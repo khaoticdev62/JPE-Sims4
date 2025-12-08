@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=JPE Sims 4 Mod Translator (Steam Deck Edition)
+Comment=Create Sims 4 mods using simple English-like syntax
+Exec=python3 -m steamdeck.app
+Icon=jpe-sims4-icon
+Terminal=false
+Type=Application
+Categories=Development;Game;
+Keywords=Sims 4;Modding;Translation;Game Development;
+StartupNotify=true
+MimeType=text/plain;

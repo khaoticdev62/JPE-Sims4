@@ -142,6 +142,39 @@ end
 - **Memory Efficient**: Optimized memory usage for large projects
 - **Progress Tracking**: Real-time progress updates for long operations
 
+## Documentation
+
+### For New Users
+- **[JPE Quick Start Guide](JPE_QUICK_START.md)** - 10-minute beginner guide with installation, first mod creation, and 5 starter templates
+- **[JPE Master Bible](JPE_MASTER_BIBLE.md)** - Comprehensive 1000+ line reference covering all JPE syntax, patterns, and techniques
+
+### For Mod Creators
+- **[Templates Directory](templates/)** - 25 production-ready copy-paste templates organized by category:
+  - Social Interactions (6 templates)
+  - Romantic Interactions (3 templates)
+  - Skills & Learning (4 templates)
+  - Moods & Emotions (3 templates)
+  - Home & Family (2 templates)
+  - Traits & Preferences (2 templates)
+  - Objects & Activities (2 templates)
+  - Fitness & Wellness (2 templates)
+  - Hobbies & Crafts (2 templates)
+  - Career Development (1 template)
+
+- **[Templates README](templates/README.md)** - Guide to using templates, customization options, and best practices
+
+### For Developers
+- **[Sims 4 File Type Support](SIMS4_FILE_TYPE_SUPPORT.md)** - Complete documentation for the extensible file type support system:
+  - File type detection and validation
+  - Handler architecture
+  - Integration with JPE pipeline
+  - Extension points for custom handlers
+  - Support roadmap for .package, .interaction, .tune, .stbl files
+
+### Architecture Documentation
+- **[Advanced Features and Distribution](ADVANCED_FEATURES_AND_DISTRIBUTION.md)** - Documentation for studio features, build system, and CI/CD pipeline
+- **[Implementation Complete](IMPLEMENTATION_COMPLETE.md)** - Summary of all 8 phases and production-ready status
+
 ## Development
 
 To contribute to the project:
@@ -164,6 +197,9 @@ python -m pytest tests/ --cov=jpe_sims4
 
 # Run specific test file
 python -m pytest tests/test_ir.py
+
+# Run Sims 4 file type support tests
+python -m pytest tests/test_sims4_file_support.py -v
 ```
 
 ## License

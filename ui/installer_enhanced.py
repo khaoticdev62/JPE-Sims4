@@ -1,4 +1,7 @@
-"""Enhanced installer with boot checklist integration."""
+"""Enhanced installer with boot checklist integration.
+
+Uses official JPE branding colors and styling per Branding PRD v1.0.
+"""
 
 import tkinter as tk
 from tkinter import ttk
@@ -7,17 +10,26 @@ import os
 from pathlib import Path
 
 from ui.installer_checklist import InstallerChecklist
+from ui.jpe_branding import (
+    InstallerStyle,
+    BRAND_LIGHT,
+    BRAND_DARK,
+    BRAND_ACCENT,
+    NEUTRAL_700,
+    get_platform_font,
+)
 
 
 class EnhancedInstallerWithChecklist:
     """Installer with real-time installation progress checklist."""
 
     def __init__(self):
-        """Initialize the enhanced installer."""
+        """Initialize the enhanced installer with official JPE branding."""
         self.root = tk.Tk()
-        self.root.title("JPE Sims 4 Mod Translator - Setup")
-        self.root.geometry("750x650")
+        self.root.title(InstallerStyle.TITLE_TEXT + " - Setup")
+        self.root.geometry(f"{InstallerStyle.WINDOW_WIDTH}x{InstallerStyle.WINDOW_HEIGHT}")
         self.root.resizable(False, False)
+        self.root.configure(bg=InstallerStyle.HEADER_BG)
 
         # Center window
         self._center_window()
@@ -39,22 +51,31 @@ class EnhancedInstallerWithChecklist:
         self.root.geometry(f"+{x}+{y}")
 
     def _setup_styles(self):
-        """Setup ttk styles."""
+        """Setup ttk styles with official JPE branding."""
         style = ttk.Style()
 
-        style.configure("Header.TLabel",
-                       font=("Segoe UI", 16, "bold"),
-                       foreground="#2C5F99")
+        # Header style using brand accent color
+        style.configure(
+            "Header.TLabel",
+            font=(get_platform_font(), InstallerStyle.TITLE_FONT_SIZE, "bold"),
+            foreground=InstallerStyle.TITLE_COLOR
+        )
 
-        style.configure("Subtitle.TLabel",
-                       font=("Segoe UI", 10),
-                       foreground="#666666")
+        # Subtitle style using neutral secondary text
+        style.configure(
+            "Subtitle.TLabel",
+            font=(get_platform_font(), InstallerStyle.SUBTITLE_FONT_SIZE),
+            foreground=InstallerStyle.SUBTITLE_COLOR
+        )
 
-        style.configure("Primary.TButton",
-                       font=("Segoe UI", 10))
+        # Primary button style
+        style.configure(
+            "Primary.TButton",
+            font=(get_platform_font(), 10)
+        )
 
     def _create_layout(self):
-        """Create installer layout."""
+        """Create installer layout with official JPE branding."""
         # Main container
         main_frame = ttk.Frame(self.root)
         main_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=20)
@@ -63,12 +84,20 @@ class EnhancedInstallerWithChecklist:
         header_frame = ttk.Frame(main_frame)
         header_frame.pack(fill=tk.X, pady=(0, 20))
 
-        title = ttk.Label(header_frame, text="JPE Sims 4 Mod Translator",
-                         style="Header.TLabel")
+        # Title using brand accent color
+        title = ttk.Label(
+            header_frame,
+            text=InstallerStyle.TITLE_TEXT,
+            style="Header.TLabel"
+        )
         title.pack(anchor=tk.W)
 
-        subtitle = ttk.Label(header_frame, text="Professional Installation",
-                            style="Subtitle.TLabel")
+        # Subtitle using neutral secondary text
+        subtitle = ttk.Label(
+            header_frame,
+            text="Professional Installation",
+            style="Subtitle.TLabel"
+        )
         subtitle.pack(anchor=tk.W, pady=(5, 0))
 
         # Separator
@@ -83,16 +112,25 @@ class EnhancedInstallerWithChecklist:
         button_frame = ttk.Frame(main_frame)
         button_frame.pack(fill=tk.X, side=tk.BOTTOM)
 
-        self.back_button = ttk.Button(button_frame, text="< Back",
-                                      command=self._go_back)
+        self.back_button = ttk.Button(
+            button_frame,
+            text="< Back",
+            command=self._go_back
+        )
         self.back_button.pack(side=tk.LEFT, padx=(0, 10))
 
-        self.next_button = ttk.Button(button_frame, text="Next >",
-                                      command=self._go_next)
+        self.next_button = ttk.Button(
+            button_frame,
+            text="Next >",
+            command=self._go_next
+        )
         self.next_button.pack(side=tk.LEFT, padx=5)
 
-        self.cancel_button = ttk.Button(button_frame, text="Cancel",
-                                       command=self.root.quit)
+        self.cancel_button = ttk.Button(
+            button_frame,
+            text="Cancel",
+            command=self.root.quit
+        )
         self.cancel_button.pack(side=tk.RIGHT)
 
         # Show welcome screen
@@ -297,13 +335,17 @@ Selected Components:
         checklist.run()
 
     def _show_completion(self):
-        """Show completion screen."""
+        """Show completion screen with success branding."""
         self._clear_content()
 
-        label = ttk.Label(self.content_frame,
-                         text="✓ Installation Complete!",
-                         style="Header.TLabel",
-                         foreground="#4CAF50")
+        # Use diagnostic success color for completion message
+        from ui.jpe_branding import DIAGNOSTIC_SUCCESS
+        label = ttk.Label(
+            self.content_frame,
+            text="✓ Installation Complete!",
+            style="Header.TLabel",
+            foreground=DIAGNOSTIC_SUCCESS
+        )
         label.pack(pady=(30, 10))
 
         msg = ttk.Label(self.content_frame,

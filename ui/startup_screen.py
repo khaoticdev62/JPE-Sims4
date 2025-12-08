@@ -1,4 +1,7 @@
-"""Startup screen with boot checklist display."""
+"""Startup screen with boot checklist display.
+
+Uses official JPE branding colors and styling per Branding PRD v1.0.
+"""
 
 import tkinter as tk
 from tkinter import ttk
@@ -6,6 +9,15 @@ from typing import Optional, Callable
 import threading
 
 from ui.boot_checklist import BootChecklist, create_standard_checklist
+from ui.jpe_branding import (
+    StartupScreenStyle,
+    BRAND_LIGHT,
+    BRAND_DARK,
+    BRAND_ACCENT,
+    NEUTRAL_700,
+    NEUTRAL_500,
+    get_platform_font,
+)
 
 
 class StartupScreen:
@@ -23,10 +35,11 @@ class StartupScreen:
         self.on_ready = on_ready
         self.checklist: Optional[BootChecklist] = None
 
-        # Configure root
-        self.root.title("JPE Sims 4 Mod Translator - Starting...")
-        self.root.geometry("700x600")
+        # Configure root using branding specifications
+        self.root.title(StartupScreenStyle.TITLE_TEXT + " - Starting...")
+        self.root.geometry(f"{StartupScreenStyle.WINDOW_WIDTH}x{StartupScreenStyle.WINDOW_HEIGHT}")
         self.root.resizable(False, False)
+        self.root.configure(bg=StartupScreenStyle.WINDOW_BG)
 
         # Center window
         self._center_window()
@@ -42,8 +55,8 @@ class StartupScreen:
         self.root.geometry(f"+{x}+{y}")
 
     def _create_widgets(self):
-        """Create UI widgets."""
-        # Main frame
+        """Create UI widgets with official JPE branding."""
+        # Main frame with brand light background
         main_frame = ttk.Frame(self.root)
         main_frame.pack(fill=tk.BOTH, expand=True)
 
@@ -51,14 +64,22 @@ class StartupScreen:
         header_frame = ttk.Frame(main_frame)
         header_frame.pack(fill=tk.X, padx=30, pady=(30, 20))
 
-        title = ttk.Label(header_frame, text="JPE Sims 4 Mod Translator",
-                         font=("Segoe UI", 18, "bold"),
-                         foreground="#2C5F99")
+        # Title using brand accent color and platform font
+        title = ttk.Label(
+            header_frame,
+            text=StartupScreenStyle.TITLE_TEXT,
+            font=(get_platform_font(), StartupScreenStyle.TITLE_FONT_SIZE, "bold"),
+            foreground=StartupScreenStyle.TITLE_COLOR
+        )
         title.pack(anchor=tk.W)
 
-        subtitle = ttk.Label(header_frame, text="Initializing application...",
-                            font=("Segoe UI", 10),
-                            foreground="#666666")
+        # Subtitle using neutral secondary text color
+        subtitle = ttk.Label(
+            header_frame,
+            text=StartupScreenStyle.SUBTITLE_TEXT,
+            font=(get_platform_font(), StartupScreenStyle.SUBTITLE_FONT_SIZE),
+            foreground=StartupScreenStyle.SUBTITLE_COLOR
+        )
         subtitle.pack(anchor=tk.W, pady=(5, 0))
 
         # Separator
@@ -72,22 +93,34 @@ class StartupScreen:
         self._create_embedded_checklist(main_frame)
 
     def _create_embedded_checklist(self, parent: tk.Widget):
-        """Create embedded checklist."""
+        """Create embedded checklist with official JPE branding."""
         # Container
         container = ttk.Frame(parent)
         container.pack(fill=tk.BOTH, expand=True, padx=20, pady=10)
 
-        # Checklist frame
-        canvas = tk.Canvas(container, bg="#FFFFFF", highlightthickness=0)
+        # Checklist frame with brand light background
+        canvas = tk.Canvas(
+            container,
+            bg=BRAND_LIGHT,
+            highlightthickness=0
+        )
         canvas.pack(fill=tk.BOTH, expand=True)
 
-        scrollbar = ttk.Scrollbar(container, orient=tk.VERTICAL, command=canvas.yview)
+        scrollbar = ttk.Scrollbar(
+            container,
+            orient=tk.VERTICAL,
+            command=canvas.yview
+        )
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
         canvas.config(yscrollcommand=scrollbar.set)
 
         # Items container
         self.items_frame = ttk.Frame(canvas)
-        self.canvas_window = canvas.create_window((0, 0), window=self.items_frame, anchor=tk.NW)
+        self.canvas_window = canvas.create_window(
+            (0, 0),
+            window=self.items_frame,
+            anchor=tk.NW
+        )
         canvas.config(scrollregion=canvas.bbox("all"))
 
         self.canvas = canvas
@@ -104,25 +137,43 @@ class StartupScreen:
         item_frame = ttk.Frame(self.items_frame)
         item_frame.pack(fill=tk.X, padx=10, pady=5)
 
-        # Status indicator
-        status_label = tk.Label(item_frame, text="○", font=("Courier New", 14, "bold"),
-                               fg="#888888", bg="#FFFFFF")
+        # Status indicator - pending symbol with neutral color
+        status_label = tk.Label(
+            item_frame,
+            text="○",
+            font=(get_platform_font(), 14, "bold"),
+            fg=NEUTRAL_500,
+            bg=BRAND_LIGHT
+        )
         status_label.pack(side=tk.LEFT, padx=(5, 10))
 
         # Content frame
         content_frame = ttk.Frame(item_frame)
         content_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
-        name_label = ttk.Label(content_frame, text=name, font=("Segoe UI", 10))
+        name_label = ttk.Label(
+            content_frame,
+            text=name,
+            font=(get_platform_font(), 10)
+        )
         name_label.pack(anchor=tk.W)
 
-        msg_label = ttk.Label(content_frame, text="", font=("Segoe UI", 8),
-                             foreground="#999999")
+        msg_label = ttk.Label(
+            content_frame,
+            text="",
+            font=(get_platform_font(), 8),
+            foreground=NEUTRAL_700
+        )
         msg_label.pack(anchor=tk.W)
 
         # Time label
-        time_label = tk.Label(item_frame, text="", font=("Segoe UI", 8),
-                             fg="#999999", bg="#FFFFFF")
+        time_label = tk.Label(
+            item_frame,
+            text="",
+            font=(get_platform_font(), 8),
+            fg=NEUTRAL_700,
+            bg=BRAND_LIGHT
+        )
         time_label.pack(side=tk.RIGHT, padx=5)
 
         item_data = {
@@ -142,7 +193,7 @@ class StartupScreen:
 
     def update_item(self, name: str, status: str, message: str = "", elapsed: float = 0):
         """
-        Update an item status.
+        Update an item status using official JPE branding.
 
         Args:
             name: Item name
@@ -155,15 +206,10 @@ class StartupScreen:
 
         item = self.items[name]
 
-        # Status symbols and colors
-        symbols = {
-            "pending": "○", "checking": "◐", "success": "✓",
-            "warning": "⚠", "error": "✗"
-        }
-        colors = {
-            "pending": "#888888", "checking": "#FF9800", "success": "#4CAF50",
-            "warning": "#FFC107", "error": "#F44336"
-        }
+        # Use branding constants for symbols and colors
+        from ui.jpe_branding import BootChecklistStyle
+        symbols = BootChecklistStyle.STATUS_SYMBOLS
+        colors = BootChecklistStyle.STATUS_COLORS
 
         item["status"].config(text=symbols[status], fg=colors[status])
         if message:

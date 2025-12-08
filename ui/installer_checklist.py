@@ -1,4 +1,7 @@
-"""Installer checklist system for setup wizard."""
+"""Installer checklist system for setup wizard.
+
+Uses official JPE branding colors and styling per Branding PRD v1.0.
+"""
 
 import tkinter as tk
 from tkinter import ttk
@@ -6,25 +9,24 @@ import threading
 import time
 from typing import Callable, List, Tuple, Optional
 
+from ui.jpe_branding import (
+    BootChecklistStyle,
+    BRAND_LIGHT,
+    NEUTRAL_700,
+    get_platform_font,
+)
+
 
 class InstallerChecklist:
-    """Installation progress checklist with real-time feedback."""
+    """Installation progress checklist with real-time feedback.
 
-    SYMBOLS = {
-        "pending": "○",
-        "checking": "◐",
-        "success": "✓",
-        "warning": "⚠",
-        "error": "✗",
-    }
+    Uses official JPE branding colors and styling per Branding PRD v1.0.
+    Combines shape + color + text for accessibility (never color alone).
+    """
 
-    COLORS = {
-        "pending": "#888888",
-        "checking": "#FF9800",
-        "success": "#4CAF50",
-        "warning": "#FFC107",
-        "error": "#F44336",
-    }
+    # Use branding constants instead of hard-coded colors
+    SYMBOLS = BootChecklistStyle.STATUS_SYMBOLS
+    COLORS = BootChecklistStyle.STATUS_COLORS
 
     def __init__(self, parent: tk.Widget, title: str = "Installation Progress"):
         """
@@ -44,19 +46,31 @@ class InstallerChecklist:
         self._create_widgets()
 
     def _create_widgets(self):
-        """Create UI elements."""
-        # Header
-        header_label = ttk.Label(self.frame, text=self.title,
-                                font=("Segoe UI", 12, "bold"),
-                                foreground="#333333")
+        """Create UI elements with official JPE branding."""
+        # Header using platform font and brand dark color
+        header_label = ttk.Label(
+            self.frame,
+            text=self.title,
+            font=(get_platform_font(), 12, "bold"),
+            foreground=BRAND_DARK
+        )
         header_label.pack(anchor=tk.W, padx=10, pady=(10, 5))
 
-        # Checklist container
-        self.canvas = tk.Canvas(self.frame, bg="#FFFFFF", highlightthickness=0, height=250)
+        # Checklist container with brand light background
+        self.canvas = tk.Canvas(
+            self.frame,
+            bg=BRAND_LIGHT,
+            highlightthickness=0,
+            height=250
+        )
         self.canvas.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
 
         # Scrollbar
-        scrollbar = ttk.Scrollbar(self.frame, orient=tk.VERTICAL, command=self.canvas.yview)
+        scrollbar = ttk.Scrollbar(
+            self.frame,
+            orient=tk.VERTICAL,
+            command=self.canvas.yview
+        )
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y, padx=(0, 10))
         self.canvas.config(yscrollcommand=scrollbar.set)
 
@@ -64,16 +78,23 @@ class InstallerChecklist:
         self.items_frame = ttk.Frame(self.canvas)
         self.canvas.create_window((0, 0), window=self.items_frame, anchor=tk.NW)
 
-        # Progress bar
+        # Progress bar with brand accent color
         self.progress_var = tk.DoubleVar()
-        self.progress_bar = ttk.Progressbar(self.frame, variable=self.progress_var,
-                                           maximum=100, mode='determinate')
+        self.progress_bar = ttk.Progressbar(
+            self.frame,
+            variable=self.progress_var,
+            maximum=100,
+            mode='determinate'
+        )
         self.progress_bar.pack(fill=tk.X, padx=10, pady=5)
 
-        # Status label
-        self.status_label = ttk.Label(self.frame, text="Ready to install...",
-                                     font=("Segoe UI", 9),
-                                     foreground="#666666")
+        # Status label with neutral secondary text color
+        self.status_label = ttk.Label(
+            self.frame,
+            text="Ready to install...",
+            font=(get_platform_font(), 9),
+            foreground=NEUTRAL_700
+        )
         self.status_label.pack(anchor=tk.W, padx=10, pady=(0, 10))
 
     def pack(self, **kwargs):
@@ -106,34 +127,48 @@ class InstallerChecklist:
         self._create_item_widget(item)
 
     def _create_item_widget(self, item: dict):
-        """Create widget for an item."""
+        """Create widget for an item with official JPE branding."""
         item_frame = ttk.Frame(self.items_frame)
         item_frame.pack(fill=tk.X, padx=10, pady=5)
         item["widget_frame"] = item_frame
 
-        # Status indicator
-        item["status_label"] = tk.Label(item_frame, text=self.SYMBOLS["pending"],
-                                       font=("Courier New", 12, "bold"),
-                                       fg=self.COLORS["pending"], bg="#FFFFFF")
+        # Status indicator - uses symbol + color per accessibility guidelines
+        item["status_label"] = tk.Label(
+            item_frame,
+            text=self.SYMBOLS["pending"],
+            font=(get_platform_font(), 12, "bold"),
+            fg=self.COLORS["pending"],
+            bg=BRAND_LIGHT
+        )
         item["status_label"].pack(side=tk.LEFT, padx=(5, 10))
 
-        # Text
+        # Text area
         text_frame = ttk.Frame(item_frame)
         text_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
-        item["name_label"] = ttk.Label(text_frame, text=item["name"],
-                                      font=("Segoe UI", 10))
+        item["name_label"] = ttk.Label(
+            text_frame,
+            text=item["name"],
+            font=(get_platform_font(), 10)
+        )
         item["name_label"].pack(anchor=tk.W)
 
-        item["message_label"] = ttk.Label(text_frame, text="",
-                                         font=("Segoe UI", 8),
-                                         foreground="#999999")
+        item["message_label"] = ttk.Label(
+            text_frame,
+            text="",
+            font=(get_platform_font(), 8),
+            foreground=NEUTRAL_700
+        )
         item["message_label"].pack(anchor=tk.W)
 
-        # Progress indicator
-        item["time_label"] = tk.Label(item_frame, text="",
-                                     font=("Segoe UI", 8),
-                                     fg="#999999", bg="#FFFFFF")
+        # Timing indicator
+        item["time_label"] = tk.Label(
+            item_frame,
+            text="",
+            font=(get_platform_font(), 8),
+            fg=NEUTRAL_700,
+            bg=BRAND_LIGHT
+        )
         item["time_label"].pack(side=tk.RIGHT, padx=5)
 
         # Update canvas

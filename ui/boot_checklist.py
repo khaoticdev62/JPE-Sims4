@@ -1,4 +1,19 @@
-"""Boot checklist system with real-time loading visualization."""
+"""Boot checklist system with real-time loading visualization.
+
+Uses official JPE branding colors, typography, and styling as defined in
+the JPE Branding PRD and Style Guide (v1.0).
+
+Color palette:
+- Brand Accent: #2EC4B6 (for highlights and primary actions)
+- Brand Dark: #151A24 (for backgrounds)
+- Brand Light: #F5F7FA (for content areas)
+- Diagnostics: Error, Warning, Info, Success colors
+
+Typography:
+- Windows: Segoe UI
+- macOS: SF Pro Display
+- Linux: Ubuntu
+"""
 
 import tkinter as tk
 from tkinter import ttk
@@ -7,6 +22,24 @@ import time
 from pathlib import Path
 from typing import Callable, List, Tuple, Optional
 import sys
+
+# Import branding constants
+from ui.jpe_branding import (
+    BootChecklistStyle,
+    BRAND_ACCENT,
+    BRAND_DARK,
+    BRAND_LIGHT,
+    DIAGNOSTIC_ERROR,
+    DIAGNOSTIC_WARNING,
+    DIAGNOSTIC_INFO,
+    DIAGNOSTIC_SUCCESS,
+    NEUTRAL_500,
+    NEUTRAL_700,
+    get_status_color,
+    get_status_symbol,
+    get_platform_font,
+    BRANDING_VERSION,
+)
 
 
 class ChecklistItem:
@@ -30,23 +63,30 @@ class ChecklistItem:
 
 
 class BootChecklist:
-    """Real-time boot checklist with visual feedback."""
+    """Real-time boot checklist with visual feedback.
 
-    # Status symbols and colors
+    Uses official JPE branding colors and styling per Branding PRD v1.0.
+    Combines shape + color + text for accessibility (never color alone).
+    """
+
+    # Status symbols - per Icon System PRD
+    # Each has distinct shape for accessibility
     SYMBOLS = {
-        "pending": "○",     # Hollow circle
-        "checking": "◐",    # Half circle
-        "success": "●",     # Filled circle (success)
-        "warning": "⚠",     # Warning symbol
-        "error": "✗",       # Error symbol
+        "pending": "○",     # Hollow circle - neutral
+        "checking": "◐",    # Half circle - in progress
+        "success": "✓",     # Checkmark - clear success
+        "warning": "⚠",     # Triangle - caution
+        "error": "✗",       # X mark - stop
     }
 
+    # Status colors - from JPE diagnostics palette
+    # Always paired with symbols and text labels
     COLORS = {
-        "pending": "#888888",    # Gray
-        "checking": "#FF9800",   # Orange
-        "success": "#4CAF50",    # Green
-        "warning": "#FFC107",    # Yellow/Orange
-        "error": "#F44336",      # Red
+        "pending": NEUTRAL_500,        # Gray - neutral
+        "checking": DIAGNOSTIC_WARNING, # Orange - in progress
+        "success": DIAGNOSTIC_SUCCESS,  # Green - success
+        "warning": DIAGNOSTIC_WARNING,  # Orange - warning
+        "error": DIAGNOSTIC_ERROR,      # Red - error
     }
 
     def __init__(self, parent: Optional[tk.Widget] = None, title: str = "Initializing JPE Sims 4"):
@@ -82,69 +122,109 @@ class BootChecklist:
         self._create_widgets()
 
     def _setup_style(self):
-        """Setup custom styles for the checklist."""
-        style = ttk.Style()
+        """Setup custom styles for the checklist.
 
-        # Configure custom frame style
-        style.configure("Checklist.TFrame", background="#F5F5F5")
+        Uses official JPE branding colors per Style Guide.
+        """
+        style = ttk.Style()
+        platform_font = get_platform_font()
+
+        # Main frame - light background per brand palette
+        style.configure("Checklist.TFrame", background=BRAND_LIGHT)
+
+        # Header - brand accent with dark text
         style.configure("ChecklistHeader.TLabel",
-                       font=("Segoe UI", 14, "bold"),
-                       background="#F5F5F5",
-                       foreground="#333333")
+                       font=(platform_font, 14, "bold"),
+                       background=BRAND_LIGHT,
+                       foreground=BRAND_DARK)
+
+        # Item labels - neutral palette
         style.configure("ChecklistItem.TLabel",
-                       font=("Segoe UI", 10),
-                       background="#FFFFFF",
-                       foreground="#333333")
+                       font=(platform_font, 10),
+                       background="white",
+                       foreground=BRAND_DARK)
+
+        # Status symbol - uses color from COLORS dict
         style.configure("ChecklistStatus.TLabel",
                        font=("Courier New", 11, "bold"),
-                       background="#FFFFFF")
+                       background="white")
+
+        # Status message - secondary text color
         style.configure("ChecklistMessage.TLabel",
-                       font=("Segoe UI", 9),
-                       background="#FFFFFF",
-                       foreground="#666666")
+                       font=(platform_font, 9),
+                       background="white",
+                       foreground=NEUTRAL_700)
 
     def _create_widgets(self):
-        """Create UI widgets."""
-        # Main container
+        """Create UI widgets with JPE branding."""
+        platform_font = get_platform_font()
+
+        # Main container - brand light background
         main_frame = ttk.Frame(self.root, style="Checklist.TFrame")
         main_frame.pack(fill=tk.BOTH, expand=True)
 
-        # Header section
+        # Header section - brand styling
         header_frame = ttk.Frame(main_frame, style="Checklist.TFrame")
         header_frame.pack(fill=tk.X, padx=30, pady=(30, 20))
 
+        # Title - brand accent color per Style Guide
         title_label = ttk.Label(header_frame, text=self.title, style="ChecklistHeader.TLabel")
         title_label.pack(anchor=tk.W)
 
-        subtitle_label = ttk.Label(header_frame, text="Loading components...", style="Checklist.TFrame")
+        # Subtitle - secondary text color from neutral palette
+        subtitle_label = ttk.Label(
+            header_frame,
+            text="Loading components...",
+            style="Checklist.TFrame"
+        )
         subtitle_label.pack(anchor=tk.W, pady=(5, 0))
-        subtitle_label.configure(font=("Segoe UI", 9), foreground="#666666")
+        subtitle_label.configure(
+            font=(platform_font, 9),
+            foreground=NEUTRAL_700,
+            background=BRAND_LIGHT
+        )
 
-        # Checklist container with scrolling
-        self.canvas = tk.Canvas(main_frame, bg="#FFFFFF", highlightthickness=0)
+        # Checklist container with scrolling - white content area
+        self.canvas = tk.Canvas(
+            main_frame,
+            bg="white",
+            highlightthickness=0,
+            highlightcolor="white"
+        )
         self.canvas.pack(fill=tk.BOTH, expand=True, padx=20, pady=(0, 20))
 
-        # Scrollbar for canvas
+        # Scrollbar for canvas - neutral color
         scrollbar = ttk.Scrollbar(main_frame, orient=tk.VERTICAL, command=self.canvas.yview)
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y, padx=(0, 20), pady=(0, 20))
         self.canvas.config(yscrollcommand=scrollbar.set)
 
-        # Frame inside canvas for checklist items
+        # Frame inside canvas for checklist items - light background
         self.checklist_frame = ttk.Frame(self.canvas, style="Checklist.TFrame")
         self.canvas.create_window((0, 0), window=self.checklist_frame, anchor=tk.NW, width=500)
 
         # Bind mousewheel/scrollwheel
         self.canvas.bind_all("<MouseWheel>", self._on_mousewheel)
 
-        # Progress bar
+        # Progress bar - brand accent color
         self.progress_var = tk.DoubleVar()
-        self.progress_bar = ttk.Progressbar(main_frame, variable=self.progress_var,
-                                           maximum=100, mode='determinate')
+        self.progress_bar = ttk.Progressbar(
+            main_frame,
+            variable=self.progress_var,
+            maximum=100,
+            mode='determinate',
+            length=300
+        )
         self.progress_bar.pack(fill=tk.X, padx=20, pady=(0, 10))
 
-        # Status label
-        self.status_label = ttk.Label(main_frame, text="Ready to start...",
-                                     style="ChecklistMessage.TLabel")
+        # Configure progress bar style with brand accent
+        style.configure("TProgressbar", foreground=BRAND_ACCENT, background=BRAND_ACCENT)
+
+        # Status label - secondary text color
+        self.status_label = ttk.Label(
+            main_frame,
+            text="Ready to start...",
+            style="ChecklistMessage.TLabel"
+        )
         self.status_label.pack(fill=tk.X, padx=20, pady=(0, 10))
 
         # Update scroll region

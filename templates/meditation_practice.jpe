@@ -1,0 +1,50 @@
+# Meditation Practice Template
+# Mindfulness and stress relief interactions
+
+Meditate
+  description: "Practice meditation to achieve inner peace"
+  type: object
+  duration: 45
+  tests:
+    - actor is in quiet location
+    - actor is not interrupted
+    - meditation cushion available
+  effects:
+    - remove stressed feeling
+    - remove sad feeling
+    - add peaceful feeling
+    - increase mood by 25
+    - increase mindfulness skill by 1
+
+---
+
+Guided Meditation
+  description: "Follow a guided meditation session"
+  type: object
+  duration: 30
+  tests:
+    - meditation app or instructor available
+    - actor is not interrupted
+  effects:
+    - remove anxiety feeling
+    - add calm feeling
+    - increase mood by 20
+    - increase wellness by 2
+
+---
+
+Peaceful Feeling
+  description: "Inner peace and tranquility"
+  mood_type: positive
+  intensity: 3
+  duration: 300
+  mood_gain: 25
+
+---
+
+Calm Feeling
+  description: "Feeling serene and composed"
+  mood_type: positive
+  intensity: 2
+  duration: 240
+  mood_gain: 20

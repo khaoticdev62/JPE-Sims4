@@ -1,0 +1,57 @@
+# Animal Lover Trait Template
+# A trait system for Sims who love animals
+
+Animal Lover Trait
+  description: "This Sim has a special connection with animals"
+  category: lifestyle
+  rarity: common
+  conflicting_traits:
+    - animal hater
+
+---
+
+Pet Cat
+  description: "Interact lovingly with a cat"
+  type: object
+  duration: 15
+  tests:
+    - actor has animal lover trait
+    - cat is present
+    - actor is in good mood
+  effects:
+    - increase mood by 30
+    - cat increases affection
+    - add happy feeling
+
+---
+
+Pet Dog
+  description: "Play with a dog and strengthen bond"
+  type: object
+  duration: 20
+  tests:
+    - actor has animal lover trait
+    - dog is present
+    - actor is not tired
+  effects:
+    - increase mood by 25
+    - dog increases loyalty
+    - add joyful feeling
+
+---
+
+Happy Feeling
+  description: "Feeling happy from animal interaction"
+  mood_type: positive
+  intensity: 2
+  duration: 120
+  mood_gain: 20
+
+---
+
+Joyful Feeling
+  description: "Feeling joyful and playful"
+  mood_type: positive
+  intensity: 2
+  duration: 150
+  mood_gain: 25

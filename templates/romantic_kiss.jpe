@@ -1,0 +1,25 @@
+# Romantic Kiss Template
+# A romantic interaction for couples in love
+
+Romantic Kiss
+  description: "Share a passionate kiss with your loved one"
+  type: social
+  duration: 15
+  tests:
+    - actor is romantic with target
+    - both are adults
+    - both are in love
+    - not in public
+  effects:
+    - increase romance +30
+    - increase mood by 25
+    - add romantic feeling buff
+
+---
+
+Romantic Feeling
+  description: "Feeling romantic and connected"
+  mood_type: positive
+  intensity: 3
+  duration: 120
+  mood_gain: 30

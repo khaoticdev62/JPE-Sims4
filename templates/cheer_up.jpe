@@ -1,0 +1,26 @@
+# Cheer Up Template
+# Help a sad Sim feel better with support and kindness
+
+Cheer Up
+  description: "Comfort a sad friend and help them feel better"
+  type: social
+  duration: 25
+  tests:
+    - target is sad
+    - actor is in good mood
+    - actor is good friend with target
+    - actor is not mean spirited
+  effects:
+    - remove sad feeling
+    - add happy feeling
+    - increase mood by 30
+    - increase friendship +20
+
+---
+
+Happy Feeling
+  description: "Feeling happy and uplifted"
+  mood_type: positive
+  intensity: 2
+  duration: 180
+  mood_gain: 25

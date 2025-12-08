@@ -1,0 +1,73 @@
+# Gardening Hobby Template
+# Plant care and gardening activities
+
+Plant Garden
+  description: "Plant seeds and start a garden"
+  type: object
+  duration: 30
+  tests:
+    - actor has gardening skill
+    - garden space available
+    - weather is suitable
+  effects:
+    - increase gardening skill by 1
+    - create garden
+    - increase mood by 10
+    - add productive feeling
+
+---
+
+Water Plants
+  description: "Care for garden plants"
+  type: object
+  duration: 15
+  tests:
+    - garden exists
+    - actor is not too tired
+  effects:
+    - improve plant health
+    - increase gardening skill by 1
+    - increase mood by 8
+    - add nurturing feeling
+
+---
+
+Harvest Crops
+  description: "Harvest fresh vegetables and fruits"
+  type: object
+  duration: 25
+  tests:
+    - crops are ready
+    - garden is healthy
+  effects:
+    - obtain fresh produce
+    - increase mood by 15
+    - increase gardening skill by 1
+    - add satisfied feeling
+
+---
+
+Productive Feeling
+  description: "Feeling productive and accomplished"
+  mood_type: positive
+  intensity: 2
+  duration: 180
+  mood_gain: 15
+
+---
+
+Nurturing Feeling
+  description: "Feeling caring and nurturing"
+  mood_type: positive
+  intensity: 2
+  duration: 120
+  mood_gain: 12
+
+---
+
+Satisfied Feeling
+  description: "Satisfied with harvest"
+  mood_type: positive
+  intensity: 2
+  duration: 150
+  mood_gain: 15

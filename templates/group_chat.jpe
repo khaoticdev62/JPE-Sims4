@@ -1,0 +1,24 @@
+# Group Chat Template
+# Create a social gathering where multiple Sims can interact
+
+Group Chat
+  description: "Gather friends for a lively group conversation"
+  type: social
+  duration: 60
+  tests:
+    - actor knows at least 2 other sims
+    - actor is not tired
+    - location is home lot
+  effects:
+    - increase mood by 20
+    - increase friendship +15
+    - add sociable feeling
+
+---
+
+Sociable Feeling
+  description: "Feeling social and connected"
+  mood_type: positive
+  intensity: 2
+  duration: 240
+  mood_gain: 18

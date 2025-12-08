@@ -1,0 +1,25 @@
+# Sibling Bond Template
+# Build stronger relationships between siblings
+
+Bond as Siblings
+  description: "Share stories and strengthen sibling connection"
+  type: social
+  duration: 50
+  tests:
+    - actor is sibling of target
+    - both are not tired
+    - both are in good mood
+    - actor and target are in same household
+  effects:
+    - increase sibling bond by 40
+    - increase mood by 25
+    - add family feeling
+
+---
+
+Family Feeling
+  description: "Feeling close to family"
+  mood_type: positive
+  intensity: 2
+  duration: 300
+  mood_gain: 25

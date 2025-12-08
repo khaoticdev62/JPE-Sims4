@@ -1,0 +1,26 @@
+# Calm Down Template
+# De-escalate an angry Sim and restore peace
+
+Calm Argument
+  description: "Calm down an angry Sim and resolve conflict"
+  type: social
+  duration: 30
+  tests:
+    - target is angry
+    - actor is in calm mood
+    - actor is diplomatic
+    - location is private
+  effects:
+    - remove angry feeling
+    - add peaceful feeling
+    - increase mood by 20
+    - increase friendship +15
+
+---
+
+Peaceful Feeling
+  description: "Feeling calm and at peace"
+  mood_type: positive
+  intensity: 2
+  duration: 240
+  mood_gain: 20

@@ -1,0 +1,25 @@
+# Deep Conversation Template
+# A meaningful conversation that builds friendship and trust
+
+Deep Conversation
+  description: "Have a meaningful conversation and share thoughts"
+  type: social
+  duration: 45
+  tests:
+    - actor knows target
+    - actor is not tired
+    - target is in good mood
+    - both are not in bad mood
+  effects:
+    - increase friendship +50
+    - increase mood by 15
+    - add connected feeling
+
+---
+
+Connected Feeling
+  description: "Feeling deeply connected to someone"
+  mood_type: positive
+  intensity: 3
+  duration: 240
+  mood_gain: 25

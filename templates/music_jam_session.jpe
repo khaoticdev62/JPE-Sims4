@@ -1,0 +1,85 @@
+# Music Jam Session Template
+# Musical collaboration and performance
+
+Play Instrument
+  description: "Practice playing a musical instrument"
+  type: object
+  duration: 60
+  tests:
+    - actor has music skill
+    - instrument is available
+    - actor is in good mood
+  effects:
+    - increase music skill by 2
+    - increase mood by 20
+    - add creative feeling
+
+---
+
+Band Jam Session
+  description: "Play music with band members"
+  type: social
+  duration: 90
+  tests:
+    - all musicians present
+    - instruments available
+    - band members are in good mood
+  effects:
+    - increase music skill by 2
+    - increase friendship +20
+    - increase mood by 30
+    - add inspired feeling
+    - add harmonious feeling
+
+---
+
+Perform Concert
+  description: "Put on a concert for an audience"
+  type: social
+  duration: 120
+  tests:
+    - musician is talented
+    - audience is present
+    - venue is setup
+  effects:
+    - increase music skill by 3
+    - increase earnings
+    - increase mood by 50
+    - add triumphant feeling
+    - add famous feeling
+
+---
+
+Creative Feeling
+  description: "Feeling creative and inspired"
+  mood_type: positive
+  intensity: 2
+  duration: 240
+  mood_gain: 20
+
+---
+
+Harmonious Feeling
+  description: "In harmony with band mates"
+  mood_type: positive
+  intensity: 3
+  duration: 300
+  mood_gain: 30
+
+---
+
+Inspired Feeling
+  description: "Feeling inspired by music"
+  mood_type: positive
+  intensity: 2
+  duration: 180
+  mood_gain: 20
+
+---
+
+Triumphant Feeling
+  description: "Triumphant performance success"
+  mood_type: positive
+  intensity: 4
+  duration: 360
+  mood_gain: 50

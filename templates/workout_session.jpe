@@ -1,0 +1,51 @@
+# Workout Session Template
+# Exercise and fitness interactions
+
+Work Out at Gym
+  description: "Get a thorough workout to build fitness"
+  type: object
+  duration: 60
+  tests:
+    - actor is not tired
+    - gym equipment is available
+    - actor is in decent mood
+  effects:
+    - increase fitness skill by 2
+    - increase metabolism
+    - increase mood by 15
+    - add energized feeling
+    - remove lazy feeling
+
+---
+
+Personal Training
+  description: "Get trained by a fitness professional"
+  type: social
+  duration: 45
+  tests:
+    - target is personal trainer
+    - actor wants to improve fitness
+    - location is gym
+  effects:
+    - increase fitness skill by 3
+    - increase mood by 10
+    - increase friendship +12
+    - add motivated feeling
+
+---
+
+Energized Feeling
+  description: "Feeling energized from exercise"
+  mood_type: positive
+  intensity: 2
+  duration: 240
+  mood_gain: 20
+
+---
+
+Motivated Feeling
+  description: "Motivated to improve"
+  mood_type: positive
+  intensity: 2
+  duration: 180
+  mood_gain: 15

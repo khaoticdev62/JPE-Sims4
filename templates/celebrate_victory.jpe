@@ -1,0 +1,34 @@
+# Celebrate Victory Template
+# Celebrate a major win or achievement
+
+Celebrate Victory
+  description: "Celebrate a major achievement or victory"
+  type: social
+  duration: 45
+  tests:
+    - actor just achieved something major
+    - actor is in good mood
+    - friends are nearby
+  effects:
+    - increase mood by 50
+    - increase confidence by 20
+    - add triumphant feeling
+    - add proud feeling
+
+---
+
+Triumphant Feeling
+  description: "Feeling victorious and accomplished"
+  mood_type: positive
+  intensity: 4
+  duration: 300
+  mood_gain: 45
+
+---
+
+Proud Feeling
+  description: "Feeling proud of achievement"
+  mood_type: positive
+  intensity: 3
+  duration: 240
+  mood_gain: 35

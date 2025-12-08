@@ -1,0 +1,24 @@
+# Cooking Session Template
+# Improve cooking skills while having fun in the kitchen
+
+Practice Cooking
+  description: "Cook a delicious meal to improve cooking skills"
+  type: object
+  duration: 75
+  tests:
+    - actor is not tired
+    - actor has access to kitchen
+    - actor is not in bad mood
+  effects:
+    - increase cooking skill by 2
+    - increase mood by 15
+    - add creative feeling
+
+---
+
+Creative Feeling
+  description: "Feeling creative and inspired"
+  mood_type: positive
+  intensity: 2
+  duration: 240
+  mood_gain: 18

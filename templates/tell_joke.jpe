@@ -1,0 +1,24 @@
+# Tell Joke Template
+# Make someone laugh and boost their mood
+
+Tell Joke
+  description: "Tell a funny joke to make someone laugh"
+  type: social
+  duration: 20
+  tests:
+    - actor is in good mood
+    - actor is not tired
+    - target is not angry
+  effects:
+    - increase mood by 20
+    - increase friendship +10
+    - add amused feeling
+
+---
+
+Amused Feeling
+  description: "Feeling amused and entertained"
+  mood_type: positive
+  intensity: 2
+  duration: 180
+  mood_gain: 15

@@ -1,0 +1,25 @@
+# Slow Dance Template
+# A romantic slow dance between partners
+
+Slow Dance
+  description: "Dance slowly together in a romantic embrace"
+  type: social
+  duration: 50
+  tests:
+    - actor is romantic with target
+    - both are adults
+    - both are in good mood
+    - location has music
+  effects:
+    - increase romance +40
+    - increase mood by 30
+    - add romantic feeling
+
+---
+
+Romantic Feeling
+  description: "Feeling romantic and emotionally connected"
+  mood_type: positive
+  intensity: 3
+  duration: 180
+  mood_gain: 35

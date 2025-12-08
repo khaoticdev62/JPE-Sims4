@@ -1,0 +1,75 @@
+# Career Advancement Template
+# Job performance and promotion interactions
+
+Work Hard
+  description: "Focus on work tasks to advance career"
+  type: object
+  duration: 480
+  tests:
+    - actor has active job
+    - actor is not too tired
+    - actor is in decent mood
+  effects:
+    - increase job performance by 10
+    - increase career skill by 2
+    - increase income
+    - add focused feeling
+
+---
+
+Ask for Promotion
+  description: "Request a promotion from your boss"
+  type: social
+  duration: 20
+  tests:
+    - actor meets promotion requirements
+    - boss is available
+    - actor has good work record
+  effects:
+    - potential for promotion
+    - increase career level
+    - increase income significantly
+    - add ambitious feeling
+
+---
+
+Network with Colleagues
+  description: "Build professional relationships"
+  type: social
+  duration: 45
+  tests:
+    - colleagues present
+    - location is workplace
+    - actor is in good mood
+  effects:
+    - increase professional network
+    - increase friendship +15
+    - increase career prospects
+    - add professional feeling
+
+---
+
+Focused Feeling
+  description: "Focused on career goals"
+  mood_type: positive
+  intensity: 2
+  duration: 240
+  mood_gain: 15
+
+---
+
+Ambitious Feeling
+  description: "Driven to succeed and advance"
+  mood_type: positive
+  intensity: 3
+  duration: 300
+  mood_gain: 25
+
+---
+
+Professional Feeling
+  description: "Feeling professional and competent"
+  mood_type: positive
+  intensity: 2
+  duration: 180
+  mood_gain: 18

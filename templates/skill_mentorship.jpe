@@ -1,0 +1,26 @@
+# Skill Mentorship Template
+# An expert teaches a skill to someone wanting to learn
+
+Teach Skill
+  description: "Share knowledge and teach a valuable skill"
+  type: social
+  duration: 60
+  tests:
+    - actor has high skill in the subject
+    - actor is in good mood
+    - target wants to learn
+    - target is not tired
+  effects:
+    - increase target skill by 1
+    - increase friendship +25
+    - increase mood by 15
+    - add inspired feeling
+
+---
+
+Inspired Feeling
+  description: "Inspired by learning from an expert"
+  mood_type: positive
+  intensity: 2
+  duration: 240
+  mood_gain: 20

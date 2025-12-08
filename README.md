@@ -162,8 +162,17 @@ end
   - Career Development (1 template)
 
 - **[Templates README](templates/README.md)** - Guide to using templates, customization options, and best practices
+- **[Advanced Patterns & Best Practices](JPE_ADVANCED_PATTERNS.md)** - Deep-dive into advanced design patterns, optimization techniques, and complex interactions for experienced creators
 
 ### For Developers
+- **[JPE API Reference](JPE_API_REFERENCE.md)** - Complete API documentation for integrating JPE into other applications:
+  - Core engine API with build pipeline
+  - File type support API
+  - Error handling and recovery
+  - Plugin development guide
+  - Type reference and data models
+  - Code examples and best practices
+
 - **[Sims 4 File Type Support](SIMS4_FILE_TYPE_SUPPORT.md)** - Complete documentation for the extensible file type support system:
   - File type detection and validation
   - Handler architecture

@@ -26,6 +26,8 @@ class Theme:
     highlight_color: str
     disabled_bg: str
     disabled_fg: str
+    # Font pack associated with this theme (optional)
+    font_pack: Optional[str] = None
 
 
 class ThemeManager:
@@ -39,7 +41,7 @@ class ThemeManager:
     
     def _load_themes(self):
         """Load all 10 hyper unique themes."""
-        # Theme 1: Cyberpunk Neon
+        # Theme 1: Cyberpunk Neon - Uses developer font pack for high contrast
         self.themes["cyberpunk"] = Theme(
             name="cyberpunk",
             display_name="Cyberpunk Neon",
@@ -57,10 +59,11 @@ class ThemeManager:
             text_fg="#00ff8c",
             highlight_color="#ff0080",
             disabled_bg="#2a2a2a",
-            disabled_fg="#5a5a5a"
+            disabled_fg="#5a5a5a",
+            font_pack="developer"
         )
-        
-        # Theme 2: Sunset Glow
+
+        # Theme 2: Sunset Glow - Uses readable font pack for warm contrast
         self.themes["sunset"] = Theme(
             name="sunset",
             display_name="Sunset Glow",
@@ -78,10 +81,11 @@ class ThemeManager:
             text_fg="#d62828",
             highlight_color="#f7a072",
             disabled_bg="#f5d0a0",
-            disabled_fg="#d0a070"
+            disabled_fg="#d0a070",
+            font_pack="readable"
         )
-        
-        # Theme 3: Forest Twilight
+
+        # Theme 3: Forest Twilight - Uses classic font pack for contrast
         self.themes["forest"] = Theme(
             name="forest",
             display_name="Forest Twilight",
@@ -99,10 +103,11 @@ class ThemeManager:
             text_fg="#e0f7c4",
             highlight_color="#8bc34a",
             disabled_bg="#5d8046",
-            disabled_fg="#a0c080"
+            disabled_fg="#a0c080",
+            font_pack="classic"
         )
-        
-        # Theme 4: Ocean Depths
+
+        # Theme 4: Ocean Depths - Uses modern font pack for contrast
         self.themes["ocean"] = Theme(
             name="ocean",
             display_name="Ocean Depths",
@@ -120,10 +125,11 @@ class ThemeManager:
             text_fg="#a7c5eb",
             highlight_color="#4fc3f7",
             disabled_bg="#3c4e6e",
-            disabled_fg="#7c9eb0"
+            disabled_fg="#7c9eb0",
+            font_pack="modern"
         )
-        
-        # Theme 5: Vintage Paper
+
+        # Theme 5: Vintage Paper - Uses readable font pack for vintage feel
         self.themes["vintage"] = Theme(
             name="vintage",
             display_name="Vintage Paper",
@@ -141,10 +147,11 @@ class ThemeManager:
             text_fg="#5c4b51",
             highlight_color="#d4c4a8",
             disabled_bg="#e0d0b0",
-            disabled_fg="#a09070"
+            disabled_fg="#a09070",
+            font_pack="readable"
         )
-        
-        # Theme 6: Cosmic Void
+
+        # Theme 6: Cosmic Void - Uses developer font pack for cosmic contrast
         self.themes["cosmic"] = Theme(
             name="cosmic",
             display_name="Cosmic Void",
@@ -162,10 +169,11 @@ class ThemeManager:
             text_fg="#c5b3e6",
             highlight_color="#9c8ce6",
             disabled_bg="#201a46",
-            disabled_fg="#605a80"
+            disabled_fg="#605a80",
+            font_pack="developer"
         )
-        
-        # Theme 7: Tropical Paradise
+
+        # Theme 7: Tropical Paradise - Uses modern font pack for vibrant contrast
         self.themes["tropical"] = Theme(
             name="tropical",
             display_name="Tropical Paradise",
@@ -183,10 +191,11 @@ class ThemeManager:
             text_fg="#2e7d32",
             highlight_color="#8bc34a",
             disabled_bg="#d0e0b0",
-            disabled_fg="#90b070"
+            disabled_fg="#90b070",
+            font_pack="modern"
         )
-        
-        # Theme 8: Ice Crystal
+
+        # Theme 8: Ice Crystal - Uses classic font pack for clean contrast
         self.themes["ice"] = Theme(
             name="ice",
             display_name="Ice Crystal",
@@ -204,10 +213,11 @@ class ThemeManager:
             text_fg="#006064",
             highlight_color="#80deea",
             disabled_bg="#b0e0e6",
-            disabled_fg="#70a0a6"
+            disabled_fg="#70a0a6",
+            font_pack="classic"
         )
-        
-        # Theme 9: Desert Sunset
+
+        # Theme 9: Desert Sunset - Uses readable font pack for warm contrast
         self.themes["desert"] = Theme(
             name="desert",
             display_name="Desert Sunset",
@@ -225,10 +235,11 @@ class ThemeManager:
             text_fg="#8d6e63",
             highlight_color="#d7ccc8",
             disabled_bg="#e0c0a0",
-            disabled_fg="#b09070"
+            disabled_fg="#b09070",
+            font_pack="readable"
         )
-        
-        # Theme 10: Midnight Purple
+
+        # Theme 10: Midnight Purple - Uses developer font pack for contrast
         self.themes["midnight"] = Theme(
             name="midnight",
             display_name="Midnight Purple",
@@ -246,7 +257,8 @@ class ThemeManager:
             text_fg="#b388eb",
             highlight_color="#e040fb",
             disabled_bg="#3a2653",
-            disabled_fg="#7a6a93"
+            disabled_fg="#7a6a93",
+            font_pack="developer"
         )
     
     def apply_theme(self, widget: tk.Widget, theme_name: str):
@@ -262,6 +274,14 @@ class ThemeManager:
 
         # Apply theme to the widget and its children recursively
         self._apply_theme_recursive(widget, theme)
+
+        # Integrate with font system if available
+        try:
+            from fonts.font_integration import apply_font_integration
+            apply_font_integration(widget, theme_name)
+        except ImportError:
+            # If font integration isn't available, just apply the theme
+            pass
 
     def _configure_ttk_styles(self, theme: Theme):
         """Configure ttk styles for the theme."""

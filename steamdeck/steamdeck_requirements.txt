@@ -1,0 +1,25 @@
+# Steam Deck Requirements for JPE Sims 4 Mod Translator UI/UX Enhancements
+
+# Core dependencies (already in main requirements)
+requests>=2.25.0
+toml>=0.10.0
+cryptography>=3.4.0
+psutil>=5.8.0
+
+# UI/UX Enhancement Dependencies (critical for Steam Deck UI)
+ttkbootstrap>=1.10.0    # Modern styling for Steam Deck optimized UI
+rich>=12.0.0            # Enhanced console output for debugging
+watchdog>=2.1.0         # File monitoring for auto-build on Steam Deck
+Pillow>=8.0.0           # Image processing for visual components
+Pygments>=2.7.0         # Syntax highlighting for code editor
+pyperclip>=1.8.0        # Clipboard access for Steam Deck input
+
+# Steam Deck specific dependencies
+pygame>=2.0.0           # Controller and display integration
+evdev>=1.6.0            # Linux input device support (for Steam Deck)
+python-xlib>=0.31      # X11 library for Linux compatibility
+
+# Additional dependencies for better Steam Deck experience
+cffi>=1.14.0            # Foreign function interface for system optimizations
+numpy>=1.21.0           # Numerical computations (for performance)
+pandas>=1.3.0           # Data processing (for mod analytics)

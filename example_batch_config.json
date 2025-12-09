@@ -1,0 +1,97 @@
+[
+  {
+    "type": "icon",
+    "args": {
+      "text": "A",
+      "color_token": "primary_blue",
+      "background_color_token": "bg_light",
+      "font_token": "body",
+      "output_base_name": "batch_icon_A"
+    },
+    "output_format": "png",
+    "multires": true,
+    "resolutions": [
+      {"size": 16, "output_suffix": "_16"},
+      {"size": 32, "output_suffix": "_32"},
+      {"size": 48, "output_suffix": "_48"}
+    ]
+  },
+  {
+    "type": "icon",
+    "args": {
+      "size": 48,
+      "text": "SVG",
+      "color_token": "primary_blue",
+      "background_color_token": "info",
+      "output_base_name": "batch_icon_svg"
+    },
+    "output_format": "svg",
+    "multires": true,
+    "resolutions": [
+      {"size": 24, "output_suffix": "_24"},
+      {"size": 48, "output_suffix": "_48"}
+    ]
+  },
+  {
+    "type": "icon",
+    "args": {
+      "size": 64,
+      "svg_source_path": "generated_assets/dummy_info_icon.svg",
+      "color_token": "error",
+      "background_color_token": "bg_medium",
+      "output_base_name": "batch_icon_from_source_error"
+    },
+    "output_format": "svg",
+    "multires": true,
+    "resolutions": [
+      {"size": 32, "output_suffix": "_32"},
+      {"size": 64, "output_suffix": "_64"}
+    ]
+  },
+  {
+    "type": "button",
+    "args": {
+      "width": 100, "height": 40, "label": "Batch Btn",
+      "bg_color_token": "success", "text_color_token": "bg_light",
+      "font_token": "body", "border_radius_token": "small",
+      "output_base_name": "batch_button_success"
+    },
+    "output_format": "png",
+    "multires": true,
+    "resolutions": [
+      {"scale": 0.5, "output_suffix": "_small"},
+      {"scale": 1.0, "output_suffix": "_normal"},
+      {"scale": 1.5, "output_suffix": "_large"}
+    ]
+  },
+  {
+    "type": "slider",
+    "args": {
+      "width": 200, "height": 40, "track_height": 8, "thumb_size": 20,
+      "value": 75, "min_value": 0, "max_value": 100,
+      "track_color_token": "bg_medium", "fill_color_token": "primary_blue",
+      "thumb_color_token": "primary_blue", "track_border_radius_token": "small",
+      "output_base_name": "batch_slider_75"
+    },
+    "output_format": "png",
+    "multires": true,
+    "resolutions": [
+      {"scale": 0.8, "output_suffix": "_compact"},
+      {"scale": 1.0, "output_suffix": "_default"}
+    ]
+  },
+  {
+    "type": "checkbox_radio",
+    "args": {
+      "control_type": "checkbox", "size": 20, "label": "Batch Checkbox",
+      "state": "checked", "font_token": "body", "border_width": 2,
+      "output_base_name": "batch_checkbox_checked"
+    },
+    "output_format": "png",
+    "multires": true,
+    "resolutions": [
+      {"scale": 0.8, "output_suffix": "_compact"},
+      {"scale": 1.0, "output_suffix": "_default"}
+    ]
+  }
+]

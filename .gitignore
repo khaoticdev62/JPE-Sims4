@@ -72,3 +72,6 @@ Thumbs.db
 # .idea is tracked for repo structure, but we can exclude some files
 .idea/workspace.xml
 .idea/*.iml
+
+.gemini/
+gha-creds-*.json

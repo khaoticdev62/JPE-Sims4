@@ -42,6 +42,9 @@ setup(
         "toml>=0.10.0",
         "cryptography>=3.4.0",
         "psutil>=5.8.0; sys_platform != 'emscripten'",
+        "ttkbootstrap>=1.10.0",
+        "rich>=12.0.0",
+        "watchdog>=2.1.0",
     ],
     entry_points={
         "console_scripts": [

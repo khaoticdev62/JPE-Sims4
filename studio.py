@@ -18,6 +18,7 @@ from ui.ui_enhancements import initialize_enhanced_ui, create_app_menu
 from branding.icons import icon_module, branding_manager
 from onboarding.the_codex import CodexManager
 from onboarding.the_codex_gui import launch_the_codex
+from ui.template_builder import TemplateBuilder
 
 
 class DesktopStudio:
@@ -41,6 +42,14 @@ class DesktopStudio:
         self._initialize_theme()
 
         self.setup_ui()
+
+    def new_from_template(self):
+        """Open the template builder window."""
+        if not self.project_root:
+            messagebox.showwarning("No Project", "Please open a project first.")
+            return
+        template_builder = TemplateBuilder(self.root, self.project_root)
+        template_builder.grab_set()
 
     def _initialize_theme(self):
         """Initialize and apply the default theme."""

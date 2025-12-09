@@ -13,16 +13,16 @@ def initialize_enhanced_ui(root_window, studio_app):
     theme_name = config_manager.get("ui.theme", "default")
     if theme_name in theme_manager.themes:
         theme_manager.apply_theme(root_window, theme_name)
-    
+
     # Set up accessibility features
     setup_accessibility_features(root_window)
-    
+
     # Enhance all tooltips and labels for better UX
     enhance_tooltips(studio_app)
-    
+
     # Apply visual enhancements
     apply_visual_enhancements(root_window)
-    
+
     log_info("Enhanced UI initialized successfully")
 
 
@@ -148,6 +148,7 @@ def create_app_menu(window, studio_app):
     file_menu = tk.Menu(menubar, tearoff=0)
     menubar.add_cascade(label="File", menu=file_menu)
     file_menu.add_command(label="New Project", command=studio_app.new_project, accelerator="Ctrl+N")
+    file_menu.add_command(label="New from Template...", command=studio_app.new_from_template)
     file_menu.add_command(label="Open Project...", command=studio_app.open_project, accelerator="Ctrl+O")
     file_menu.add_separator()
     file_menu.add_command(label="Save", command=studio_app.save_file, accelerator="Ctrl+S")
@@ -186,3 +187,47 @@ def enhance_dialogs():
     # This function would define enhanced dialog patterns
     # with consistent styling and behavior
     pass
+
+
+def integrate_font_settings(notebook):
+    """Integrate font settings into the application's settings notebook."""
+    try:
+        from fonts.font_settings import create_font_settings_tab
+        font_tab, font_panel = create_font_settings_tab(notebook)
+
+        # Add the font settings tab to the notebook
+        # In the actual application, this would be inserted at an appropriate position
+        # For now, we'll just return the tab and panel for the calling code to handle
+        return font_tab, font_panel
+    except ImportError:
+        # If font settings aren't available, return None
+        return None, None
+
+
+def get_current_font_info():
+    """Get information about the current font settings."""
+    try:
+        from fonts.font_integration import get_current_font_info
+        return get_current_font_info()
+    except ImportError:
+        # If font integration isn't available, return basic info
+        return {
+            "pack_name": "Not Available",
+            "pack_description": "Font pack system not loaded",
+            "fonts": {}
+        }
+
+
+def integrate_visual_font_selector(notebook):
+    """Integrate visual font selector into the application's settings notebook."""
+    try:
+        from fonts.visual_font_selector import create_visual_font_selector_tab
+        visual_selector_tab, visual_selector = create_visual_font_selector_tab(notebook)
+
+        # Add the visual font selector tab to the notebook
+        # In the actual application, this would be inserted at an appropriate position
+        # For now, we'll just return the tab and panel for the calling code to handle
+        return visual_selector_tab, visual_selector
+    except ImportError:
+        # If visual font selector isn't available, return None
+        return None, None

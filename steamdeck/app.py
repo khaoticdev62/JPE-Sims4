@@ -8,6 +8,29 @@ from pathlib import Path
 import pygame  # For Steam Deck gamepad integration
 from typing import List, Dict, Optional
 
+# Import new UI/UX enhancements
+try:
+    import ttkbootstrap as ttkb
+    from ttkbootstrap import Style
+    from ui.advanced_ui_components import (
+        ModernMenuBar,
+        ModernStatusBar,
+        ModernTabView,
+        ModernToolbox,
+        ModernPropertyPanel,
+        ModernDataGrid,
+        ModernProgressBar,
+        ModernNotificationPanel
+    )
+    from ui.rich_console import RichConsoleManager
+    from ui.enhanced_theme_manager import enhanced_ui_manager
+    from ui.file_monitor import file_monitor
+    UI_X_AVAILABLE = True
+except ImportError:
+    UI_X_AVAILABLE = False
+    # Fallback to pygame for UI if ttkbootstrap not available
+    pass
+
 from engine.engine import TranslationEngine, EngineConfig
 from diagnostics.errors import BuildReport, EngineError, ErrorSeverity, ErrorCategory
 
@@ -16,38 +39,156 @@ class SteamDeckApp:
     """Steam Deck optimized application for JPE Sims 4 Mod Translator."""
     
     def __init__(self):
+        # Check if we're actually on Steam Deck
+        self.is_steam_deck = self._detect_steam_deck()
+
+        # Initialize UI/UX enhancements first (try tkinter/ttkbootstrap for better experience)
+        if UI_X_AVAILABLE:
+            # Use enhanced UI with ttkbootstrap for better Steam Deck experience
+            try:
+                import tkinter as tk
+                from tkinter import ttk
+
+                # Initialize the main window using tkinter for enhanced UI
+                self.root = tk.Tk()
+                self.root.title("JPE Sims 4 Mod Translator - Steam Deck Edition")
+
+                # Set display resolution appropriate for Steam Deck
+                if self.is_steam_deck:
+                    self.root.geometry("1280x800")  # Steam Deck's native resolution
+                else:
+                    self.root.geometry("1200x800")
+
+                # Apply enhanced theme
+                enhanced_ui_manager.enhanced_theme_manager.apply_enhanced_theme(
+                    self.root,
+                    "darkly"  # Use dark theme for better battery life on OLED
+                )
+
+                # Initialize enhanced UI components
+                self.setup_enhanced_ui()
+
+                # Set a flag to indicate we're using enhanced UI
+                self.use_enhanced_ui = True
+
+            except Exception:
+                # Fallback to pygame if tkinter/ttkbootstrap initialization fails
+                self._init_pygame_ui()
+                self.use_enhanced_ui = False
+        else:
+            # Use pygame UI as fallback
+            self._init_pygame_ui()
+            self.use_enhanced_ui = False
+
+        # Initialize core components
+        self.project_root = None
+        self.engine = None
+        self.current_report = None
+
+        # Initialize UI state
+        self.current_screen = "main_menu"  # main_menu, project_list, project_editor, build_view
+
+        # Start file monitor if available
+        if UI_X_AVAILABLE:
+            try:
+                file_monitor.start_monitoring()
+            except:
+                pass  # File monitoring not available
+
+    def _init_pygame_ui(self):
+        """Initialize pygame UI as fallback."""
         # Initialize pygame for controller support
         pygame.init()
         pygame.joystick.init()
-        
-        # Check if we're actually on Steam Deck
-        self.is_steam_deck = self._detect_steam_deck()
-        
+
         # Initialize the Steam Deck display (480x854 rotated)
         if self.is_steam_deck:
             self.screen = pygame.display.set_mode((854, 480), pygame.FULLSCREEN)
         else:
             self.screen = pygame.display.set_mode((1200, 800))
-        
+
         pygame.display.set_caption("JPE Sims 4 Mod Translator - Steam Deck Edition")
-        
+
         # Initialize controller
         self.controller = None
         if pygame.joystick.get_count() > 0:
             self.controller = pygame.joystick.Joystick(0)
             self.controller.init()
-        
-        # Initialize core components
-        self.project_root = None
-        self.engine = None
-        self.current_report = None
-        
+
         # Initialize UI components
         self.font = pygame.font.SysFont(None, 24)
         self.small_font = pygame.font.SysFont(None, 18)
-        
-        # Initialize UI state
-        self.current_screen = "main_menu"  # main_menu, project_list, project_editor, build_view
+
+    def setup_enhanced_ui(self):
+        """Setup enhanced UI components with modern styling."""
+        # Create main application structure
+        main_paned = ttkb.PanedWindow(self.root, orient=tk.HORIZONTAL)
+        main_paned.pack(fill=tk.BOTH, expand=True)
+
+        # Left panel (toolbox)
+        self.left_frame = ttkb.Frame()
+        main_paned.add(self.left_frame, weight=1)
+
+        # Center panel (main content)
+        self.center_frame = ttkb.Frame()
+        main_paned.add(self.center_frame, weight=3)
+
+        # Right panel (properties)
+        self.right_frame = ttkb.Frame()
+        main_paned.add(self.right_frame, weight=1)
+
+        # Create menu bar
+        self.menu_bar = ModernMenuBar(self.root)
+        self.menu_bar.add_menu("File", [
+            {"label": "New Project", "command": self.new_project},
+            {"label": "Open Project", "command": self.open_project},
+            {"separator": True},
+            {"label": "Exit", "command": self.quit_app}
+        ])
+
+        # Create status bar
+        self.status_bar = ModernStatusBar(self.root)
+        self.status_bar.set_status("JPE Sims 4 Mod Translator - Ready for Steam Deck")
+
+        # Create toolbox
+        self.toolbox = ModernToolbox(self.left_frame)
+
+        # Create property panel
+        self.property_panel = ModernPropertyPanel(self.right_frame)
+
+        # Create tab view for main content
+        self.tab_view = ModernTabView(self.center_frame)
+
+        # Create notification panel
+        self.notification_panel = ModernNotificationPanel(self.center_frame)
+
+        # Create progress bar
+        self.progress_bar = ModernProgressBar(self.center_frame, mode="determinate")
+
+        # Add sample content to property panel
+        self.property_panel.add_property("Project Name", "text", "")
+        self.property_panel.add_property("Author", "text", "")
+        self.property_panel.add_property("Version", "text", "1.0.0")
+        self.property_panel.add_property("Enabled", "boolean", True)
+
+    def new_project(self):
+        """Handle new project creation."""
+        if UI_X_AVAILABLE:
+            self.notification_panel.add_notification("Creating new project...", "info", 3000)
+        print("Creating new project...")
+
+    def open_project(self):
+        """Handle opening a project."""
+        if UI_X_AVAILABLE:
+            self.notification_panel.add_notification("Opening project...", "info", 3000)
+        print("Opening project...")
+
+    def quit_app(self):
+        """Handle application exit."""
+        if UI_X_AVAILABLE and hasattr(self, 'file_monitor'):
+            file_monitor.stop_monitoring()
+        self.root.quit()
+        self.root.destroy()
         self.selected_item_index = 0
         self.scroll_offset = 0
 
@@ -490,26 +631,31 @@ class SteamDeckApp:
     
     def run(self):
         """Main application loop."""
-        clock = pygame.time.Clock()
-        
-        while self.running:
-            self.handle_controller_input()
-            
-            # Draw current screen
-            if self.current_screen == "main_menu":
-                self.draw_main_menu()
-            elif self.current_screen == "project_list":
-                self.draw_project_list()
-            elif self.current_screen == "project_editor":
-                self.draw_project_editor()
-            elif self.current_screen == "build_view":
-                self.draw_build_view()
-            
-            pygame.display.flip()
-            clock.tick(60)  # 60 FPS
-        
-        pygame.quit()
-        sys.exit()
+        if hasattr(self, 'use_enhanced_ui') and self.use_enhanced_ui:
+            # Use enhanced UI with tkinter/ttkbootstrap
+            self.root.mainloop()
+        else:
+            # Use pygame UI as fallback
+            clock = pygame.time.Clock()
+
+            while self.running:
+                self.handle_controller_input()
+
+                # Draw current screen
+                if self.current_screen == "main_menu":
+                    self.draw_main_menu()
+                elif self.current_screen == "project_list":
+                    self.draw_project_list()
+                elif self.current_screen == "project_editor":
+                    self.draw_project_editor()
+                elif self.current_screen == "build_view":
+                    self.draw_build_view()
+
+                pygame.display.flip()
+                clock.tick(60)  # 60 FPS
+
+            pygame.quit()
+            sys.exit()
 
 
 def main():

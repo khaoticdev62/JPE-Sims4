@@ -8,8 +8,8 @@ from pathlib import Path
 from datetime import datetime
 import json
 
-from ..diagnostics.errors import EngineError, ErrorCategory, ErrorSeverity
-from ..diagnostics.comprehensive import ExceptionTranslator
+from .errors import EngineError, ErrorCategory, ErrorSeverity
+from .comprehensive import ExceptionTranslator
 
 
 class SentinelExceptionLogger:

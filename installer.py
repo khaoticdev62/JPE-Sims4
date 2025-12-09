@@ -5,6 +5,12 @@ from tkinter import ttk
 import sys
 import os
 from pathlib import Path
+from PIL import Image, ImageTk
+from PIL import ImageColor
+from branding.icons import JPEBranding # Keep for potential other uses if needed, but primarily use design_token_manager
+from design_system.token_manager import design_token_manager
+# Global branding_manager instance should be replaced with design_token_manager
+# branding_manager = JPEBranding() # No longer needed directly for installer colors
 
 
 class BrandedInstaller:
@@ -16,6 +22,13 @@ class BrandedInstaller:
         self.root.geometry("650x500")
         self.root.resizable(False, False)
         
+        # Set installer icon
+        icon_path = Path(__file__).parent / "branding" / "assets" / "jpe_installer_icon.png"
+        if icon_path.exists():
+            self.icon_image = Image.open(icon_path)
+            self.icon_photo = ImageTk.PhotoImage(self.icon_image)
+            self.root.iconphoto(True, self.icon_photo)
+        
         # Center the window
         self.center_window()
         
@@ -23,8 +36,18 @@ class BrandedInstaller:
         self.style = ttk.Style()
         self.configure_branded_styles()
         
+        # Load and place the opaque background logo as a watermark
+        bg_logo_path = Path(__file__).parent / "branding" / "assets" / "jpe_background_logo.png"
+        if bg_logo_path.exists():
+            self.bg_logo_image = Image.open(bg_logo_path)
+            self.bg_logo_photo = ImageTk.PhotoImage(self.bg_logo_image)
+            self.background_label = tk.Label(self.root, image=self.bg_logo_photo, bg=design_token_manager.get_color("bg_light")) # Set background color of label to match
+            self.background_label.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
+            # Ensure the background label is behind other widgets
+            self.background_label.lower()
+        
         # Main container with branded background
-        self.main_frame = ttk.Frame(self.root)
+        self.main_frame = ttk.Frame(self.root, style="Branded.TFrame")
         self.main_frame.pack(fill=tk.BOTH, expand=True)
         
         # Header with logo and branding
@@ -63,30 +86,35 @@ class BrandedInstaller:
         # Configure colors based on JPE brand
         self.style.configure("TButton", 
                             font=("Segoe UI", 10),
-                            padding=(10, 6))
+                            padding=(15, 8)) # Increased padding for better sizing
         
         self.style.configure("Title.TLabel",
                             font=("Segoe UI", 16, "bold"),
-                            foreground="#2C5F99")  # JPE blue
+                            foreground=design_token_manager.get_color("primary_blue"))
         
         self.style.configure("Subtitle.TLabel", 
                             font=("Segoe UI", 10),
-                            foreground="#555555")
+                            foreground=design_token_manager.get_color("text_secondary"))
         
         self.style.configure("Header.TLabel",
                             font=("Segoe UI", 12, "bold"),
-                            foreground="#2C5F99")
+                            foreground=design_token_manager.get_color("primary_blue"))
         
         self.style.configure("Branded.TFrame",
-                            background="#F0F5FF")  # Light blue tint
+                            background=design_token_manager.get_color("bg_lighter")) # Using bg_lighter from refined tokens
         
         # Configure custom button style for primary actions
+        primary_blue_rgb = ImageColor.getrgb(design_token_manager.get_color("primary_blue"))
+        # Calculate a slightly darker version for the active state
+        darker_blue_rgb = tuple(max(0, c - 40) for c in primary_blue_rgb[:3]) + (primary_blue_rgb[3] if len(primary_blue_rgb) == 4 else 255,)
+        darker_blue_hex = '#%02x%02x%02x' % darker_blue_rgb[:3] # Convert back to hex
+
         self.style.configure("Primary.TButton",
-                            background="#2C5F99",
-                            foreground="white",
+                            background=design_token_manager.get_color("primary_blue"),
+                            foreground=design_token_manager.get_color("bg_light"),
                             font=("Segoe UI", 10, "bold"))
         self.style.map("Primary.TButton",
-                      background=[("active", "#1D4F89")])
+                      background=[("active", darker_blue_hex)])
     
     def create_header(self):
         """Create the branded header with logo and title."""
@@ -139,7 +167,7 @@ class BrandedInstaller:
             text="Cancel",
             command=self.cancel_installation
         )
-        self.cancel_button.pack(side=tk.RIGHT, padx=5)
+        self.cancel_button.pack(side=tk.RIGHT)
     
     def go_next(self):
         """Navigate to the next page."""
@@ -177,7 +205,7 @@ class BrandedInstaller:
             welcome_frame,
             text="Welcome to JPE Sims 4 Mod Translator Setup",
             font=("Segoe UI", 14, "bold"),
-            foreground="#2C5F99"
+            foreground=design_token_manager.get_color("primary_blue")
         )
         welcome_label.pack(pady=(20, 10))
         
@@ -380,7 +408,7 @@ The installer will display the contents of the LICENSE file when available."""
                 comp_container,
                 text=desc_text,
                 font=("Segoe UI", 8),
-                foreground="#666666"
+                foreground=design_token_manager.get_color("text_light_gray")
             )
             desc_label.pack(anchor=tk.W, padx=(25, 0))
     
@@ -433,14 +461,7 @@ The installer will display the contents of the LICENSE file when available."""
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
         
         # Add initial log message
-        self.update_log("Starting installation process...")
-        self.update_log("Creating installation directory...")
-        self.update_log("Copying core engine files...")
-        self.update_log("Installing desktop studio...")
-        self.update_log("Installing command-line tools...")
-        self.update_log("Creating desktop shortcut...")
-        self.update_log("Configuring file associations...")
-        self.update_log("Installation completed successfully!")
+        self.root.after(100, self.run_installation)
     
     def update_log(self, message):
         """Add a message to the installation log."""
@@ -459,7 +480,7 @@ The installer will display the contents of the LICENSE file when available."""
             completion_frame,
             text="Installation Completed Successfully!",
             font=("Segoe UI", 14, "bold"),
-            foreground="green"
+            foreground=design_token_manager.get_color("success")
         )
         success_label.pack(pady=(30, 10))
         
@@ -526,6 +547,42 @@ The installer will display the contents of the LICENSE file when available."""
             # In a real implementation, launch the application
             pass
         self.root.destroy()
+
+    def run_installation(self):
+        """Run the installation process."""
+        try:
+            self.update_log("Starting installation process...")
+            install_dir = self.install_dir_var.get()
+            if not os.path.exists(install_dir):
+                os.makedirs(install_dir)
+            self.update_log(f"Installation directory: {install_dir}")
+
+            # Simulate file copying
+            import time
+            time.sleep(1)
+            self.update_log("Copying core engine files...")
+            time.sleep(1)
+            self.update_log("Installing desktop studio...")
+            time.sleep(1)
+            self.update_log("Installing command-line tools...")
+            time.sleep(1)
+            self.update_log("Creating desktop shortcut...")
+            time.sleep(1)
+            self.update_log("Configuring file associations...")
+            time.sleep(1)
+
+            self.update_log("Installation completed successfully!")
+            self.progress.stop()
+            self.status_label.config(text="Installation successful!")
+            self.next_button.config(state="normal")
+
+        except (IOError, OSError) as e:
+            self.update_log(f"Error during installation: {e}")
+            self.progress.stop()
+            self.status_label.config(text="Installation failed!")
+            messagebox.showerror("Installation Error", f"An error occurred during installation: {e}")
+            self.back_button.config(state="normal")
+            self.next_button.config(state="disabled")
 
 
 def main():

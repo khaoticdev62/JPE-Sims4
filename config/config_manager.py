@@ -44,6 +44,12 @@ class ConfigManager:
                 "word_wrap": True,
                 "auto_save": True
             },
+            "fonts": {
+                "current_pack": "modern",
+                "size_multiplier": 1.0,
+                "custom_font_paths": [],
+                "override_defaults": {}
+            },
             "security": {
                 "api_keys_encrypted": {},
                 "max_file_size": 50 * 1024 * 1024,  # 50MB

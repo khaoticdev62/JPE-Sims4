@@ -4,6 +4,9 @@ import unittest
 import sys
 import os
 
+# Add the project root to the Python path
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), 'src')))
+
 def run_all_tests():
     """Run all tests in the test suite."""
     # Discover and run all tests

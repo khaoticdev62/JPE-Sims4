@@ -19,29 +19,79 @@ from branding.icons import icon_module, branding_manager
 from onboarding.the_codex import CodexManager
 from onboarding.the_codex_gui import launch_the_codex
 from ui.template_builder import TemplateBuilder
+# Removed studio_ide import to prevent circular dependency issues
+# The enhanced studio components will be integrated directly in the UI
 
 
 class DesktopStudio:
     """Main desktop studio application for JPE Sims 4 Mod Translator."""
-    
-    def __init__(self):
-        self.root = tk.Tk()
-        self.root.title("JPE Sims 4 Mod Translator Studio")
-        self.root.geometry("1200x800")
 
-        # Configure application state
-        self.project_root: Optional[Path] = None
-        self.engine: Optional[TranslationEngine] = None
-        self.current_report: Optional[BuildReport] = None
+    def __init__(self):
+        # Initialize the base window with ttkbootstrap if available
+        if ttkb_available:
+            self.root = ttkb.Window(themename="flatly")
+            self.root.title("JPE Studio - Sims 4 Mod Translator")
+        else:
+            self.root = tk.Tk()
+            self.root.title("JPE Studio - Sims 4 Mod Translator")
+
+        self.root.geometry("1400x900")
 
         # Initialize onboarding system
         self.onboarding_manager = OnboardingManager()
         self.doc_provider = StudioDocumentationProvider(self.onboarding_manager)
 
+        # Set up application state
+        self.project_root: Optional[Path] = None
+        self.engine: Optional[TranslationEngine] = None
+        self.current_report: Optional[BuildReport] = None
+
+        # Initialize enhancement systems
+        self._initialize_enhancement_systems()
+
         # Apply theme to the root window
         self._initialize_theme()
 
-        self.setup_ui()
+        # Set up UI with enhancements
+        self.setup_enhanced_ui()
+
+    def _initialize_enhancement_systems(self):
+        """Initialize all enhancement systems."""
+        # Attempt to initialize enhancement systems with graceful fallbacks
+        try:
+            from engine.enhanced_validation import RealTimeValidator
+            self.real_time_validator = RealTimeValidator(Path('.'))
+        except ImportError:
+            self.real_time_validator = None
+            print("Enhanced validation system not available")
+
+        try:
+            from engine.predictive_coding import PredictiveCodingSystem
+            self.predictive_coding_system = PredictiveCodingSystem()
+        except ImportError:
+            self.predictive_coding_system = None
+            print("Predictive coding system not available")
+
+        try:
+            from ai.ai_assistant import JPEAIAssistant
+            self.ai_assistant = JPEAIAssistant()
+        except ImportError:
+            self.ai_assistant = None
+            print("AI assistant system not available")
+
+        try:
+            from cloud.api import CloudAPI
+            self.cloud_api = CloudAPI()
+        except ImportError:
+            self.cloud_api = None
+            print("Cloud API not available")
+
+        try:
+            from collaboration.system import CollaborationManager
+            self.collaboration_manager = CollaborationManager()
+        except ImportError:
+            self.collaboration_manager = None
+            print("Collaboration system not available")
 
     def new_from_template(self):
         """Open the template builder window."""

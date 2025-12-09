@@ -522,6 +522,36 @@ except ImportError as e:
 
     file_monitor = FileMonitor()
 
+# Import JetBrains-style installer components
+try:
+    from .jetbrains_installer import (
+        ColoredConsole,
+        JetBrainsInstaller,
+        create_jetbrains_style_installer
+    )
+except ImportError as e:
+    print(f"Warning: Could not import JetBrains installer components: {e}")
+
+    # Define placeholders
+    class ColoredConsole:
+        def __init__(self, parent, **kwargs):
+            pass
+        def write(self, text, tag=None):
+            pass
+        def clear(self):
+            pass
+        def color_line(self, line_num, tag):
+            pass
+
+    class JetBrainsInstaller:
+        def __init__(self):
+            pass
+        def run(self):
+            pass
+
+    def create_jetbrains_style_installer():
+        pass
+
 # Import advanced UI components
 try:
     from .advanced_ui_components import (
@@ -785,4 +815,9 @@ __all__ = [
     'JPEWorkspaceTabs',
     'JPEStudioFramework',
     'create_jpe_studio',
+
+    # JetBrains-style Installer Components
+    'ColoredConsole',
+    'JetBrainsInstaller',
+    'create_jetbrains_style_installer'
 ]

@@ -5,11 +5,15 @@ from setuptools import setup, find_packages
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
-with open("pyproject.toml", "r", encoding="utf-8") as fh:
-    # Extract version from pyproject.toml
-    import toml
-    pyproject_data = toml.loads(fh.read())
-    version = pyproject_data["project"]["version"]
+try:
+    with open("pyproject.toml", "r", encoding="utf-8") as fh:
+        # Extract version from pyproject.toml
+        import toml
+        pyproject_data = toml.loads(fh.read())
+        version = pyproject_data["project"]["version"]
+except (ImportError, FileNotFoundError, KeyError):
+    # Fallback if toml module or pyproject.toml is not available during install
+    version = "0.1.0"  # Default version
 
 setup(
     name="jpe-sims4",
@@ -45,6 +49,17 @@ setup(
         "ttkbootstrap>=1.10.0",
         "rich>=12.0.0",
         "watchdog>=2.1.0",
+        "Pillow>=8.0.0",
+        "aiohttp>=3.8.0",
+        "websockets>=10.0",
+        "matplotlib>=3.5.0",
+        "plotly>=5.0.0",
+        "regex>=2021.0.0",
+        "textdistance>=4.2.0",
+        "fuzzywuzzy>=0.18.0",
+        "opencv-python>=4.5.0",
+        "imageio>=2.9.0",
+        "numpy>=1.21.0",
     ],
     entry_points={
         "console_scripts": [
@@ -64,6 +79,35 @@ setup(
         ],
         "gui": [
             "Pillow>=8.0.0",
+            "ttkbootstrap>=1.10.0",
+            "matplotlib>=3.5.0",
+            "plotly>=5.0.0",
+        ],
+        "enhanced": [
+            "ttkbootstrap>=1.10.0",
+            "rich>=12.0.0",
+            "watchdog>=2.1.0",
+            "Pillow>=8.0.0",
+        ],
+        "ai": [
+            "torch>=1.9.0",
+            "transformers>=4.10.0",
+            "scikit-learn>=1.0.0",
+            "numpy>=1.21.0",
+        ],
+        "cloud": [
+            "aiohttp>=3.8.0",
+            "websockets>=10.0",
+        ],
+        "text_processing": [
+            "regex>=2021.0.0",
+            "textdistance>=4.2.0",
+            "fuzzywuzzy>=0.18.0",
+        ],
+        "image_processing": [
+            "opencv-python>=4.5.0",
+            "imageio>=2.9.0",
+            "Pillow>=8.0.0",
         ],
         "all": [
             "pytest>=6.0",
@@ -73,6 +117,19 @@ setup(
             "black>=21.0.0",
             "flake8>=3.8.0",
             "Pillow>=8.0.0",
+            "ttkbootstrap>=1.10.0",
+            "rich>=12.0.0",
+            "watchdog>=2.1.0",
+            "aiohttp>=3.8.0",
+            "websockets>=10.0",
+            "matplotlib>=3.5.0",
+            "plotly>=5.0.0",
+            "regex>=2021.0.0",
+            "textdistance>=4.2.0",
+            "fuzzywuzzy>=0.18.0",
+            "opencv-python>=4.5.0",
+            "imageio>=2.9.0",
+            "numpy>=1.21.0",
         ],
     },
 )

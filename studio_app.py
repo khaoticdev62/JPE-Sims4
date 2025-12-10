@@ -5,10 +5,13 @@ This module serves as the main application entry point that integrates all UI/UX
 """
 
 import tkinter as tk
-from tkinter import ttk, messagebox, filedialog
+from tkinter import ttk, messagebox, filedialog, simpledialog
 import sys
 from pathlib import Path
 import json
+import os
+import subprocess
+import traceback # Import traceback to get detailed error info
 from typing import Optional, Dict, Any, List
 
 # Try to import enhancement components with graceful fallbacks
@@ -36,6 +39,27 @@ from ui.theme_manager import theme_manager
 from ui.ui_enhancements import initialize_enhanced_ui, create_app_menu
 
 
+class ConsoleRedirector:
+    def __init__(self, text_widget, autoscroll=True):
+        self.text_widget = text_widget
+        self.autoscroll = autoscroll
+        self.original_stdout = sys.stdout # Store original stdout
+        self.original_stderr = sys.stderr # Store original stderr
+
+    def write(self, message):
+        self.text_widget.configure(state=tk.NORMAL)
+        self.text_widget.insert(tk.END, message)
+        if self.autoscroll:
+            self.text_widget.see(tk.END)
+        self.text_widget.configure(state=tk.DISABLED)
+        # Also print to original stdout/stderr
+        self.original_stdout.write(message) 
+
+    def flush(self):
+        # Required for file-like objects
+        self.original_stdout.flush()
+
+
 class StudioApplication:
     """Main studio application that integrates all UI/UX enhancements."""
     
@@ -53,6 +77,11 @@ class StudioApplication:
         self.project_root: Optional[Path] = None
         self.engine: Optional[TranslationEngine] = None
         self.current_report: Optional[BuildReport] = None
+        self.project_tree_menu: Optional[tk.Menu] = None
+        self.active_file: Optional[Path] = None
+        self.editor_filename_var = tk.StringVar(value="Untitled")
+        self.encoding_var = tk.StringVar(value="utf-8")
+        self.wrap_var = tk.BooleanVar(value=False)
         
         # Enhancement system flags
         self.enhancements_initialized = False
@@ -70,101 +99,54 @@ class StudioApplication:
                 self.setup_basic_ui()
         else:
             self.setup_basic_ui()
-    
+
+        # Redirect stdout and stderr to console_text
+        # This needs to be done *after* setup_basic_ui which creates console_text
+        self.root.update_idletasks() # Ensure console_text is created
+        if hasattr(self, 'console_text'):
+            self.console_redirector = ConsoleRedirector(self.console_text)
+            sys.stdout = self.console_redirector
+            sys.stderr = self.console_redirector
+            self.show_console_message("Console output redirected.")
+
     def setup_basic_ui(self):
         """Setup basic UI when enhanced components aren't available."""
         # Create main layout
         main_frame = ttk.Frame(self.root)
         main_frame.pack(fill=tk.BOTH, expand=True)
-        
-        # Create menu
-        menubar = tk.Menu(self.root)
-        self.root.config(menu=menubar)
-        
-        file_menu = tk.Menu(menubar, tearoff=0)
-        menubar.add_cascade(label="File", menu=file_menu)
-        file_menu.add_command(label="New Project", command=self.new_project)
-        file_menu.add_command(label="Open Project...", command=self.open_project)
-        file_menu.add_separator()
-        file_menu.add_command(label="Exit", command=self.root.quit)
 
-        tools_menu = tk.Menu(menubar, tearoff=0)
-        menubar.add_cascade(label="Tools", menu=tools_menu)
-        tools_menu.add_command(label="Settings", command=self.open_settings_window)
-
-        plugins_menu = tk.Menu(menubar, tearoff=0)
-        menubar.add_cascade(label="Plugins", menu=plugins_menu)
-        plugins_menu.add_command(label="Open Plugins", command=self.open_plugins_window)
-        
-        # Create a simple text editor for basic functionality
-        self.editor_frame = ttk.Frame(main_frame)
-        self.editor_frame.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
-        
-        # Create text editor
-        self.text_editor = tk.Text(
-            self.editor_frame,
-            wrap=tk.NONE,
-            undo=True,
-            font=("Consolas", 10) if ttkb_available else ("TkDefaultFont", 10)
-        )
-        v_scrollbar = ttk.Scrollbar(self.editor_frame, orient=tk.VERTICAL, command=self.text_editor.yview)
-        h_scrollbar = ttk.Scrollbar(self.editor_frame, orient=tk.HORIZONTAL, command=self.text_editor.xview)
-        
-        self.text_editor.configure(yscrollcommand=v_scrollbar.set, xscrollcommand=h_scrollbar.set)
-        
-        self.text_editor.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-        v_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-        h_scrollbar.pack(side=tk.BOTTOM, fill=tk.X)
-        
-        # Create basic status bar
-        self.status_var = tk.StringVar(value="Ready")
-        status_bar = ttk.Label(
-            self.root,
-            textvariable=self.status_var,
-            relief=tk.SUNKEN,
-            anchor=tk.W
-        )
-        status_bar.pack(side=tk.BOTTOM, fill=tk.X)
     
     def open_settings_window(self):
+        engine = self._ensure_engine()
+        if not engine:
+            return
+        
         settings_win = tk.Toplevel(self.root)
         settings_win.title("Settings")
         settings_win.geometry("800x600")
 
-        notebook = ttk.Notebook(settings_win)
-        notebook.pack(fill="both", expand=True, padx=10, pady=10)
-
-        if not self.engine:
-            self.engine = TranslationEngine()
-
-        plugin_manager = self.engine._plugin_manager
-        plugins = plugin_manager.get_all_plugins()
-
-        for plugin in plugins:
-            if hasattr(plugin, "get_settings_panel") and callable(plugin.get_settings_panel):
-                panel = plugin.get_settings_panel(notebook)
-                if panel:
-                    notebook.add(panel, text=plugin.name())
+        self._build_plugin_notebook(
+            parent=settings_win,
+            plugin_manager=engine._plugin_manager,
+            getter_name="get_settings_panel",
+            empty_message="No plugin settings panels are available."
+        )
 
     def open_plugins_window(self):
+        engine = self._ensure_engine()
+        if not engine:
+            return
+        
         plugins_win = tk.Toplevel(self.root)
         plugins_win.title("Plugins")
         plugins_win.geometry("1000x800")
 
-        notebook = ttk.Notebook(plugins_win)
-        notebook.pack(fill="both", expand=True, padx=10, pady=10)
-
-        if not self.engine:
-            self.engine = TranslationEngine()
-
-        plugin_manager = self.engine._plugin_manager
-        plugins = plugin_manager.get_all_plugins()
-
-        for plugin in plugins:
-            if hasattr(plugin, "get_main_ui") and callable(plugin.get_main_ui):
-                panel = plugin.get_main_ui(notebook)
-                if panel:
-                    notebook.add(panel, text=plugin.name())
+        self._build_plugin_notebook(
+            parent=plugins_win,
+            plugin_manager=engine._plugin_manager,
+            getter_name="get_main_ui",
+            empty_message="No plugin UIs are available."
+        )
 
     def setup_enhanced_ui(self):
         """Setup enhanced UI with all enhancement features."""
@@ -181,6 +163,7 @@ class StudioApplication:
             # Connect our core functionality to the enhanced UI
             self.text_editor = self.enhanced_ide.text_editor
             self.project_tree = self.enhanced_ide.project_tree
+            self._bind_project_tree_events()
             
             # Initialize enhancement systems
             self.initialize_enhancement_systems()
@@ -273,7 +256,12 @@ class StudioApplication:
         if not self.project_root or not hasattr(self, 'project_tree'):
             return
         
-        # Clear existing tree
+        project_files = sorted(self.project_root.rglob('*.jpe'))
+        if not project_files:
+            self._render_project_tree_placeholder("No .jpe files found in this project yet.")
+            return
+        
+        # Clear existing tree content
         for item in self.project_tree.get_children():
             self.project_tree.delete(item)
         
@@ -281,21 +269,15 @@ class StudioApplication:
         root_node = self.project_tree.insert('', 'end', text=self.project_root.name, values=[str(self.project_root)])
         
         # Add project files
-        for file_path in self.project_root.rglob('*.jpe'):
-            relative_path = file_path.relative_to(self.project_root.parent)
+        for file_path in project_files:
+            relative_path = file_path.relative_to(self.project_root)
             parent = root_node
+            current_path = self.project_root
             
             # Create nodes for each directory in the path
-            path_parts = relative_path.parts[1:-1]  # Skip project name and filename
-            for part in path_parts:
-                found = False
-                for child in self.project_tree.get_children(parent):
-                    if self.project_tree.item(child, 'text') == part:
-                        parent = child
-                        found = True
-                        break
-                if not found:
-                    parent = self.project_tree.insert(parent, 'end', text=part)
+            for part in relative_path.parts[:-1]:
+                current_path = current_path / part
+                parent = self._find_or_create_tree_directory(parent, part, current_path)
             
             # Add file
             self.project_tree.insert(parent, 'end', text=file_path.name, values=[str(file_path)])

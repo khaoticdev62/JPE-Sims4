@@ -91,11 +91,11 @@ the user's local files and user‑provided metadata only.
 - Deep integration with JPE translation pipeline for JPE/JPE‑XML output.
 - Diagnostics and CRM view for TS4Rebels mods.
 - Privacy‑aware exports.
+- **Direct download of mod files from specified URLs (e.g., TS4Rebels links) into the vault.**
 
 ### 4.2 Out of Scope (v1)
 
 - Multiple TS4Rebels vaults per user profile (may be added later).
-- Direct HTTP/API integration with TS4Rebels infrastructure.
 - Automatic installation or removal of mods in the Sims 4 game folder.
 - Any remote telemetry beyond local logs (the plugin is designed for offline use).
 
@@ -307,6 +307,25 @@ the user's local files and user‑provided metadata only.
   - Diagnostics retention (days).
   - Privacy options (checkboxes).
   - Conflict detection ruleset.
+
+### 5.7 Download Management
+
+**FR-D1: Direct Download from URL**
+- The user must be able to provide a valid URL to a mod file (e.g., direct download link to a .package or .zip file) or a web page containing such links.
+- The plugin shall attempt to download the file(s) into a user-specified subfolder within the configured TS4Rebels vault.
+- Support for common download types: direct file links (e.g., `.package`, `.ts4script`, `.zip`, `.rar`), and basic parsing of common mod host pages (e.g., CurseForge, Mod The Sims) to extract direct download links. (Note: comprehensive parsing of all mod host pages is out of scope for v1, focusing on direct links or simple extractions).
+
+**FR-D2: Download Progress and Status**
+- The UI must display real-time progress for active downloads (e.g., percentage complete, download speed, estimated time remaining).
+- The plugin shall log the status of each download (success, failed, cancelled) and any associated errors.
+
+**FR-D3: Vault Integration Post-Download**
+- Upon successful download, if the downloaded file is an archive (`.zip`, `.rar`), the plugin shall offer to automatically extract its contents into a new subfolder within the vault.
+- After extraction (or direct download of a mod file), the `VaultIndexer` shall be triggered to perform an incremental scan of the download target directory to include the new mod(s) in the vault index.
+
+**FR-D4: Download UI Access**
+- A dedicated section or button in the main plugin UI (e.g., in the `PluginFrame`) shall be provided to access download functionality.
+- This UI should include an input field for the URL, a browse button for the target subfolder, and a "Download" button.
 
 ## 6. Data & Domain Model
 

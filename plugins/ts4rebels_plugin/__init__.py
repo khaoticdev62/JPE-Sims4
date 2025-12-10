@@ -1,9 +1,15 @@
 """TS4Rebels plugin package for the JPE Sims 4 Mod Translation Suite."""
 
 from typing import Any
+from pathlib import Path
 from .. import HasSettingsPanel, HasMainUI
 from .settings_ui import SettingsPanel
 from .ui import PluginFrame
+from config.config_manager import config_manager
+
+# --- Helper Function for Config ---
+def _get_ts4rebels_config_value(key: str, default: Any = None) -> Any:
+    return config_manager.get(f"ts4rebels.{key}", default)
 
 # --- Main Plugin Class ---
 
@@ -30,7 +36,9 @@ class TS4RebelsPlugin(HasSettingsPanel, HasMainUI):
         """
         Return the main UI widget for this plugin.
         """
-        return PluginFrame(parent)
+        vault_path_str = _get_ts4rebels_config_value("vault_path", "")
+        vault_root = Path(vault_path_str) if vault_path_str else Path.cwd() # Fallback to current working directory
+        return PluginFrame(parent, vault_root=vault_root)
 
 # --- Other Components ---
 

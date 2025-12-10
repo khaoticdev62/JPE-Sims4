@@ -9,11 +9,12 @@ import asyncio
 import json
 import os
 from pathlib import Path
-from typing import Dict, List, Optional, Any, Callable
+from typing import Dict, List, Optional, Any, Callable, Tuple
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 import hashlib
 import aiohttp
+import requests
 from enum import Enum
 
 from diagnostics.errors import EngineError, ErrorCategory, ErrorSeverity
@@ -53,6 +54,161 @@ class CloudFileSyncState:
     cloud_hash: Optional[str]
     sync_status: str  # "synced", "local_changed", "cloud_changed", "conflict"
     last_synced: Optional[datetime] = None
+
+
+@dataclass(slots=True)
+class CloudSyncError:
+    """Represents an error returned by the cloud sync API."""
+    code: str
+    message: str
+
+
+@dataclass(slots=True)
+class CloudProjectMetadata:
+    """Lightweight metadata for a synced project."""
+    project_id: str
+    name: str
+    version: str
+    author: str
+    created_at: str
+    modified_at: str
+    last_sync_at: Optional[str]
+    file_hash: str
+    size_bytes: int
+
+
+@dataclass(slots=True)
+class SyncResult:
+    """Represents the outcome of an API operation."""
+    success: bool
+    message: str
+    errors: List[CloudSyncError]
+    project_metadata: Optional[CloudProjectMetadata] = None
+
+
+class CloudSyncAPI:
+    """Synchronous helper used by tests and lightweight tools."""
+
+    def __init__(self, api_base_url: str = "https://api.jpe-sims4.com", api_key: Optional[str] = None):
+        self.api_base_url = api_base_url.rstrip("/")
+        self.api_key = api_key or os.getenv("JPE_API_KEY")
+
+    def authenticate(self, username: str, password: str) -> bool:
+        """Authenticate the user and update the stored API key."""
+        payload = {"username": username, "password": password}
+        try:
+            response = requests.post(f"{self.api_base_url}/auth/login", json=payload, timeout=10)
+        except requests.RequestException:
+            return False
+
+        if response.status_code == 200:
+            data = response.json() or {}
+            token = data.get("token")
+            if token:
+                self.api_key = token
+            return True
+        return False
+
+    def upload_project(self, project_path: Path, username: str) -> SyncResult:
+        """Upload a project directory to the cloud service."""
+        errors: List[CloudSyncError] = []
+        if not project_path.exists() or not project_path.is_dir():
+            errors.append(CloudSyncError("PROJECT_NOT_FOUND", f"Directory '{project_path}' does not exist."))
+            return SyncResult(False, "Project directory was not found", errors)
+
+        project_files = list(project_path.glob("**/*"))
+        if not any(p.is_file() for p in project_files):
+            errors.append(CloudSyncError("PROJECT_EMPTY", "No files found in project directory."))
+            return SyncResult(False, "Project directory is empty", errors)
+
+        metadata = self._create_project_metadata(project_path, username)
+        payload = {
+            "project_id": metadata.project_id,
+            "name": metadata.name,
+            "version": metadata.version,
+            "author": metadata.author,
+            "files": self._serialize_project_files(project_path),
+        }
+
+        try:
+            response = requests.post(f"{self.api_base_url}/projects", json=payload, timeout=15)
+        except requests.RequestException as exc:
+            errors.append(CloudSyncError("UPLOAD_FAILED", str(exc)))
+            return SyncResult(False, "Project upload failed", errors)
+
+        if response.status_code == 200:
+            return SyncResult(True, "Project uploaded successfully", [], metadata)
+
+        errors.append(CloudSyncError("UPLOAD_FAILED", f"HTTP {response.status_code}"))
+        return SyncResult(False, "Project upload failed", errors)
+
+    def list_user_projects(self, username: str) -> Tuple[List[CloudProjectMetadata], List[CloudSyncError]]:
+        """List projects for the specific user."""
+        projects: List[CloudProjectMetadata] = []
+        errors: List[CloudSyncError] = []
+        try:
+            response = requests.get(f"{self.api_base_url}/users/{username}/projects", timeout=10)
+        except requests.RequestException as exc:
+            errors.append(CloudSyncError("LIST_FAILED", str(exc)))
+            return projects, errors
+
+        if response.status_code != 200:
+            errors.append(CloudSyncError("LIST_FAILED", f"HTTP {response.status_code}"))
+            return projects, errors
+
+        data = response.json() or {}
+        for item in data.get("projects", []):
+            projects.append(
+                CloudProjectMetadata(
+                    project_id=item.get("project_id", ""),
+                    name=item.get("name", ""),
+                    version=item.get("version", "0.0.0"),
+                    author=item.get("author", ""),
+                    created_at=item.get("created_at", ""),
+                    modified_at=item.get("modified_at", ""),
+                    last_sync_at=item.get("last_sync_at"),
+                    file_hash=item.get("file_hash", ""),
+                    size_bytes=int(item.get("size_bytes", 0)),
+                )
+            )
+        return projects, errors
+
+    def _serialize_project_files(self, project_path: Path) -> Dict[str, Dict[str, Any]]:
+        """Create a payload of project files and hashes."""
+        files: Dict[str, Dict[str, Any]] = {}
+        for file_path in project_path.rglob("*"):
+            if file_path.is_file():
+                relative = file_path.relative_to(project_path).as_posix()
+                content = file_path.read_bytes()
+                files[relative] = {
+                    "hash": hashlib.sha256(content).hexdigest(),
+                    "size": len(content),
+                }
+        return files
+
+    def _create_project_metadata(self, project_path: Path, username: str) -> CloudProjectMetadata:
+        """Generate metadata for a project path."""
+        hash_builder = hashlib.sha256()
+        size = 0
+        for file_path in sorted(project_path.rglob("*")):
+            if file_path.is_file():
+                content = file_path.read_bytes()
+                hash_builder.update(content)
+                size += len(content)
+
+        digest = hash_builder.hexdigest()
+        now = datetime.utcnow().isoformat()
+        return CloudProjectMetadata(
+            project_id=f"{username}_{project_path.name}",
+            name=project_path.name,
+            version="1.0.0",
+            author=username,
+            created_at=now,
+            modified_at=now,
+            last_sync_at=None,
+            file_hash=digest,
+            size_bytes=size,
+        )
 
 
 class CloudAPI:

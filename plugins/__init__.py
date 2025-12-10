@@ -54,8 +54,226 @@ class GeneratorPlugin(Plugin):
 
 
 class TransformPlugin(Plugin):
+
+
     """Plugin for transforming the IR in specific ways."""
+
+
     
+
+
     def transform(self, ir: ProjectIR) -> tuple[ProjectIR, List[EngineError]]:
+
+
         """Transform the IR and return the new IR and any errors."""
+
+
         ...
+
+
+
+
+
+
+
+
+class HasSettingsPanel(Plugin):
+
+
+
+
+
+
+
+
+    """
+
+
+
+
+
+
+
+
+    Protocol for plugins that have a settings panel.
+
+
+
+
+
+
+
+
+    """
+
+
+
+
+
+
+
+
+    def get_settings_panel(self, parent) -> Any:
+
+
+
+
+
+
+
+
+        """
+
+
+
+
+
+
+
+
+        Return a settings panel widget to be displayed in the UI.
+
+
+
+
+
+
+
+
+        'parent' is the parent widget to attach the panel to.
+
+
+
+
+
+
+
+
+        """
+
+
+
+
+
+
+
+
+        ...
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+class HasMainUI(Plugin):
+
+
+
+
+
+
+
+
+    """
+
+
+
+
+
+
+
+
+    Protocol for plugins that have a main UI component.
+
+
+
+
+
+
+
+
+    """
+
+
+
+
+
+
+
+
+    def get_main_ui(self, parent) -> Any:
+
+
+
+
+
+
+
+
+        """
+
+
+
+
+
+
+
+
+        Return the main UI widget for this plugin to be displayed in the main application.
+
+
+
+
+
+
+
+
+        'parent' is the parent widget to attach the UI to.
+
+
+
+
+
+
+
+
+        """
+
+
+
+
+
+
+
+
+        ...
+
+
+
+
+
+
+
+
+
+

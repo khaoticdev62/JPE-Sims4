@@ -1,0 +1,49 @@
+{
+  "vault_path": {
+    "type": "string",
+    "description": "Absolute path to the local TS4Rebels mod vault."
+  },
+  "vault_structure_preset": {
+    "type": "string",
+    "enum": [
+      "flat",
+      "by_creator",
+      "by_pack",
+      "mixed"
+    ],
+    "description": "How folder structure is interpreted for metadata inference."
+  },
+  "manifest_paths": {
+    "type": "array",
+    "items": {
+      "type": "string"
+    },
+    "description": "List of JSON/CSV manifest file paths."
+  },
+  "diagnostics_retention_days": {
+    "type": "integer",
+    "minimum": 1,
+    "description": "Number of days to retain diagnostics history."
+  },
+  "redact_local_paths_in_exports": {
+    "type": "boolean",
+    "description": "If true, removes local file paths from exported reports."
+  },
+  "redact_username_in_exports": {
+    "type": "boolean",
+    "description": "If true, strips usernames from paths and messages in exports."
+  },
+  "exclude_non_ts4rebels_mods_from_exports": {
+    "type": "boolean",
+    "description": "If true, exports only include mods in the TS4Rebels vault."
+  },
+  "conflict_ruleset": {
+    "type": "string",
+    "enum": [
+      "conservative",
+      "balanced",
+      "aggressive"
+    ],
+    "description": "Controls thresholds for conflict detection."
+  }
+}

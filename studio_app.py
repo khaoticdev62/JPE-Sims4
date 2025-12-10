@@ -87,6 +87,14 @@ class StudioApplication:
         file_menu.add_command(label="Open Project...", command=self.open_project)
         file_menu.add_separator()
         file_menu.add_command(label="Exit", command=self.root.quit)
+
+        tools_menu = tk.Menu(menubar, tearoff=0)
+        menubar.add_cascade(label="Tools", menu=tools_menu)
+        tools_menu.add_command(label="Settings", command=self.open_settings_window)
+
+        plugins_menu = tk.Menu(menubar, tearoff=0)
+        menubar.add_cascade(label="Plugins", menu=plugins_menu)
+        plugins_menu.add_command(label="Open Plugins", command=self.open_plugins_window)
         
         # Create a simple text editor for basic functionality
         self.editor_frame = ttk.Frame(main_frame)
@@ -118,6 +126,46 @@ class StudioApplication:
         )
         status_bar.pack(side=tk.BOTTOM, fill=tk.X)
     
+    def open_settings_window(self):
+        settings_win = tk.Toplevel(self.root)
+        settings_win.title("Settings")
+        settings_win.geometry("800x600")
+
+        notebook = ttk.Notebook(settings_win)
+        notebook.pack(fill="both", expand=True, padx=10, pady=10)
+
+        if not self.engine:
+            self.engine = TranslationEngine()
+
+        plugin_manager = self.engine._plugin_manager
+        plugins = plugin_manager.get_all_plugins()
+
+        for plugin in plugins:
+            if hasattr(plugin, "get_settings_panel") and callable(plugin.get_settings_panel):
+                panel = plugin.get_settings_panel(notebook)
+                if panel:
+                    notebook.add(panel, text=plugin.name())
+
+    def open_plugins_window(self):
+        plugins_win = tk.Toplevel(self.root)
+        plugins_win.title("Plugins")
+        plugins_win.geometry("1000x800")
+
+        notebook = ttk.Notebook(plugins_win)
+        notebook.pack(fill="both", expand=True, padx=10, pady=10)
+
+        if not self.engine:
+            self.engine = TranslationEngine()
+
+        plugin_manager = self.engine._plugin_manager
+        plugins = plugin_manager.get_all_plugins()
+
+        for plugin in plugins:
+            if hasattr(plugin, "get_main_ui") and callable(plugin.get_main_ui):
+                panel = plugin.get_main_ui(notebook)
+                if panel:
+                    notebook.add(panel, text=plugin.name())
+
     def setup_enhanced_ui(self):
         """Setup enhanced UI with all enhancement features."""
         # If we have access to the enhanced IDE, integrate it with our core functionality

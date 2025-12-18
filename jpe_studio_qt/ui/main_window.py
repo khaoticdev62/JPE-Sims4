@@ -34,6 +34,7 @@ from PySide6.QtWidgets import (
     QMainWindow,
     QMessageBox,
     QPushButton,
+    QSizePolicy,
     QTreeWidget,
     QTreeWidgetItem,
     QScrollArea,
@@ -46,23 +47,29 @@ from PySide6.QtWidgets import (
     QTableWidgetItem,
     QTextEdit,
     QToolButton,
+    QTreeWidgetItemIterator,
     QVBoxLayout,
     QWidget,
 )
 
+from jpe_studio_qt.design_system import DESIGN
 from jpe_studio_qt.ui.components import (
-    CardFrame, H1, H2, Muted, BadgeLabel, FAB, SearchBar,
+    CardFrame, H1, H2, MaterialIcon, Muted, BadgeLabel, FAB, SearchBar,
     EmptyStateWidget, ProgressCard, ChipButton, set_toolbutton_icon
 )
 from jpe_studio_qt.ui.code_editor import CodeEditor
 from jpe_studio_qt.ui.pages.docs_hub import DocsHubPage
 from jpe_studio_qt.ui.pages.about import AboutSystemInfoPage
+from jpe_studio_qt.ui.pages.dashboard2 import Dashboard2Page
 from jpe_studio_qt.ui.pages.project_detail import ProjectDetailPage
 from jpe_studio_qt.ui.pages.explorer2 import Explorer2Page
 from jpe_studio_qt.ui.pages.plugins_marketplace2_page import PluginsMarketplace2Page
+from jpe_studio_qt.ui.pages.settings2 import Settings2Page
+from jpe_studio_qt.ui.pages.build_history2 import BuildHistory2Page
+from jpe_studio_qt.ui.pages.diagnostics_tab2 import DiagnosticsTab2Page
 from jpe_studio_qt.ui.diagnostics_pane import GlobalDiagnosticsPane
 from jpe_studio_qt.ui.entity_detail_dialog import EntityDetailDialog, EntityRef
-from jpe_studio_qt.ui.pages.entity_jpe_view import EntityJpeViewPage, EntityEditorModel
+from jpe_studio_qt.ui.pages.entity_jpe_view import EntityJpeViewPage
 
 
 class _WorkerSignals(QObject):
@@ -112,8 +119,8 @@ class MainWindow(QMainWindow):
         topbar = QFrame()
         topbar.setObjectName("Topbar")
         topbar_l = QHBoxLayout(topbar)
-        topbar_l.setContentsMargins(14, 10, 14, 10)
-        topbar_l.setSpacing(10)
+        topbar_l.setContentsMargins(DESIGN.spacing.md, DESIGN.spacing.sm, DESIGN.spacing.md, DESIGN.spacing.sm)  # 14,10,14,10px margins
+        topbar_l.setSpacing(DESIGN.spacing.sm)  # 10px spacing
 
         self.breadcrumb = QLabel("Home")
         self.breadcrumb.setObjectName("Muted")
@@ -161,11 +168,13 @@ class MainWindow(QMainWindow):
 
         sidebar = QFrame()
         sidebar.setObjectName("Sidebar")
-        sidebar.setFixedWidth(320)
+        sidebar.setMaximumWidth(320)
+        sidebar.setMinimumWidth(200)  # Allow sidebar to shrink on smaller screens
+        sidebar.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self.sidebar = sidebar
         s_l = QVBoxLayout(sidebar)
-        s_l.setContentsMargins(18, 18, 18, 18)
-        s_l.setSpacing(14)
+        s_l.setContentsMargins(DESIGN.spacing.lg, DESIGN.spacing.lg, DESIGN.spacing.lg, DESIGN.spacing.lg)  # 18px margins
+        s_l.setSpacing(DESIGN.spacing.md)  # 14px spacing
 
         brand = QFrame()
         brand_l = QHBoxLayout(brand)
@@ -205,6 +214,7 @@ class MainWindow(QMainWindow):
 
         self.nav_buttons: list[QToolButton] = []
         self.stack = QStackedWidget()
+        self.stack.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
         def nav(label: str, idx: int, icon: QStyle.StandardPixmap) -> QToolButton:
             b = QToolButton()
@@ -274,7 +284,8 @@ class MainWindow(QMainWindow):
         # Command palette (matches `keyboard_shortcuts_&_command_palette`).
         self._palette = CommandPaletteDialog(self)
         QShortcut(QKeySequence("Ctrl+K"), self, activated=self._open_command_palette)
-        QShortcut(QKeySequence("Ctrl+P"), self, activated=self._open_command_palette)
+        # Assets use Ctrl+P for file search in the editor sidebar.
+        QShortcut(QKeySequence("Ctrl+P"), self, activated=self._focus_workspace_file_search)
 
     def _open_command_palette(self) -> None:
         try:
@@ -282,9 +293,24 @@ class MainWindow(QMainWindow):
         except Exception:
             return
 
+    def _focus_workspace_file_search(self) -> None:
+        try:
+            self._select_page(2)
+        except Exception:
+            return
+        try:
+            self.workspace_page.focus_file_search()
+        except Exception:
+            return
+
     def _build_pages(self) -> None:
         # 0 Dashboard
-        self.stack.addWidget(self._page_home())
+        self.dashboard_page = Dashboard2Page()
+        self.dashboard_page.request_nav_index.connect(self._select_page)
+        self.dashboard_page.request_import.connect(self._open_import)
+        self.dashboard_page.request_open_project_json.connect(lambda p: self._open_project_json(Path(p)))
+        self.dashboard_page.request_open_project_detail_json.connect(lambda p: self._open_project_detail_json(Path(p)))
+        self.stack.addWidget(self.dashboard_page)
         # 1 Projects (Explorer)
         self.explorer_page = Explorer2Page()
         self.explorer_page.request_translate.connect(lambda: self._select_page(2))
@@ -297,13 +323,14 @@ class MainWindow(QMainWindow):
         self.workspace_page.save_requested.connect(self._save_project)
         self.stack.addWidget(self.workspace_page)
         # 3 Issues
-        self.qa_page = QAPage()
+        self.qa_page = DiagnosticsTab2Page()
         self.qa_page.goto_segment.connect(self._goto_segment)
         self.stack.addWidget(self.qa_page)
         # 4 Build
-        self.build_page = BuildPage()
+        self.build_page = BuildHistory2Page()
         self.build_page.request_build_folder.connect(self._build_folder)
         self.build_page.request_build_zip.connect(self._build_zip)
+        self.build_page.request_open_settings.connect(lambda: self._select_page(11))
         self.stack.addWidget(self.build_page)
         # 5 Plugins
         self.plugins_page = PluginsMarketplace2Page()
@@ -328,7 +355,8 @@ class MainWindow(QMainWindow):
         self.entity_jpe_page.back_requested.connect(lambda: self._select_page(9))
         self.stack.addWidget(self.entity_jpe_page)
         # 11 Settings
-        self.settings_page = SettingsPage()
+        self.settings_page = Settings2Page()
+        self.settings_page.request_back.connect(lambda: self._select_page(0))
         self.settings_page.apply_settings.connect(self._apply_settings)
         self.stack.addWidget(self.settings_page)
 
@@ -452,7 +480,7 @@ class MainWindow(QMainWindow):
         for i, b in enumerate(self.nav_buttons):
             b.setChecked(i == idx)
         try:
-            self.btn_settings.setChecked(idx == 8)
+            self.btn_settings.setChecked(idx == 11)
         except Exception:
             pass
 
@@ -476,6 +504,12 @@ class MainWindow(QMainWindow):
             pass
 
     def _render_recents(self) -> None:
+        try:
+            if hasattr(self, "dashboard_page") and hasattr(self.dashboard_page, "set_recents"):
+                self.dashboard_page.set_recents([str(p) for p in (self._recents or [])])
+                return
+        except Exception:
+            pass
         if hasattr(self, "recents_cards"):
             layout = self.recents_cards
             while layout.count():
@@ -1501,14 +1535,14 @@ class CommandPaletteDialog(QDialog):
         cmds: list[dict[str, object]] = [
             {"group": "FILE OPERATIONS", "name": "Save Project", "key": "Ctrl+S", "chip": "CORE", "fn": getattr(parent, "_save_project", None)},
             {"group": "FILE OPERATIONS", "name": "Save Project As", "key": "Ctrl+Shift+S", "chip": "CORE", "fn": getattr(parent, "save_project_as", None)},
-            {"group": "FILE OPERATIONS", "name": "Open…", "key": "Ctrl+O", "chip": "CORE", "fn": getattr(parent, "_open_any", None)},
+            {"group": "FILE OPERATIONS", "name": "Open", "key": "Ctrl+O", "chip": "CORE", "fn": getattr(parent, "_open_any", None)},
             {"group": "NAVIGATION", "name": "Go to Dashboard", "key": "", "chip": "VIEW", "fn": lambda: getattr(parent, "_select_page")(0)},
             {"group": "NAVIGATION", "name": "Go to Projects", "key": "", "chip": "VIEW", "fn": lambda: getattr(parent, "_select_page")(1)},
             {"group": "NAVIGATION", "name": "Go to Translate", "key": "", "chip": "VIEW", "fn": lambda: getattr(parent, "_select_page")(2)},
             {"group": "NAVIGATION", "name": "Go to Issues", "key": "", "chip": "VIEW", "fn": lambda: getattr(parent, "_select_page")(3)},
             {"group": "NAVIGATION", "name": "Go to Build", "key": "", "chip": "VIEW", "fn": lambda: getattr(parent, "_select_page")(4)},
             {"group": "NAVIGATION", "name": "Go to Plugins", "key": "", "chip": "VIEW", "fn": lambda: getattr(parent, "_select_page")(5)},
-            {"group": "NAVIGATION", "name": "Go to Settings", "key": "", "chip": "VIEW", "fn": lambda: getattr(parent, "_select_page")(8)},
+            {"group": "NAVIGATION", "name": "Go to Settings", "key": "", "chip": "VIEW", "fn": lambda: getattr(parent, "_select_page")(11)},
         ]
         if self._has_project:
             cmds.append(
@@ -1580,22 +1614,100 @@ class WorkspacePage(QWidget):
         self._project: Project | None = None
         self._visible_segments: list[dict[str, object]] = []
         self._current_segment_id: str | None = None
+        self._file_scope: str | None = None
+        self._open_files_mru: list[str] = []
         self._output_collapsed = False
+        self._left_sidebar_visible = True
+        self._split_sizes: list[int] | None = None
 
-        root = QVBoxLayout(self)
-        root.setContentsMargins(24, 24, 24, 24)
+        outer = QVBoxLayout(self)
+        outer.setContentsMargins(0, 0, 0, 0)
+        outer.setSpacing(0)
+
+        # Header aligned to `dual-pane_jpe/xml_editor_2` (desktop).
+        header = QFrame()
+        header.setFixedHeight(64)
+        header.setStyleSheet("background: rgba(24,16,35,1.0); border-bottom: 1px solid rgba(255,255,255,0.10);")
+        hl = QHBoxLayout(header)
+        hl.setContentsMargins(18, 10, 18, 10)
+        hl.setSpacing(14)
+
+        icon = QFrame()
+        icon.setFixedSize(40, 40)
+        icon.setStyleSheet(
+            "border-radius: 12px;"
+            "background: qlineargradient(x1:0,y1:0,x2:1,y2:1, stop:0 #8638fa, stop:1 #5b20b0);"
+            "border: 1px solid rgba(255,255,255,0.10);"
+        )
+        il = QHBoxLayout(icon)
+        il.setContentsMargins(0, 0, 0, 0)
+        il.addWidget(MaterialIcon("terminal", size_px=22), 0, Qt.AlignCenter)
+        hl.addWidget(icon)
+
+        title_col = QVBoxLayout()
+        title_col.setContentsMargins(0, 0, 0, 0)
+        title_col.setSpacing(3)
+        self.ws_breadcrumb = QLabel("Translate")
+        self.ws_breadcrumb.setStyleSheet("font-family: Consolas; font-size: 9pt; color: rgba(255,255,255,0.50);")
+        self.ws_file_title = QLabel("No file selected")
+        self.ws_file_title.setStyleSheet("font-size: 12pt; font-weight: 900;")
+        title_col.addWidget(self.ws_breadcrumb)
+        title_col.addWidget(self.ws_file_title)
+        hl.addLayout(title_col, 1)
+
+        view_wrap = QFrame()
+        view_wrap.setStyleSheet("background: rgba(0,0,0,0.20); border: 1px solid rgba(255,255,255,0.10); border-radius: 12px;")
+        vl = QHBoxLayout(view_wrap)
+        vl.setContentsMargins(4, 4, 4, 4)
+        vl.setSpacing(4)
+        self.btn_view_editor = QPushButton("Editor")
+        self.btn_view_editor.setCheckable(True)
+        self.btn_view_editor.setChecked(True)
+        self.btn_view_editor.setStyleSheet(
+            "QPushButton{padding: 6px 10px; border-radius: 9px; background: rgba(255,255,255,0.06);"
+            "border: 1px solid rgba(255,255,255,0.08); font-weight: 800;}"
+        )
+        self.btn_view_diff = QPushButton("Diff")
+        self.btn_view_diff.setObjectName("Chip")
+        self.btn_view_hist = QPushButton("History")
+        self.btn_view_hist.setObjectName("Chip")
+        vl.addWidget(self.btn_view_editor)
+        vl.addWidget(self.btn_view_diff)
+        vl.addWidget(self.btn_view_hist)
+        hl.addWidget(view_wrap)
+
+        tools = QFrame()
+        tools.setStyleSheet("background: rgba(0,0,0,0.20); border: 1px solid rgba(255,255,255,0.10); border-radius: 12px;")
+        tl = QHBoxLayout(tools)
+        tl.setContentsMargins(4, 4, 4, 4)
+        tl.setSpacing(4)
+        self.btn_toggle_sidebar = QToolButton()
+        self.btn_toggle_sidebar.setObjectName("IconButton")
+        set_toolbutton_icon(self.btn_toggle_sidebar, "view_sidebar", size_px=18)
+        self.btn_toggle_sidebar.setToolTip("Toggle Sidebar")
+        self.btn_toggle_sidebar.clicked.connect(self._toggle_left_sidebar)
+        tl.addWidget(self.btn_toggle_sidebar)
+        self.btn_split = QToolButton()
+        self.btn_split.setObjectName("IconButton")
+        set_toolbutton_icon(self.btn_split, "splitscreen", size_px=18)
+        self.btn_split.setToolTip("Toggle Output Split")
+        self.btn_split.clicked.connect(self._toggle_output_view)
+        tl.addWidget(self.btn_split)
+        hl.addWidget(tools)
+
+        self.btn_save_changes = QPushButton("Save Changes")
+        self.btn_save_changes.setObjectName("Primary")
+        self.btn_save_changes.clicked.connect(self.save_requested.emit)
+        hl.addWidget(self.btn_save_changes)
+
+        outer.addWidget(header)
+
+        body = QWidget()
+        outer.addWidget(body, 1)
+        root = QVBoxLayout(body)
+        root.setContentsMargins(18, 18, 18, 18)
         root.setSpacing(14)
 
-        # Translate header (kept compact; the shell carries the main header).
-        hdr = QHBoxLayout()
-        hdr.setSpacing(10)
-        hdr.addWidget(H2("Translate"))
-        hdr.addWidget(Muted("Dual-pane editor · segments · validation"))
-        hdr.addStretch(1)
-        root.addLayout(hdr)
-
-        filters = QHBoxLayout()
-        filters.setSpacing(10)
         self.search = QLineEdit()
         self.search.setPlaceholderText("Search segments...")
         self.search.textChanged.connect(self._render_segments)
@@ -1614,16 +1726,30 @@ class WorkspacePage(QWidget):
         self.btn_reviewed = QPushButton("Mark Reviewed")
         self.btn_reviewed.setObjectName("Chip")
         self.btn_reviewed.clicked.connect(self._mark_reviewed)
-        filters.addWidget(self.search, 1)
-        filters.addWidget(self.status)
-        filters.addWidget(self.btn_prev)
-        filters.addWidget(self.btn_next)
-        filters.addWidget(self.btn_next_untranslated)
-        filters.addWidget(self.btn_reviewed)
-        root.addLayout(filters)
 
+        # File search + tree (editor sidebar intent from `dual-pane_jpe/xml_editor_2`).
+        self.file_search = QLineEdit()
+        self.file_search.setPlaceholderText("Search files (Ctrl+P)...")
+        self.file_search.textChanged.connect(self._render_file_tree)
+        self.file_tree = QTreeWidget()
+        self.file_tree.setColumnCount(2)
+        self.file_tree.setHeaderHidden(True)
+        self.file_tree.setIndentation(14)
+        try:
+            self.file_tree.header().setStretchLastSection(False)
+            self.file_tree.header().setSectionResizeMode(0, QHeaderView.Stretch)
+            self.file_tree.header().setSectionResizeMode(1, QHeaderView.ResizeToContents)
+        except Exception:
+            pass
+        self.file_tree.itemSelectionChanged.connect(self._on_file_tree_selection_changed)
+        self.file_tree.setStyleSheet(
+            "QTreeWidget{background: rgba(0,0,0,0.10); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 6px;}"
+            "QTreeWidget::item{padding: 6px 8px; border-radius: 10px;}"
+            "QTreeWidget::item:selected{background: rgba(157,92,255,0.18); border-left: 3px solid #9d5cff;}"
+        )
         split = QSplitter(Qt.Horizontal)
         root.addWidget(split, 1)
+        self.main_split = split
 
         # Left: segment list.
         left = QFrame()
@@ -1631,13 +1757,42 @@ class WorkspacePage(QWidget):
         left_l = QVBoxLayout(left)
         left_l.setContentsMargins(10, 10, 10, 10)
         left_l.setSpacing(8)
+
+        file_search_wrap = QFrame()
+        file_search_wrap.setStyleSheet("background: rgba(0,0,0,0.18); border: 1px solid rgba(255,255,255,0.07); border-radius: 12px;")
+        fs_l = QHBoxLayout(file_search_wrap)
+        fs_l.setContentsMargins(10, 6, 10, 6)
+        fs_l.setSpacing(10)
+        fs_icon = MaterialIcon("search", size_px=18)
+        fs_icon.setStyleSheet("color: rgba(255,255,255,0.45);")
+        fs_l.addWidget(fs_icon)
+        self.file_search.setStyleSheet("border: none; background: transparent; padding: 8px 0px;")
+        fs_l.addWidget(self.file_search, 1)
+        left_l.addWidget(file_search_wrap)
+        left_l.addWidget(self.file_tree, 1)
+
+        # Sidebar controls (kept in the left pane for closer parity with the asset layout).
+        left_l.addWidget(self.search)
+        filter_row = QHBoxLayout()
+        filter_row.setSpacing(10)
+        filter_row.addWidget(self.status, 1)
+        filter_row.addWidget(self.btn_prev)
+        filter_row.addWidget(self.btn_next)
+        left_l.addLayout(filter_row)
+        nav_row = QHBoxLayout()
+        nav_row.setSpacing(10)
+        nav_row.addWidget(self.btn_next_untranslated, 1)
+        nav_row.addWidget(self.btn_reviewed)
+        left_l.addLayout(nav_row)
+
         self.progress = QLabel("No project loaded.")
         self.progress.setObjectName("Muted")
         left_l.addWidget(self.progress)
         self.segment_list = QListWidget()
         self.segment_list.currentItemChanged.connect(self._on_segment_selected)
-        left_l.addWidget(self.segment_list, 1)
+        left_l.addWidget(self.segment_list, 2)
         split.addWidget(left)
+        self.left_pane = left
 
         # Middle: true dual-pane editor (top editor + bottom output view).
         mid = QWidget()
@@ -1678,6 +1833,7 @@ class WorkspacePage(QWidget):
         self.btn_save_local.clicked.connect(self.save_requested.emit)
         eh_l.addWidget(self.btn_save_local)
         mid_l.addWidget(self.editor_header)
+        self.editor_header.setVisible(False)
 
         self.dual_split = QSplitter(Qt.Vertical)
         mid_l.addWidget(self.dual_split, 1)
@@ -1773,14 +1929,20 @@ class WorkspacePage(QWidget):
         self.pos_label.setStyleSheet("font-family: Consolas; font-size: 9pt; color: rgba(255,255,255,0.85);")
         self.encoding_label = QLabel("UTF-8")
         self.encoding_label.setStyleSheet("font-family: Consolas; font-size: 9pt; color: rgba(255,255,255,0.55);")
-        self.warn_label = QLabel("0 issues")
+        self.warn_icon = MaterialIcon("warning", size_px=16)
+        self.warn_icon.setStyleSheet("color: rgba(255,255,255,0.55);")
+        self.warn_label = QLabel("0 Issues")
         self.warn_label.setStyleSheet("font-family: Consolas; font-size: 9pt; color: rgba(255,255,255,0.55);")
+        self.sync_icon = MaterialIcon("check_circle", size_px=16)
+        self.sync_icon.setStyleSheet("color: #22c55e;")
         self.sync_label = QLabel("Sync OK")
         self.sync_label.setStyleSheet("font-family: Consolas; font-size: 9pt; color: #22c55e;")
         status_l.addWidget(self.pos_label)
         status_l.addWidget(self.encoding_label)
         status_l.addStretch(1)
+        status_l.addWidget(self.warn_icon)
         status_l.addWidget(self.warn_label)
+        status_l.addWidget(self.sync_icon)
         status_l.addWidget(self.sync_label)
         bot_l.addWidget(status_card)
 
@@ -1862,11 +2024,37 @@ class WorkspacePage(QWidget):
             self.btn_toggle_output.setToolTip("Expand Output View")
         self._output_collapsed = not self._output_collapsed
 
+    def _toggle_left_sidebar(self) -> None:
+        try:
+            left = getattr(self, "left_pane", None)
+            split = getattr(self, "main_split", None)
+            if left is None or split is None:
+                return
+            self._left_sidebar_visible = not self._left_sidebar_visible
+            left.setVisible(self._left_sidebar_visible)
+            if self._left_sidebar_visible:
+                split.setSizes(self._split_sizes or [340, 780, 360])
+            else:
+                try:
+                    self._split_sizes = list(split.sizes())
+                except Exception:
+                    self._split_sizes = None
+                split.setSizes([0, 900, 360])
+        except Exception:
+            return
+
     def set_project(self, project: Project) -> None:
         self._project = project
         self._current_segment_id = None
+        self._file_scope = None
+        self._open_files_mru = []
         self.search.setText("")
         self.status.setCurrentIndex(0)
+        try:
+            self.file_search.setText("")
+        except Exception:
+            pass
+        self._render_file_tree()
         self._render_segments()
         self._clear_editor()
 
@@ -1878,6 +2066,8 @@ class WorkspacePage(QWidget):
         out: list[dict[str, object]] = []
         for s in list(self._project.segments or []):
             if st != "All" and str(s.get("status") or "new") != st:
+                continue
+            if self._file_scope and str(s.get("file_path") or "") != self._file_scope:
                 continue
             if q:
                 hay = " ".join(
@@ -1894,6 +2084,219 @@ class WorkspacePage(QWidget):
                     continue
             out.append(s)
         return out
+
+    def focus_file_search(self) -> None:
+        try:
+            self.file_search.setFocus()
+            self.file_search.selectAll()
+        except Exception:
+            return
+
+    def _render_file_tree(self) -> None:
+        self.file_tree.blockSignals(True)
+        try:
+            self.file_tree.clear()
+            if not self._project:
+                return
+            q = self.file_search.text().strip().lower()
+
+            def include(path: str) -> bool:
+                if not q:
+                    return True
+                return q in path.lower() or q in Path(path).name.lower()
+
+            files = sorted(
+                {
+                    str(s.get("file_path") or "")
+                    for s in (self._project.segments or [])
+                    if str(s.get("file_path") or "").strip()
+                }
+            )
+            open_files = [p for p in self._open_files_mru if p in files]
+
+            active_file = self._file_scope
+            if not active_file and self._current_segment_id:
+                seg = self._seg_by_id(self._current_segment_id)
+                if seg:
+                    active_file = str(seg.get("file_path") or "") or None
+
+            def modified(path: str) -> bool:
+                for s in (self._project.segments or []):
+                    if str(s.get("file_path") or "") != path:
+                        continue
+                    if str(s.get("target") or "").strip():
+                        return True
+                return False
+
+            def add_group(title: str) -> QTreeWidgetItem:
+                it = QTreeWidgetItem([title, ""])
+                it.setFlags(Qt.ItemIsEnabled)
+                it.setForeground(0, Qt.gray)
+                it.setFirstColumnSpanned(True)
+                self.file_tree.addTopLevelItem(it)
+                return it
+
+            grp_open = add_group("OPEN EDITORS")
+            all_item = QTreeWidgetItem(["All Files", ""])
+            all_item.setData(0, Qt.UserRole, "__ALL__")
+            try:
+                all_item.setIcon(0, self.style().standardIcon(QStyle.SP_DirIcon))
+            except Exception:
+                pass
+            grp_open.addChild(all_item)
+            for p in open_files[:8]:
+                if not include(p):
+                    continue
+                child = QTreeWidgetItem([Path(p).name, ("M" if modified(p) else "")])
+                child.setData(0, Qt.UserRole, p)
+                child.setTextAlignment(1, Qt.AlignCenter)
+                child.setForeground(1, Qt.gray)
+                if modified(p):
+                    try:
+                        from PySide6.QtGui import QColor, QBrush, QFont
+
+                        child.setForeground(1, QColor("#ffffff"))
+                        child.setBackground(1, QBrush(QColor(157, 92, 255, 130)))
+                        f = QFont()
+                        f.setBold(True)
+                        f.setPointSize(8)
+                        child.setFont(1, f)
+                    except Exception:
+                        pass
+                try:
+                    child.setIcon(0, self.style().standardIcon(QStyle.SP_FileIcon))
+                except Exception:
+                    pass
+                if active_file and p == active_file:
+                    try:
+                        from PySide6.QtGui import QColor, QBrush
+
+                        child.setBackground(0, QBrush(QColor(157, 92, 255, 50)))
+                    except Exception:
+                        pass
+                grp_open.addChild(child)
+            grp_open.setExpanded(True)
+
+            grp_root = add_group("PROJECT ROOT")
+
+            def section_for(path: str) -> str:
+                p = path.replace("\\", "/").lower()
+                if "/generated" in p or p.startswith("generated/") or p.startswith("build/"):
+                    return "Generated Outputs"
+                if "/tuning" in p or p.startswith("tuning/"):
+                    return "Tuning Files"
+                if p.startswith("mods/") or "/mods/" in p:
+                    return "Mods"
+                if "/logs" in p or p.startswith("logs/"):
+                    return "Logs"
+                return "Project Root"
+
+            sections: dict[str, QTreeWidgetItem] = {}
+
+            def section_item(name: str) -> QTreeWidgetItem:
+                if name in sections:
+                    return sections[name]
+                it = QTreeWidgetItem([name, ""])
+                it.setFlags(Qt.ItemIsEnabled)
+                it.setForeground(0, Qt.gray)
+                it.setFirstColumnSpanned(True)
+                try:
+                    it.setIcon(0, self.style().standardIcon(QStyle.SP_DirIcon))
+                except Exception:
+                    pass
+                grp_root.addChild(it)
+                sections[name] = it
+                return it
+
+            folder_nodes: dict[tuple[int, str], QTreeWidgetItem] = {}
+
+            def ensure_folder(parent: QTreeWidgetItem, name: str) -> QTreeWidgetItem:
+                key = (id(parent), name)
+                ex = folder_nodes.get(key)
+                if ex is not None:
+                    return ex
+                it = QTreeWidgetItem([name, ""])
+                it.setData(0, Qt.UserRole, "")
+                try:
+                    it.setIcon(0, self.style().standardIcon(QStyle.SP_DirIcon))
+                except Exception:
+                    pass
+                parent.addChild(it)
+                folder_nodes[key] = it
+                return it
+
+            for p in files:
+                if not include(p):
+                    continue
+                sec = section_item(section_for(p))
+                parts = [x for x in p.replace("\\", "/").split("/") if x]
+                parent = sec
+                for d in parts[:-1]:
+                    parent = ensure_folder(parent, d)
+                ext = Path(p).suffix.lstrip(".").upper()[:4]
+                leaf = QTreeWidgetItem([parts[-1] if parts else p, ext])
+                leaf.setData(0, Qt.UserRole, p)
+                leaf.setTextAlignment(1, Qt.AlignCenter)
+                leaf.setForeground(1, Qt.gray)
+                try:
+                    leaf.setIcon(0, self.style().standardIcon(QStyle.SP_FileIcon))
+                except Exception:
+                    pass
+                if active_file and p == active_file:
+                    try:
+                        from PySide6.QtGui import QColor, QBrush
+
+                        leaf.setBackground(0, QBrush(QColor(157, 92, 255, 50)))
+                    except Exception:
+                        pass
+                parent.addChild(leaf)
+
+            grp_root.setExpanded(True)
+            for it in sections.values():
+                it.setExpanded(True)
+
+            # Reselect scope.
+            if self._file_scope:
+                self._select_file_in_tree(self._file_scope)
+            else:
+                self.file_tree.setCurrentItem(all_item)
+        finally:
+            self.file_tree.blockSignals(False)
+
+    def _select_file_in_tree(self, file_path: str) -> None:
+        if not file_path:
+            return
+        try:
+            it = QTreeWidgetItemIterator(self.file_tree)
+            while it.value():
+                cur = it.value()
+                if str(cur.data(0, Qt.UserRole) or "") == file_path:
+                    self.file_tree.setCurrentItem(cur)
+                    try:
+                        self.file_tree.scrollToItem(cur)
+                    except Exception:
+                        pass
+                    return
+                it += 1
+        except Exception:
+            return
+
+    def _on_file_tree_selection_changed(self) -> None:
+        items = self.file_tree.selectedItems()
+        if not items:
+            return
+        it = items[0]
+        fp = str(it.data(0, Qt.UserRole) or "").strip()
+        if fp == "__ALL__":
+            self._file_scope = None
+            self._render_segments()
+            return
+        if not fp:
+            return
+        self._file_scope = fp
+        self._render_segments()
+        if self._visible_segments:
+            self.segment_list.setCurrentRow(0)
 
     def _render_segments(self) -> None:
         self.segment_list.blockSignals(True)
@@ -1947,6 +2350,36 @@ class WorkspacePage(QWidget):
         self.file_title.setText(Path(file_path).name or "(untitled)")
         parts = [p.strip() for p in (file_path, location) if str(p or "").strip()]
         self.file_path.setText(" · ".join(parts))
+        try:
+            self.ws_file_title.setText(Path(file_path).name or "No file selected")
+            crumb = Path(file_path).parent.as_posix().strip("/")
+            crumb = "/".join([p for p in crumb.split("/") if p][-3:])
+            self.ws_breadcrumb.setText(crumb or "Translate")
+        except Exception:
+            pass
+        if file_path:
+            try:
+                if file_path in self._open_files_mru:
+                    self._open_files_mru.remove(file_path)
+                self._open_files_mru.insert(0, file_path)
+                self._open_files_mru = self._open_files_mru[:12]
+                self._render_file_tree()
+                if self._file_scope:
+                    self._select_file_in_tree(self._file_scope)
+            except Exception:
+                pass
+        if file_path:
+            try:
+                if file_path in self._open_files_mru:
+                    self._open_files_mru.remove(file_path)
+                self._open_files_mru.insert(0, file_path)
+                self._open_files_mru = self._open_files_mru[:12]
+                self._render_file_tree()
+                # If scoped to a file, keep the selection highlighted.
+                if self._file_scope:
+                    self._select_file_in_tree(self._file_scope)
+            except Exception:
+                pass
 
         src = str(seg.get("source") or "")
         tgt = str(seg.get("target") or "")
@@ -1980,6 +2413,11 @@ class WorkspacePage(QWidget):
     def _clear_editor(self) -> None:
         self.file_title.setText("No file selected")
         self.file_path.setText("")
+        try:
+            self.ws_file_title.setText("No file selected")
+            self.ws_breadcrumb.setText("Translate")
+        except Exception:
+            pass
         self.editor_source.setPlainText("")
         self.editor_target.setPlainText("")
         self.editor_raw.setPlainText("")
@@ -2052,12 +2490,18 @@ class WorkspacePage(QWidget):
         err_n = sum(1 for d in diags if str(d.severity).upper() in {"FATAL", "ERROR"})
         warn_n = sum(1 for d in diags if str(d.severity).upper() == "WARNING")
         if err_n:
+            self.warn_icon.setText("error")
+            self.warn_icon.setStyleSheet("color: #ef4444;")
             self.warn_label.setStyleSheet("font-family: Consolas; font-size: 9pt; color: #ef4444;")
             self.warn_label.setText(f"{err_n} Error" + ("" if err_n == 1 else "s"))
         elif warn_n:
+            self.warn_icon.setText("warning")
+            self.warn_icon.setStyleSheet("color: #eab308;")
             self.warn_label.setStyleSheet("font-family: Consolas; font-size: 9pt; color: #eab308;")
             self.warn_label.setText(f"{warn_n} Warning" + ("" if warn_n == 1 else "s"))
         else:
+            self.warn_icon.setText("check_circle")
+            self.warn_icon.setStyleSheet("color: rgba(255,255,255,0.55);")
             self.warn_label.setStyleSheet("font-family: Consolas; font-size: 9pt; color: rgba(255,255,255,0.55);")
             self.warn_label.setText("0 Issues")
 
@@ -2256,25 +2700,17 @@ class QAPage(QWidget):
 
         chips = QHBoxLayout()
         chips.setSpacing(10)
-        self.chip_all = QPushButton("All")
-        self.chip_all.setObjectName("ChipActive")
-        self.chip_all.setCheckable(True)
-        self.chip_all.setChecked(True)
+        # Use ChipButton components
+        self.chip_all = ChipButton("All", active=True)
         self.chip_all.clicked.connect(lambda: self._set_chip("ALL"))
 
-        self.chip_err = QPushButton("⛔ Errors")
-        self.chip_err.setObjectName("Chip")
-        self.chip_err.setCheckable(True)
+        self.chip_err = ChipButton("⛔ Errors", active=False)
         self.chip_err.clicked.connect(lambda: self._set_chip("ERROR"))
 
-        self.chip_warn = QPushButton("⚠ Warnings")
-        self.chip_warn.setObjectName("Chip")
-        self.chip_warn.setCheckable(True)
+        self.chip_warn = ChipButton("⚠ Warnings", active=False)
         self.chip_warn.clicked.connect(lambda: self._set_chip("WARNING"))
 
-        self.chip_info = QPushButton("ℹ Info")
-        self.chip_info.setObjectName("Chip")
-        self.chip_info.setCheckable(True)
+        self.chip_info = ChipButton("ℹ Info", active=False)
         self.chip_info.clicked.connect(lambda: self._set_chip("INFO"))
 
         for b in (self.chip_all, self.chip_err, self.chip_warn, self.chip_info):
@@ -2282,8 +2718,8 @@ class QAPage(QWidget):
         chips.addStretch(1)
         root.addLayout(chips)
 
-        self.search = QLineEdit()
-        self.search.setPlaceholderText("Search diagnostics...")
+        # Use SearchBar component
+        self.search = SearchBar(placeholder="Search diagnostics...")
         self.search.textChanged.connect(self._render)
         root.addWidget(self.search)
 
@@ -2483,25 +2919,19 @@ class BuildPage(QWidget):
         hroot.setContentsMargins(0, 0, 0, 0)
         hroot.setSpacing(14)
 
-        self.search = QLineEdit()
-        self.search.setPlaceholderText("Search output path or timestamp...")
+        # Use SearchBar component
+        self.search = SearchBar(placeholder="Search output path or timestamp...")
         self.search.textChanged.connect(self._render)
         hroot.addWidget(self.search)
 
         chips = QHBoxLayout()
         chips.setSpacing(10)
-        self.chip_all = QPushButton("All Builds")
-        self.chip_all.setObjectName("ChipActive")
-        self.chip_all.setCheckable(True)
-        self.chip_all.setChecked(True)
+        # Use ChipButton components
+        self.chip_all = ChipButton("All Builds", active=True)
         self.chip_all.clicked.connect(lambda: self._set_chip("ALL"))
-        self.chip_failed = QPushButton("Failed")
-        self.chip_failed.setObjectName("Chip")
-        self.chip_failed.setCheckable(True)
+        self.chip_failed = ChipButton("Failed", active=False)
         self.chip_failed.clicked.connect(lambda: self._set_chip("FAILED"))
-        self.chip_success = QPushButton("Success")
-        self.chip_success.setObjectName("Chip")
-        self.chip_success.setCheckable(True)
+        self.chip_success = ChipButton("Success", active=False)
         self.chip_success.clicked.connect(lambda: self._set_chip("SUCCESS"))
         for b in (self.chip_all, self.chip_failed, self.chip_success):
             chips.addWidget(b)
@@ -2583,27 +3013,19 @@ class BuildPage(QWidget):
         aroot.setSpacing(12)
 
         self.activity_context = Muted("No project loaded.")
-        self.activity_context.setStyleSheet("font-family: Consolas; font-size: 9pt;")
+        self.activity_context.setProperty("role", "caption")
         aroot.addWidget(self.activity_context)
 
         achips = QHBoxLayout()
         achips.setSpacing(10)
-        self.activity_all = QPushButton("All Builds")
-        self.activity_all.setObjectName("ChipActive")
-        self.activity_all.setCheckable(True)
-        self.activity_all.setChecked(True)
+        # Use ChipButton components
+        self.activity_all = ChipButton("All Builds", active=True)
         self.activity_all.clicked.connect(lambda: self._set_activity_chip("ALL"))
-        self.activity_passing = QPushButton("Passing")
-        self.activity_passing.setObjectName("Chip")
-        self.activity_passing.setCheckable(True)
+        self.activity_passing = ChipButton("Passing", active=False)
         self.activity_passing.clicked.connect(lambda: self._set_activity_chip("PASSING"))
-        self.activity_failed = QPushButton("Failed")
-        self.activity_failed.setObjectName("Chip")
-        self.activity_failed.setCheckable(True)
+        self.activity_failed = ChipButton("Failed", active=False)
         self.activity_failed.clicked.connect(lambda: self._set_activity_chip("FAILED"))
-        self.activity_drafts = QPushButton("Drafts")
-        self.activity_drafts.setObjectName("Chip")
-        self.activity_drafts.setCheckable(True)
+        self.activity_drafts = ChipButton("Drafts", active=False)
         self.activity_drafts.clicked.connect(lambda: self._set_activity_chip("DRAFTS"))
         for b in (self.activity_all, self.activity_passing, self.activity_failed, self.activity_drafts):
             achips.addWidget(b)
@@ -2960,12 +3382,20 @@ class SettingsPage(QWidget):
         row2.addWidget(self.lang_combo, 1)
         g_l.addLayout(row2)
 
-        self.autosave_toggle = QCheckBox("Autosave")
-        self.autosave_toggle.setChecked(True)
-        self.telemetry_toggle = QCheckBox("Anonymous Telemetry")
-        self.telemetry_toggle.setChecked(False)
-        g_l.addWidget(self.autosave_toggle)
-        g_l.addWidget(self.telemetry_toggle)
+        # Use ToggleSwitch components
+        autosave_row = QHBoxLayout()
+        autosave_row.addWidget(Muted("Autosave"))
+        self.autosave_toggle = ToggleSwitch(checked=True)
+        autosave_row.addWidget(self.autosave_toggle)
+        autosave_row.addStretch(1)
+        g_l.addLayout(autosave_row)
+
+        telemetry_row = QHBoxLayout()
+        telemetry_row.addWidget(Muted("Anonymous Telemetry"))
+        self.telemetry_toggle = ToggleSwitch(checked=False)
+        telemetry_row.addWidget(self.telemetry_toggle)
+        telemetry_row.addStretch(1)
+        g_l.addLayout(telemetry_row)
         l.addWidget(general)
 
         validation = CardFrame(shadow=False)
@@ -2973,7 +3403,9 @@ class SettingsPage(QWidget):
         v_l.setContentsMargins(12, 12, 12, 12)
         v_l.setSpacing(12)
         v_l.addWidget(H2("Validation"))
-        v_l.addWidget(Muted("Leave Enabled Rules empty to use defaults. One rule id/regex per line."))
+        desc = Muted("Leave Enabled Rules empty to use defaults. One rule id/regex per line.")
+        desc.setProperty("role", "caption")
+        v_l.addWidget(desc)
 
         self.src_locale = QLineEdit()
         self.src_locale.setPlaceholderText("en_US")
@@ -2986,14 +3418,20 @@ class SettingsPage(QWidget):
         lr.addWidget(self.tgt_locale)
         v_l.addLayout(lr)
 
-        v_l.addWidget(Muted("Enabled Rules"))
+        enabled_label = Muted("Enabled Rules")
+        enabled_label.setProperty("role", "caption")
+        enabled_label.setStyleSheet("text-transform: uppercase; letter-spacing: 1px;")
+        v_l.addWidget(enabled_label)
         self.enabled_rules = QTextEdit()
         self.enabled_rules.setPlaceholderText("placeholder_parity\npreserve_whitespace\n...")
         v_l.addWidget(self.enabled_rules)
 
-        v_l.addWidget(Muted("Token Regexes"))
+        token_label = Muted("Token Regexes")
+        token_label.setProperty("role", "caption")
+        token_label.setStyleSheet("text-transform: uppercase; letter-spacing: 1px;")
+        v_l.addWidget(token_label)
         self.token_regexes = QTextEdit()
-        self.token_regexes.setPlaceholderText(r"%\\d+s\n\\{[^}]+\\}\n...")
+        self.token_regexes.setPlaceholderText(r"%\d+s\n\{[^}]+\}\n...")
         v_l.addWidget(self.token_regexes)
         l.addWidget(validation)
 

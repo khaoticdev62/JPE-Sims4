@@ -12,6 +12,7 @@ def qss() -> str:
     - dynamic properties (`role=…`, `kind=…`, `variant=…`) for scalable styling
     """
     c = DESIGN.colors
+    r = DESIGN.radius  # radius tokens
     ui_fonts = ui_font_stack()
     mono_fonts = mono_font_stack()
 
@@ -86,13 +87,13 @@ def qss() -> str:
       background: {c.surface};
       border: 1px solid rgba(255,255,255,0.10);
       padding: 8px 10px;
-      border-radius: 10px;
+      border-radius: {r.sm}px;
     }}
 
     QLineEdit {{
       background: rgba(26, 18, 37, 0.70);
       border: 1px solid rgba(255,255,255,0.07);
-      border-radius: 10px;
+      border-radius: {r.sm}px;
       padding: 11px 14px;
       selection-background-color: {c.primary};
     }}
@@ -104,7 +105,7 @@ def qss() -> str:
     QComboBox {{
       background: rgba(26, 18, 37, 0.70);
       border: 1px solid rgba(255,255,255,0.07);
-      border-radius: 10px;
+      border-radius: {r.sm}px;
       padding: 8px 10px;
     }}
     QComboBox:focus {{
@@ -124,7 +125,7 @@ def qss() -> str:
     QTextEdit {{
       background: {c.surface};
       border: 1px solid rgba(255,255,255,0.10);
-      border-radius: 10px;
+      border-radius: {r.sm}px;
       padding: 10px;
       selection-background-color: {c.primary};
     }}
@@ -135,7 +136,7 @@ def qss() -> str:
     QPlainTextEdit {{
       background: {c.surface};
       border: 1px solid rgba(255,255,255,0.10);
-      border-radius: 12px;
+      border-radius: {r.md}px;
       padding: 10px;
       selection-background-color: rgba(134,56,250,0.30);
       selection-color: #ffffff;
@@ -149,17 +150,17 @@ def qss() -> str:
     QPlainTextEdit[variant="codePrimary"] {{
       background: {c.code_primary_bg};
       border: 1px solid rgba(255,255,255,0.10);
-      border-radius: 12px;
+      border-radius: {r.md}px;
     }}
     QPlainTextEdit[variant="codeOutput"] {{
       background: {c.code_output_bg};
       border: 1px solid rgba(255,255,255,0.10);
-      border-radius: 12px;
+      border-radius: {r.md}px;
     }}
 
     QTabWidget::pane {{
       border: 1px solid rgba(255,255,255,0.10);
-      border-radius: 14px;
+      border-radius: {r.lg}px;
       top: -1px;
       background: {c.surface};
     }}
@@ -168,8 +169,8 @@ def qss() -> str:
       border: 1px solid rgba(255,255,255,0.10);
       border-bottom: none;
       padding: 8px 12px;
-      border-top-left-radius: 10px;
-      border-top-right-radius: 10px;
+      border-top-left-radius: {r.sm}px;
+      border-top-right-radius: {r.sm}px;
       margin-right: 6px;
     }}
     QTabBar::tab:selected {{
@@ -208,7 +209,7 @@ def qss() -> str:
     QListWidget {{
       background: {c.surface};
       border: 1px solid rgba(255,255,255,0.10);
-      border-radius: 12px;
+      border-radius: {r.md}px;
       padding: 6px;
     }}
     QListWidget:focus {{
@@ -216,7 +217,7 @@ def qss() -> str:
     }}
     QListWidget::item {{
       padding: 10px 10px;
-      border-radius: 10px;
+      border-radius: {r.sm}px;
     }}
     QListWidget::item:selected {{
       background: {c.primary};
@@ -229,7 +230,7 @@ def qss() -> str:
     QToolButton#NavButton {{
       background: transparent;
       border: 1px solid transparent;
-      border-radius: 12px;
+      border-radius: {r.md}px;
       padding: 10px 12px;
       text-align: left;
     }}
@@ -246,7 +247,7 @@ def qss() -> str:
     QToolButton#IconButton {{
       background: transparent;
       border: 1px solid transparent;
-      border-radius: 10px;
+      border-radius: {r.sm}px;
       padding: 8px 10px;
     }}
     QToolButton#IconButton:hover {{
@@ -267,7 +268,7 @@ def qss() -> str:
     }}
 
     QPushButton {{
-      border-radius: 12px;
+      border-radius: {r.md}px;
       padding: 10px 12px;
       border: 1px solid rgba(255,255,255,0.10);
       background: {c.surface_active};
@@ -295,7 +296,7 @@ def qss() -> str:
       border: 1px solid {c.primary};
       color: #ffffff;
       font-weight: 600;
-      border-radius: 12px;
+      border-radius: {r.md}px;
       padding: 10px 12px;
     }}
     QPushButton[role="primary"]:hover {{
@@ -303,7 +304,7 @@ def qss() -> str:
       border-color: {c.primary_hover};
     }}
     QPushButton#Chip {{
-      border-radius: 999px;
+      border-radius: {r.pill}px;
       padding: 6px 12px;
       background: {c.surface_active};
       border: 1px solid rgba(255,255,255,0.10);
@@ -313,7 +314,7 @@ def qss() -> str:
       background: {c.surface_hover};
     }}
     QPushButton#ChipActive {{
-      border-radius: 999px;
+      border-radius: {r.pill}px;
       padding: 6px 12px;
       background: {c.primary};
       border: 1px solid {c.primary};
@@ -324,14 +325,14 @@ def qss() -> str:
 
     /* Property-driven chips (preferred). */
     QPushButton[kind="chip"] {{
-      border-radius: 999px;
+      border-radius: {r.pill}px;
       padding: 6px 12px;
       background: {c.surface_active};
       border: 1px solid rgba(255,255,255,0.10);
       font-size: 9pt;
     }}
     QPushButton[kind="chipActive"] {{
-      border-radius: 999px;
+      border-radius: {r.pill}px;
       padding: 6px 12px;
       background: {c.primary};
       border: 1px solid {c.primary};
@@ -343,7 +344,7 @@ def qss() -> str:
     QToolButton#QuickTile {{
       background: {c.surface};
       border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 12px;
+      border-radius: {r.md}px;
       padding: 10px 10px;
     }}
     QToolButton#QuickTile:hover {{
@@ -368,7 +369,7 @@ def qss() -> str:
     QFrame#Card {{
       background: {c.surface};
       border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 14px;
+      border-radius: {r.lg}px;
     }}
     QFrame#Card:hover {{
       border: 1px solid rgba(157,92,255,0.15);
@@ -377,19 +378,19 @@ def qss() -> str:
     QFrame#Card[variant="EditorHeader"] {{
       background: {c.surface};
       border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 14px;
+      border-radius: {r.lg}px;
     }}
 
     QFrame#Card[variant="CodeStatusBar"] {{
       background: {c.surface_active};
       border: 1px solid rgba(255,255,255,0.06);
-      border-radius: 12px;
+      border-radius: {r.md}px;
     }}
 
     QPushButton#CardButton {{
       background: {c.surface};
       border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 14px;
+      border-radius: {r.lg}px;
       padding: 12px 12px;
       text-align: left;
     }}
@@ -409,7 +410,7 @@ def qss() -> str:
     QTableWidget {{
       background: {c.surface};
       border: 1px solid rgba(255,255,255,0.10);
-      border-radius: 12px;
+      border-radius: {r.md}px;
       gridline-color: rgba(255,255,255,0.10);
       selection-background-color: {c.primary};
       selection-color: #ffffff;
@@ -466,7 +467,7 @@ def qss() -> str:
     /* Badge labels */
     QLabel[role="badge"] {{
       padding: 4px 8px;
-      border-radius: 6px;
+      border-radius: {r.sm}px;
       font-size: 9pt;
       font-weight: 700;
       text-transform: uppercase;

@@ -10,11 +10,12 @@ from PySide6.QtWidgets import (
     QGraphicsDropShadowEffect,
     QLabel,
     QPushButton,
+    QSizePolicy,
     QToolButton,
 )
 
 from jpe_studio_qt.fonts import has_font_family
-from jpe_studio_qt.design_system import mono_font_stack
+from jpe_studio_qt.design_system import DESIGN, mono_font_stack
 from jpe_studio_qt.icons import icon_font_family, icon_text
 
 
@@ -72,16 +73,41 @@ class MaterialIcon(QLabel):
     """
 
     def __init__(self, name: str, *, size_px: int = 18) -> None:
-        super().__init__(icon_text(name))
+        # For Material Symbols ligatures to work, we need to set the text to the icon name itself,
+        # not the fallback character. The font will render the ligature automatically.
+        super().__init__(name)
         self.setProperty("role", "icon")
-        try:
-            from PySide6.QtGui import QFont
+        self._apply_font(name, size_px)
 
-            f = QFont(icon_font_family())
-            f.setPixelSize(size_px)
-            self.setFont(f)
-        except Exception:
-            pass
+    def _apply_font(self, name: str, size_px: int) -> None:
+        """Apply the correct font for Material Symbols icon."""
+        try:
+            from PySide6.QtGui import QFont, QFontDatabase
+            import jpe_studio_qt.icons  # Ensure icons module is loaded first
+
+            # Get the correct font family
+            icon_font_name = icon_font_family()
+
+            # Create font
+            font = QFont(icon_font_name)
+            font.setPixelSize(size_px)
+
+            # Apply font to this label
+            self.setFont(font)
+
+            # Test if font is actually applied by checking the font family
+            applied_family = self.font().family()
+            if "Material Symbols" not in applied_family:
+                print(f"Warning: Material Symbols font not properly applied. Got: {applied_family}")
+        except Exception as e:
+            # Fallback to standard approach if anything fails
+            try:
+                from PySide6.QtGui import QFont
+                f = QFont(icon_font_family())
+                f.setPixelSize(size_px)
+                self.setFont(f)
+            except Exception:
+                pass
 
 
 class ChipButton(QPushButton):
@@ -144,12 +170,13 @@ class BadgeLabel(QLabel):
 class FAB(QToolButton):
     """
     Floating Action Button (56x56px) with primary color and shadow.
+    The FAB is intentionally fixed size to maintain its recognizable circular shape.
     """
 
     def __init__(self, *, icon_name: str = "add") -> None:
         super().__init__()
         self.setObjectName("Fab")
-        self.setFixedSize(56, 56)
+        self.setFixedSize(56, 56)  # FAB intentionally has fixed size
         set_toolbutton_icon(self, icon_name, size_px=28)
 
 
@@ -168,11 +195,12 @@ class SearchBar(QFrame):
 
         super().__init__()
         self.setObjectName("Card")
-        self.setFixedHeight(48)
+        self.setMinimumHeight(48)
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(12, 0, 12, 0)
-        layout.setSpacing(8)
+        layout.setContentsMargins(DESIGN.spacing.md, 0, DESIGN.spacing.md, 0)  # 12px side margins
+        layout.setSpacing(DESIGN.spacing.xs)  # 8px spacing
 
         # Search icon
         icon = MaterialIcon("search", size_px=20)
@@ -231,8 +259,8 @@ class EmptyStateWidget(QFrame):
         self.setStyleSheet("QFrame#Card { border-style: dashed; }")
 
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(40, 40, 40, 40)
-        layout.setSpacing(16)
+        layout.setContentsMargins(DESIGN.spacing.xl*2, DESIGN.spacing.xl*2, DESIGN.spacing.xl*2, DESIGN.spacing.xl*2)  # 40px margins
+        layout.setSpacing(DESIGN.spacing.lg)  # 16px spacing
         layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         # Icon
@@ -393,12 +421,12 @@ class ProgressCard(CardFrame):
         self.setCursor(Qt.CursorShape.PointingHandCursor)
 
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(16, 16, 16, 16)
-        layout.setSpacing(12)
+        layout.setContentsMargins(DESIGN.spacing.lg, DESIGN.spacing.lg, DESIGN.spacing.lg, DESIGN.spacing.lg)  # 16px margins
+        layout.setSpacing(DESIGN.spacing.md)  # 12px spacing
 
         # Header row: Title + Badge
         header = QHBoxLayout()
-        header.setSpacing(10)
+        header.setSpacing(DESIGN.spacing.md)  # 10px spacing
 
         title_label = QLabel(title)
         title_label.setProperty("role", "h3")

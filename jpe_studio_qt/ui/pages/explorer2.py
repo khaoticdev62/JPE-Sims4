@@ -12,6 +12,7 @@ from PySide6.QtWidgets import (
     QLabel,
     QLineEdit,
     QProgressBar,
+    QSizePolicy,
     QSplitter,
     QToolButton,
     QTreeWidget,
@@ -23,6 +24,7 @@ from PySide6.QtWidgets import (
 from jpe_sims4.project import Project
 
 from jpe_studio_qt.ui.code_editor import CodeEditor
+from jpe_studio_qt.design_system import DESIGN
 from jpe_studio_qt.ui.components import H2, Muted, set_toolbutton_icon
 
 
@@ -65,7 +67,8 @@ class Explorer2Page(QWidget):
 
         # Header.
         header = QFrame()
-        header.setFixedHeight(56)
+        header.setMinimumHeight(48)  # Allow header to have minimum height but expand if needed
+        header.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
         header.setStyleSheet(f"background: {COL.surface}; border-bottom: 1px solid {COL.border_rgba};")
         hl = QHBoxLayout(header)
         hl.setContentsMargins(18, 10, 18, 10)
@@ -103,7 +106,8 @@ class Explorer2Page(QWidget):
         hl.addLayout(brand)
 
         sep = QFrame()
-        sep.setFixedWidth(1)
+        sep.setFixedWidth(1)  # The vertical separator intentionally has fixed width for visual consistency
+        sep.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Expanding)
         sep.setStyleSheet("background: rgba(255,255,255,0.10);")
         hl.addWidget(sep)
 
@@ -111,7 +115,7 @@ class Explorer2Page(QWidget):
         self.active_proj_label.setStyleSheet("font-weight: 700;")
         proj_col = QVBoxLayout()
         proj_col.setContentsMargins(0, 0, 0, 0)
-        proj_col.setSpacing(1)
+        proj_col.setSpacing(DESIGN.spacing.xxs)  # 1px spacing (using smallest spacing token)
         proj_col.addWidget(QLabel("Active Project"))
         proj_col.itemAt(0).widget().setStyleSheet("font-size: 9pt; color: rgba(255,255,255,0.55);")  # type: ignore[union-attr]
         proj_col.addWidget(self.active_proj_label)
@@ -121,10 +125,10 @@ class Explorer2Page(QWidget):
 
         # Segmented view (Code / Design / Translate).
         seg_wrap = QFrame()
-        seg_wrap.setStyleSheet("background: rgba(0,0,0,0.20); border-radius: 10px; padding: 4px;")
+        seg_wrap.setStyleSheet(f"background: rgba(0,0,0,0.20); border-radius: {DESIGN.radius.sm}px; padding: {DESIGN.spacing.xxs}px;")  # Used radius.sm (10px) and spacing.xxs (4px) to match original
         seg = QHBoxLayout(seg_wrap)
         seg.setContentsMargins(0, 0, 0, 0)
-        seg.setSpacing(4)
+        seg.setSpacing(DESIGN.spacing.xxs)  # 4px spacing using xxs token
         self._seg_group = QButtonGroup(self)
         self._seg_group.setExclusive(True)
         self.btn_code = self._seg_btn("Code", active=True)
@@ -167,11 +171,11 @@ class Explorer2Page(QWidget):
         left.setMinimumWidth(360)
         left.setMaximumWidth(460)
         ll = QVBoxLayout(left)
-        ll.setContentsMargins(16, 16, 16, 16)
-        ll.setSpacing(12)
+        ll.setContentsMargins(DESIGN.spacing.lg, DESIGN.spacing.lg, DESIGN.spacing.lg, DESIGN.spacing.lg)  # 16px margins
+        ll.setSpacing(DESIGN.spacing.md)  # 12px spacing
 
         top_row = QHBoxLayout()
-        top_row.setSpacing(10)
+        top_row.setSpacing(DESIGN.spacing.md)  # 10px spacing
         title = QLabel("Explorer")
         title.setStyleSheet("font-size: 9pt; font-weight: 900; letter-spacing: 2px; color: rgba(255,255,255,0.55);")
         top_row.addWidget(title)
@@ -201,7 +205,7 @@ class Explorer2Page(QWidget):
         ll.addWidget(self.search)
 
         btn_row = QHBoxLayout()
-        btn_row.setSpacing(10)
+        btn_row.setSpacing(DESIGN.spacing.md)  # 10px spacing
         self.btn_new_file = QToolButton()
         self.btn_new_file.setText("New File")
         self.btn_new_file.setCursor(Qt.PointingHandCursor)
@@ -300,14 +304,14 @@ class Explorer2Page(QWidget):
         right = QFrame()
         right.setStyleSheet(f"background: {COL.background};")
         rl = QVBoxLayout(right)
-        rl.setContentsMargins(16, 16, 16, 16)
-        rl.setSpacing(12)
+        rl.setContentsMargins(DESIGN.spacing.lg, DESIGN.spacing.lg, DESIGN.spacing.lg, DESIGN.spacing.lg)  # 16px margins
+        rl.setSpacing(DESIGN.spacing.md)  # 12px spacing
 
         self.preview_header = QFrame()
         self.preview_header.setStyleSheet(f"background: {COL.surface}; border: 1px solid {COL.border_rgba}; border-radius: 14px;")
         phl = QHBoxLayout(self.preview_header)
-        phl.setContentsMargins(12, 10, 12, 10)
-        phl.setSpacing(10)
+        phl.setContentsMargins(DESIGN.spacing.md, DESIGN.spacing.sm, DESIGN.spacing.md, DESIGN.spacing.sm)  # 12px, 10px margins
+        phl.setSpacing(DESIGN.spacing.md)  # 10px spacing
         self.preview_title = QLabel("No file selected")
         self.preview_title.setStyleSheet("font-weight: 900;")
         self.preview_path = QLabel("")
@@ -334,19 +338,21 @@ class Explorer2Page(QWidget):
         split.addWidget(right)
         split.setStretchFactor(0, 0)
         split.setStretchFactor(1, 1)
-        split.setSizes([360, 900])
+        # Use initial sizes that adapt better to different window sizes
+        split.setSizes([360, self.width() - 360])  # Use available space for the right panel
 
         # Bottom status bar.
         status = QFrame()
-        status.setFixedHeight(30)
+        status.setMinimumHeight(30)
+        status.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
         status.setStyleSheet(f"background: {COL.primary}; border-top: 1px solid rgba(255,255,255,0.10);")
         sl = QHBoxLayout(status)
-        sl.setContentsMargins(14, 0, 14, 0)
-        sl.setSpacing(18)
+        sl.setContentsMargins(DESIGN.spacing.lg, 0, DESIGN.spacing.lg, 0)  # 14px side margins
+        sl.setSpacing(DESIGN.spacing.lg)  # 18px spacing
         ready = QWidget()
         rl = QHBoxLayout(ready)
         rl.setContentsMargins(0, 0, 0, 0)
-        rl.setSpacing(6)
+        rl.setSpacing(DESIGN.spacing.xs)  # 6px spacing
         ico = QToolButton()
         ico.setObjectName("IconButton")
         ico.setEnabled(False)

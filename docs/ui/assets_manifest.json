@@ -1,0 +1,1017 @@
+{
+  "assets_root": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder",
+  "assets": [
+    {
+      "asset_id": "about_/_system_info",
+      "folder": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\about_\\_system_info",
+      "code_html": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\about_\\_system_info\\code.html",
+      "screen_png": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\about_\\_system_info\\screen.png",
+      "title": "About / System Info - JPE Translation Suite",
+      "fonts": [
+        "Inter",
+        "Material Symbols Outlined"
+      ],
+      "uses_material_symbols": true,
+      "tailwind_colors": {
+        "primary": "#761ff9",
+        "background-light": "#f7f5f8",
+        "background-dark": "#170f23",
+        "surface-dark": "#231a33"
+      }
+    },
+    {
+      "asset_id": "build_&_history_screen_1",
+      "folder": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\build_&_history_screen_1",
+      "code_html": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\build_&_history_screen_1\\code.html",
+      "screen_png": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\build_&_history_screen_1\\screen.png",
+      "title": "JPE Sims 4 Translation Suite - Build History",
+      "fonts": [
+        "Inter",
+        "JetBrains Mono",
+        "Material Symbols Outlined"
+      ],
+      "uses_material_symbols": true,
+      "tailwind_colors": {
+        "primary": "#8638fa",
+        "primary-dark": "#6a2bc4",
+        "background-light": "#f7f5f8",
+        "background-dark": "#170f23",
+        "surface-dark": "#231634",
+        "surface-highlight": "#2d1d42",
+        "success": "#00E676",
+        "error": "#FF5252",
+        "warning": "#FFAB40",
+        "text-secondary": "#a78ecc"
+      }
+    },
+    {
+      "asset_id": "build_&_history_screen_2",
+      "folder": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\build_&_history_screen_2",
+      "code_html": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\build_&_history_screen_2\\code.html",
+      "screen_png": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\build_&_history_screen_2\\screen.png",
+      "title": "JPE Sims 4 Translation Suite - Build History",
+      "fonts": [
+        "Inter",
+        "JetBrains Mono",
+        "Material Symbols Outlined"
+      ],
+      "uses_material_symbols": true,
+      "tailwind_colors": {
+        "primary": "#8638fa",
+        "primary-dark": "#6a2bc4",
+        "primary-light": "#a566ff",
+        "background-light": "#f7f5f8",
+        "background-dark": "#130c1c",
+        "surface-dark": "#1e142b",
+        "surface-highlight": "#2a1e3b",
+        "surface-active": "#352250",
+        "success": "#00E676",
+        "error": "#FF5252",
+        "warning": "#FFAB40",
+        "info": "#2979FF",
+        "text-primary": "#ffffff",
+        "text-secondary": "#b4a0d8",
+        "text-muted": "#75668c",
+        "border-color": "#33264a",
+        "border-highlight": "#4a366b"
+      }
+    },
+    {
+      "asset_id": "build_activity_tab",
+      "folder": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\build_activity_tab",
+      "code_html": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\build_activity_tab\\code.html",
+      "screen_png": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\build_activity_tab\\screen.png",
+      "title": "Build Activity - JPE Sims 4 Translation Suite",
+      "fonts": [
+        "Material Symbols Outlined",
+        "Inter",
+        "JetBrains Mono"
+      ],
+      "uses_material_symbols": true,
+      "tailwind_colors": {
+        "primary": "#9d5cff",
+        "primary-dark": "#7c3aff",
+        "secondary": "#a78dce",
+        "success": "#00e676",
+        "error": "#ff5252",
+        "warning": "#ffd740",
+        "background-light": "#f7f5f8",
+        "background-dark": "#170f23",
+        "surface-dark": "#1f1530",
+        "surface-highlight": "#2d1f45"
+      }
+    },
+    {
+      "asset_id": "diagnostics_tab_(global)",
+      "folder": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\diagnostics_tab_(global)",
+      "code_html": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\diagnostics_tab_(global)\\code.html",
+      "screen_png": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\diagnostics_tab_(global)\\screen.png",
+      "title": "Diagnostics Tab",
+      "fonts": [
+        "Inter",
+        "JetBrains Mono",
+        "Material Symbols Outlined"
+      ],
+      "uses_material_symbols": true,
+      "tailwind_colors": {
+        "primary": "#9d5cff",
+        "background-light": "#f7f5f8",
+        "background-dark": "#170f23",
+        "surface-dark": "#231b30",
+        "error": "#ef4444",
+        "warning": "#eab308"
+      }
+    },
+    {
+      "asset_id": "dual-pane_jpe/xml_editor_1",
+      "folder": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\dual-pane_jpe\\xml_editor_1",
+      "code_html": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\dual-pane_jpe\\xml_editor_1\\code.html",
+      "screen_png": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\dual-pane_jpe\\xml_editor_1\\screen.png",
+      "title": "Dual-Pane JPE/XML Editor",
+      "fonts": [
+        "Inter",
+        "JetBrains Mono",
+        "Material Symbols Outlined"
+      ],
+      "uses_material_symbols": true,
+      "tailwind_colors": {
+        "primary": "#8638fa",
+        "background-light": "#f7f5f8",
+        "background-dark": "#170f23",
+        "surface-dark": "#181023",
+        "surface-lighter": "#31214a",
+        "border-color": "#472f6a",
+        "text-secondary": "#a78ecc"
+      }
+    },
+    {
+      "asset_id": "dual-pane_jpe/xml_editor_2",
+      "folder": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\dual-pane_jpe\\xml_editor_2",
+      "code_html": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\dual-pane_jpe\\xml_editor_2\\code.html",
+      "screen_png": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\dual-pane_jpe\\xml_editor_2\\screen.png",
+      "title": "Dual-Pane JPE/XML Editor",
+      "fonts": [
+        "Inter",
+        "JetBrains Mono",
+        "Material Symbols Outlined"
+      ],
+      "uses_material_symbols": true,
+      "tailwind_colors": {
+        "primary": "#8638fa",
+        "primary-hover": "#702cd6",
+        "background-light": "#f7f5f8",
+        "background-dark": "#170f23",
+        "surface-dark": "#181023",
+        "surface-lighter": "#31214a",
+        "border-color": "#472f6a",
+        "text-secondary": "#a78ecc",
+        "editor-bg": "#0d0914"
+      }
+    },
+    {
+      "asset_id": "entity_detail_sheet_1",
+      "folder": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\entity_detail_sheet_1",
+      "code_html": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\entity_detail_sheet_1\\code.html",
+      "screen_png": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\entity_detail_sheet_1\\screen.png",
+      "title": "Entity Detail Sheet",
+      "fonts": [
+        "Inter",
+        "Material Symbols Outlined"
+      ],
+      "uses_material_symbols": true,
+      "tailwind_colors": {
+        "primary": "#9551fb",
+        "background-light": "#f7f5f8",
+        "background-dark": "#170f23",
+        "surface-dark": "#231835",
+        "surface-lighter": "#31214a"
+      }
+    },
+    {
+      "asset_id": "entity_detail_sheet_2",
+      "folder": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\entity_detail_sheet_2",
+      "code_html": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\entity_detail_sheet_2\\code.html",
+      "screen_png": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\entity_detail_sheet_2\\screen.png",
+      "title": "Entity Detail Sheet",
+      "fonts": [
+        "Inter",
+        "Material Symbols Outlined"
+      ],
+      "uses_material_symbols": true,
+      "tailwind_colors": {
+        "primary": "#9551fb",
+        "background-light": "#f7f5f8",
+        "background-dark": "#130c1c",
+        "surface-dark": "#1e142d",
+        "surface-lighter": "#2d1f42",
+        "surface-highlight": "#3a2a55"
+      }
+    },
+    {
+      "asset_id": "entity_jpe_view",
+      "folder": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\entity_jpe_view",
+      "code_html": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\entity_jpe_view\\code.html",
+      "screen_png": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\entity_jpe_view\\screen.png",
+      "title": "Entity JPE View",
+      "fonts": [
+        "Material Symbols Outlined",
+        "Inter",
+        "JetBrains Mono"
+      ],
+      "uses_material_symbols": true,
+      "tailwind_colors": {
+        "primary": "#9d5cff",
+        "background-light": "#f7f5f8",
+        "background-dark": "#170f23",
+        "code-bg": "#120c1c",
+        "gutter-bg": "#170f23",
+        "accent-error": "#ef4444",
+        "accent-warning": "#f59e0b"
+      }
+    },
+    {
+      "asset_id": "global_diagnostics_pane_1",
+      "folder": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\global_diagnostics_pane_1",
+      "code_html": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\global_diagnostics_pane_1\\code.html",
+      "screen_png": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\global_diagnostics_pane_1\\screen.png",
+      "title": "Global Diagnostics Pane",
+      "fonts": [
+        "Inter",
+        "JetBrains Mono",
+        "Material Symbols Outlined"
+      ],
+      "uses_material_symbols": true,
+      "tailwind_colors": {
+        "primary": "#761ff9",
+        "primary-dark": "#5e17c7",
+        "background-light": "#f7f5f8",
+        "background-dark": "#170f23",
+        "surface-dark": "#231a33",
+        "surface-card": "#2a203b",
+        "neon-red": "#ff4d6d",
+        "neon-yellow": "#ffd60a",
+        "neon-blue": "#4cc9f0"
+      }
+    },
+    {
+      "asset_id": "global_diagnostics_pane_2",
+      "folder": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\global_diagnostics_pane_2",
+      "code_html": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\global_diagnostics_pane_2\\code.html",
+      "screen_png": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\global_diagnostics_pane_2\\screen.png",
+      "title": "Global Diagnostics Pane",
+      "fonts": [
+        "Inter",
+        "JetBrains Mono",
+        "Material Symbols Outlined"
+      ],
+      "uses_material_symbols": true,
+      "tailwind_colors": {
+        "primary": "#761ff9",
+        "primary-dark": "#5e17c7",
+        "background-light": "#f7f5f8",
+        "background-dark": "#130c1e",
+        "surface-dark": "#1e1628",
+        "surface-card": "#2a203b",
+        "surface-hover": "#35294a",
+        "neon-red": "#ff4d6d",
+        "neon-yellow": "#ffd60a",
+        "neon-blue": "#4cc9f0"
+      }
+    },
+    {
+      "asset_id": "global_settings_1",
+      "folder": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\global_settings_1",
+      "code_html": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\global_settings_1\\code.html",
+      "screen_png": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\global_settings_1\\screen.png",
+      "title": "Global Settings - JPE Sims 4 Translation Suite",
+      "fonts": [
+        "Inter",
+        "Noto Sans",
+        "JetBrains Mono",
+        "Material Symbols Outlined"
+      ],
+      "uses_material_symbols": true,
+      "tailwind_colors": {
+        "primary": "#761ff9",
+        "background-light": "#f7f5f8",
+        "background-dark": "#181023",
+        "surface-dark": "#31214a",
+        "text-secondary": "#a78ecc"
+      }
+    },
+    {
+      "asset_id": "global_settings_2",
+      "folder": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\global_settings_2",
+      "code_html": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\global_settings_2\\code.html",
+      "screen_png": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\global_settings_2\\screen.png",
+      "title": "Global Settings - JPE Sims 4 Translation Suite",
+      "fonts": [
+        "Material Symbols Outlined",
+        "Inter"
+      ],
+      "uses_material_symbols": true,
+      "tailwind_colors": {
+        "primary": "#761ff9",
+        "primary-dark": "#5e17c9",
+        "background-light": "#f7f5f8",
+        "background-dark": "#170f23",
+        "surface-dark": "#231735",
+        "surface-light": "#ffffff",
+        "subtle-text": "#a78ecc"
+      }
+    },
+    {
+      "asset_id": "help_&_docs_hub",
+      "folder": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\help_&_docs_hub",
+      "code_html": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\help_&_docs_hub\\code.html",
+      "screen_png": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\help_&_docs_hub\\screen.png",
+      "title": "JPE Docs Hub",
+      "fonts": [
+        "Material Symbols Outlined",
+        "Inter"
+      ],
+      "uses_material_symbols": true,
+      "tailwind_colors": {
+        "primary": "#761ff9",
+        "background-light": "#f7f5f8",
+        "background-dark": "#170f23",
+        "surface-dark": "#2a1f3d",
+        "surface-darker": "#120b1b"
+      }
+    },
+    {
+      "asset_id": "keyboard_shortcuts_&_command_palette",
+      "folder": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\keyboard_shortcuts_&_command_palette",
+      "code_html": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\keyboard_shortcuts_&_command_palette\\code.html",
+      "screen_png": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\keyboard_shortcuts_&_command_palette\\screen.png",
+      "title": "Command Palette",
+      "fonts": [
+        "Inter",
+        "JetBrains Mono",
+        "Material Symbols Outlined"
+      ],
+      "uses_material_symbols": true,
+      "tailwind_colors": {
+        "primary": "#761ff9",
+        "primary-dark": "#5e17c7",
+        "background-light": "#f7f5f8",
+        "background-dark": "#170f23",
+        "surface-dark": "#1f162f",
+        "surface-highlight": "#2a1e3e"
+      }
+    },
+    {
+      "asset_id": "mobile_home_/_projects_tab_1",
+      "folder": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\mobile_home_\\_projects_tab_1",
+      "code_html": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\mobile_home_\\_projects_tab_1\\code.html",
+      "screen_png": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\mobile_home_\\_projects_tab_1\\screen.png",
+      "title": "JPE Translation Suite - Projects",
+      "fonts": [
+        "Inter",
+        "Material Symbols Outlined"
+      ],
+      "uses_material_symbols": true,
+      "tailwind_colors": {
+        "primary": "#9d5cff",
+        "background-light": "#f7f5f8",
+        "background-dark": "#170f23",
+        "surface-dark": "#231b2e",
+        "status-error": "#ff5c5c",
+        "status-warning": "#ffbd5c",
+        "status-ok": "#5cffbd",
+        "status-sync": "#888888"
+      }
+    },
+    {
+      "asset_id": "mobile_home_/_projects_tab_2",
+      "folder": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\mobile_home_\\_projects_tab_2",
+      "code_html": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\mobile_home_\\_projects_tab_2\\code.html",
+      "screen_png": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\mobile_home_\\_projects_tab_2\\screen.png",
+      "title": "JPE Translation Suite - Projects",
+      "fonts": [
+        "Inter",
+        "Material Symbols Outlined"
+      ],
+      "uses_material_symbols": true,
+      "tailwind_colors": {
+        "primary": "#b066ff",
+        "background-light": "#f7f5f8",
+        "background-dark": "#201c2c",
+        "surface-dark": "#2d263d",
+        "status-error": "#ff6b6b",
+        "status-warning": "#ffd166",
+        "status-ok": "#66ffc2",
+        "status-sync": "#a0a0a0"
+      }
+    },
+    {
+      "asset_id": "mobile_home_/_projects_tab_3",
+      "folder": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\mobile_home_\\_projects_tab_3",
+      "code_html": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\mobile_home_\\_projects_tab_3\\code.html",
+      "screen_png": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\mobile_home_\\_projects_tab_3\\screen.png",
+      "title": "JPE Translation Suite - Projects",
+      "fonts": [
+        "Inter",
+        "Material Symbols Outlined"
+      ],
+      "uses_material_symbols": true,
+      "tailwind_colors": {
+        "primary": "#b066ff",
+        "background-light": "#f7f5f8",
+        "background-dark": "#201c2c",
+        "surface-dark": "#2d263d",
+        "status-error": "#ff6b6b",
+        "status-warning": "#ffd166",
+        "status-ok": "#66ffc2",
+        "status-sync": "#a0a0a0"
+      }
+    },
+    {
+      "asset_id": "mobile_home_/_projects_tab_4",
+      "folder": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\mobile_home_\\_projects_tab_4",
+      "code_html": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\mobile_home_\\_projects_tab_4\\code.html",
+      "screen_png": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\mobile_home_\\_projects_tab_4\\screen.png",
+      "title": "JPE Translation Suite - Projects",
+      "fonts": [
+        "Inter",
+        "Material Symbols Outlined"
+      ],
+      "uses_material_symbols": true,
+      "tailwind_colors": {
+        "primary": "#b066ff",
+        "background-light": "#f7f5f8",
+        "background-dark": "#201c2c",
+        "surface-dark": "#2d263d",
+        "status-error": "#ff6b6b",
+        "status-warning": "#ffd166",
+        "status-ok": "#66ffc2",
+        "status-sync": "#a0a0a0"
+      }
+    },
+    {
+      "asset_id": "mobile_settings",
+      "folder": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\mobile_settings",
+      "code_html": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\mobile_settings\\code.html",
+      "screen_png": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\mobile_settings\\screen.png",
+      "title": "Mobile Settings",
+      "fonts": [
+        "Material Symbols Outlined",
+        "Inter"
+      ],
+      "uses_material_symbols": true,
+      "tailwind_colors": {
+        "primary": "#9d5cff",
+        "background-light": "#f7f5f8",
+        "background-dark": "#170f23",
+        "surface-dark": "#1E1E2E",
+        "surface-darker": "#13131F"
+      }
+    },
+    {
+      "asset_id": "plugin_detail_&_settings_1",
+      "folder": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\plugin_detail_&_settings_1",
+      "code_html": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\plugin_detail_&_settings_1\\code.html",
+      "screen_png": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\plugin_detail_&_settings_1\\screen.png",
+      "title": "Plugin Detail &amp; Settings",
+      "fonts": [
+        "Inter",
+        "Material Symbols Outlined"
+      ],
+      "uses_material_symbols": true,
+      "tailwind_colors": {
+        "primary": "#9d5cff",
+        "background-light": "#f7f5f8",
+        "background-dark": "#170f23",
+        "surface-dark": "#1f162f",
+        "surface-border": "#462e6b",
+        "text-secondary": "#a78dce"
+      }
+    },
+    {
+      "asset_id": "plugin_detail_&_settings_2",
+      "folder": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\plugin_detail_&_settings_2",
+      "code_html": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\plugin_detail_&_settings_2\\code.html",
+      "screen_png": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\plugin_detail_&_settings_2\\screen.png",
+      "title": "Plugin Detail &amp; Settings",
+      "fonts": [
+        "Inter",
+        "Material Symbols Outlined"
+      ],
+      "uses_material_symbols": true,
+      "tailwind_colors": {
+        "primary": "#9551fb",
+        "background-light": "#f7f5f8",
+        "background-dark": "#170f23",
+        "surface-dark": "#251b36",
+        "surface-darker": "#1c142b",
+        "text-secondary": "#a78ecc",
+        "border-color": "#472f6a"
+      }
+    },
+    {
+      "asset_id": "plugin_library_1",
+      "folder": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\plugin_library_1",
+      "code_html": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\plugin_library_1\\code.html",
+      "screen_png": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\plugin_library_1\\screen.png",
+      "title": "Plugin Library",
+      "fonts": [
+        "Material Symbols Outlined"
+      ],
+      "uses_material_symbols": true,
+      "tailwind_colors": {
+        "primary": "#9d5cff",
+        "background-light": "#f7f5f8",
+        "background-dark": "#170f23",
+        "card-dark": "#251b36",
+        "card-hover": "#2f2245"
+      }
+    },
+    {
+      "asset_id": "plugin_library_2",
+      "folder": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\plugin_library_2",
+      "code_html": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\plugin_library_2\\code.html",
+      "screen_png": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\plugin_library_2\\screen.png",
+      "title": "Plugin Library - JPE Sims 4 Translation Suite",
+      "fonts": [
+        "Inter",
+        "JetBrains Mono",
+        "Material Symbols Outlined"
+      ],
+      "uses_material_symbols": true,
+      "tailwind_colors": {
+        "primary": "#7825f4",
+        "primary-dark": "#5e1dbf",
+        "background-light": "#f7f5f8",
+        "background-dark": "#181023",
+        "surface-dark": "#241a33",
+        "surface-darker": "#322249",
+        "text-secondary": "#a890cb",
+        "success": "#22c55e",
+        "error": "#ef4444"
+      }
+    },
+    {
+      "asset_id": "plugin_marketplace_1",
+      "folder": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\plugin_marketplace_1",
+      "code_html": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\plugin_marketplace_1\\code.html",
+      "screen_png": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\plugin_marketplace_1\\screen.png",
+      "title": "Plugin Marketplace - JPE Sims 4 Translation Suite",
+      "fonts": [
+        "Inter",
+        "JetBrains Mono",
+        "Material Symbols Outlined"
+      ],
+      "uses_material_symbols": true,
+      "tailwind_colors": {
+        "primary": "#9d5cff",
+        "primary-dark": "#7b46c9",
+        "background-light": "#f7f5f8",
+        "background-dark": "#121212",
+        "surface-dark": "#1e1e1e",
+        "surface-darker": "#171717",
+        "text-main": "#E0E0E0",
+        "text-muted": "#888888",
+        "success": "#4CAF50",
+        "warning": "#FFC107",
+        "danger": "#FF5252"
+      }
+    },
+    {
+      "asset_id": "plugin_marketplace_2",
+      "folder": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\plugin_marketplace_2",
+      "code_html": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\plugin_marketplace_2\\code.html",
+      "screen_png": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\plugin_marketplace_2\\screen.png",
+      "title": "Plugin Marketplace",
+      "fonts": [
+        "Material Symbols Outlined",
+        "Space Grotesk",
+        "Noto Sans"
+      ],
+      "uses_material_symbols": true,
+      "tailwind_colors": {
+        "primary": "#9551fb",
+        "background-light": "#f7f5f8",
+        "background-dark": "#170f23",
+        "card-dark": "#231835",
+        "accent-neon": "#00ff9d",
+        "accent-cyan": "#00e5ff",
+        "text-secondary": "#a78ecc"
+      }
+    },
+    {
+      "asset_id": "project_dashboard_1",
+      "folder": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\project_dashboard_1",
+      "code_html": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\project_dashboard_1\\code.html",
+      "screen_png": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\project_dashboard_1\\screen.png",
+      "title": "JPE Suite Dashboard",
+      "fonts": [
+        "Inter",
+        "Material Symbols Outlined"
+      ],
+      "uses_material_symbols": true,
+      "tailwind_colors": {
+        "primary": "#9d5cff",
+        "background-light": "#f7f5f8",
+        "background-dark": "#170f23",
+        "surface-dark": "#251e33",
+        "surface-border": "#462e6b"
+      }
+    },
+    {
+      "asset_id": "project_dashboard_2",
+      "folder": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\project_dashboard_2",
+      "code_html": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\project_dashboard_2\\code.html",
+      "screen_png": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\project_dashboard_2\\screen.png",
+      "title": "JPE Dashboard",
+      "fonts": [
+        "Material Symbols Outlined",
+        "Inter"
+      ],
+      "uses_material_symbols": true,
+      "tailwind_colors": {
+        "primary": "#8638fa",
+        "primary-hover": "#9d5cfa",
+        "background-light": "#f7f5f8",
+        "background-dark": "#0f0916",
+        "surface-dark": "#1a1225",
+        "surface-active": "#2b1e3b",
+        "surface-hover": "#36274a"
+      }
+    },
+    {
+      "asset_id": "project_detail",
+      "folder": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\project_detail",
+      "code_html": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\project_detail\\code.html",
+      "screen_png": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\project_detail\\screen.png",
+      "title": "JPE Sims 4 Translation Suite - Project Detail",
+      "fonts": [
+        "Inter",
+        "JetBrains Mono",
+        "Material Symbols Outlined"
+      ],
+      "uses_material_symbols": true,
+      "tailwind_colors": {
+        "primary": "#9d5cff",
+        "primary-dark": "#7c45cc",
+        "background-light": "#f7f5f8",
+        "background-dark": "#121212",
+        "surface-dark": "#1E1E1E",
+        "surface-highlight": "#2C2C2C",
+        "success": "#4ade80",
+        "warning": "#facc15",
+        "error": "#ef4444"
+      }
+    },
+    {
+      "asset_id": "project_explorer_1",
+      "folder": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\project_explorer_1",
+      "code_html": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\project_explorer_1\\code.html",
+      "screen_png": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\project_explorer_1\\screen.png",
+      "title": "Project Explorer",
+      "fonts": [
+        "Material Symbols Outlined",
+        "Inter",
+        "Noto Sans"
+      ],
+      "uses_material_symbols": true,
+      "tailwind_colors": {
+        "primary": "#7825f4",
+        "background-light": "#f7f5f8",
+        "background-dark": "#171022",
+        "surface-dark": "#231b2e",
+        "surface-highlight": "#322249"
+      }
+    },
+    {
+      "asset_id": "project_explorer_2",
+      "folder": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\project_explorer_2",
+      "code_html": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\project_explorer_2\\code.html",
+      "screen_png": "C:\\Users\\thecr\\Desktop\\JPE_Mod_Translator\\JPE assets folder\\project_explorer_2\\screen.png",
+      "title": "Project Explorer",
+      "fonts": [
+        "Material Symbols Outlined",
+        "Inter",
+        "Noto Sans"
+      ],
+      "uses_material_symbols": true,
+      "tailwind_colors": {
+        "primary": "#7825f4",
+        "primary-hover": "#8e44f6",
+        "background-light": "#f7f5f8",
+        "background-dark": "#171022",
+        "surface-dark": "#231b2e",
+        "surface-highlight": "#322249",
+        "sidebar-bg": "#1c1427"
+      }
+    }
+  ],
+  "summary": {
+    "assets_count": 32,
+    "fonts": [
+      [
+        "Material Symbols Outlined",
+        32
+      ],
+      [
+        "Inter",
+        30
+      ],
+      [
+        "JetBrains Mono",
+        14
+      ],
+      [
+        "Noto Sans",
+        4
+      ],
+      [
+        "Space Grotesk",
+        1
+      ]
+    ],
+    "color_keys": [
+      "accent-cyan",
+      "accent-error",
+      "accent-neon",
+      "accent-warning",
+      "background-dark",
+      "background-light",
+      "border-color",
+      "border-highlight",
+      "card-dark",
+      "card-hover",
+      "code-bg",
+      "danger",
+      "editor-bg",
+      "error",
+      "gutter-bg",
+      "info",
+      "neon-blue",
+      "neon-red",
+      "neon-yellow",
+      "primary",
+      "primary-dark",
+      "primary-hover",
+      "primary-light",
+      "secondary",
+      "sidebar-bg",
+      "status-error",
+      "status-ok",
+      "status-sync",
+      "status-warning",
+      "subtle-text",
+      "success",
+      "surface-active",
+      "surface-border",
+      "surface-card",
+      "surface-dark",
+      "surface-darker",
+      "surface-highlight",
+      "surface-hover",
+      "surface-light",
+      "surface-lighter",
+      "text-main",
+      "text-muted",
+      "text-primary",
+      "text-secondary",
+      "warning"
+    ],
+    "primary_variants": [
+      [
+        "#9d5cff",
+        10
+      ],
+      [
+        "#761ff9",
+        7
+      ],
+      [
+        "#8638fa",
+        5
+      ],
+      [
+        "#9551fb",
+        4
+      ],
+      [
+        "#7825f4",
+        3
+      ],
+      [
+        "#b066ff",
+        3
+      ]
+    ],
+    "colors": {
+      "primary": {
+        "#761ff9": 7,
+        "#8638fa": 5,
+        "#9d5cff": 10,
+        "#9551fb": 4,
+        "#b066ff": 3,
+        "#7825f4": 3
+      },
+      "background-light": {
+        "#f7f5f8": 32
+      },
+      "background-dark": {
+        "#170f23": 19,
+        "#130c1c": 2,
+        "#130c1e": 1,
+        "#181023": 2,
+        "#201c2c": 3,
+        "#121212": 2,
+        "#0f0916": 1,
+        "#171022": 2
+      },
+      "surface-dark": {
+        "#231a33": 2,
+        "#231634": 1,
+        "#1e142b": 1,
+        "#1f1530": 1,
+        "#231b30": 1,
+        "#181023": 2,
+        "#231835": 1,
+        "#1e142d": 1,
+        "#1e1628": 1,
+        "#31214a": 1,
+        "#231735": 1,
+        "#2a1f3d": 1,
+        "#1f162f": 2,
+        "#231b2e": 3,
+        "#2d263d": 3,
+        "#1E1E2E": 1,
+        "#251b36": 1,
+        "#241a33": 1,
+        "#1e1e1e": 1,
+        "#251e33": 1,
+        "#1a1225": 1,
+        "#1E1E1E": 1
+      },
+      "primary-dark": {
+        "#6a2bc4": 2,
+        "#7c3aff": 1,
+        "#5e17c7": 3,
+        "#5e17c9": 1,
+        "#5e1dbf": 1,
+        "#7b46c9": 1,
+        "#7c45cc": 1
+      },
+      "surface-highlight": {
+        "#2d1d42": 1,
+        "#2a1e3b": 1,
+        "#2d1f45": 1,
+        "#3a2a55": 1,
+        "#2a1e3e": 1,
+        "#2C2C2C": 1,
+        "#322249": 2
+      },
+      "success": {
+        "#00E676": 2,
+        "#00e676": 1,
+        "#22c55e": 1,
+        "#4CAF50": 1,
+        "#4ade80": 1
+      },
+      "error": {
+        "#FF5252": 2,
+        "#ff5252": 1,
+        "#ef4444": 3
+      },
+      "warning": {
+        "#FFAB40": 2,
+        "#ffd740": 1,
+        "#eab308": 1,
+        "#FFC107": 1,
+        "#facc15": 1
+      },
+      "text-secondary": {
+        "#a78ecc": 6,
+        "#b4a0d8": 1,
+        "#a78dce": 1,
+        "#a890cb": 1
+      },
+      "primary-light": {
+        "#a566ff": 1
+      },
+      "surface-active": {
+        "#352250": 1,
+        "#2b1e3b": 1
+      },
+      "info": {
+        "#2979FF": 1
+      },
+      "text-primary": {
+        "#ffffff": 1
+      },
+      "text-muted": {
+        "#75668c": 1,
+        "#888888": 1
+      },
+      "border-color": {
+        "#33264a": 1,
+        "#472f6a": 3
+      },
+      "border-highlight": {
+        "#4a366b": 1
+      },
+      "secondary": {
+        "#a78dce": 1
+      },
+      "surface-lighter": {
+        "#31214a": 3,
+        "#2d1f42": 1
+      },
+      "primary-hover": {
+        "#702cd6": 1,
+        "#9d5cfa": 1,
+        "#8e44f6": 1
+      },
+      "editor-bg": {
+        "#0d0914": 1
+      },
+      "code-bg": {
+        "#120c1c": 1
+      },
+      "gutter-bg": {
+        "#170f23": 1
+      },
+      "accent-error": {
+        "#ef4444": 1
+      },
+      "accent-warning": {
+        "#f59e0b": 1
+      },
+      "surface-card": {
+        "#2a203b": 2
+      },
+      "neon-red": {
+        "#ff4d6d": 2
+      },
+      "neon-yellow": {
+        "#ffd60a": 2
+      },
+      "neon-blue": {
+        "#4cc9f0": 2
+      },
+      "surface-hover": {
+        "#35294a": 1,
+        "#36274a": 1
+      },
+      "surface-light": {
+        "#ffffff": 1
+      },
+      "subtle-text": {
+        "#a78ecc": 1
+      },
+      "surface-darker": {
+        "#120b1b": 1,
+        "#13131F": 1,
+        "#1c142b": 1,
+        "#322249": 1,
+        "#171717": 1
+      },
+      "status-error": {
+        "#ff5c5c": 1,
+        "#ff6b6b": 3
+      },
+      "status-warning": {
+        "#ffbd5c": 1,
+        "#ffd166": 3
+      },
+      "status-ok": {
+        "#5cffbd": 1,
+        "#66ffc2": 3
+      },
+      "status-sync": {
+        "#888888": 1,
+        "#a0a0a0": 3
+      },
+      "surface-border": {
+        "#462e6b": 2
+      },
+      "card-dark": {
+        "#251b36": 1,
+        "#231835": 1
+      },
+      "card-hover": {
+        "#2f2245": 1
+      },
+      "text-main": {
+        "#E0E0E0": 1
+      },
+      "danger": {
+        "#FF5252": 1
+      },
+      "accent-neon": {
+        "#00ff9d": 1
+      },
+      "accent-cyan": {
+        "#00e5ff": 1
+      },
+      "sidebar-bg": {
+        "#1c1427": 1
+      }
+    }
+  }
+}

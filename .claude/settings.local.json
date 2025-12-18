@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir \"C:\\\\Users\\\\thecr\\\\Desktop\\\\JPE_Mod_Translator\\\\JPE assets folder\" /B)",
+      "Bash(ls:*)",
+      "Bash(git init:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nPhase 1-2: UI/UX Foundation and Component Library\n\n- Updated design_system.py with new color tokens \\(#9d5cff primary, badge colors, shadows, animations\\)\n- Added spacing tokens \\(xxs=4, xs=8\\) and animation tokens\n- Refined QSS stylesheet typography \\(H1: 24pt, H2: 16pt, body: 11pt, added H3 and caption roles\\)\n- Updated component styling \\(inputs, buttons, cards, scrollbars from 12px to 8px\\)\n- Added badge styling rules with 5 variants \\(primary, success, warning, error, info\\)\n- Updated gradient background and all color references to use new primary color\n- Created 7 new components in components.py:\n  * BadgeLabel - status badges with color variants\n  * FAB - floating action button \\(56x56px\\)\n  * SearchBar - enhanced search input with icon and clear button\n  * EmptyStateWidget - empty state display with icon, title, description\n  * SegmentedControl - multi-button pill container with active state\n  * ProgressCard - project card with progress bar and metadata\n- Updated existing components:\n  * CardFrame - updated shadow color to new primary\n  * ToggleSwitch - updated colors to new primary \\(#9d5cff\\)\n\nAll changes align with the 48 reference designs in JPE assets folder.\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(python:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nPhase 3: Core Workflow Screens\n\nUpdated three main screens with Phase 1-2 components and new color tokens:\n\n**Dashboard \\(Home Page\\)** - main_window.py:\n- Replaced QLineEdit with SearchBar component \\(icon + clear button\\)\n- Replaced manual chip buttons with ChipButton components\n- Replaced manual FAB with FAB component \\(56x56px, tooltip\\)\n- Added EmptyStateWidget when no recent projects\n- Updated icon background color to new primary \\(#9d5cff\\)\n- Used H1 component for \"Hello, Dev\" heading\n- Updated BadgeLabel integration for project status badges\n- Updated caption role for subtitle text\n\n**Project Explorer** - explorer2.py:\n- Updated primary colors from #7825f4 to #9d5cff\n- Updated primary_hover from #8e44f6 to #b584ff\n- Updated brand icon background to new primary \\(rgba\\(157,92,255,0.18\\)\\)\n\n**Project Detail** - project_detail.py:\n- Imported and used BadgeLabel component for error/warning badges\n- Updated title to use H2 role property\n- Updated subtitle to use caption role\n- Updated segmented button active color to new primary \\(rgba\\(157,92,255,0.85\\)\\)\n- Updated progress bar chunk color to #9d5cff\n- Replaced inline badge styles with BadgeLabel components\n\nAll changes align with the 48 reference designs in JPE assets folder.\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git commit:*)",
+      "Bash(git remote add:*)",
+      "Bash(git push:*)",
+      "Bash(git fetch:*)",
+      "Bash(git merge-base:*)",
+      "Bash(git pull:*)"
+    ]
+  }
+}

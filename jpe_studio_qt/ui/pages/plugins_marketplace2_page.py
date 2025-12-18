@@ -13,7 +13,7 @@ from PySide6.QtWidgets import (
 )
 
 from jpe_studio_qt.design_system import DESIGN
-from jpe_studio_qt.ui.components import CardFrame, H1, H2, MaterialIcon, Muted, SearchBar
+from jpe_studio_qt.ui.components import CardFrame, H1, H2, MaterialIcon, Muted, SearchBar, ChipButton, BadgeLabel
 
 
 class PluginsMarketplace2Page(QWidget):
@@ -56,17 +56,9 @@ class PluginsMarketplace2Page(QWidget):
         search_row.addWidget(search, 1)
 
         # Filter chips
-        all_chip = QPushButton("All")
-        all_chip.setObjectName("ChipActive")
-        all_chip.setFixedHeight(32)
-        
-        installed_chip = QPushButton("Installed")
-        installed_chip.setObjectName("Chip")
-        installed_chip.setFixedHeight(32)
-        
-        updates_chip = QPushButton("Updates")
-        updates_chip.setObjectName("Chip")
-        updates_chip.setFixedHeight(32)
+        all_chip = ChipButton("All", active=True)
+        installed_chip = ChipButton("Installed")
+        updates_chip = ChipButton("Updates")
 
         search_row.addWidget(all_chip)
         search_row.addWidget(installed_chip)
@@ -89,15 +81,13 @@ class PluginsMarketplace2Page(QWidget):
 
         # Categories
         categories_row = QHBoxLayout()
-        categories_row.setSpacing(12)
-        
+        categories_row.setSpacing(DESIGN.spacing.md)
+
         categories = ["All", "Translation", "Validation", "Export", "Utility", "Theme"]
         for cat in categories:
-            chip = QPushButton(cat)
-            chip.setObjectName("Chip" + ("Active" if cat == "All" else ""))
-            chip.setFixedHeight(32)
+            chip = ChipButton(cat, active=(cat == "All"))
             categories_row.addWidget(chip)
-        
+
         categories_row.addStretch(1)
         content_l.addLayout(categories_row)
 
@@ -238,17 +228,7 @@ class PluginsMarketplace2Page(QWidget):
 
         # Featured badge
         if featured:
-            featured_badge = QLabel("FEATURED")
-            featured_badge.setStyleSheet("""
-                font-size: 8pt;
-                font-weight: 800;
-                letter-spacing: 1px;
-                padding: 2px 6px;
-                border-radius: 6px;
-                background: rgba(76,201,240,0.18);
-                color: #4cc9f0;
-                border: 1px solid rgba(76,201,240,0.25);
-            """)
+            featured_badge = BadgeLabel("FEATURED", variant="info")
             top_row.addWidget(featured_badge)
 
         card_l.addLayout(top_row)
@@ -285,15 +265,14 @@ class PluginsMarketplace2Page(QWidget):
         return card
 
     def _get_color_for_variant(self, variant: str) -> str:
-        """Get color based on variant."""
-        c = DESIGN.colors
+        """Get RGB color values based on variant (for rgba() usage)."""
         if variant == "success":
-            return c.success
+            return "34, 197, 94"  # #22c55e
         elif variant == "warning":
-            return c.warning
+            return "234, 179, 8"  # #eab308
         elif variant == "error":
-            return c.error
+            return "239, 68, 68"  # #ef4444
         elif variant == "info":
-            return c.info
+            return "76, 201, 240"  # #4cc9f0
         else:  # primary
-            return c.primary
+            return "157, 92, 255"  # #9d5cff

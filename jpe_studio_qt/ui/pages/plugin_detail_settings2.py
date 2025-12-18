@@ -15,7 +15,7 @@ from PySide6.QtWidgets import (
 )
 
 from jpe_studio_qt.design_system import DESIGN
-from jpe_studio_qt.ui.components import CardFrame, H1, H2, MaterialIcon, Muted
+from jpe_studio_qt.ui.components import CardFrame, H1, H2, MaterialIcon, Muted, BadgeLabel, ChipButton, ToggleSwitch
 
 
 class PluginDetailSettings2Page(QWidget):
@@ -93,26 +93,16 @@ class PluginDetailSettings2Page(QWidget):
         actions.setSpacing(10)
 
         # Status badge
-        status_badge = QLabel("INSTALLED")
-        status_badge.setProperty("role", "badge")
-        status_badge.setProperty("variant", "success")
-        status_badge.setStyleSheet(
-            "padding: 4px 10px; border-radius: 10px; font-size: 9pt; font-weight: 900;"
-            "background: rgba(34,197,94,0.14); color: #22c55e; border: 1px solid rgba(34,197,94,0.20);"
-        )
+        status_badge = BadgeLabel("INSTALLED", variant="success")
         actions.addWidget(status_badge)
 
         # Update button
-        update_btn = QPushButton("Update")
-        update_btn.setObjectName("Chip")
-        update_btn.setFixedHeight(32)
+        update_btn = ChipButton("Update")
         actions.addWidget(update_btn)
 
         # Uninstall button
-        uninstall_btn = QPushButton("Uninstall")
-        uninstall_btn.setObjectName("Chip")
+        uninstall_btn = ChipButton("Uninstall")
         uninstall_btn.setStyleSheet("color: #ef4444; border-color: rgba(239,68,68,0.4);")
-        uninstall_btn.setFixedHeight(32)
         actions.addWidget(uninstall_btn)
 
         hl.addLayout(actions)

@@ -19,7 +19,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from jpe_studio_qt.ui.components import CardFrame, H2, Muted, set_toolbutton_icon
+from jpe_studio_qt.ui.components import CardFrame, H2, Muted, BadgeLabel, ChipButton, set_toolbutton_icon
 
 
 @dataclass(frozen=True)
@@ -83,11 +83,7 @@ class EntityDetailDialog(QDialog):
         il.setSpacing(10)
         self.badges = QHBoxLayout()
         self.badges.setSpacing(8)
-        self.badge_kind = QLabel("ENTITY")
-        self.badge_kind.setStyleSheet(
-            "padding: 3px 8px; border-radius: 8px; font-size: 9pt; font-weight: 900;"
-            "background: rgba(149,81,251,0.18); color: #9551fb; border: 1px solid rgba(149,81,251,0.20);"
-        )
+        self.badge_kind = BadgeLabel("ENTITY", variant="primary")
         self.badge_source = QLabel("JPE Core")
         self.badge_source.setStyleSheet(
             "padding: 3px 8px; border-radius: 8px; font-size: 9pt; font-weight: 800;"
@@ -114,8 +110,7 @@ class EntityDetailDialog(QDialog):
 
         # Bottom action bar.
         actions = QHBoxLayout()
-        self.btn_jump = QPushButton("Jump to Related")
-        self.btn_jump.setObjectName("Chip")
+        self.btn_jump = ChipButton("Jump to Related")
         actions.addWidget(self.btn_jump)
         self.btn_open_editor = QPushButton("Open Full Editor")
         self.btn_open_editor.setObjectName("Primary")

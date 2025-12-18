@@ -1451,33 +1451,22 @@ class CommandPaletteDialog(QDialog):
         root.setContentsMargins(16, 16, 16, 16)
         root.setSpacing(12)
 
-        title = QLabel("Command Palette")
-        title.setObjectName("H2")
+        title = H2("Command Palette")
         root.addWidget(title)
 
-        self.query = QLineEdit()
-        self.query.setPlaceholderText("Type command or binding...")
+        self.query = SearchBar(placeholder="Type command or binding...")
         self.query.textChanged.connect(self._render)
         root.addWidget(self.query)
 
         chips = QHBoxLayout()
-        chips.setSpacing(10)
-        self.chip_all = QPushButton("All")
-        self.chip_all.setObjectName("ChipActive")
-        self.chip_all.setCheckable(True)
-        self.chip_all.setChecked(True)
+        chips.setSpacing(DESIGN.spacing.sm)
+        self.chip_all = ChipButton("All", active=True)
         self.chip_all.clicked.connect(lambda: self._set_chip("ALL"))
-        self.chip_core = QPushButton("Core")
-        self.chip_core.setObjectName("Chip")
-        self.chip_core.setCheckable(True)
+        self.chip_core = ChipButton("Core")
         self.chip_core.clicked.connect(lambda: self._set_chip("CORE"))
-        self.chip_translation = QPushButton("Translation")
-        self.chip_translation.setObjectName("Chip")
-        self.chip_translation.setCheckable(True)
+        self.chip_translation = ChipButton("Translation")
         self.chip_translation.clicked.connect(lambda: self._set_chip("TRANSLATION"))
-        self.chip_view = QPushButton("View")
-        self.chip_view.setObjectName("Chip")
-        self.chip_view.setCheckable(True)
+        self.chip_view = ChipButton("View")
         self.chip_view.clicked.connect(lambda: self._set_chip("VIEW"))
         for b in (self.chip_all, self.chip_core, self.chip_translation, self.chip_view):
             chips.addWidget(b)
@@ -1490,8 +1479,7 @@ class CommandPaletteDialog(QDialog):
 
         foot = QHBoxLayout()
         foot.addStretch(1)
-        self.btn_close = QPushButton("Close")
-        self.btn_close.setObjectName("Chip")
+        self.btn_close = ChipButton("Close")
         self.btn_close.clicked.connect(self.reject)
         self.btn_run = QPushButton("Run")
         self.btn_run.setObjectName("Primary")
@@ -1523,10 +1511,10 @@ class CommandPaletteDialog(QDialog):
             "VIEW": self.chip_view,
         }
         for k, b in mapping.items():
-            b.setObjectName("ChipActive" if k == chip else "Chip")
+            # ChipButton handles active state via property
+            b.setProperty("active", k == chip)
             b.style().unpolish(b)
             b.style().polish(b)
-            b.setChecked(k == chip)
         self._render()
 
     def _all_commands(self) -> list[dict[str, object]]:

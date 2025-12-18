@@ -1,0 +1,68 @@
+# Bookworm Trait Template
+# For Sims who love reading and learning
+
+Bookworm Trait
+  description: "This Sim loves reading and gets lost in books"
+  category: lifestyle
+  rarity: common
+  benefits:
+    - faster reading speed
+    - mood boost from reading
+    - knowledge gain
+
+---
+
+Read Book
+  description: "Get lost in an engaging book"
+  type: object
+  duration: 90
+  tests:
+    - actor has bookworm trait
+    - book is available
+    - actor is in quiet location
+    - actor is not interrupted
+  effects:
+    - increase mood by 30
+    - increase knowledge skill by 2
+    - add focused feeling
+    - add relaxed feeling
+
+---
+
+Read for Fun
+  description: "Enjoy leisure reading just for pleasure"
+  type: object
+  duration: 60
+  tests:
+    - actor has bookworm trait
+    - actor is not stressed
+  effects:
+    - increase mood by 25
+    - add peaceful feeling
+
+---
+
+Focused Feeling
+  description: "Deeply focused on reading"
+  mood_type: positive
+  intensity: 2
+  duration: 240
+  mood_gain: 20
+
+---
+
+Relaxed Feeling
+  description: "Feeling relaxed and content"
+  mood_type: positive
+  intensity: 2
+  duration: 300
+  mood_gain: 15
+
+---
+
+Peaceful Feeling
+  description: "Peaceful and serene"
+  mood_type: positive
+  intensity: 2
+  duration: 180
+  mood_gain: 18

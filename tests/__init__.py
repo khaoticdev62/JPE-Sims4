@@ -1,0 +1,1 @@
+"""Test suite for JPE Sims 4 Mod Translator."""

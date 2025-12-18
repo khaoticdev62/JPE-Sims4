@@ -1,0 +1,81 @@
+
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Asset Preview</title>
+            <style>
+                
+        body { font-family: sans-serif; margin: 20px; background-color: #f0f0f0; }
+        h1 { color: #333; text-align: center; }
+        .asset-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .asset-item {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            text-align: center;
+            background-color: #fff;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .asset-item img, .asset-item embed {
+            max-width: 100%;
+            height: auto;
+            max-height: 150px; /* Limit height for uniform display */
+            object-fit: contain;
+            margin-bottom: 10px;
+            border: 1px dashed #eee;
+        }
+        .asset-item p {
+            font-size: 0.8em;
+            color: #555;
+            word-break: break-all;
+        }
+        
+            </style>
+        </head>
+        <body>
+            <h1>Asset Preview</h1>
+            <div class="asset-container">
+                
+            <div class="asset-item">
+                <img src="cli_icon_P_32.png" alt="cli_icon_P_32.png" />
+                <p>cli_icon_P_32.png</p>
+            </div>
+            
+            <div class="asset-item">
+                <embed src="cli_icon_S_48.svg" type="image/svg+xml" />
+                <p>cli_icon_S_48.svg</p>
+            </div>
+            
+            <div class="asset-item">
+                <img src="cli_button_save.png" alt="cli_button_save.png" />
+                <p>cli_button_save.png</p>
+            </div>
+            
+            <div class="asset-item">
+                <img src="cli_progressbar_75.png" alt="cli_progressbar_75.png" />
+                <p>cli_progressbar_75.png</p>
+            </div>
+            
+            <div class="asset-item">
+                <img src="cli_text_input_normal.png" alt="cli_text_input_normal.png" />
+                <p>cli_text_input_normal.png</p>
+            </div>
+            
+            </div>
+        </body>
+        </html>
+        

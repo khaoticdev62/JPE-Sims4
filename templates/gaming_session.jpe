@@ -1,0 +1,59 @@
+# Gaming Session Template
+# Video game playing and entertainment
+
+Play Video Game
+  description: "Enjoy playing video games for fun and relaxation"
+  type: object
+  duration: 120
+  tests:
+    - actor is not tired
+    - gaming system is available
+    - actor is in good mood
+  effects:
+    - increase mood by 30
+    - increase gaming skill by 1
+    - add entertained feeling
+    - add relaxed feeling
+
+---
+
+Multiplayer Gaming
+  description: "Play video games with friends"
+  type: social
+  duration: 90
+  tests:
+    - actor is not tired
+    - at least one friend present
+    - gaming system supports multiplayer
+  effects:
+    - increase mood by 35
+    - increase friendship +15
+    - increase gaming skill by 1
+    - add fun feeling
+
+---
+
+Entertained Feeling
+  description: "Entertained and having fun"
+  mood_type: positive
+  intensity: 2
+  duration: 240
+  mood_gain: 25
+
+---
+
+Relaxed Feeling
+  description: "Relaxed and unwinding"
+  mood_type: positive
+  intensity: 2
+  duration: 180
+  mood_gain: 20
+
+---
+
+Fun Feeling
+  description: "Having a blast with friends"
+  mood_type: positive
+  intensity: 3
+  duration: 300
+  mood_gain: 30

@@ -1,0 +1,24 @@
+# Give Compliment Template
+# Boost someone's self-esteem with a genuine compliment
+
+Give Compliment
+  description: "Give a genuine compliment to boost confidence"
+  type: social
+  duration: 12
+  tests:
+    - actor is not mean spirited
+    - target is not in excellent mood
+    - not in public
+  effects:
+    - increase mood by 15
+    - increase friendship +8
+    - add confident feeling
+
+---
+
+Confident Feeling
+  description: "Feeling confident and valued"
+  mood_type: positive
+  intensity: 2
+  duration: 150
+  mood_gain: 12

@@ -1,0 +1,11 @@
+[Project]
+name: Test
+id: test_project
+version:1.0.0
+author:Test
+end
+
+[Interactions]
+id: greet
+display_name: hi
+end

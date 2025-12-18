@@ -1,0 +1,22 @@
+# Simple Greeting Template
+# A basic friendly greeting between Sims - perfect for testing
+
+Simple Wave
+  description: "Give a friendly wave and say hello"
+  type: social
+  duration: 10
+  tests:
+    - actor is not alone
+    - actor is not in bad mood
+  effects:
+    - increase mood by 5
+    - increase friendship +3
+
+---
+
+Happy Greeting Buff
+  description: "Feeling happy from a friendly greeting"
+  mood_type: positive
+  intensity: 1
+  duration: 60
+  mood_gain: 5

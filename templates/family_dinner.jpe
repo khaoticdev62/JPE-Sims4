@@ -1,0 +1,26 @@
+# Family Dinner Template
+# Create a multi-family gathering for bonding
+
+Family Dinner Night
+  description: "Gather the whole family for dinner and quality time"
+  type: social
+  duration: 120
+  tests:
+    - actor is head of household
+    - location is home lot
+    - everyone is available
+    - actor has prepared meal
+  effects:
+    - increase mood by 40
+    - increase family bonds by 30
+    - increase friendship +25
+    - add family feeling
+
+---
+
+Family Feeling
+  description: "Feeling close and bonded with family"
+  mood_type: positive
+  intensity: 3
+  duration: 360
+  mood_gain: 40

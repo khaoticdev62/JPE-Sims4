@@ -1,0 +1,24 @@
+# Painting Practice Template
+# Develop painting skills through dedicated practice
+
+Practice Painting
+  description: "Work on canvas to develop painting skills"
+  type: object
+  duration: 60
+  tests:
+    - actor is not tired
+    - actor has painting supplies
+    - actor is in good mood
+  effects:
+    - increase painting skill by 2
+    - increase mood by 10
+    - add focused feeling
+
+---
+
+Focused Feeling
+  description: "Focused on artistic expression"
+  mood_type: positive
+  intensity: 2
+  duration: 180
+  mood_gain: 15

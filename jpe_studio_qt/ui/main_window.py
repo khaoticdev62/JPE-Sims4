@@ -92,6 +92,13 @@ from jpe_studio_qt.ui.pages.design_system_pages import (
 from jpe_studio_qt.animations import fade_in, fade_out  # Phase 5: Animation integration
 from jpe_studio_qt.state_widgets import LoadingSpinner, ErrorState  # Phase 5: State widget integration
 
+# Phase 16-20: Advanced infrastructure integration
+from jpe_studio_qt.navigation import NavigationHistory
+from jpe_studio_qt.project_persistence import ProjectPersistence
+from jpe_studio_qt.settings_manager import SettingsManager, DEFAULT_SETTINGS
+from jpe_studio_qt.theme_manager import ThemeManager
+from jpe_studio_qt.import_export import ImportExportManager
+
 
 # Entity Editor Model for displaying entity data (dataclass for passing entity info to UI)
 @dataclass
@@ -138,6 +145,32 @@ class MainWindow(QMainWindow):
         self._thread_pool = QThreadPool.globalInstance()
         self._ctx = ProjectContext()
         self._recents = load_recents()
+
+        # Phase 16-20: Initialize all infrastructure systems
+        # Settings Manager - Loads/saves user preferences
+        self.settings_manager = SettingsManager()
+        for key, value in DEFAULT_SETTINGS.items():
+            self.settings_manager.set_default(key, value)
+
+        # Theme Manager - Handles dark/light mode switching
+        from PySide6.QtWidgets import QApplication
+        app = QApplication.instance()
+        self.theme_manager = ThemeManager(app, self.settings_manager)
+        self.theme_manager.on_theme_change(self._on_theme_changed)
+
+        # Navigation History - Tracks page navigation with back/forward support
+        page_names = {
+            0: "Dashboard", 1: "Projects", 2: "Translate", 3: "Issues",
+            4: "Build", 5: "Plugins", 6: "Documentation", 7: "Community",
+            8: "About", 9: "Project", 10: "Entity", 11: "Settings"
+        }
+        self.navigation_history = NavigationHistory(page_names, max_history=50)
+
+        # Project Persistence - Auto-save and backup management
+        self.project_persistence = ProjectPersistence()
+
+        # Import/Export Manager - Handles data import/export
+        self.import_export_manager = ImportExportManager()
 
         shell = QFrame()
         shell.setObjectName("AppShell")
@@ -553,8 +586,14 @@ class MainWindow(QMainWindow):
         return True
 
     def _select_page(self, idx: int) -> None:
-        """Navigate to page with fade animation and sidebar visibility handling."""
+        """Navigate to page with fade animation and sidebar visibility handling.
+
+        Phase 21: Integrated navigation history tracking.
+        """
         current_widget = self.stack.currentWidget()
+
+        # Phase 21: Track navigation in history
+        self.navigation_history.navigate_to(idx)
 
         # Set the new page (will be hidden initially for fade-in effect)
         self.stack.setCurrentIndex(idx)
@@ -600,6 +639,19 @@ class MainWindow(QMainWindow):
             self.breadcrumb.setText(page_names.get(idx, ""))
         except Exception as e:
             logger.debug(f"Note: Could not update breadcrumb: {e}")
+
+    def _on_theme_changed(self, theme_name: str) -> None:
+        """Handle theme change from ThemeManager.
+
+        Phase 21: Theme system integration.
+        """
+        try:
+            logger.info(f"Theme changed to: {theme_name}")
+            # Theme stylesheet is already applied by ThemeManager
+            # Update status bar if needed
+            self.status.setText(f"Theme: {theme_name.capitalize()}")
+        except Exception as e:
+            logger.warning(f"Failed to apply theme change: {e}")
 
     def _render_recents(self) -> None:
         try:
@@ -740,6 +792,10 @@ class MainWindow(QMainWindow):
         self.status.setText(text)
 
     def _save_project(self) -> None:
+        """Save the current project.
+
+        Phase 21: Integrated project persistence with auto-save and backups.
+        """
         if not self._ctx.project:
             QMessageBox.information(self, "JPE Studio", "No project loaded.")
             return
@@ -748,6 +804,9 @@ class MainWindow(QMainWindow):
             return
         try:
             save_project(self._ctx.project, self._ctx.project_json_path)
+            # Phase 21: Also save to project persistence (creates backups)
+            project_name = self._ctx.project_json_path.stem
+            self.project_persistence.save_project(self._ctx.project, project_name)
         except Exception as e:
             QMessageBox.critical(self, "JPE Studio", f"Save failed.\n\n{e}")
             return
@@ -823,8 +882,25 @@ class MainWindow(QMainWindow):
         self._thread_pool.start(worker)
 
     def set_project(self, project: Project, *, project_json_path: Path | None) -> None:
-        """Update all page screens with the current project context."""
+        """Update all page screens with the current project context.
+
+        Phase 21: Integrated project persistence with auto-save.
+        """
         self._ctx = ProjectContext(project=project, project_json_path=project_json_path)
+
+        # Phase 21: Enable auto-save for this project
+        if project_json_path:
+            project_name = project_json_path.stem
+            try:
+                # Try to load from persistence first (might have backups)
+                saved_project = self.project_persistence.load_project(project_name)
+                if saved_project:
+                    logger.info(f"Loaded project from persistence: {project_name}")
+                # Enable auto-save with 60-second interval
+                self.project_persistence.enable_autosave(project, project_name, interval_seconds=60)
+                logger.info(f"Auto-save enabled for project: {project_name}")
+            except Exception as e:
+                logger.warning(f"Failed to set up auto-save for {project_name}: {e}")
 
         # Initialize all screen pages with project data
         pages = [
@@ -888,6 +964,10 @@ class MainWindow(QMainWindow):
         self._select_page(10)
 
     def save_project_as(self) -> None:
+        """Save project to a new location.
+
+        Phase 21: Integrated persistence on save-as.
+        """
         if not self._ctx.project:
             return
         path, _ = QFileDialog.getSaveFileName(self, "Save Project As", "", "JPE Project (*.json)")
@@ -896,6 +976,9 @@ class MainWindow(QMainWindow):
         p = Path(path)
         try:
             save_project(self._ctx.project, p)
+            # Phase 21: Also save to project persistence
+            project_name = p.stem
+            self.project_persistence.save_project(self._ctx.project, project_name)
         except Exception as e:
             QMessageBox.critical(self, "JPE Studio", f"Save failed.\n\n{e}")
             return

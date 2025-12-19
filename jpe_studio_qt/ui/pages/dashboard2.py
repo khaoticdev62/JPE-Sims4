@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Optional
 
 from PySide6.QtCore import Qt, Signal, QTimer
-from PySide6.QtGui import QColor
+from PySide6.QtGui import QColor, QResizeEvent
 from PySide6.QtWidgets import (
     QFrame,
     QGridLayout,
@@ -246,20 +246,30 @@ class Dashboard2Page(QWidget):
             return
 
         # Create cards for each project with fade-in animation (Phase 5)
+        project_cards = []
         for idx, project_path in enumerate(recents[:12]):
             card = self._create_project_card(project_path)
             self._projects_layout.addWidget(card)
+            project_cards.append(card)
             # Stagger animations slightly for smooth cascade effect
             QTimer.singleShot(idx * 50, lambda c=card: fade_in(c, duration=150))
 
-        # Setup responsive grid (280px min, 3 columns max on large screens)
+        # Setup responsive grid (280px min, 3 columns max on large screens) - Phase 5
         if self._responsive_grid is None:
             self._responsive_grid = ResponsiveGrid(
                 self._projects_layout, min_col_width=280, max_columns=3
             )
-            for project_path in recents[:12]:
-                # Already added, just track
-                pass
+        # Add project cards to responsive grid for tracking
+        for card in project_cards:
+            self._responsive_grid.add_item(card)
+
+    def resizeEvent(self, event: QResizeEvent) -> None:
+        """Phase 5: Handle window resize to update responsive grid columns."""
+        super().resizeEvent(event)
+        if self._responsive_grid is not None and self._projects:
+            # Get the container width (accounting for scrollbar and margins)
+            available_width = self.width() - 48  # 24px left + 24px right margin
+            self._responsive_grid.update_columns(available_width)
 
     def _create_quick_action_tile(self, icon_name: str, label: str) -> QWidget:
         """Create a 120x120px quick action tile."""

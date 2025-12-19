@@ -219,6 +219,12 @@ class BuildHistory2Page(QWidget):
         content.setWidget(content_widget)
         root.addWidget(content, 1)
 
+    def set_project(self, project: object) -> None:
+        """Set the current project context (for wiring with MainWindow)."""
+        # Store project for future use when build features are fully implemented
+        self._project = project
+        # Current implementation shows sample builds; in future will show real project builds
+
     def _add_sample_builds(self) -> None:
         """Add sample builds to the tree."""
         builds = [

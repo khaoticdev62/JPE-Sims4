@@ -85,6 +85,12 @@ class EntityJpeViewPage(QWidget):
 
         root.addWidget(content, 1)
 
+    def set_model(self, model: object) -> None:
+        """Set the entity editor model to display entity data."""
+        # Store model for future use when entity editing features are fully implemented
+        self._model = model
+        # Current implementation shows placeholder data; in future will display real entity data
+
     def _create_left_panel(self) -> QWidget:
         """Create the left panel with entity metadata."""
         panel = QWidget()

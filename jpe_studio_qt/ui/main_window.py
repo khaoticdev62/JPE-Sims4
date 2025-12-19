@@ -1,10 +1,14 @@
 from __future__ import annotations
 
 import json
+import logging
 from dataclasses import dataclass
 from datetime import datetime, timezone
 import os
 from pathlib import Path
+
+# Setup logger for debugging screen loading issues
+logger = logging.getLogger(__name__)
 
 from jpe_sims4.project import Project
 from jpe_sims4.glossary import glossary_hits
@@ -73,6 +77,16 @@ from jpe_studio_qt.ui.entity_detail_dialog import EntityDetailDialog, EntityRef
 from jpe_studio_qt.ui.pages.entity_jpe_view import EntityJpeViewPage
 from jpe_studio_qt.animations import fade_in, fade_out  # Phase 5: Animation integration
 from jpe_studio_qt.state_widgets import LoadingSpinner, ErrorState  # Phase 5: State widget integration
+
+
+# Entity Editor Model for displaying entity data (dataclass for passing entity info to UI)
+@dataclass
+class EntityEditorModel:
+    """Model for entity editor - holds entity display data."""
+    title: str
+    status: str
+    code: str
+    warning: str | None = None
 
 
 class _WorkerSignals(QObject):
@@ -473,7 +487,7 @@ class MainWindow(QMainWindow):
         return True
 
     def _select_page(self, idx: int) -> None:
-        # Phase 5: Page transition animation
+        """Navigate to page with fade animation and sidebar visibility handling."""
         current_widget = self.stack.currentWidget()
 
         # Set the new page (will be hidden initially for fade-in effect)
@@ -484,19 +498,25 @@ class MainWindow(QMainWindow):
         if new_widget is not None:
             fade_in(new_widget, duration=200)
 
+        # Handle full-shell pages that hide sidebar
         try:
             full_shell = bool(new_widget.property("full_shell")) if new_widget is not None else False
             self.sidebar.setVisible(not full_shell)
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f"Note: Could not set sidebar visibility: {e}")
+
+        # Update navigation button states
         for i, b in enumerate(self.nav_buttons):
             b.setChecked(i == idx)
+
+        # Update settings button state
         try:
             self.btn_settings.setChecked(idx == 11)
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f"Note: Could not update settings button: {e}")
 
-        names = {
+        # Update breadcrumb with page name
+        page_names = {
             0: "Dashboard",
             1: "Projects",
             2: "Translate",
@@ -511,17 +531,17 @@ class MainWindow(QMainWindow):
             11: "Settings",
         }
         try:
-            self.breadcrumb.setText(names.get(idx, ""))
-        except Exception:
-            pass
+            self.breadcrumb.setText(page_names.get(idx, ""))
+        except Exception as e:
+            logger.debug(f"Note: Could not update breadcrumb: {e}")
 
     def _render_recents(self) -> None:
         try:
             if hasattr(self, "dashboard_page") and hasattr(self.dashboard_page, "set_recents"):
                 self.dashboard_page.set_recents([str(p) for p in (self._recents or [])])
                 return
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f"Dashboard page doesn't have set_recents method, falling back to recents_cards: {e}")
         if hasattr(self, "recents_cards"):
             layout = self.recents_cards
             while layout.count():
@@ -737,40 +757,33 @@ class MainWindow(QMainWindow):
         self._thread_pool.start(worker)
 
     def set_project(self, project: Project, *, project_json_path: Path | None) -> None:
+        """Update all page screens with the current project context."""
         self._ctx = ProjectContext(project=project, project_json_path=project_json_path)
+
+        # Initialize all screen pages with project data
+        pages = [
+            ("Workspace", self.workspace_page),
+            ("Explorer", self.explorer_page),
+            ("Diagnostics", self.qa_page),
+            ("Build History", self.build_page),
+            ("Plugins Marketplace", self.plugins_page),
+            ("Settings", self.settings_page),
+            ("Project Detail", self.project_detail_page),
+        ]
+
+        for page_name, page_obj in pages:
+            try:
+                page_obj.set_project(project)
+                logger.debug(f"✓ {page_name} page initialized")
+            except Exception as e:
+                logger.error(f"✗ Failed to initialize {page_name} page: {e}", exc_info=True)
+
+        # Reset entity view to avoid stale data
         try:
-            self.workspace_page.set_project(project)
-        except Exception:
-            pass
-        try:
-            self.explorer_page.set_project(project)
-        except Exception:
-            pass
-        try:
-            self.qa_page.set_project(project)
-        except Exception:
-            pass
-        try:
-            self.build_page.set_project(project)
-        except Exception:
-            pass
-        try:
-            self.plugins_page.set_project(project)
-        except Exception:
-            pass
-        try:
-            self.settings_page.set_project(project)
-        except Exception:
-            pass
-        try:
-            self.project_detail_page.set_project(project)
-        except Exception:
-            pass
-        try:
-            # Keep entity view reset to avoid stale code.
             self.entity_jpe_page.set_model(EntityEditorModel(title="Entity Editor", status="", code="", warning=None))
-        except Exception:
-            pass
+            logger.debug("✓ Entity JPE View initialized")
+        except Exception as e:
+            logger.error(f"✗ Failed to initialize Entity JPE View: {e}", exc_info=True)
 
     def _open_entity_from_segment(self, seg: object) -> None:
         if not isinstance(seg, dict):

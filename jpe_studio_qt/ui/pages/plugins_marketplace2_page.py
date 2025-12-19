@@ -105,6 +105,12 @@ class PluginsMarketplace2Page(QWidget):
         content.setWidget(content_widget)
         root.addWidget(content, 1)
 
+    def set_project(self, project: object) -> None:
+        """Set the current project context (for wiring with MainWindow)."""
+        # Store project for future use when plugin features are fully implemented
+        self._project = project
+        # Current implementation shows marketplace plugins; in future will show project-specific plugins
+
     def _create_section(self, title: str, content_widget: QWidget) -> QFrame:
         """Create a section with title and content."""
         section = QFrame()

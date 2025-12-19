@@ -1560,3 +1560,240 @@ class FormSection(QFrame):
         # Divider
         divider = Divider()
         layout.addWidget(divider)
+
+
+class LoadingIndicator(QFrame):
+    """Spinning loading indicator for data loading states.
+
+    Features:
+    - Smooth rotating animation
+    - Customizable size and color
+    - Optional loading text below spinner
+
+    Usage:
+        loader = LoadingIndicator(size=48, text="Loading data...")
+        layout.addWidget(loader)
+    """
+
+    def __init__(self, size: int = 48, text: str = "", color: str = None) -> None:
+        super().__init__()
+        from PySide6.QtCore import QTimer, QPropertyAnimation, QRect
+        from PySide6.QtGui import QBrush, QPen, QPalette
+        from PySide6.QtWidgets import QVBoxLayout
+
+        self.size = size
+        self.color = color or COLORS.accent_primary
+        self.rotation = 0
+
+        # Main layout
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(SPACING.sm)
+        layout.setAlignment(Qt.AlignCenter)
+
+        # Spinner widget
+        self.spinner = QFrame()
+        self.spinner.setFixedSize(size, size)
+        self.spinner.setStyleSheet(f"""
+            QFrame {{
+                background: transparent;
+                border: 3px solid {COLORS.stroke_1};
+                border-radius: {size // 2}px;
+                border-top-color: {self.color};
+            }}
+        """)
+        layout.addWidget(self.spinner, alignment=Qt.AlignCenter)
+
+        # Loading text (optional)
+        if text:
+            text_label = QLabel(text)
+            text_label.setStyleSheet(f"color: {COLORS.text_secondary}; font-size: 13px;")
+            text_label.setAlignment(Qt.AlignCenter)
+            layout.addWidget(text_label)
+
+        # Start rotation animation
+        self._start_rotation()
+
+    def _start_rotation(self) -> None:
+        """Start the spinning animation."""
+        from PySide6.QtCore import QTimer
+
+        self.timer = QTimer()
+        self.timer.timeout.connect(self._rotate)
+        self.timer.start(50)  # Update every 50ms
+
+    def _rotate(self) -> None:
+        """Rotate the spinner."""
+        self.rotation = (self.rotation + 6) % 360
+        self.spinner.setStyleSheet(f"""
+            QFrame {{
+                background: transparent;
+                border: 3px solid {COLORS.stroke_1};
+                border-radius: {self.size // 2}px;
+                border-top-color: {self.color};
+                transform: rotate({self.rotation}deg);
+            }}
+        """)
+
+    def stop(self) -> None:
+        """Stop the animation."""
+        if hasattr(self, "timer"):
+            self.timer.stop()
+
+    def __del__(self) -> None:
+        """Clean up timer on deletion."""
+        self.stop()
+
+
+class EmptyState(QFrame):
+    """Empty state display when no data is available.
+
+    Features:
+    - Icon (Material Symbols)
+    - Title and description
+    - Optional action button
+
+    Usage:
+        empty = EmptyState(
+            icon="inbox",
+            title="No builds yet",
+            description="Create your first build to get started",
+            action_text="Create Build"
+        )
+        layout.addWidget(empty)
+    """
+
+    def __init__(
+        self,
+        icon: str = "inbox",
+        title: str = "No data available",
+        description: str = "",
+        action_text: str = "",
+    ) -> None:
+        super().__init__()
+        from PySide6.QtWidgets import QVBoxLayout
+
+        self.setStyleSheet("background: transparent;")
+
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(SPACING.xl, SPACING.xxl, SPACING.xl, SPACING.xxl)
+        layout.setSpacing(SPACING.lg)
+        layout.setAlignment(Qt.AlignCenter)
+
+        # Icon
+        icon_widget = MaterialIcon(icon, size_px=64)
+        icon_widget.setStyleSheet(f"color: {COLORS.text_tertiary};")
+        icon_widget.setAlignment(Qt.AlignCenter)
+        layout.addWidget(icon_widget)
+
+        # Title
+        title_label = H2(title)
+        title_label.setAlignment(Qt.AlignCenter)
+        title_label.setStyleSheet(f"color: {COLORS.text_primary};")
+        layout.addWidget(title_label)
+
+        # Description
+        if description:
+            desc_label = QLabel(description)
+            desc_label.setAlignment(Qt.AlignCenter)
+            desc_label.setWordWrap(True)
+            desc_label.setStyleSheet(
+                f"color: {COLORS.text_secondary}; font-size: 13px; max-width: 400px;"
+            )
+            layout.addWidget(desc_label)
+
+        # Action button
+        if action_text:
+            from PySide6.QtWidgets import QPushButton
+
+            action_btn = QPushButton(action_text)
+            action_btn.setObjectName("Primary")
+            action_btn.setFixedWidth(150)
+            action_btn.setFixedHeight(40)
+
+            # Center align button
+            btn_container = QFrame()
+            btn_layout = QHBoxLayout(btn_container)
+            btn_layout.setContentsMargins(0, 0, 0, 0)
+            btn_layout.addStretch(1)
+            btn_layout.addWidget(action_btn)
+            btn_layout.addStretch(1)
+
+            layout.addWidget(btn_container)
+
+
+class Toast(QFrame):
+    """Toast notification popup for user feedback.
+
+    Features:
+    - Auto-dismiss after duration
+    - 4 variants: success, error, warning, info
+    - Icon + message + close button
+
+    Usage:
+        toast = Toast("Build completed successfully!", variant="success")
+        parent.layout().addWidget(toast)
+        # Auto-dismisses after 4 seconds
+    """
+
+    def __init__(
+        self,
+        message: str,
+        variant: str = "info",
+        duration: int = 4000,
+        parent=None,
+    ) -> None:
+        super().__init__(parent)
+        from PySide6.QtCore import QTimer
+        from PySide6.QtWidgets import QHBoxLayout
+
+        self.duration = duration
+
+        # Style based on variant
+        variants = {
+            "success": ("#22C55E", "check_circle", "Success"),
+            "error": ("#EF4444", "error", "Error"),
+            "warning": ("#E5940C", "warning", "Warning"),
+            "info": ("#60A5FA", "info", "Info"),
+        }
+
+        color, icon_name, _ = variants.get(variant, variants["info"])
+
+        self.setStyleSheet(f"""
+            QFrame {{
+                background: {COLORS.surface_0};
+                border: 1px solid {color}40;
+                border-left: 4px solid {color};
+                border-radius: {RADIUS.md}px;
+                padding: {SPACING.md}px;
+            }}
+        """)
+        self.setMinimumWidth(300)
+        self.setMaximumWidth(500)
+
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(SPACING.md, SPACING.sm, SPACING.md, SPACING.sm)
+        layout.setSpacing(SPACING.sm)
+
+        # Icon
+        icon = MaterialIcon(icon_name, size_px=20)
+        icon.setStyleSheet(f"color: {color};")
+        layout.addWidget(icon)
+
+        # Message
+        msg_label = QLabel(message)
+        msg_label.setStyleSheet(f"color: {COLORS.text_primary}; font-size: 13px;")
+        msg_label.setWordWrap(True)
+        layout.addWidget(msg_label, 1)
+
+        # Close button
+        close_btn = QLabel("×")
+        close_btn.setStyleSheet(f"color: {COLORS.text_tertiary}; font-size: 18px; cursor: pointer;")
+        close_btn.setCursor(Qt.PointingHandCursor)
+        close_btn.mousePressEvent = lambda e: self.close()  # type: ignore[assignment]
+        layout.addWidget(close_btn)
+
+        # Auto-dismiss timer
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.close)
+        self.timer.start(duration)

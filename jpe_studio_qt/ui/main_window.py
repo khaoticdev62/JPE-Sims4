@@ -762,18 +762,21 @@ class MainWindow(QMainWindow):
 
         # Initialize all screen pages with project data
         pages = [
-            ("Workspace", self.workspace_page),
-            ("Explorer", self.explorer_page),
-            ("Diagnostics", self.qa_page),
-            ("Build History", self.build_page),
-            ("Plugins Marketplace", self.plugins_page),
-            ("Settings", self.settings_page),
-            ("Project Detail", self.project_detail_page),
+            ("Workspace", self.workspace_page, False),
+            ("Explorer", self.explorer_page, False),
+            ("Diagnostics", self.qa_page, False),
+            ("Build History", self.build_page, False),
+            ("Plugins Marketplace", self.plugins_page, False),
+            ("Settings", self.settings_page, False),
+            ("Project Detail", self.project_detail_page, True),  # Needs project_json_path
         ]
 
-        for page_name, page_obj in pages:
+        for page_name, page_obj, needs_path in pages:
             try:
-                page_obj.set_project(project)
+                if needs_path:
+                    page_obj.set_project(project, project_json_path)
+                else:
+                    page_obj.set_project(project)
                 logger.debug(f"✓ {page_name} page initialized")
             except Exception as e:
                 logger.error(f"✗ Failed to initialize {page_name} page: {e}", exc_info=True)

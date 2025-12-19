@@ -1,13 +1,27 @@
 """
 Complete screen mockups using atomic, molecular, and organism components.
 
-This module provides complete screen implementations:
+This module provides complete screen implementations (14 screens total):
+
+Core Workflow Screens:
 1. DashboardScreen - Main screen with search, filters, and project cards
 2. DetailScreen - Detail view with inspector and tabbed content
-3. SettingsScreen - Settings form with sections and fields
-4. ExplorerScreen - Project file browser with tree view
-5. WorkspaceScreen - Dual-pane translation/edit workspace
-6. ComponentShowcase - Component gallery and documentation
+3. ExplorerScreen - Project file browser with tree view
+4. WorkspaceScreen - Dual-pane translation/edit workspace
+
+Phase 10 Screens:
+5. BuildScreen - Build history with filters and statistics
+6. DiagnosticsScreen - Issues/QA with severity filtering and search
+7. ProjectDetailScreen - Project metadata and information
+8. AboutScreen - Application information and links
+9. DocsScreen - Documentation and help system
+10. PluginsScreen - Plugin marketplace browser
+11. EntityViewScreen - Entity tree and details editor
+
+Settings & Demo:
+12. SettingsScreen - Settings form with sections and fields
+13. ComponentShowcase - Component gallery and documentation
+14. H3 - Helper function for H3-styled labels
 """
 
 from __future__ import annotations
@@ -1028,3 +1042,767 @@ def H3(text: str) -> QLabel:
     label = QLabel(text)
     label.setStyleSheet(f"font-size: 14px; font-weight: 600; color: {COLORS.text_primary};")
     return label
+
+
+class BuildScreen(QWidget):
+    """
+    Build history screen: Project build management with history, filters, and statistics.
+
+    Features:
+    - Build action buttons (Build from Folder, Build from ZIP)
+    - Filter chips (All, Success, Failed, Last 7 Days)
+    - Build history table with status, duration, and date
+    - Statistics summary (Total Builds, Success Rate, Avg. Duration, Last Build)
+
+    Signals:
+        build_folder_requested: Build from folder action triggered
+        build_zip_requested: Build from ZIP action triggered
+        settings_requested: Settings action triggered
+    """
+
+    build_folder_requested = Signal()
+    build_zip_requested = Signal()
+    settings_requested = Signal()
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.setStyleSheet(f"background: {COLORS.bg_0};")
+        self.setProperty("full_shell", True)
+
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+
+        # TopBar
+        top_bar = TopBar("Build History", has_back=False, actions=[])
+        layout.addWidget(top_bar)
+
+        # Content area
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setStyleSheet("border: none;")
+
+        content = QWidget()
+        content_layout = QVBoxLayout(content)
+        content_layout.setContentsMargins(SPACING.xl, SPACING.lg, SPACING.xl, SPACING.xl)
+        content_layout.setSpacing(SPACING.lg)
+
+        # Action buttons
+        action_layout = QHBoxLayout()
+        action_layout.setSpacing(SPACING.sm)
+
+        build_folder_btn = Button("Build from Folder", variant="primary")
+        build_folder_btn.clicked.connect(self.build_folder_requested.emit)
+        action_layout.addWidget(build_folder_btn)
+
+        build_zip_btn = Button("Build from ZIP", variant="secondary")
+        build_zip_btn.clicked.connect(self.build_zip_requested.emit)
+        action_layout.addWidget(build_zip_btn)
+
+        action_layout.addStretch(1)
+
+        settings_btn = IconButton("settings", size=44)
+        settings_btn.clicked.connect(self.settings_requested.emit)
+        action_layout.addWidget(settings_btn)
+
+        content_layout.addLayout(action_layout)
+
+        # Filter chips
+        filters = FilterChipsRow(["All Builds", "Success", "Failed", "Last 7 Days"], active_chip="All Builds")
+        content_layout.addWidget(filters)
+
+        # Builds table
+        table_frame = CardFrame()
+        table_layout = QVBoxLayout(table_frame)
+        table_layout.setContentsMargins(0, 0, 0, 0)
+
+        table_header = QHBoxLayout()
+        for header_text in ["Project", "Status", "Duration", "Date"]:
+            header_label = QLabel(header_text)
+            header_label.setStyleSheet(f"font-weight: 600; color: {COLORS.text_secondary};")
+            table_header.addWidget(header_label)
+        table_layout.addLayout(table_header)
+
+        # Sample builds
+        builds_data = [
+            ("Sims4_UI_Enhancement", "success", "1m 45s", "Today, 14:30"),
+            ("Furniture_Pack_2", "failed", "3m 12s", "Today, 12:15"),
+            ("Gameplay_Tweaks", "success", "2m 08s", "Yesterday, 09:45"),
+            ("Clothing_Collection", "success", "1m 30s", "Yesterday, 16:20"),
+        ]
+
+        for project, status, duration, date in builds_data:
+            row_layout = QHBoxLayout()
+            row_layout.setSpacing(SPACING.md)
+
+            proj_label = QLabel(project)
+            proj_label.setStyleSheet(f"color: {COLORS.text_primary};")
+            row_layout.addWidget(proj_label)
+
+            status_pill = Pill(status.upper(), variant="success" if status == "success" else "error")
+            row_layout.addWidget(status_pill)
+
+            dur_label = QLabel(duration)
+            dur_label.setStyleSheet(f"color: {COLORS.text_secondary};")
+            row_layout.addWidget(dur_label)
+
+            date_label = QLabel(date)
+            date_label.setStyleSheet(f"color: {COLORS.text_secondary};")
+            row_layout.addWidget(date_label)
+
+            table_layout.addLayout(row_layout)
+
+        content_layout.addWidget(table_frame)
+
+        # Statistics
+        stats_frame = CardFrame()
+        stats_layout = QHBoxLayout(stats_frame)
+        stats_layout.setSpacing(SPACING.xl)
+
+        stats_data = [
+            ("Total Builds", "24"),
+            ("Success Rate", "95%"),
+            ("Avg. Duration", "2m 15s"),
+            ("Last Build", "Today, 14:30")
+        ]
+
+        for label, value in stats_data:
+            stat_layout = QVBoxLayout()
+            stat_layout.setSpacing(SPACING.xs)
+
+            value_label = QLabel(value)
+            value_label.setStyleSheet(f"font-size: 16px; font-weight: 700; color: {COLORS.text_primary};")
+            stat_layout.addWidget(value_label)
+
+            label_label = QLabel(label)
+            label_label.setStyleSheet(f"font-size: 11px; color: {COLORS.text_secondary};")
+            stat_layout.addWidget(label_label)
+
+            stats_layout.addLayout(stat_layout)
+
+        stats_layout.addStretch(1)
+        content_layout.addWidget(stats_frame)
+
+        content_layout.addStretch(1)
+        scroll.setWidget(content)
+        layout.addWidget(scroll, 1)
+
+
+class DiagnosticsScreen(QWidget):
+    """
+    Diagnostics/Issues screen: Project quality control with error filtering and fixing.
+
+    Features:
+    - Filter chips (All, Errors, Warnings, Info)
+    - Search bar for finding issues
+    - Issues list with severity, code, and message
+    - Action buttons (Open Pane, Share, Clear, Fix Next)
+
+    Signals:
+        open_pane_requested: Open full diagnostics pane
+        share_requested: Share diagnostics report
+        clear_requested: Clear all diagnostics
+        fix_next_requested: Fix next issue
+    """
+
+    open_pane_requested = Signal()
+    share_requested = Signal()
+    clear_requested = Signal()
+    fix_next_requested = Signal()
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.setStyleSheet(f"background: {COLORS.bg_0};")
+        self.setProperty("full_shell", True)
+
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+
+        # TopBar
+        top_bar = TopBar("Global Diagnostics", has_back=False, actions=[])
+        layout.addWidget(top_bar)
+
+        # Content area
+        content = QWidget()
+        content_layout = QVBoxLayout(content)
+        content_layout.setContentsMargins(SPACING.xl, SPACING.lg, SPACING.xl, SPACING.xl)
+        content_layout.setSpacing(SPACING.lg)
+
+        # Action buttons
+        action_layout = QHBoxLayout()
+        action_layout.setSpacing(SPACING.sm)
+
+        open_pane_btn = Button("Open Pane", variant="secondary")
+        open_pane_btn.clicked.connect(self.open_pane_requested.emit)
+        action_layout.addWidget(open_pane_btn)
+
+        action_layout.addStretch(1)
+
+        share_btn = IconButton("share", size=44)
+        share_btn.clicked.connect(self.share_requested.emit)
+        action_layout.addWidget(share_btn)
+
+        clear_btn = IconButton("delete", size=44)
+        clear_btn.clicked.connect(self.clear_requested.emit)
+        action_layout.addWidget(clear_btn)
+
+        fix_next_btn = Button("Fix Next", variant="primary")
+        fix_next_btn.clicked.connect(self.fix_next_requested.emit)
+        action_layout.addWidget(fix_next_btn)
+
+        content_layout.addLayout(action_layout)
+
+        # Filter chips
+        filters = FilterChipsRow(["All Issues", "Errors", "Warnings", "Info"], active_chip="All Issues")
+        content_layout.addWidget(filters)
+
+        # Search bar
+        search_input = Input("Search issues, error codes, or files...")
+        content_layout.addWidget(search_input)
+
+        # Issues list
+        issues_frame = CardFrame()
+        issues_layout = QVBoxLayout(issues_frame)
+        issues_layout.setSpacing(SPACING.md)
+
+        issues_data = [
+            ("error", "ERR_001", "Syntax error in pattern validation", "components/validator.py", "L42"),
+            ("warning", "WARN_005", "Deprecated function usage detected", "utils/helpers.py", "L128"),
+            ("error", "ERR_012", "Missing required field in entity definition", "data/entities.py", "L87"),
+            ("info", "INFO_003", "Consider using const instead of let", "scripts/main.js", "L15"),
+        ]
+
+        for severity, code, message, file_path, location in issues_data:
+            issue_layout = QHBoxLayout()
+            issue_layout.setSpacing(SPACING.md)
+
+            # Severity indicator
+            severity_variants = {"error": "error", "warning": "warning", "info": "info"}
+            severity_pill = Pill(severity.upper(), variant=severity_variants.get(severity, "neutral"))
+            issue_layout.addWidget(severity_pill)
+
+            # Issue details
+            details_layout = QVBoxLayout()
+            details_layout.setSpacing(SPACING.xs)
+
+            title_label = QLabel(f"{code}: {message}")
+            title_label.setStyleSheet(f"color: {COLORS.text_primary}; font-weight: 600;")
+            details_layout.addWidget(title_label)
+
+            path_label = QLabel(f"{file_path} {location}")
+            path_label.setStyleSheet(f"color: {COLORS.text_secondary}; font-size: 11px;")
+            details_layout.addWidget(path_label)
+
+            issue_layout.addLayout(details_layout, 1)
+            issue_layout.addStretch(1)
+
+            # Action button
+            fix_btn = Button("Fix", variant="ghost")
+            fix_btn.setMaximumWidth(60)
+            issue_layout.addWidget(fix_btn)
+
+            issues_layout.addLayout(issue_layout)
+
+        content_layout.addWidget(issues_frame)
+        content_layout.addStretch(1)
+
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setStyleSheet("border: none;")
+        scroll.setWidget(content)
+        layout.addWidget(scroll, 1)
+
+
+class ProjectDetailScreen(QWidget):
+    """
+    Project detail screen: Comprehensive project information and metadata view.
+
+    Features:
+    - Project name, version, and description
+    - Project metadata (author, date created, last modified)
+    - Project statistics (files, size, build count)
+    - Project actions (Edit, Share, Archive)
+
+    Signals:
+        edit_requested: Edit project action triggered
+        share_requested: Share project action triggered
+        archive_requested: Archive project action triggered
+    """
+
+    edit_requested = Signal()
+    share_requested = Signal()
+    archive_requested = Signal()
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.setStyleSheet(f"background: {COLORS.bg_0};")
+        self.setProperty("full_shell", True)
+
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+
+        # TopBar
+        top_bar = TopBar("Project Details", has_back=True, actions=[])
+        layout.addWidget(top_bar)
+
+        # Content area
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setStyleSheet("border: none;")
+
+        content = QWidget()
+        content_layout = QVBoxLayout(content)
+        content_layout.setContentsMargins(SPACING.xl, SPACING.lg, SPACING.xl, SPACING.xl)
+        content_layout.setSpacing(SPACING.lg)
+
+        # Project header card
+        header_frame = CardFrame()
+        header_layout = QVBoxLayout(header_frame)
+        header_layout.setSpacing(SPACING.md)
+
+        project_name = H2("Sims 4 UI Enhancement")
+        header_layout.addWidget(project_name)
+
+        version_label = QLabel("v2.1.0 • Last updated: Yesterday at 3:45 PM")
+        version_label.setStyleSheet(f"color: {COLORS.text_secondary}; font-size: 12px;")
+        header_layout.addWidget(version_label)
+
+        desc_label = QLabel("A comprehensive UI enhancement pack that improves the visual design and user experience of The Sims 4 game interface.")
+        desc_label.setStyleSheet(f"color: {COLORS.text_secondary};")
+        desc_label.setWordWrap(True)
+        header_layout.addWidget(desc_label)
+
+        # Action buttons
+        action_layout = QHBoxLayout()
+        action_layout.setSpacing(SPACING.sm)
+
+        edit_btn = Button("Edit", variant="primary")
+        edit_btn.clicked.connect(self.edit_requested.emit)
+        action_layout.addWidget(edit_btn)
+
+        share_btn = Button("Share", variant="secondary")
+        share_btn.clicked.connect(self.share_requested.emit)
+        action_layout.addWidget(share_btn)
+
+        archive_btn = Button("Archive", variant="ghost")
+        archive_btn.clicked.connect(self.archive_requested.emit)
+        action_layout.addWidget(archive_btn)
+
+        header_layout.addLayout(action_layout)
+        content_layout.addWidget(header_frame)
+
+        # Project metadata
+        meta_frame = CardFrame()
+        meta_layout = QVBoxLayout(meta_frame)
+        meta_layout.setSpacing(SPACING.md)
+
+        metadata = [
+            ("Author", "Jane Developer"),
+            ("Created", "March 15, 2023"),
+            ("Last Modified", "December 19, 2024"),
+            ("Status", "Active"),
+        ]
+
+        for key, value in metadata:
+            row = QHBoxLayout()
+            row.setSpacing(SPACING.lg)
+
+            key_label = QLabel(key)
+            key_label.setStyleSheet(f"color: {COLORS.text_secondary}; font-weight: 600; min-width: 100px;")
+            row.addWidget(key_label)
+
+            value_label = QLabel(value)
+            value_label.setStyleSheet(f"color: {COLORS.text_primary};")
+            row.addWidget(value_label, 1)
+
+            meta_layout.addLayout(row)
+
+        content_layout.addWidget(meta_frame)
+
+        # Statistics
+        stats_frame = CardFrame()
+        stats_layout = QHBoxLayout(stats_frame)
+        stats_layout.setSpacing(SPACING.xl)
+
+        stats_data = [("Files", "156"), ("Size", "84.5 MB"), ("Builds", "28"), ("Success Rate", "96%")]
+
+        for label, value in stats_data:
+            stat_layout = QVBoxLayout()
+            stat_layout.setSpacing(SPACING.xs)
+
+            value_label = QLabel(value)
+            value_label.setStyleSheet(f"font-size: 16px; font-weight: 700; color: {COLORS.text_primary};")
+            stat_layout.addWidget(value_label)
+
+            label_label = QLabel(label)
+            label_label.setStyleSheet(f"font-size: 11px; color: {COLORS.text_secondary};")
+            stat_layout.addWidget(label_label)
+
+            stats_layout.addLayout(stat_layout)
+
+        stats_layout.addStretch(1)
+        content_layout.addWidget(stats_frame)
+
+        content_layout.addStretch(1)
+        scroll.setWidget(content)
+        layout.addWidget(scroll, 1)
+
+
+class AboutScreen(QWidget):
+    """
+    About screen: Application information, version, and links.
+
+    Features:
+    - App name and version
+    - App description and credits
+    - Links (Website, Documentation, GitHub, Support)
+    - System information
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.setStyleSheet(f"background: {COLORS.bg_0};")
+        self.setProperty("full_shell", True)
+
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+
+        # TopBar
+        top_bar = TopBar("About JPE Studio", has_back=False, actions=[])
+        layout.addWidget(top_bar)
+
+        # Content area
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setStyleSheet("border: none;")
+
+        content = QWidget()
+        content_layout = QVBoxLayout(content)
+        content_layout.setContentsMargins(SPACING.xl, SPACING.lg, SPACING.xl, SPACING.xl)
+        content_layout.setSpacing(SPACING.lg)
+
+        # App info
+        info_frame = CardFrame()
+        info_layout = QVBoxLayout(info_frame)
+        info_layout.setSpacing(SPACING.md)
+
+        app_title = H2("JPE Studio")
+        info_layout.addWidget(app_title)
+
+        version_label = QLabel("Version 3.0.0 (Build 2024-12-19)")
+        version_label.setStyleSheet(f"color: {COLORS.text_secondary};")
+        info_layout.addWidget(version_label)
+
+        desc_label = QLabel("A professional IDE for building and translating Sims 4 mods with design system components, real-time diagnostics, and build management.")
+        desc_label.setStyleSheet(f"color: {COLORS.text_secondary};")
+        desc_label.setWordWrap(True)
+        info_layout.addWidget(desc_label)
+
+        content_layout.addWidget(info_frame)
+
+        # Links
+        links_frame = CardFrame()
+        links_layout = QVBoxLayout(links_frame)
+        links_layout.setSpacing(SPACING.sm)
+
+        links = [
+            ("Website", "https://jpe-studio.dev"),
+            ("Documentation", "https://docs.jpe-studio.dev"),
+            ("GitHub", "https://github.com/jpe-studio"),
+            ("Support", "https://support.jpe-studio.dev"),
+        ]
+
+        for label, url in links:
+            link_btn = Button(label, variant="secondary")
+            links_layout.addWidget(link_btn)
+
+        content_layout.addWidget(links_frame)
+
+        # Credits
+        credits_frame = CardFrame()
+        credits_layout = QVBoxLayout(credits_frame)
+        credits_layout.setSpacing(SPACING.md)
+
+        credits_title = H3("Credits")
+        credits_layout.addWidget(credits_title)
+
+        credits_text = QLabel("Designed and developed by the JPE Studio team.\n\nBuilt with PySide6, Python, and modern UI design principles.")
+        credits_text.setStyleSheet(f"color: {COLORS.text_secondary};")
+        credits_text.setWordWrap(True)
+        credits_layout.addWidget(credits_text)
+
+        content_layout.addWidget(credits_frame)
+
+        content_layout.addStretch(1)
+        scroll.setWidget(content)
+        layout.addWidget(scroll, 1)
+
+
+class DocsScreen(QWidget):
+    """
+    Documentation screen: Help, guides, and tutorials.
+
+    Features:
+    - Quick links to common topics
+    - Search bar for documentation
+    - Recent articles
+    - Category browser
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.setStyleSheet(f"background: {COLORS.bg_0};")
+        self.setProperty("full_shell", True)
+
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+
+        # TopBar
+        top_bar = TopBar("Documentation", has_back=False, actions=[])
+        layout.addWidget(top_bar)
+
+        # Content area
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setStyleSheet("border: none;")
+
+        content = QWidget()
+        content_layout = QVBoxLayout(content)
+        content_layout.setContentsMargins(SPACING.xl, SPACING.lg, SPACING.xl, SPACING.xl)
+        content_layout.setSpacing(SPACING.lg)
+
+        # Search bar
+        search_input = Input("Search documentation...")
+        content_layout.addWidget(search_input)
+
+        # Quick links
+        quick_links_frame = CardFrame()
+        quick_links_layout = QGridLayout(quick_links_frame)
+        quick_links_layout.setSpacing(SPACING.md)
+
+        quick_topics = [
+            "Getting Started",
+            "Creating Projects",
+            "Build Configuration",
+            "Translation Workflow",
+            "Diagnostics & QA",
+            "API Reference",
+        ]
+
+        for i, topic in enumerate(quick_topics):
+            btn = Button(topic, variant="secondary")
+            row, col = divmod(i, 3)
+            quick_links_layout.addWidget(btn, row, col)
+
+        content_layout.addWidget(quick_links_frame)
+
+        # Recent articles
+        articles_frame = CardFrame()
+        articles_layout = QVBoxLayout(articles_frame)
+        articles_layout.setSpacing(SPACING.md)
+
+        articles_title = H3("Recent Articles")
+        articles_layout.addWidget(articles_title)
+
+        articles = [
+            "Getting Started with JPE Studio",
+            "How to Create Your First Project",
+            "Understanding the Build System",
+            "Translation Best Practices",
+        ]
+
+        for article in articles:
+            article_label = QLabel(f"• {article}")
+            article_label.setStyleSheet(f"color: {COLORS.text_secondary};")
+            articles_layout.addWidget(article_label)
+
+        content_layout.addWidget(articles_frame)
+
+        content_layout.addStretch(1)
+        scroll.setWidget(content)
+        layout.addWidget(scroll, 1)
+
+
+class PluginsScreen(QWidget):
+    """
+    Plugins/Marketplace screen: Browse and install plugins.
+
+    Features:
+    - Plugin search and filtering
+    - Plugin cards with ratings and install buttons
+    - Category browsing
+    - Installed plugins list
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.setStyleSheet(f"background: {COLORS.bg_0};")
+        self.setProperty("full_shell", True)
+
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+
+        # TopBar
+        top_bar = TopBar("Plugin Marketplace", has_back=False, actions=[])
+        layout.addWidget(top_bar)
+
+        # Content area
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setStyleSheet("border: none;")
+
+        content = QWidget()
+        content_layout = QVBoxLayout(content)
+        content_layout.setContentsMargins(SPACING.xl, SPACING.lg, SPACING.xl, SPACING.xl)
+        content_layout.setSpacing(SPACING.lg)
+
+        # Search bar
+        search_input = Input("Search plugins...")
+        content_layout.addWidget(search_input)
+
+        # Category filter
+        categories = FilterChipsRow(["All", "Build Tools", "Translation", "Analytics", "Utilities"], active_chip="All")
+        content_layout.addWidget(categories)
+
+        # Plugin cards
+        plugins_frame = CardFrame()
+        plugins_layout = QGridLayout(plugins_frame)
+        plugins_layout.setSpacing(SPACING.md)
+
+        plugins = [
+            ("Build Optimizer", "⭐⭐⭐⭐⭐ (128)"),
+            ("Translation Helper", "⭐⭐⭐⭐ (85)"),
+            ("Code Analyzer", "⭐⭐⭐⭐⭐ (156)"),
+            ("Git Integration", "⭐⭐⭐⭐ (72)"),
+        ]
+
+        for i, (name, rating) in enumerate(plugins):
+            plugin_col = QVBoxLayout()
+            plugin_col.setSpacing(SPACING.sm)
+
+            name_label = QLabel(name)
+            name_label.setStyleSheet(f"font-weight: 600; color: {COLORS.text_primary};")
+            plugin_col.addWidget(name_label)
+
+            rating_label = QLabel(rating)
+            rating_label.setStyleSheet(f"color: {COLORS.text_secondary}; font-size: 11px;")
+            plugin_col.addWidget(rating_label)
+
+            install_btn = Button("Install", variant="primary")
+            install_btn.setMaximumWidth(80)
+            plugin_col.addWidget(install_btn)
+
+            plugin_col.addStretch(1)
+
+            row, col = divmod(i, 2)
+            plugins_layout.addLayout(plugin_col, row, col)
+
+        content_layout.addWidget(plugins_frame)
+
+        content_layout.addStretch(1)
+        scroll.setWidget(content)
+        layout.addWidget(scroll, 1)
+
+
+class EntityViewScreen(QWidget):
+    """
+    Entity view screen: Browse and edit project entities (patterns, data definitions).
+
+    Features:
+    - Entity tree browser
+    - Entity details panel
+    - Entity editor
+    - Search and filtering
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.setStyleSheet(f"background: {COLORS.bg_0};")
+        self.setProperty("full_shell", True)
+
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+
+        # TopBar
+        top_bar = TopBar("Entity Browser", has_back=True, actions=[])
+        layout.addWidget(top_bar)
+
+        # Content area - dual pane
+        content_layout = QHBoxLayout()
+        content_layout.setContentsMargins(SPACING.xl, SPACING.lg, SPACING.xl, SPACING.xl)
+        content_layout.setSpacing(SPACING.lg)
+
+        # Left pane: Entity tree
+        left_frame = CardFrame()
+        left_layout = QVBoxLayout(left_frame)
+        left_layout.setContentsMargins(SPACING.md, SPACING.md, SPACING.md, SPACING.md)
+
+        tree_title = H3("Entities")
+        left_layout.addWidget(tree_title)
+
+        entity_tree = QTreeWidget()
+        entity_tree.setHeaderLabel("Entity Structure")
+        entity_tree.setStyleSheet(f"""
+            QTreeWidget {{
+                background: {COLORS.bg_1};
+                color: {COLORS.text_primary};
+                border: 1px solid {COLORS.stroke_0};
+                border-radius: {RADIUS.md}px;
+            }}
+        """)
+
+        # Add sample entities
+        root = QTreeWidgetItem(entity_tree, ["Project Root"])
+        patterns = QTreeWidgetItem(root, ["Patterns"])
+        QTreeWidgetItem(patterns, ["Pattern_Validation"])
+        QTreeWidgetItem(patterns, ["Pattern_Transform"])
+        data = QTreeWidgetItem(root, ["Data"])
+        QTreeWidgetItem(data, ["EntityDef_Base"])
+        QTreeWidgetItem(data, ["EntityDef_Extended"])
+
+        entity_tree.expandAll()
+        left_layout.addWidget(entity_tree)
+
+        content_layout.addWidget(left_frame, 1)
+
+        # Right pane: Entity details
+        right_frame = CardFrame()
+        right_layout = QVBoxLayout(right_frame)
+        right_layout.setContentsMargins(SPACING.md, SPACING.md, SPACING.md, SPACING.md)
+
+        detail_title = H3("Details")
+        right_layout.addWidget(detail_title)
+
+        entity_name = QLabel("Selected Entity")
+        entity_name.setStyleSheet(f"color: {COLORS.text_secondary};")
+        right_layout.addWidget(entity_name)
+
+        entity_editor = QTextEdit()
+        entity_editor.setPlaceholderText("Entity details will appear here")
+        entity_editor.setStyleSheet(f"""
+            QTextEdit {{
+                background: {COLORS.bg_1};
+                color: {COLORS.text_primary};
+                border: 1px solid {COLORS.stroke_0};
+                border-radius: {RADIUS.md}px;
+            }}
+        """)
+        right_layout.addWidget(entity_editor)
+
+        content_layout.addWidget(right_frame, 1)
+
+        content_widget = QWidget()
+        content_widget.setLayout(content_layout)
+
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setStyleSheet("border: none;")
+        scroll.setWidget(content_widget)
+
+        layout.addWidget(scroll, 1)

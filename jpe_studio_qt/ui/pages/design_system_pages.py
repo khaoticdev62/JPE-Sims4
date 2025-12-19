@@ -19,7 +19,20 @@ from PySide6.QtCore import Signal
 from PySide6.QtWidgets import QWidget, QVBoxLayout
 
 from jpe_sims4.project import Project
-from jpe_studio_qt.ui.screens import DashboardScreen, DetailScreen, SettingsScreen, ExplorerScreen, WorkspaceScreen
+from jpe_studio_qt.ui.screens import (
+    DashboardScreen,
+    DetailScreen,
+    SettingsScreen,
+    ExplorerScreen,
+    WorkspaceScreen,
+    BuildScreen,
+    DiagnosticsScreen,
+    ProjectDetailScreen,
+    AboutScreen,
+    DocsScreen,
+    PluginsScreen,
+    EntityViewScreen,
+)
 
 
 class DesignSystemDashboardPage(QWidget):
@@ -421,3 +434,166 @@ class DesignSystemWorkspacePage(QWidget):
             # Fallback: keep sample data if loading fails
             import logging
             logging.warning(f"Failed to load file content: {e}")
+
+
+class DesignSystemBuildPage(QWidget):
+    """
+    Build page wrapper for BuildScreen - Phase 10.
+
+    Integrates the design system build history page into MainWindow.
+    Manages build operations and displays build history.
+
+    Signals:
+        build_folder_requested: Build from folder action
+        build_zip_requested: Build from ZIP action
+        settings_requested: Settings action
+    """
+
+    build_folder_requested = Signal()
+    build_zip_requested = Signal()
+    settings_requested = Signal()
+
+    def __init__(self) -> None:
+        super().__init__()
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+
+        self.build_screen = BuildScreen()
+        layout.addWidget(self.build_screen)
+
+        self.build_screen.build_folder_requested.connect(self.build_folder_requested.emit)
+        self.build_screen.build_zip_requested.connect(self.build_zip_requested.emit)
+        self.build_screen.settings_requested.connect(self.settings_requested.emit)
+
+
+class DesignSystemDiagnosticsPage(QWidget):
+    """
+    Diagnostics page wrapper for DiagnosticsScreen - Phase 10.
+
+    Integrates the design system diagnostics page into MainWindow.
+    Manages issue tracking and quality control.
+
+    Signals:
+        open_pane_requested, share_requested, clear_requested, fix_next_requested
+    """
+
+    open_pane_requested = Signal()
+    share_requested = Signal()
+    clear_requested = Signal()
+    fix_next_requested = Signal()
+
+    def __init__(self) -> None:
+        super().__init__()
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+
+        self.diagnostics_screen = DiagnosticsScreen()
+        layout.addWidget(self.diagnostics_screen)
+
+        self.diagnostics_screen.open_pane_requested.connect(self.open_pane_requested.emit)
+        self.diagnostics_screen.share_requested.connect(self.share_requested.emit)
+        self.diagnostics_screen.clear_requested.connect(self.clear_requested.emit)
+        self.diagnostics_screen.fix_next_requested.connect(self.fix_next_requested.emit)
+
+
+class DesignSystemProjectDetailPage(QWidget):
+    """
+    Project detail page wrapper for ProjectDetailScreen - Phase 10.
+
+    Integrates the design system project detail page into MainWindow.
+    Displays comprehensive project information and metadata.
+
+    Signals:
+        edit_requested, share_requested, archive_requested
+    """
+
+    edit_requested = Signal()
+    share_requested = Signal()
+    archive_requested = Signal()
+
+    def __init__(self) -> None:
+        super().__init__()
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+
+        self.project_detail_screen = ProjectDetailScreen()
+        layout.addWidget(self.project_detail_screen)
+
+        self.project_detail_screen.edit_requested.connect(self.edit_requested.emit)
+        self.project_detail_screen.share_requested.connect(self.share_requested.emit)
+        self.project_detail_screen.archive_requested.connect(self.archive_requested.emit)
+
+
+class DesignSystemAboutPage(QWidget):
+    """
+    About page wrapper for AboutScreen - Phase 10.
+
+    Integrates the design system about page into MainWindow.
+    Displays application information and links.
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+
+        self.about_screen = AboutScreen()
+        layout.addWidget(self.about_screen)
+
+
+class DesignSystemDocsPage(QWidget):
+    """
+    Docs page wrapper for DocsScreen - Phase 10.
+
+    Integrates the design system documentation page into MainWindow.
+    Provides help, guides, and tutorials.
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+
+        self.docs_screen = DocsScreen()
+        layout.addWidget(self.docs_screen)
+
+
+class DesignSystemPluginsPage(QWidget):
+    """
+    Plugins page wrapper for PluginsScreen - Phase 10.
+
+    Integrates the design system plugins/marketplace page into MainWindow.
+    Manages plugin browsing and installation.
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+
+        self.plugins_screen = PluginsScreen()
+        layout.addWidget(self.plugins_screen)
+
+
+class DesignSystemEntityViewPage(QWidget):
+    """
+    Entity view page wrapper for EntityViewScreen - Phase 10.
+
+    Integrates the design system entity browser into MainWindow.
+    Manages entity browsing and editing.
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+
+        self.entity_view_screen = EntityViewScreen()
+        layout.addWidget(self.entity_view_screen)

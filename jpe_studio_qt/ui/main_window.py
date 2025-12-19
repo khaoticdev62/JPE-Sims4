@@ -81,6 +81,13 @@ from jpe_studio_qt.ui.pages.design_system_pages import (
     DesignSystemSettingsPage,
     DesignSystemExplorerPage,
     DesignSystemWorkspacePage,
+    DesignSystemBuildPage,
+    DesignSystemDiagnosticsPage,
+    DesignSystemProjectDetailPage,
+    DesignSystemAboutPage,
+    DesignSystemDocsPage,
+    DesignSystemPluginsPage,
+    DesignSystemEntityViewPage,
 )
 from jpe_studio_qt.animations import fade_in, fade_out  # Phase 5: Animation integration
 from jpe_studio_qt.state_widgets import LoadingSpinner, ErrorState  # Phase 5: State widget integration
@@ -367,37 +374,62 @@ class MainWindow(QMainWindow):
             self.workspace_page = WorkspacePage()
             self.workspace_page.save_requested.connect(self._save_project)
         self.stack.addWidget(self.workspace_page)
-        # 3 Issues
-        self.qa_page = DiagnosticsTab2Page()
-        self.qa_page.goto_segment.connect(self._goto_segment)
+        # 3 Issues - Use new design system diagnostics when available
+        if USE_DESIGN_SYSTEM_PAGES:
+            self.qa_page = DesignSystemDiagnosticsPage()
+            self.qa_page.open_pane_requested.connect(self._open_pane)  # Placeholder
+        else:
+            self.qa_page = DiagnosticsTab2Page()
+            self.qa_page.goto_segment.connect(self._goto_segment)
         self.stack.addWidget(self.qa_page)
-        # 4 Build
-        self.build_page = BuildHistory2Page()
-        self.build_page.request_build_folder.connect(self._build_folder)
-        self.build_page.request_build_zip.connect(self._build_zip)
-        self.build_page.request_open_settings.connect(lambda: self._select_page(11))
+        # 4 Build - Use new design system build when available
+        if USE_DESIGN_SYSTEM_PAGES:
+            self.build_page = DesignSystemBuildPage()
+            self.build_page.build_folder_requested.connect(self._build_folder)
+            self.build_page.build_zip_requested.connect(self._build_zip)
+            self.build_page.settings_requested.connect(lambda: self._select_page(11))
+        else:
+            self.build_page = BuildHistory2Page()
+            self.build_page.request_build_folder.connect(self._build_folder)
+            self.build_page.request_build_zip.connect(self._build_zip)
+            self.build_page.request_open_settings.connect(lambda: self._select_page(11))
         self.stack.addWidget(self.build_page)
-        # 5 Plugins
-        self.plugins_page = PluginsMarketplace2Page()
+        # 5 Plugins - Use new design system plugins when available
+        if USE_DESIGN_SYSTEM_PAGES:
+            self.plugins_page = DesignSystemPluginsPage()
+        else:
+            self.plugins_page = PluginsMarketplace2Page()
         self.stack.addWidget(self.plugins_page)
-        # 6 Docs
-        self.docs_page = DocsHubPage()
+        # 6 Docs - Use new design system docs when available
+        if USE_DESIGN_SYSTEM_PAGES:
+            self.docs_page = DesignSystemDocsPage()
+        else:
+            self.docs_page = DocsHubPage()
         self.stack.addWidget(self.docs_page)
         # 7 Community
         self.stack.addWidget(self._page_stub("Community", "Coming next: links + status."))
-        # 8 About
-        self.about_page = AboutSystemInfoPage()
+        # 8 About - Use new design system about when available
+        if USE_DESIGN_SYSTEM_PAGES:
+            self.about_page = DesignSystemAboutPage()
+        else:
+            self.about_page = AboutSystemInfoPage()
         self.stack.addWidget(self.about_page)
-        # 9 Project detail
-        self.project_detail_page = ProjectDetailPage()
-        self.project_detail_page.go_files.connect(lambda: self._select_page(1))
-        self.project_detail_page.go_translate.connect(lambda: self._select_page(2))
-        self.project_detail_page.go_build.connect(lambda: self._select_page(4))
-        self.project_detail_page.open_entity.connect(self._open_entity_from_segment)
+        # 9 Project detail - Use new design system project detail when available
+        if USE_DESIGN_SYSTEM_PAGES:
+            self.project_detail_page = DesignSystemProjectDetailPage()
+        else:
+            self.project_detail_page = ProjectDetailPage()
+            self.project_detail_page.go_files.connect(lambda: self._select_page(1))
+            self.project_detail_page.go_translate.connect(lambda: self._select_page(2))
+            self.project_detail_page.go_build.connect(lambda: self._select_page(4))
+            self.project_detail_page.open_entity.connect(self._open_entity_from_segment)
         self.stack.addWidget(self.project_detail_page)
-        # 10 Entity JPE view
-        self.entity_jpe_page = EntityJpeViewPage()
-        self.entity_jpe_page.back_requested.connect(lambda: self._select_page(9))
+        # 10 Entity JPE view - Use new design system entity view when available
+        if USE_DESIGN_SYSTEM_PAGES:
+            self.entity_jpe_page = DesignSystemEntityViewPage()
+        else:
+            self.entity_jpe_page = EntityJpeViewPage()
+            self.entity_jpe_page.back_requested.connect(lambda: self._select_page(9))
         self.stack.addWidget(self.entity_jpe_page)
         # 11 Settings - Use new design system settings
         if USE_DESIGN_SYSTEM_PAGES:

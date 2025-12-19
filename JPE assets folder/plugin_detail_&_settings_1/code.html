@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Plugin Detail &amp; Settings</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#9d5cff",
+                        "background-light": "#f7f5f8",
+                        "background-dark": "#170f23",
+                        "surface-dark": "#1f162f",
+                        "surface-border": "#462e6b",
+                        "text-secondary": "#a78dce",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.125rem", 
+                        "lg": "0.25rem", 
+                        "xl": "0.5rem", 
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        /* Custom scrollbar for developer feel */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #170f23;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #462e6b;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #9d5cff;
+        }
+        
+        /* Toggle Switch Animation */
+        .toggle-checkbox:checked {
+            right: 0;
+            border-color: #9d5cff;
+        }
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: #9d5cff;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display antialiased text-white selection:bg-primary/30 selection:text-primary">
+<div class="relative flex h-full min-h-screen w-full flex-col overflow-hidden max-w-md mx-auto border-x border-surface-border/20 shadow-2xl">
+<!-- TopAppBar -->
+<header class="sticky top-0 z-50 flex items-center bg-background-dark/95 backdrop-blur-sm p-4 border-b border-surface-border">
+<button class="text-white flex size-10 shrink-0 items-center justify-center hover:bg-white/5 rounded-full transition-colors">
+<span class="material-symbols-outlined text-[24px]">arrow_back</span>
+</button>
+<h2 class="text-white text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center truncate px-2">DeepL Translator</h2>
+<button class="flex w-12 items-center justify-end hover:opacity-80 transition-opacity">
+<p class="text-primary text-base font-bold leading-normal tracking-[0.015em] shrink-0">Save</p>
+</button>
+</header>
+<!-- ProfileHeader -->
+<div class="flex p-4 pb-0 w-full">
+<div class="flex w-full gap-4 items-start">
+<div class="bg-center bg-no-repeat bg-cover rounded-lg h-24 w-24 shrink-0 border border-surface-border shadow-lg" data-alt="DeepL logo icon blue abstract shape" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAnexsMe-jQIXfOxRWD_77MXVLJqrlkDmZm2S0TyOSyzUb5h6Hv1jUfWreI337X-SpJ4JPAbU-fBrPVYbWqEEsxJZZKrnxrkg_8UIWndZKt7xc5n1fqbZfHNCuk_iMTKymfpLnBHoN7cEGP6KVb6z89VzAbsg4juf1HE6vEgCJjReQoGDDzHYzJ9KhbC7D2vfr9iEOtuDkewtuCaNfQNcTfVyDhvRWmRlhg0sblE_0omBgxJ8bdl6QuqAi3ynpOsAuF-CbBKInLzg");'></div>
+<div class="flex flex-col justify-center h-24 py-1">
+<p class="text-white text-xl font-bold leading-tight tracking-[-0.015em] mb-1">DeepL Translator</p>
+<div class="flex items-center gap-2 mb-1">
+<span class="bg-primary/20 text-primary text-xs font-bold px-2 py-0.5 rounded">v2.4.1</span>
+<p class="text-text-secondary text-sm font-normal">by JPEdev</p>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="block w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]"></span>
+<p class="text-text-secondary text-sm font-normal">Status: Active</p>
+</div>
+</div>
+</div>
+</div>
+<!-- ActionsBar -->
+<div class="px-4 py-4 w-full">
+<div class="gap-3 grid grid-cols-3">
+<button class="group flex flex-col items-center gap-2 bg-surface-dark border border-surface-border/50 hover:border-primary/50 hover:bg-surface-border/20 rounded-lg py-3 px-2 transition-all">
+<div class="rounded-full bg-[#31204b] group-hover:bg-primary/20 p-2 transition-colors">
+<span class="material-symbols-outlined text-white group-hover:text-primary text-[20px]">code</span>
+</div>
+<p class="text-text-secondary group-hover:text-white text-xs font-medium leading-normal">Repo</p>
+</button>
+<button class="group flex flex-col items-center gap-2 bg-surface-dark border border-surface-border/50 hover:border-primary/50 hover:bg-surface-border/20 rounded-lg py-3 px-2 transition-all">
+<div class="rounded-full bg-[#31204b] group-hover:bg-primary/20 p-2 transition-colors">
+<span class="material-symbols-outlined text-white group-hover:text-primary text-[20px]">menu_book</span>
+</div>
+<p class="text-text-secondary group-hover:text-white text-xs font-medium leading-normal">Docs</p>
+</button>
+<button class="group flex flex-col items-center gap-2 bg-surface-dark border border-surface-border/50 hover:border-primary/50 hover:bg-surface-border/20 rounded-lg py-3 px-2 transition-all">
+<div class="rounded-full bg-[#31204b] group-hover:bg-primary/20 p-2 transition-colors">
+<span class="material-symbols-outlined text-white group-hover:text-primary text-[20px]">sync</span>
+</div>
+<p class="text-text-secondary group-hover:text-white text-xs font-medium leading-normal">Check Updates</p>
+</button>
+</div>
+</div>
+<!-- Tabs -->
+<div class="sticky top-[73px] z-40 bg-background-dark border-b border-surface-border">
+<div class="flex px-4 justify-between">
+<a class="flex flex-col items-center justify-center border-b-[3px] border-b-transparent text-text-secondary hover:text-white pb-3 pt-3 flex-1 transition-colors" href="#">
+<p class="text-sm font-semibold tracking-wide">Overview</p>
+</a>
+<a class="flex flex-col items-center justify-center border-b-[3px] border-b-primary text-white pb-3 pt-3 flex-1" href="#">
+<p class="text-sm font-bold tracking-wide shadow-[0_4px_12px_rgba(157,92,255,0.4)]">Settings</p>
+</a>
+<a class="flex flex-col items-center justify-center border-b-[3px] border-b-transparent text-text-secondary hover:text-white pb-3 pt-3 flex-1 transition-colors" href="#">
+<p class="text-sm font-semibold tracking-wide">Diagnostics</p>
+</a>
+<a class="flex flex-col items-center justify-center border-b-[3px] border-b-transparent text-text-secondary hover:text-white pb-3 pt-3 flex-1 transition-colors" href="#">
+<p class="text-sm font-semibold tracking-wide">Permissions</p>
+</a>
+</div>
+</div>
+<!-- Settings Content -->
+<div class="flex-1 flex flex-col gap-6 p-4 pb-24">
+<!-- Section: API Configuration -->
+<div class="flex flex-col gap-3">
+<h3 class="text-white text-sm uppercase tracking-wider font-bold opacity-80 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[18px]">key</span>
+                    API Configuration
+                </h3>
+<div class="bg-surface-dark rounded-lg p-4 border border-surface-border/50 flex flex-col gap-4">
+<div class="flex flex-col gap-1.5">
+<label class="text-xs font-semibold text-text-secondary uppercase">API Key</label>
+<div class="relative">
+<input class="w-full bg-[#130c1d] text-white border border-surface-border rounded p-2.5 text-sm font-mono focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all placeholder-white/20" placeholder="Paste your key here" type="password" value="xk89-21mm-990a-xxxx"/>
+<button class="absolute right-2 top-1/2 -translate-y-1/2 text-text-secondary hover:text-white p-1">
+<span class="material-symbols-outlined text-[18px]">visibility_off</span>
+</button>
+</div>
+<p class="text-[10px] text-text-secondary/60">Key is stored securely in the local keychain.</p>
+</div>
+<div class="flex flex-col gap-1.5">
+<label class="text-xs font-semibold text-text-secondary uppercase">Target Language</label>
+<div class="relative">
+<select class="w-full bg-[#130c1d] text-white border border-surface-border rounded p-2.5 text-sm appearance-none focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all cursor-pointer">
+<option>English (US)</option>
+<option>English (UK)</option>
+<option>German</option>
+<option>French</option>
+<option>Spanish</option>
+<option>Japanese</option>
+</select>
+<div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-text-secondary">
+<span class="material-symbols-outlined text-[20px]">expand_more</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Section: Behavior -->
+<div class="flex flex-col gap-3">
+<h3 class="text-white text-sm uppercase tracking-wider font-bold opacity-80 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[18px]">tune</span>
+                    Behavior
+                </h3>
+<div class="bg-surface-dark rounded-lg border border-surface-border/50 overflow-hidden">
+<!-- Toggle Item -->
+<div class="flex items-center justify-between p-4 border-b border-surface-border/50 hover:bg-white/5 transition-colors">
+<div class="flex flex-col gap-0.5">
+<p class="text-sm font-semibold text-white">Auto-translate Strings</p>
+<p class="text-xs text-text-secondary">Translate new keys automatically on load.</p>
+</div>
+<div class="relative inline-block w-11 h-6 align-middle select-none transition duration-200 ease-in">
+<input class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer border-[#31204b] checked:border-primary top-0.5 left-0.5 transition-all duration-300" id="toggle1" name="toggle" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-[#31204b] cursor-pointer transition-colors duration-300" for="toggle1"></label>
+</div>
+</div>
+<!-- Toggle Item -->
+<div class="flex items-center justify-between p-4 hover:bg-white/5 transition-colors">
+<div class="flex flex-col gap-0.5">
+<p class="text-sm font-semibold text-white">Cache Results</p>
+<p class="text-xs text-text-secondary">Store translations locally to save API quota.</p>
+</div>
+<div class="relative inline-block w-11 h-6 align-middle select-none transition duration-200 ease-in">
+<input checked="" class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer border-[#31204b] checked:border-primary top-0.5 left-0.5 transition-all duration-300" id="toggle2" name="toggle" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-6 rounded-full bg-[#31204b] cursor-pointer transition-colors duration-300" for="toggle2"></label>
+</div>
+</div>
+</div>
+</div>
+<!-- Section: Advanced -->
+<div class="flex flex-col gap-3">
+<h3 class="text-white text-sm uppercase tracking-wider font-bold opacity-80 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[18px]">terminal</span>
+                    Advanced
+                </h3>
+<div class="bg-surface-dark rounded-lg p-4 border border-surface-border/50 flex flex-col gap-4">
+<div class="flex flex-col gap-1.5">
+<div class="flex justify-between">
+<label class="text-xs font-semibold text-text-secondary uppercase">Request Timeout (ms)</label>
+<span class="text-[10px] text-primary bg-primary/10 px-1 rounded">Default: 5000</span>
+</div>
+<input class="w-full bg-[#130c1d] text-white border border-surface-border rounded p-2.5 text-sm font-mono focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" type="number" value="5000"/>
+</div>
+<div class="pt-2 border-t border-surface-border/30">
+<button class="w-full py-2.5 text-xs font-bold text-red-400 hover:text-red-300 hover:bg-red-500/10 border border-transparent hover:border-red-500/20 rounded transition-all uppercase tracking-wide flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[16px]">delete_forever</span>
+                            Reset Plugin Data
+                        </button>
+</div>
+</div>
+</div>
+</div>
+<!-- Floating Info / Hint at bottom -->
+<div class="fixed bottom-6 right-4 left-4 pointer-events-none z-50">
+<div class="bg-surface-dark/90 backdrop-blur-md border border-primary/30 p-3 rounded-lg shadow-[0_8px_32px_rgba(0,0,0,0.5)] flex items-start gap-3 pointer-events-auto transform transition-transform hover:scale-[1.02] cursor-pointer">
+<div class="bg-primary/20 p-1.5 rounded-full shrink-0">
+<span class="material-symbols-outlined text-primary text-[18px]">info</span>
+</div>
+<div class="flex flex-col">
+<p class="text-xs text-white font-medium">Unsaved Changes</p>
+<p class="text-[10px] text-text-secondary leading-tight mt-0.5">You have modified the Behavior settings. Tap 'Save' to apply.</p>
+</div>
+</div>
+</div>
+</div>
+</body></html>

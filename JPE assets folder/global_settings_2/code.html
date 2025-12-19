@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Global Settings - JPE Sims 4 Translation Suite</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#761ff9",
+                        "primary-dark": "#5e17c9",
+                        "background-light": "#f7f5f8",
+                        "background-dark": "#170f23",
+                        "surface-dark": "#231735",
+                        "surface-light": "#ffffff",
+                        "subtle-text": "#a78ecc",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "sm": "0.125rem", "lg": "0.5rem", "xl": "0.75rem", "2xl": "1rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+<style>
+        .toggle-checkbox:checked {
+            right: 0;
+            border-color: #761ff9;
+        }
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: #761ff9;
+        }::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #31214a;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #4a326f;
+        }
+        .light ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-white transition-colors duration-200 min-h-screen flex flex-col">
+<div class="sticky top-0 z-50 w-full bg-background-light/90 dark:bg-background-dark/90 backdrop-blur-md border-b border-gray-200 dark:border-[#31214a]">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+<div class="flex items-center gap-4">
+<button class="flex items-center justify-center size-9 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors group">
+<span class="material-symbols-outlined text-slate-600 dark:text-gray-300 group-hover:text-primary transition-colors">arrow_back</span>
+</button>
+<div class="h-6 w-px bg-gray-300 dark:bg-[#31214a] mx-1"></div>
+<h1 class="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Global Settings</h1>
+</div>
+<div class="flex items-center gap-3">
+<span class="text-xs font-medium text-gray-500 dark:text-subtle-text hidden sm:block">Changes autosaved</span>
+<button class="px-4 py-2 bg-primary hover:bg-primary-dark text-white text-sm font-semibold rounded-lg shadow-lg shadow-primary/20 transition-all active:scale-95">
+                    Save Changes
+                </button>
+</div>
+</div>
+</div>
+<main class="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+<div class="lg:col-span-7 flex flex-col gap-8">
+<div class="bg-white dark:bg-surface-dark rounded-xl border border-gray-200 dark:border-[#31214a] shadow-sm overflow-hidden">
+<div class="px-6 py-4 border-b border-gray-100 dark:border-[#31214a] flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">tune</span>
+<h2 class="text-base font-bold text-slate-900 dark:text-white">General &amp; Appearance</h2>
+</div>
+<div class="p-6 flex flex-col gap-1">
+<div class="group flex items-center justify-between p-3 -mx-3 rounded-lg hover:bg-gray-50 dark:hover:bg-[#2a1c40] cursor-pointer transition-colors">
+<div class="flex items-center gap-4">
+<div class="flex items-center justify-center size-10 rounded-full bg-gray-100 dark:bg-[#181023] text-gray-600 dark:text-gray-300 group-hover:text-primary transition-colors">
+<span class="material-symbols-outlined">dark_mode</span>
+</div>
+<div class="flex flex-col">
+<span class="text-sm font-semibold text-slate-800 dark:text-white">App Theme</span>
+<span class="text-xs text-gray-500 dark:text-subtle-text">Dark Mode (Default)</span>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-xs font-medium text-gray-400">System</span>
+<span class="material-symbols-outlined text-gray-400">chevron_right</span>
+</div>
+</div>
+<div class="group flex items-center justify-between p-3 -mx-3 rounded-lg hover:bg-gray-50 dark:hover:bg-[#2a1c40] cursor-pointer transition-colors">
+<div class="flex items-center gap-4">
+<div class="flex items-center justify-center size-10 rounded-full bg-gray-100 dark:bg-[#181023] text-gray-600 dark:text-gray-300 group-hover:text-primary transition-colors">
+<span class="material-symbols-outlined">translate</span>
+</div>
+<div class="flex flex-col">
+<span class="text-sm font-semibold text-slate-800 dark:text-white">App Language</span>
+<span class="text-xs text-gray-500 dark:text-subtle-text">English (US)</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-gray-400">chevron_right</span>
+</div>
+<div class="h-px w-full bg-gray-100 dark:bg-[#31214a] my-2"></div>
+<div class="flex items-center justify-between p-3 -mx-3">
+<div class="flex flex-col gap-0.5">
+<span class="text-sm font-semibold text-slate-800 dark:text-white">Autosave on Edit</span>
+<span class="text-xs text-gray-500 dark:text-subtle-text">Save changes immediately without confirmation</span>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox" value=""/>
+<div class="w-11 h-6 bg-gray-200 dark:bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+<div class="flex items-center justify-between p-3 -mx-3">
+<div class="flex flex-col gap-0.5">
+<span class="text-sm font-semibold text-slate-800 dark:text-white">Telemetry</span>
+<span class="text-xs text-gray-500 dark:text-subtle-text">Send anonymous usage data to help improve JPE</span>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input class="sr-only peer" type="checkbox" value=""/>
+<div class="w-11 h-6 bg-gray-200 dark:bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+</div>
+</div>
+<div class="bg-white dark:bg-surface-dark rounded-xl border border-gray-200 dark:border-[#31214a] shadow-sm overflow-hidden">
+<div class="px-6 py-4 border-b border-gray-100 dark:border-[#31214a] flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">folder_managed</span>
+<h2 class="text-base font-bold text-slate-900 dark:text-white">Paths &amp; Tooling</h2>
+</div>
+<button class="text-primary hover:text-primary-dark text-xs font-bold uppercase tracking-wide flex items-center gap-1 transition-colors px-3 py-1.5 rounded hover:bg-primary/10">
+<span class="material-symbols-outlined text-[16px]">qr_code_scanner</span> Auto-Scan
+                        </button>
+</div>
+<div class="p-6 flex flex-col gap-6">
+<div class="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-2 md:gap-4 items-start">
+<label class="text-sm font-medium text-slate-700 dark:text-gray-300 mt-2">Sims 4 Installation</label>
+<div class="flex items-center gap-2 bg-gray-50 dark:bg-[#181023] p-1.5 pl-3 rounded-lg border border-gray-200 dark:border-[#31214a] focus-within:border-primary focus-within:ring-1 focus-within:ring-primary transition-all shadow-sm w-full">
+<span class="material-symbols-outlined text-green-400 text-lg" title="Path Valid">check_circle</span>
+<input class="bg-transparent text-slate-800 dark:text-white text-sm w-full outline-none truncate font-mono placeholder-gray-500 py-1" readonly="" type="text" value="C:\Program Files\EA Games\The Sims 4"/>
+<button class="p-1.5 rounded-md hover:bg-gray-200 dark:hover:bg-[#31214a] text-gray-400 hover:text-primary transition-colors"><span class="material-symbols-outlined text-xl">folder_open</span></button>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-2 md:gap-4 items-start">
+<label class="text-sm font-medium text-slate-700 dark:text-gray-300 mt-2">Cache Storage</label>
+<div class="flex items-center gap-2 bg-gray-50 dark:bg-[#181023] p-1.5 pl-3 rounded-lg border border-gray-200 dark:border-[#31214a] focus-within:border-primary focus-within:ring-1 focus-within:ring-primary transition-all shadow-sm w-full">
+<span class="material-symbols-outlined text-green-400 text-lg" title="Path Valid">check_circle</span>
+<input class="bg-transparent text-slate-800 dark:text-white text-sm w-full outline-none truncate font-mono placeholder-gray-500 py-1" readonly="" type="text" value="C:\Users\Admin\Documents\JPE_Cache"/>
+<button class="p-1.5 rounded-md hover:bg-gray-200 dark:hover:bg-[#31214a] text-gray-400 hover:text-primary transition-colors"><span class="material-symbols-outlined text-xl">folder_open</span></button>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-2 md:gap-4 items-start">
+<label class="text-sm font-medium text-slate-700 dark:text-gray-300 mt-2">Build Output Folder</label>
+<div class="flex flex-col w-full gap-1">
+<div class="flex items-center gap-2 bg-gray-50 dark:bg-[#181023] p-1.5 pl-3 rounded-lg border border-red-500/50 dark:border-red-500/30 focus-within:border-red-500 focus-within:ring-1 focus-within:ring-red-500 transition-all shadow-sm w-full">
+<span class="material-symbols-outlined text-red-500 text-lg" title="Path Invalid">error</span>
+<input class="bg-transparent text-slate-800 dark:text-white text-sm w-full outline-none truncate font-mono placeholder-gray-500 py-1" placeholder="Select a folder..." readonly="" type="text"/>
+<button class="p-1.5 rounded-md hover:bg-gray-200 dark:hover:bg-[#31214a] text-gray-400 hover:text-primary transition-colors"><span class="material-symbols-outlined text-xl">folder_open</span></button>
+</div>
+<span class="text-xs text-red-400 font-medium">Output folder is required for builds.</span>
+</div>
+</div>
+</div>
+</div>
+<div class="bg-white dark:bg-surface-dark rounded-xl border border-gray-200 dark:border-[#31214a] shadow-sm overflow-hidden">
+<div class="px-6 py-4 border-b border-gray-100 dark:border-[#31214a] flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">extension</span>
+<h2 class="text-base font-bold text-slate-900 dark:text-white">Plugins</h2>
+</div>
+<button class="text-primary hover:text-primary-dark text-xs font-bold uppercase tracking-wide flex items-center gap-1 transition-colors px-3 py-1.5 rounded hover:bg-primary/10">
+<span class="material-symbols-outlined text-[16px]">add_circle</span> Browse Store
+                        </button>
+</div>
+<div class="divide-y divide-gray-100 dark:divide-[#31214a]">
+<div class="flex items-center justify-between p-4 px-6 hover:bg-gray-50 dark:hover:bg-[#2a1c40] transition-colors">
+<div class="flex items-center gap-4">
+<div class="size-10 rounded-lg bg-purple-500/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary">extension</span>
+</div>
+<div class="flex flex-col">
+<span class="text-sm font-bold text-slate-800 dark:text-white">String Table Validator</span>
+<span class="text-xs text-gray-500 dark:text-subtle-text">v1.2.4 • Installed</span>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<button class="text-xs font-medium text-gray-400 hover:text-white transition-colors">Settings</button>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox" value=""/>
+<div class="w-11 h-6 bg-gray-200 dark:bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+</div>
+<div class="flex items-center justify-between p-4 px-6 hover:bg-gray-50 dark:hover:bg-[#2a1c40] transition-colors">
+<div class="flex items-center gap-4">
+<div class="size-10 rounded-lg bg-gray-100 dark:bg-[#181023] flex items-center justify-center">
+<span class="material-symbols-outlined text-gray-400">palette</span>
+</div>
+<div class="flex flex-col">
+<span class="text-sm font-bold text-slate-800 dark:text-white">Color Tag Highlighter</span>
+<span class="text-xs text-gray-500 dark:text-subtle-text">v0.9.1 • Beta</span>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<button class="text-xs font-medium text-gray-400 hover:text-white transition-colors">Settings</button>
+<label class="relative inline-flex items-center cursor-pointer">
+<input class="sr-only peer" type="checkbox" value=""/>
+<div class="w-11 h-6 bg-gray-200 dark:bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+</div>
+<div class="flex items-center justify-between p-4 px-6 hover:bg-gray-50 dark:hover:bg-[#2a1c40] transition-colors">
+<div class="flex items-center gap-4">
+<div class="size-10 rounded-lg bg-purple-500/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary">code</span>
+</div>
+<div class="flex flex-col">
+<span class="text-sm font-bold text-slate-800 dark:text-white">XML Snippets</span>
+<span class="text-xs text-gray-500 dark:text-subtle-text">v2.0.0 • Installed</span>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<button class="text-xs font-medium text-gray-400 hover:text-white transition-colors">Settings</button>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox" value=""/>
+<div class="w-11 h-6 bg-gray-200 dark:bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="lg:col-span-5 flex flex-col gap-8">
+<div class="bg-white dark:bg-surface-dark rounded-xl border border-gray-200 dark:border-[#31214a] shadow-sm overflow-hidden">
+<div class="px-6 py-4 border-b border-gray-100 dark:border-[#31214a] flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">cloud</span>
+<h2 class="text-base font-bold text-slate-900 dark:text-white">Cloud &amp; Sync</h2>
+</div>
+<div class="p-6">
+<div class="rounded-xl bg-gradient-to-br from-primary/20 via-[#231735] to-surface-dark border border-primary/20 p-5 flex flex-col gap-5">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-4">
+<div class="size-12 rounded-full bg-primary flex items-center justify-center shadow-[0_0_15px_rgba(118,31,249,0.5)]">
+<span class="material-symbols-outlined text-white text-2xl">cloud_sync</span>
+</div>
+<div class="flex flex-col">
+<span class="text-base font-bold text-slate-800 dark:text-white">Sync Status: Active</span>
+<span class="text-xs text-green-400 font-medium">Last synced 2 mins ago</span>
+</div>
+</div>
+<button class="size-8 rounded-full hover:bg-white/10 flex items-center justify-center transition-colors group">
+<span class="material-symbols-outlined text-white/70 group-hover:text-white text-lg transition-colors">refresh</span>
+</button>
+</div>
+<div class="h-px bg-white/10 w-full"></div>
+<div class="flex items-center justify-between">
+<span class="text-sm text-slate-800 dark:text-gray-200 font-medium">Sync over Wi-Fi only</span>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox" value=""/>
+<div class="w-9 h-5 bg-black/40 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-gray-300 after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary peer-checked:after:bg-white"></div>
+</label>
+</div>
+<div class="flex items-center justify-between">
+<span class="text-sm text-slate-800 dark:text-gray-200 font-medium">Auto-resolve conflicts</span>
+<label class="relative inline-flex items-center cursor-pointer">
+<input class="sr-only peer" type="checkbox" value=""/>
+<div class="w-9 h-5 bg-black/40 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-gray-300 after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary peer-checked:after:bg-white"></div>
+</label>
+</div>
+<button class="w-full mt-2 py-2 bg-primary/20 hover:bg-primary/30 text-primary border border-primary/30 rounded text-sm font-semibold transition-colors">
+                                Force Full Sync
+                            </button>
+</div>
+</div>
+</div>
+<div class="bg-white dark:bg-surface-dark rounded-xl border border-gray-200 dark:border-[#31214a] shadow-sm overflow-hidden flex-1">
+<div class="px-6 py-4 border-b border-gray-100 dark:border-[#31214a] flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">translate</span>
+<h2 class="text-base font-bold text-slate-900 dark:text-white">Language Profiles</h2>
+</div>
+<button class="text-primary hover:text-primary-dark text-xs font-bold uppercase tracking-wide transition-colors flex items-center gap-1 px-3 py-1.5 rounded hover:bg-primary/10">
+<span class="material-symbols-outlined text-[16px]">add</span> Add New
+                        </button>
+</div>
+<div class="p-6 flex flex-col gap-3">
+<div class="group flex items-center justify-between p-4 rounded-lg bg-primary/5 border border-primary/20 cursor-pointer hover:bg-primary/10 transition-colors">
+<div class="flex items-center gap-4">
+<div class="bg-blue-500/20 text-blue-400 p-2 rounded-lg">
+<span class="material-symbols-outlined text-[20px]">language_french</span>
+</div>
+<div class="flex flex-col">
+<span class="text-sm font-bold text-slate-800 dark:text-white">English → French</span>
+<span class="text-xs text-green-400 flex items-center gap-1 font-medium"><span class="w-1.5 h-1.5 rounded-full bg-green-400"></span> Active Target</span>
+</div>
+</div>
+<div class="flex gap-2">
+<button class="p-1 rounded text-gray-400 hover:text-primary hover:bg-white/10"><span class="material-symbols-outlined">edit</span></button>
+<button class="p-1 rounded text-gray-400 hover:text-white hover:bg-white/10"><span class="material-symbols-outlined">more_vert</span></button>
+</div>
+</div>
+<div class="group flex items-center justify-between p-4 rounded-lg bg-gray-50 dark:bg-[#181023] border border-gray-200 dark:border-[#31214a] cursor-pointer hover:border-gray-300 dark:hover:border-gray-600 transition-colors">
+<div class="flex items-center gap-4">
+<div class="bg-yellow-500/20 text-yellow-400 p-2 rounded-lg">
+<span class="material-symbols-outlined text-[20px]">language</span>
+</div>
+<div class="flex flex-col">
+<span class="text-sm font-semibold text-slate-800 dark:text-white">English → German</span>
+<span class="text-xs text-gray-500 dark:text-subtle-text">Last edited 2d ago</span>
+</div>
+</div>
+<div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-1 rounded text-gray-400 hover:text-primary hover:bg-white/10"><span class="material-symbols-outlined">edit</span></button>
+<button class="p-1 rounded text-gray-400 hover:text-white hover:bg-white/10"><span class="material-symbols-outlined">more_vert</span></button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+
+</body></html>

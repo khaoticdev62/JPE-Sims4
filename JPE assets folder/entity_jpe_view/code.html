@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Entity JPE View</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#9d5cff",
+                        "background-light": "#f7f5f8",
+                        "background-dark": "#170f23",
+                        "code-bg": "#120c1c",
+                        "gutter-bg": "#170f23",
+                        "accent-error": "#ef4444",
+                        "accent-warning": "#f59e0b",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"],
+                        "mono": ["JetBrains Mono", "monospace"],
+                    },
+                    borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+                },
+            },
+        }
+    </script>
+<style>
+        /* Custom scrollbar for code editor */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark min-h-screen flex flex-col font-display overflow-hidden text-slate-900 dark:text-white">
+<!-- TopAppBar -->
+<header class="flex items-center bg-background-light dark:bg-background-dark p-4 pb-2 justify-between border-b border-gray-200 dark:border-white/5 z-20 shrink-0">
+<button class="text-slate-900 dark:text-white flex size-12 shrink-0 items-center justify-center hover:bg-black/5 dark:hover:bg-white/5 rounded-full transition-colors">
+<span class="material-symbols-outlined" style="font-size: 24px;">arrow_back_ios_new</span>
+</button>
+<div class="flex flex-col items-center flex-1 overflow-hidden px-2">
+<h2 class="text-slate-900 dark:text-white text-base font-bold leading-tight tracking-[-0.015em] text-center truncate w-full font-mono">0x89A2_Buff_Happy.jpe</h2>
+<div class="flex items-center gap-1.5 mt-0.5">
+<span class="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]"></span>
+<span class="text-xs text-slate-500 dark:text-slate-400 font-medium">Edited</span>
+</div>
+</div>
+<button class="flex w-12 h-12 items-center justify-center rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-colors text-primary">
+<span class="material-symbols-outlined" style="font-size: 24px;">save</span>
+</button>
+</header>
+<!-- Main Content: Code Editor -->
+<main class="flex-1 overflow-y-auto relative flex flex-col pb-[140px]">
+<!-- Editor Surface -->
+<div class="flex flex-1 min-h-[500px] w-full bg-background-light dark:bg-code-bg font-mono text-sm leading-relaxed relative">
+<!-- Gutter (Line Numbers & Diagnostic Icons) -->
+<div class="flex flex-col items-end min-w-[3.5rem] py-4 pr-3 bg-gray-100 dark:bg-gutter-bg border-r border-gray-200 dark:border-white/5 select-none text-slate-400 dark:text-slate-600">
+<div class="h-6">1</div>
+<div class="h-6">2</div>
+<div class="h-6">3</div>
+<div class="h-6 text-accent-warning flex items-center justify-end gap-1 font-bold">
+<span class="material-symbols-outlined text-[10px] leading-none">warning</span> 4
+                </div>
+<div class="h-6">5</div>
+<div class="h-6">6</div>
+<div class="h-6">7</div>
+</div>
+<!-- Code Content -->
+<div class="flex-1 py-4 px-3 overflow-x-auto no-scrollbar">
+<!-- Line 1 -->
+<div class="h-6 whitespace-pre text-slate-600 dark:text-slate-400"><span class="text-purple-600 dark:text-purple-400">&lt;T</span> <span class="text-sky-600 dark:text-sky-300">n</span>=<span class="text-primary">"buff_name"</span><span class="text-purple-600 dark:text-purple-400">&gt;</span><span class="text-slate-900 dark:text-white">0x54F2A1</span><span class="text-purple-600 dark:text-purple-400">&lt;/T&gt;</span></div>
+<!-- Line 2 -->
+<div class="h-6 whitespace-pre text-slate-600 dark:text-slate-400"><span class="text-purple-600 dark:text-purple-400">&lt;T</span> <span class="text-sky-600 dark:text-sky-300">n</span>=<span class="text-primary">"buff_description"</span><span class="text-purple-600 dark:text-purple-400">&gt;</span><span class="text-slate-900 dark:text-white">0x92B1C4</span><span class="text-purple-600 dark:text-purple-400">&lt;/T&gt;</span></div>
+<!-- Line 3 -->
+<div class="h-6 whitespace-pre text-slate-600 dark:text-slate-400"><span class="text-purple-600 dark:text-purple-400">&lt;L</span> <span class="text-sky-600 dark:text-sky-300">n</span>=<span class="text-primary">"tags"</span><span class="text-purple-600 dark:text-purple-400">&gt;</span></div>
+<!-- Line 4 (With Issue) -->
+<div class="h-6 whitespace-pre relative group cursor-pointer">
+<div class="absolute inset-0 bg-accent-warning/10 -mx-3 border-l-2 border-accent-warning"></div>
+<span class="text-purple-600 dark:text-purple-400 pl-4">&lt;E&gt;</span><span class="text-slate-900 dark:text-white border-b border-dashed border-accent-warning">Buff_Social_Happy</span><span class="text-purple-600 dark:text-purple-400">&lt;/E&gt;</span>
+</div>
+<!-- Diagnostic Card (Inline) -->
+<div class="my-4 -ml-2 mr-2">
+<div class="relative flex flex-col bg-white dark:bg-[#251a3a] rounded-lg border border-gray-200 dark:border-white/10 overflow-hidden shadow-lg">
+<div class="flex items-start gap-3 p-4">
+<div class="shrink-0 pt-1">
+<span class="material-symbols-outlined text-accent-warning">warning</span>
+</div>
+<div class="flex-1 flex flex-col gap-1">
+<p class="text-slate-900 dark:text-white text-sm font-bold leading-tight">Line 4: Deprecated Tag</p>
+<p class="text-slate-500 dark:text-slate-300 text-xs leading-normal font-mono bg-black/5 dark:bg-black/20 p-1 rounded inline-block self-start">'Buff_Social_Happy'</p>
+<p class="text-slate-600 dark:text-slate-400 text-xs leading-normal">This tag is deprecated in the latest patch. Use <span class="text-primary">Buff_Social_Happy_V2</span> instead.</p>
+</div>
+</div>
+<div class="flex items-center justify-between gap-4 p-3 bg-gray-50 dark:bg-black/20 border-t border-gray-200 dark:border-white/5">
+<button class="text-slate-500 dark:text-slate-400 text-xs font-medium px-2 py-1 hover:text-white transition-colors">Ignore</button>
+<button class="flex cursor-pointer items-center justify-center overflow-hidden rounded h-8 px-4 bg-primary hover:bg-primary/90 transition-colors text-white text-xs font-bold leading-normal tracking-[0.015em]">
+<span class="material-symbols-outlined mr-1.5" style="font-size: 16px;">auto_fix</span>
+<span class="truncate">Quick Fix</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Line 5 -->
+<div class="h-6 whitespace-pre text-slate-600 dark:text-slate-400"><span class="text-purple-600 dark:text-purple-400">&lt;/L&gt;</span></div>
+<!-- Line 6 -->
+<div class="h-6 whitespace-pre text-slate-600 dark:text-slate-400"> </div>
+<!-- Cursor Indicator (Simulated) -->
+<div class="h-6 whitespace-pre text-slate-600 dark:text-slate-400 relative">
+<div class="absolute w-[2px] h-5 bg-primary animate-pulse left-0 top-0.5 shadow-[0_0_8px_#9d5cff]"></div>
+</div>
+</div>
+</div>
+<!-- Inline Action: Flag Review -->
+<div class="px-4 py-6 flex justify-center">
+<button class="flex w-full max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 px-4 bg-[#251a3a] border border-primary/30 text-primary hover:bg-primary/10 transition-all gap-2 text-sm font-bold leading-normal tracking-[0.015em]">
+<span class="material-symbols-outlined" style="font-size: 20px;">flag</span>
+<span class="truncate">Flag for Desktop Review</span>
+</button>
+</div>
+</main>
+<!-- Keyboard Accessory Bar (Sticky) -->
+<div class="fixed bottom-[80px] left-0 w-full bg-[#1e152d]/95 backdrop-blur-md border-t border-b border-white/5 z-30 px-2 py-2 flex items-center gap-2 overflow-x-auto no-scrollbar">
+<button class="shrink-0 size-8 rounded bg-white/5 hover:bg-white/10 flex items-center justify-center text-primary font-mono text-sm border border-white/5">{</button>
+<button class="shrink-0 size-8 rounded bg-white/5 hover:bg-white/10 flex items-center justify-center text-primary font-mono text-sm border border-white/5">}</button>
+<button class="shrink-0 size-8 rounded bg-white/5 hover:bg-white/10 flex items-center justify-center text-primary font-mono text-sm border border-white/5">&lt;</button>
+<button class="shrink-0 size-8 rounded bg-white/5 hover:bg-white/10 flex items-center justify-center text-primary font-mono text-sm border border-white/5">&gt;</button>
+<button class="shrink-0 size-8 rounded bg-white/5 hover:bg-white/10 flex items-center justify-center text-primary font-mono text-sm border border-white/5">/</button>
+<button class="shrink-0 size-8 rounded bg-white/5 hover:bg-white/10 flex items-center justify-center text-primary font-mono text-sm border border-white/5">"</button>
+<button class="shrink-0 size-8 rounded bg-white/5 hover:bg-white/10 flex items-center justify-center text-primary font-mono text-sm border border-white/5">$</button>
+<div class="w-[1px] h-6 bg-white/10 mx-1"></div>
+<button class="shrink-0 h-8 px-3 rounded bg-primary/20 hover:bg-primary/30 flex items-center justify-center text-primary text-xs font-bold border border-primary/30 ml-auto">
+<span class="material-symbols-outlined text-[16px] mr-1">search</span> Find
+        </button>
+</div>
+<!-- Bottom Navigation -->
+<nav class="fixed bottom-0 w-full bg-background-light dark:bg-[#120c1c]/90 backdrop-blur-xl border-t border-gray-200 dark:border-white/5 pb-6 pt-2 z-40">
+<div class="flex items-center justify-around px-2">
+<!-- Explorer Tab -->
+<button class="flex flex-col items-center justify-center gap-1 p-2 w-16 group">
+<span class="material-symbols-outlined text-slate-400 group-hover:text-white transition-colors">folder_open</span>
+<span class="text-[10px] font-medium text-slate-500 group-hover:text-white">Explorer</span>
+</button>
+<!-- JPE View Tab (Active) -->
+<button class="flex flex-col items-center justify-center gap-1 p-2 w-16 group">
+<div class="bg-primary/20 rounded-full px-4 py-0.5 mb-0.5">
+<span class="material-symbols-outlined text-primary text-[24px]">code</span>
+</div>
+<span class="text-[10px] font-bold text-primary">Editor</span>
+</button>
+<!-- Search Tab -->
+<button class="flex flex-col items-center justify-center gap-1 p-2 w-16 group">
+<span class="material-symbols-outlined text-slate-400 group-hover:text-white transition-colors">search</span>
+<span class="text-[10px] font-medium text-slate-500 group-hover:text-white">Search</span>
+</button>
+<!-- Settings Tab -->
+<button class="flex flex-col items-center justify-center gap-1 p-2 w-16 group">
+<span class="material-symbols-outlined text-slate-400 group-hover:text-white transition-colors">settings</span>
+<span class="text-[10px] font-medium text-slate-500 group-hover:text-white">Settings</span>
+</button>
+</div>
+</nav>
+</body></html>

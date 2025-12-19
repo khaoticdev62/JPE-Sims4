@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Mobile Settings</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "primary": "#9d5cff",
+              "background-light": "#f7f5f8",
+              "background-dark": "#170f23",
+              "surface-dark": "#1E1E2E",
+              "surface-darker": "#13131F"
+            },
+            fontFamily: {
+              "display": ["Inter", "sans-serif"]
+            },
+            borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        /* Custom scrollbar for webkit */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 3px;
+        }
+        
+        .toggle-checkbox:checked {
+            right: 0;
+            border-color: #9d5cff;
+        }
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: #9d5cff;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-white overflow-x-hidden selection:bg-primary selection:text-white">
+<div class="relative min-h-screen w-full flex flex-col pb-24">
+<!-- Header -->
+<header class="flex flex-col px-6 pt-12 pb-4 bg-background-light dark:bg-background-dark z-10 sticky top-0 border-b border-black/5 dark:border-white/5 backdrop-blur-md bg-opacity-90 dark:bg-opacity-90">
+<h1 class="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Settings</h1>
+</header>
+<!-- Scrollable Content -->
+<main class="flex-1 flex flex-col w-full max-w-2xl mx-auto">
+<!-- Section: Appearance -->
+<div class="mt-6">
+<h3 class="px-6 py-2 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Appearance</h3>
+<div class="bg-white dark:bg-surface-dark border-y border-black/5 dark:border-white/5 sm:rounded-xl sm:border-x mb-6 overflow-hidden">
+<!-- Theme Segmented Control -->
+<div class="p-4 border-b border-black/5 dark:border-white/5">
+<label class="block text-sm font-medium mb-3 text-slate-700 dark:text-slate-200">App Theme</label>
+<div class="flex h-10 w-full items-center justify-center rounded-lg bg-slate-100 dark:bg-[#31204b] p-1">
+<label class="flex cursor-pointer h-full grow items-center justify-center overflow-hidden rounded-md px-2 transition-all has-[:checked]:bg-white dark:has-[:checked]:bg-primary has-[:checked]:shadow-sm has-[:checked]:text-primary dark:has-[:checked]:text-white text-slate-500 dark:text-[#a78dce] text-sm font-medium leading-normal hover:bg-white/50 dark:hover:bg-white/5">
+<span class="truncate">Auto</span>
+<input class="invisible w-0 absolute" name="theme-select" type="radio" value="Auto"/>
+</label>
+<label class="flex cursor-pointer h-full grow items-center justify-center overflow-hidden rounded-md px-2 transition-all has-[:checked]:bg-white dark:has-[:checked]:bg-primary has-[:checked]:shadow-sm has-[:checked]:text-primary dark:has-[:checked]:text-white text-slate-500 dark:text-[#a78dce] text-sm font-medium leading-normal hover:bg-white/50 dark:hover:bg-white/5">
+<span class="truncate">Light</span>
+<input class="invisible w-0 absolute" name="theme-select" type="radio" value="Light"/>
+</label>
+<label class="flex cursor-pointer h-full grow items-center justify-center overflow-hidden rounded-md px-2 transition-all has-[:checked]:bg-white dark:has-[:checked]:bg-primary has-[:checked]:shadow-sm has-[:checked]:text-primary dark:has-[:checked]:text-white text-slate-500 dark:text-[#a78dce] text-sm font-medium leading-normal hover:bg-white/50 dark:hover:bg-white/5">
+<span class="truncate">Dark</span>
+<input checked="" class="invisible w-0 absolute" name="theme-select" type="radio" value="Dark"/>
+</label>
+</div>
+</div>
+<!-- Text Size Slider -->
+<div class="p-4 flex flex-col gap-3">
+<div class="flex w-full items-center justify-between">
+<p class="text-slate-900 dark:text-white text-base font-medium">Text Size</p>
+<span class="text-slate-400 dark:text-slate-500 text-sm font-mono bg-slate-100 dark:bg-black/20 px-2 py-0.5 rounded">100%</span>
+</div>
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-slate-400 text-lg">text_decrease</span>
+<div class="flex h-6 flex-1 items-center relative group cursor-pointer">
+<!-- Track Background -->
+<div class="absolute h-1.5 w-full rounded-full bg-slate-200 dark:bg-[#462e6b]"></div>
+<!-- Filled Track -->
+<div class="absolute h-1.5 w-[50%] rounded-full bg-primary"></div>
+<!-- Thumb -->
+<div class="absolute left-[50%] h-5 w-5 -ml-2.5 rounded-full bg-white border-2 border-primary shadow-md cursor-grab active:cursor-grabbing hover:scale-110 transition-transform"></div>
+</div>
+<span class="material-symbols-outlined text-slate-400 text-2xl">text_increase</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Section: Synchronization -->
+<div class="mt-2">
+<h3 class="px-6 py-2 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Synchronization</h3>
+<div class="bg-white dark:bg-surface-dark border-y border-black/5 dark:border-white/5 sm:rounded-xl sm:border-x mb-6 overflow-hidden">
+<!-- Toggle Row -->
+<div class="flex items-center justify-between p-4 border-b border-black/5 dark:border-white/5">
+<div class="flex flex-col">
+<span class="text-base font-medium text-slate-900 dark:text-white">Auto-Sync on Save</span>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox" value=""/>
+<div class="w-12 h-7 bg-slate-200 dark:bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-primary border border-transparent dark:border-white/10"></div>
+</label>
+</div>
+<!-- Toggle Row -->
+<div class="flex items-center justify-between p-4 border-b border-black/5 dark:border-white/5">
+<div class="flex flex-col">
+<span class="text-base font-medium text-slate-900 dark:text-white">Sync over Wi-Fi Only</span>
+<span class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Save data usage</span>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input class="sr-only peer" type="checkbox" value=""/>
+<div class="w-12 h-7 bg-slate-200 dark:bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-primary border border-transparent dark:border-white/10"></div>
+</label>
+</div>
+<!-- Info/Action Row -->
+<div class="flex items-center justify-between p-4 active:bg-slate-50 dark:active:bg-white/5 transition-colors cursor-pointer group">
+<div class="flex flex-col">
+<span class="text-base font-medium text-primary group-hover:text-primary/80">Force Sync Now</span>
+<span class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Last synced: 2 mins ago</span>
+</div>
+<span class="material-symbols-outlined text-primary group-hover:text-primary/80">sync</span>
+</div>
+</div>
+</div>
+<!-- Section: Plugins -->
+<div class="mt-2">
+<h3 class="px-6 py-2 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Plugins</h3>
+<div class="bg-white dark:bg-surface-dark border-y border-black/5 dark:border-white/5 sm:rounded-xl sm:border-x mb-6 overflow-hidden">
+<!-- Toggle Row -->
+<div class="flex items-center justify-between p-4 border-b border-black/5 dark:border-white/5">
+<div class="flex flex-col">
+<span class="text-base font-medium text-slate-900 dark:text-white">Show Core Strings</span>
+<span class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Display internal game IDs</span>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input class="sr-only peer" type="checkbox" value=""/>
+<div class="w-12 h-7 bg-slate-200 dark:bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-primary border border-transparent dark:border-white/10"></div>
+</label>
+</div>
+<!-- Toggle Row -->
+<div class="flex items-center justify-between p-4 border-b border-black/5 dark:border-white/5">
+<div class="flex flex-col">
+<span class="text-base font-medium text-slate-900 dark:text-white">Enable STBL Preview</span>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox" value=""/>
+<div class="w-12 h-7 bg-slate-200 dark:bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-primary border border-transparent dark:border-white/10"></div>
+</label>
+</div>
+<!-- Toggle Row -->
+<div class="flex items-center justify-between p-4">
+<div class="flex flex-col">
+<span class="text-base font-medium text-slate-900 dark:text-white">Debug Mode</span>
+<span class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Enable verbose logging</span>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input class="sr-only peer" type="checkbox" value=""/>
+<div class="w-12 h-7 bg-slate-200 dark:bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-primary border border-transparent dark:border-white/10"></div>
+</label>
+</div>
+</div>
+</div>
+<!-- Footer Version Info -->
+<div class="text-center pb-8 pt-4">
+<p class="text-xs text-slate-400 dark:text-slate-600 font-mono">
+                    JPE Sims 4 Suite v1.0.4 (Build 2409)<br/>
+                    Designed for Creators
+                </p>
+</div>
+</main>
+<!-- Bottom Navigation -->
+<nav class="fixed bottom-0 left-0 w-full bg-white/80 dark:bg-surface-darker/90 backdrop-blur-lg border-t border-black/5 dark:border-white/10 pb-safe pt-2 z-50">
+<div class="flex justify-around items-center h-16 max-w-2xl mx-auto">
+<button class="flex flex-col items-center justify-center w-full h-full text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
+<span class="material-symbols-outlined text-[28px] mb-0.5">folder_open</span>
+<span class="text-[10px] font-medium">Projects</span>
+</button>
+<button class="flex flex-col items-center justify-center w-full h-full text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
+<span class="material-symbols-outlined text-[28px] mb-0.5">search_check</span>
+<span class="text-[10px] font-medium">Inspect</span>
+</button>
+<button class="flex flex-col items-center justify-center w-full h-full text-primary dark:text-primary transition-colors">
+<span class="material-symbols-outlined text-[28px] mb-0.5 font-variation-settings-'FILL'1">settings</span>
+<span class="text-[10px] font-medium">Settings</span>
+</button>
+</div>
+<!-- Safe area spacer for bottom bar on mobile -->
+<div class="h-1 bg-transparent w-full"></div>
+</nav>
+</div>
+</body></html>

@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Diagnostics Tab</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#9d5cff",
+                        "background-light": "#f7f5f8",
+                        "background-dark": "#170f23",
+                        "surface-dark": "#231b30",
+                        "error": "#ef4444",
+                        "warning": "#eab308",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"],
+                        "mono": ["JetBrains Mono", "monospace"],
+                    },
+                    borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+                },
+            },
+        }
+    </script>
+<style>
+        /* Custom scrollbar hiding for horizontal scroll */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .material-symbols-outlined {
+            font-variation-settings:
+            'FILL' 0,
+            'wght' 400,
+            'GRAD' 0,
+            'opsz' 24
+        }
+        .material-symbols-outlined.filled {
+            font-variation-settings: 'FILL' 1;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark min-h-screen font-display text-slate-900 dark:text-white pb-24">
+<!-- Header -->
+<div class="sticky top-0 z-20 bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-md border-b border-black/5 dark:border-white/5">
+<div class="flex items-center p-4 pb-2 justify-between">
+<h2 class="text-xl font-bold leading-tight tracking-[-0.015em] flex-1">Global Diagnostics</h2>
+<div class="flex items-center justify-end gap-2">
+<button class="flex items-center justify-center size-10 rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-colors text-slate-500 dark:text-slate-400">
+<span class="material-symbols-outlined">ios_share</span>
+</button>
+<button class="flex items-center justify-center size-10 rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-colors text-slate-500 dark:text-slate-400">
+<span class="material-symbols-outlined">delete</span>
+</button>
+</div>
+</div>
+<!-- Filters -->
+<div class="flex gap-3 px-4 pb-3 overflow-x-auto no-scrollbar">
+<!-- Active Filter -->
+<button class="flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full bg-primary pl-3 pr-4 shadow-[0_0_15px_rgba(157,92,255,0.3)] transition-all active:scale-95">
+<span class="material-symbols-outlined text-white text-[20px]">tune</span>
+<p class="text-white text-sm font-semibold leading-normal">All</p>
+</button>
+<!-- Inactive Filters -->
+<button class="flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full bg-slate-200 dark:bg-surface-dark pl-3 pr-4 border border-transparent dark:border-white/10 active:scale-95 transition-all">
+<span class="material-symbols-outlined text-error text-[20px]">error</span>
+<p class="text-slate-700 dark:text-slate-200 text-sm font-medium leading-normal">Errors <span class="opacity-60 ml-1 text-xs">12</span></p>
+</button>
+<button class="flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full bg-slate-200 dark:bg-surface-dark pl-3 pr-4 border border-transparent dark:border-white/10 active:scale-95 transition-all">
+<span class="material-symbols-outlined text-warning text-[20px]">warning</span>
+<p class="text-slate-700 dark:text-slate-200 text-sm font-medium leading-normal">Warnings <span class="opacity-60 ml-1 text-xs">4</span></p>
+</button>
+<button class="flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full bg-slate-200 dark:bg-surface-dark pl-3 pr-4 border border-transparent dark:border-white/10 active:scale-95 transition-all">
+<span class="material-symbols-outlined text-primary text-[20px]">info</span>
+<p class="text-slate-700 dark:text-slate-200 text-sm font-medium leading-normal">Info</p>
+</button>
+</div>
+</div>
+<!-- Content List -->
+<div class="flex flex-col w-full divide-y divide-slate-200 dark:divide-white/5">
+<!-- Today Header -->
+<div class="px-4 py-2 bg-slate-100 dark:bg-white/5">
+<p class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Today</p>
+</div>
+<!-- Item 1: Error -->
+<div class="group relative flex items-center gap-4 px-4 py-4 justify-between active:bg-slate-100 dark:active:bg-white/5 transition-colors cursor-pointer">
+<div class="flex items-start gap-4 flex-1 min-w-0">
+<div class="flex items-center justify-center rounded-lg bg-error/10 shrink-0 size-12 mt-0.5">
+<span class="material-symbols-outlined text-error filled">error</span>
+</div>
+<div class="flex flex-col justify-center min-w-0 flex-1">
+<div class="flex justify-between items-baseline gap-2">
+<p class="text-slate-900 dark:text-white text-base font-semibold leading-snug line-clamp-1">Missing String Key</p>
+<p class="text-slate-500 dark:text-slate-400 text-xs font-medium leading-normal shrink-0">2m</p>
+</div>
+<p class="text-slate-500 dark:text-[#a78dce] text-xs font-mono mt-1 truncate opacity-80">buff_Sim_Happy</p>
+<p class="text-slate-400 dark:text-slate-500 text-sm leading-normal line-clamp-1 mt-0.5">Reference ID 0x829A not found in STBL.</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-slate-300 dark:text-slate-600 text-xl">chevron_right</span>
+</div>
+<!-- Item 2: Warning -->
+<div class="group relative flex items-center gap-4 px-4 py-4 justify-between active:bg-slate-100 dark:active:bg-white/5 transition-colors cursor-pointer">
+<div class="flex items-start gap-4 flex-1 min-w-0">
+<div class="flex items-center justify-center rounded-lg bg-warning/10 shrink-0 size-12 mt-0.5">
+<span class="material-symbols-outlined text-warning filled">warning</span>
+</div>
+<div class="flex flex-col justify-center min-w-0 flex-1">
+<div class="flex justify-between items-baseline gap-2">
+<p class="text-slate-900 dark:text-white text-base font-semibold leading-snug line-clamp-1">Duplicate Entry</p>
+<p class="text-slate-500 dark:text-slate-400 text-xs font-medium leading-normal shrink-0">15m</p>
+</div>
+<p class="text-slate-500 dark:text-[#a78dce] text-xs font-mono mt-1 truncate opacity-80">interaction_social_greet</p>
+<p class="text-slate-400 dark:text-slate-500 text-sm leading-normal line-clamp-1 mt-0.5">Key 0x112B is defined multiple times.</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-slate-300 dark:text-slate-600 text-xl">chevron_right</span>
+</div>
+<!-- Item 3: Error -->
+<div class="group relative flex items-center gap-4 px-4 py-4 justify-between active:bg-slate-100 dark:active:bg-white/5 transition-colors cursor-pointer">
+<div class="flex items-start gap-4 flex-1 min-w-0">
+<div class="flex items-center justify-center rounded-lg bg-error/10 shrink-0 size-12 mt-0.5">
+<span class="material-symbols-outlined text-error filled">hexagon</span>
+</div>
+<div class="flex flex-col justify-center min-w-0 flex-1">
+<div class="flex justify-between items-baseline gap-2">
+<p class="text-slate-900 dark:text-white text-base font-semibold leading-snug line-clamp-1">Invalid Tunable</p>
+<p class="text-slate-500 dark:text-slate-400 text-xs font-medium leading-normal shrink-0">42m</p>
+</div>
+<p class="text-slate-500 dark:text-[#a78dce] text-xs font-mono mt-1 truncate opacity-80">object_electronics_computer_01</p>
+<p class="text-slate-400 dark:text-slate-500 text-sm leading-normal line-clamp-1 mt-0.5">Tunable type 'T' mismatch expected 'U'.</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-slate-300 dark:text-slate-600 text-xl">chevron_right</span>
+</div>
+<!-- Item 4: Info -->
+<div class="group relative flex items-center gap-4 px-4 py-4 justify-between active:bg-slate-100 dark:active:bg-white/5 transition-colors cursor-pointer">
+<div class="flex items-start gap-4 flex-1 min-w-0">
+<div class="flex items-center justify-center rounded-lg bg-primary/10 shrink-0 size-12 mt-0.5">
+<span class="material-symbols-outlined text-primary filled">check_circle</span>
+</div>
+<div class="flex flex-col justify-center min-w-0 flex-1">
+<div class="flex justify-between items-baseline gap-2">
+<p class="text-slate-900 dark:text-white text-base font-semibold leading-snug line-clamp-1">Export Successful</p>
+<p class="text-slate-500 dark:text-slate-400 text-xs font-medium leading-normal shrink-0">1h</p>
+</div>
+<p class="text-slate-500 dark:text-[#a78dce] text-xs font-mono mt-1 truncate opacity-80">string_table_01</p>
+<p class="text-slate-400 dark:text-slate-500 text-sm leading-normal line-clamp-1 mt-0.5">Package compiled in 1.2s.</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-slate-300 dark:text-slate-600 text-xl">chevron_right</span>
+</div>
+<!-- Yesterday Header -->
+<div class="px-4 py-2 bg-slate-100 dark:bg-white/5 mt-2">
+<p class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Yesterday</p>
+</div>
+<!-- Item 5: Warning -->
+<div class="group relative flex items-center gap-4 px-4 py-4 justify-between active:bg-slate-100 dark:active:bg-white/5 transition-colors cursor-pointer">
+<div class="flex items-start gap-4 flex-1 min-w-0">
+<div class="flex items-center justify-center rounded-lg bg-warning/10 shrink-0 size-12 mt-0.5">
+<span class="material-symbols-outlined text-warning filled">warning</span>
+</div>
+<div class="flex flex-col justify-center min-w-0 flex-1">
+<div class="flex justify-between items-baseline gap-2">
+<p class="text-slate-900 dark:text-white text-base font-semibold leading-snug line-clamp-1">Unused Resource</p>
+<p class="text-slate-500 dark:text-slate-400 text-xs font-medium leading-normal shrink-0">1d</p>
+</div>
+<p class="text-slate-500 dark:text-[#a78dce] text-xs font-mono mt-1 truncate opacity-80">snippet_tutorial_text</p>
+<p class="text-slate-400 dark:text-slate-500 text-sm leading-normal line-clamp-1 mt-0.5">Resource exists but is never referenced.</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-slate-300 dark:text-slate-600 text-xl">chevron_right</span>
+</div>
+<!-- Item 6: Info -->
+<div class="group relative flex items-center gap-4 px-4 py-4 justify-between active:bg-slate-100 dark:active:bg-white/5 transition-colors cursor-pointer">
+<div class="flex items-start gap-4 flex-1 min-w-0">
+<div class="flex items-center justify-center rounded-lg bg-primary/10 shrink-0 size-12 mt-0.5">
+<span class="material-symbols-outlined text-primary filled">sync</span>
+</div>
+<div class="flex flex-col justify-center min-w-0 flex-1">
+<div class="flex justify-between items-baseline gap-2">
+<p class="text-slate-900 dark:text-white text-base font-semibold leading-snug line-clamp-1">Cloud Sync</p>
+<p class="text-slate-500 dark:text-slate-400 text-xs font-medium leading-normal shrink-0">1d</p>
+</div>
+<p class="text-slate-500 dark:text-[#a78dce] text-xs font-mono mt-1 truncate opacity-80">Global Project Settings</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-slate-300 dark:text-slate-600 text-xl">chevron_right</span>
+</div>
+</div>
+<!-- Empty State Spacer for demonstration scrolling -->
+<div class="h-10"></div>
+<!-- Bottom Navigation -->
+<div class="fixed bottom-0 left-0 w-full bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-lg border-t border-black/5 dark:border-white/5 pb-5 pt-2 z-50">
+<div class="flex justify-around items-center px-2">
+<button class="flex flex-col items-center gap-1 p-2 w-16 rounded-lg text-slate-400 dark:text-slate-500 hover:text-primary dark:hover:text-primary transition-colors">
+<span class="material-symbols-outlined">folder_open</span>
+<span class="text-[10px] font-medium">Projects</span>
+</button>
+<button class="flex flex-col items-center gap-1 p-2 w-16 rounded-lg text-slate-400 dark:text-slate-500 hover:text-primary dark:hover:text-primary transition-colors">
+<span class="material-symbols-outlined">translate</span>
+<span class="text-[10px] font-medium">Translate</span>
+</button>
+<button class="flex flex-col items-center gap-1 p-2 w-16 rounded-lg text-primary dark:text-primary">
+<span class="material-symbols-outlined filled">bug_report</span>
+<span class="text-[10px] font-medium">Issues</span>
+</button>
+<button class="flex flex-col items-center gap-1 p-2 w-16 rounded-lg text-slate-400 dark:text-slate-500 hover:text-primary dark:hover:text-primary transition-colors">
+<span class="material-symbols-outlined">settings</span>
+<span class="text-[10px] font-medium">Settings</span>
+</button>
+</div>
+</div>
+</body></html>

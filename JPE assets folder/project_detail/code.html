@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>JPE Sims 4 Translation Suite - Project Detail</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Theme Config -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#9d5cff",
+                        "primary-dark": "#7c45cc",
+                        "background-light": "#f7f5f8",
+                        "background-dark": "#121212", /* Deep charcoal as requested */
+                        "surface-dark": "#1E1E1E", /* Card background */
+                        "surface-highlight": "#2C2C2C",
+                        "success": "#4ade80",
+                        "warning": "#facc15",
+                        "error": "#ef4444",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"],
+                        "mono": ["JetBrains Mono", "monospace"],
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem", 
+                        "sm": "0.125rem",
+                        "md": "0.375rem",
+                        "lg": "0.5rem", 
+                        "xl": "0.75rem", 
+                        "2xl": "1rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        /* Custom scrollbar for dark mode feeling */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #121212; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #333; 
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555; 
+        }
+        
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined.filled {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-white font-display antialiased selection:bg-primary/30">
+<div class="relative flex flex-col h-screen w-full overflow-hidden max-w-md mx-auto border-x border-white/5 shadow-2xl">
+<!-- Header -->
+<header class="flex-none bg-background-dark/95 backdrop-blur-md pt-safe-top z-20 border-b border-white/5 sticky top-0">
+<!-- Top Bar -->
+<div class="flex items-center justify-between px-4 py-3">
+<div class="flex flex-col">
+<h1 class="text-white text-lg font-bold leading-tight tracking-tight">Basemental Drugs</h1>
+<span class="text-white/50 text-xs font-mono">v2.1.4 • 0x89AC2</span>
+</div>
+<div class="flex items-center gap-3">
+<button class="flex items-center justify-center w-10 h-10 rounded-full hover:bg-white/5 text-primary transition-colors">
+<span class="material-symbols-outlined">sync</span>
+</button>
+<button class="flex items-center justify-center w-10 h-10 rounded-full hover:bg-white/5 text-white transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+</div>
+<!-- Segmented Control -->
+<div class="px-4 pb-3">
+<div class="flex h-9 w-full bg-surface-highlight rounded-lg p-1 relative">
+<!-- Active Indicator (Simulated with absolute positioning or just styling the active button) -->
+<button class="flex-1 flex items-center justify-center rounded-md bg-primary text-white text-xs font-semibold shadow-sm transition-all">
+                        Summary
+                    </button>
+<button class="flex-1 flex items-center justify-center rounded-md text-white/60 hover:text-white text-xs font-medium transition-colors">
+                        Diagnostics
+                    </button>
+<button class="flex-1 flex items-center justify-center rounded-md text-white/60 hover:text-white text-xs font-medium transition-colors">
+                        Entities
+                    </button>
+</div>
+</div>
+</header>
+<!-- Main Content (Scrollable) -->
+<main class="flex-1 overflow-y-auto pb-24 scroll-smooth">
+<!-- Project Health Section -->
+<section class="p-4 space-y-4">
+<h2 class="text-white text-lg font-bold tracking-tight">Project Health</h2>
+<!-- Progress Card -->
+<div class="bg-surface-dark rounded-xl p-5 border border-white/5 shadow-lg">
+<div class="flex justify-between items-end mb-3">
+<div class="flex flex-col gap-1">
+<span class="text-white/60 text-sm font-medium">Translation Progress</span>
+<span class="text-3xl font-bold text-white tracking-tight">78%</span>
+</div>
+<span class="text-primary text-sm font-mono mb-1">940 / 1204</span>
+</div>
+<div class="h-2 w-full bg-white/5 rounded-full overflow-hidden">
+<div class="h-full bg-primary rounded-full shadow-[0_0_10px_rgba(157,92,255,0.5)]" style="width: 78%;"></div>
+</div>
+<div class="mt-4 flex items-center gap-2 text-xs text-white/40">
+<span class="material-symbols-outlined text-[16px]">schedule</span>
+<span>Last edited 2m ago by <span class="text-white/80">JPE User</span></span>
+</div>
+</div>
+<!-- Stats Grid -->
+<div class="grid grid-cols-3 gap-3">
+<div class="bg-surface-dark rounded-xl p-4 flex flex-col gap-1 border border-white/5">
+<span class="text-white/50 text-xs font-medium uppercase tracking-wider">Strings</span>
+<span class="text-xl font-bold text-white">1,204</span>
+</div>
+<div class="bg-surface-dark rounded-xl p-4 flex flex-col gap-1 border border-white/5 relative overflow-hidden group">
+<div class="absolute inset-0 bg-warning/5 group-hover:bg-warning/10 transition-colors"></div>
+<span class="text-warning text-xs font-medium uppercase tracking-wider relative z-10">Untranslated</span>
+<span class="text-xl font-bold text-white relative z-10">45</span>
+</div>
+<div class="bg-surface-dark rounded-xl p-4 flex flex-col gap-1 border border-white/5 relative overflow-hidden group">
+<div class="absolute inset-0 bg-error/5 group-hover:bg-error/10 transition-colors"></div>
+<span class="text-error text-xs font-medium uppercase tracking-wider relative z-10">Errors</span>
+<span class="text-xl font-bold text-white relative z-10">3</span>
+</div>
+</div>
+</section>
+<!-- Diagnostics Preview Section -->
+<section class="mt-2">
+<div class="flex items-center justify-between px-4 py-2">
+<h3 class="text-white text-base font-bold tracking-tight">Diagnostics</h3>
+<button class="text-primary text-xs font-semibold hover:text-primary-dark transition-colors">View All (5)</button>
+</div>
+<div class="flex flex-col px-4 gap-3">
+<!-- Error Item -->
+<div class="bg-surface-dark rounded-lg p-3 flex gap-3 border border-l-4 border-white/5 border-l-error shadow-sm items-start">
+<div class="mt-0.5 text-error shrink-0">
+<span class="material-symbols-outlined filled text-[20px]">error</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-start">
+<h4 class="text-white text-sm font-semibold truncate">Duplicate Key Found</h4>
+<span class="text-white/30 text-[10px] font-mono mt-0.5">#E01</span>
+</div>
+<p class="text-white/60 text-xs mt-1 line-clamp-2">String Table <span class="font-mono text-white/80 bg-white/5 px-1 rounded text-[10px]">0x44C8...</span> contains multiple entries for the same ID.</p>
+</div>
+</div>
+<!-- Warning Item -->
+<div class="bg-surface-dark rounded-lg p-3 flex gap-3 border border-l-4 border-white/5 border-l-warning shadow-sm items-start">
+<div class="mt-0.5 text-warning shrink-0">
+<span class="material-symbols-outlined filled text-[20px]">warning</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-start">
+<h4 class="text-white text-sm font-semibold truncate">Missing Punctuation</h4>
+<span class="text-white/30 text-[10px] font-mono mt-0.5">#W12</span>
+</div>
+<p class="text-white/60 text-xs mt-1">String <span class="font-mono text-white/80 bg-white/5 px-1 rounded text-[10px]">0x99A2...</span> ends abruptly without punctuation.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Entities Preview Section -->
+<section class="mt-6 mb-4">
+<div class="flex items-center justify-between px-4 py-2">
+<h3 class="text-white text-base font-bold tracking-tight">Entities</h3>
+<button class="text-primary text-xs font-semibold hover:text-primary-dark transition-colors">View All</button>
+</div>
+<!-- Search Bar Placeholder -->
+<div class="px-4 mb-3">
+<div class="relative">
+<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-white/30 text-[18px]">search</span>
+</div>
+<input class="block w-full pl-10 pr-3 py-2 border-none rounded-lg leading-5 bg-surface-dark text-white placeholder-white/30 focus:outline-none focus:ring-1 focus:ring-primary sm:text-sm" placeholder="Search by Key or Text" type="text"/>
+</div>
+</div>
+<!-- Entity List -->
+<div class="flex flex-col divide-y divide-white/5 border-t border-b border-white/5 bg-surface-dark">
+<!-- Entity Item 1 -->
+<div class="flex items-center gap-3 p-4 hover:bg-white/5 transition-colors cursor-pointer group">
+<div class="w-2 h-2 rounded-full bg-success shrink-0 shadow-[0_0_4px_rgba(74,222,128,0.5)]"></div>
+<div class="flex-1 min-w-0 flex flex-col gap-0.5">
+<div class="flex items-center gap-2">
+<span class="font-mono text-primary/80 text-xs">0x5F3E129A</span>
+<span class="bg-white/5 text-white/40 text-[10px] px-1.5 py-0.5 rounded uppercase font-bold tracking-wider">Buff</span>
+</div>
+<p class="text-white text-sm truncate font-medium">Sims can now jog without getting tired.</p>
+</div>
+<span class="material-symbols-outlined text-white/20 group-hover:text-white/60 text-[20px]">chevron_right</span>
+</div>
+<!-- Entity Item 2 -->
+<div class="flex items-center gap-3 p-4 hover:bg-white/5 transition-colors cursor-pointer group">
+<div class="w-2 h-2 rounded-full bg-white/20 shrink-0"></div>
+<div class="flex-1 min-w-0 flex flex-col gap-0.5">
+<div class="flex items-center gap-2">
+<span class="font-mono text-primary/80 text-xs">0x8B2C4401</span>
+<span class="bg-white/5 text-white/40 text-[10px] px-1.5 py-0.5 rounded uppercase font-bold tracking-wider">Interaction</span>
+</div>
+<p class="text-white text-sm truncate font-medium">Ask about day</p>
+</div>
+<span class="material-symbols-outlined text-white/20 group-hover:text-white/60 text-[20px]">chevron_right</span>
+</div>
+<!-- Entity Item 3 (Missing) -->
+<div class="flex items-center gap-3 p-4 hover:bg-white/5 transition-colors cursor-pointer group bg-warning/5">
+<div class="w-2 h-2 rounded-full bg-warning shrink-0 shadow-[0_0_4px_rgba(250,204,21,0.5)]"></div>
+<div class="flex-1 min-w-0 flex flex-col gap-0.5">
+<div class="flex items-center gap-2">
+<span class="font-mono text-primary/80 text-xs">0xA00129BB</span>
+<span class="bg-white/5 text-white/40 text-[10px] px-1.5 py-0.5 rounded uppercase font-bold tracking-wider">Object</span>
+</div>
+<p class="text-white/50 italic text-sm truncate font-medium">MISSING STRING TABLE ENTRY</p>
+</div>
+<span class="material-symbols-outlined text-white/20 group-hover:text-white/60 text-[20px]">chevron_right</span>
+</div>
+</div>
+</section>
+</main>
+<!-- Bottom Navigation -->
+<nav class="absolute bottom-0 w-full bg-background-dark/90 backdrop-blur-xl border-t border-white/5 px-2 pb-safe-bottom z-30">
+<div class="flex justify-around items-center h-[60px]">
+<button class="flex flex-col items-center justify-center w-full h-full space-y-1 text-primary">
+<span class="material-symbols-outlined filled">grid_view</span>
+<span class="text-[10px] font-medium">Project</span>
+</button>
+<button class="flex flex-col items-center justify-center w-full h-full space-y-1 text-white/40 hover:text-white transition-colors">
+<span class="material-symbols-outlined">folder_open</span>
+<span class="text-[10px] font-medium">Files</span>
+</button>
+<button class="flex flex-col items-center justify-center w-full h-full space-y-1 text-white/40 hover:text-white transition-colors">
+<span class="material-symbols-outlined">search</span>
+<span class="text-[10px] font-medium">Search</span>
+</button>
+<button class="flex flex-col items-center justify-center w-full h-full space-y-1 text-white/40 hover:text-white transition-colors">
+<span class="material-symbols-outlined">settings</span>
+<span class="text-[10px] font-medium">Settings</span>
+</button>
+</div>
+</nav>
+<!-- Background Decor -->
+<div class="absolute top-0 right-0 w-full h-64 bg-primary/5 blur-[100px] pointer-events-none rounded-full translate-x-1/2 -translate-y-1/2"></div>
+<div class="absolute bottom-0 left-0 w-64 h-64 bg-primary/5 blur-[80px] pointer-events-none rounded-full -translate-x-1/4 translate-y-1/4"></div>
+</div>
+</body></html>

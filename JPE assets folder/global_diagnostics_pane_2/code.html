@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Global Diagnostics Pane</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#761ff9",
+                        "primary-dark": "#5e17c7",
+                        "background-light": "#f7f5f8",
+                        "background-dark": "#130c1e",
+                        "surface-dark": "#1e1628",
+                        "surface-card": "#2a203b", 
+                        "surface-hover": "#35294a",
+                        "neon-red": "#ff4d6d",
+                        "neon-yellow": "#ffd60a",
+                        "neon-blue": "#4cc9f0",
+                        "border-dark": "#ffffff10"
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"],
+                        "mono": ["JetBrains Mono", "monospace"],
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "sm": "0.125rem", 
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        .custom-scroll::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        .custom-scroll::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-dark min-h-screen font-display text-slate-300 antialiased selection:bg-primary selection:text-white overflow-hidden flex flex-col">
+<header class="h-16 bg-surface-dark border-b border-border-dark flex items-center justify-between px-6 shrink-0 z-20 shadow-sm">
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-3">
+<button class="flex items-center justify-center size-9 rounded hover:bg-white/5 transition-colors">
+<span class="material-symbols-outlined text-slate-400" style="font-size: 22px;">arrow_back</span>
+</button>
+<h1 class="text-lg font-bold text-white tracking-tight flex items-center gap-2.5">
+<span class="material-symbols-outlined text-primary" style="font-size: 24px;">bug_report</span>
+                Global Diagnostics
+            </h1>
+</div>
+<div class="h-8 w-px bg-white/10 mx-2"></div>
+<div class="relative w-[480px]">
+<span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 material-symbols-outlined" style="font-size: 20px;">search</span>
+<input class="w-full bg-background-dark border border-white/10 rounded-md py-2 pl-10 pr-4 text-sm text-white placeholder-slate-500 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all shadow-inner" placeholder="Search issues, error codes (#4092), or files..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-3 px-4 py-2 bg-background-dark rounded border border-white/5 shadow-sm">
+<label class="text-xs font-medium text-slate-400 select-none" for="new-toggle">New since last build</label>
+<div class="relative inline-block w-9 h-5 align-middle select-none transition duration-200 ease-in">
+<input class="toggle-checkbox absolute block w-4 h-4 rounded-full bg-white border-2 appearance-none cursor-pointer checked:right-0.5 right-5 top-0.5 transition-all duration-300 z-10" id="new-toggle" name="toggle" type="checkbox"/>
+<label class="toggle-label block overflow-hidden h-5 rounded-full bg-surface-card cursor-pointer border border-white/10 peer-checked:bg-primary" for="new-toggle"></label>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<button class="h-9 px-4 bg-surface-card hover:bg-surface-hover border border-white/10 rounded text-xs font-medium text-white flex items-center gap-2 transition-colors">
+<span class="material-symbols-outlined" style="font-size: 18px;">download</span>
+                Export Log
+            </button>
+<button class="h-9 px-4 bg-primary hover:bg-primary-dark rounded text-xs font-bold text-white flex items-center gap-2 shadow-lg shadow-primary/20 transition-colors">
+<span class="material-symbols-outlined" style="font-size: 18px;">build</span>
+                Fix All (3)
+            </button>
+</div>
+</div>
+</header>
+<div class="flex flex-1 overflow-hidden">
+<aside class="w-[300px] bg-surface-dark border-r border-border-dark flex flex-col shrink-0 z-10">
+<div class="p-5 border-b border-border-dark flex justify-between items-center bg-surface-dark">
+<span class="text-xs font-bold uppercase tracking-wider text-slate-500">Filters</span>
+<button class="text-xs text-primary hover:text-primary-dark font-medium transition-colors">Reset All</button>
+</div>
+<div class="flex-1 overflow-y-auto custom-scroll p-4 space-y-6">
+<div class="space-y-2">
+<div class="px-1 py-1 text-[11px] font-bold text-slate-500 uppercase tracking-wide">Severity</div>
+<div class="space-y-1">
+<button class="w-full flex items-center justify-between px-3 py-2.5 rounded-md bg-primary/10 text-white border border-primary/20 shadow-sm">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined" style="font-size: 20px;">grid_view</span>
+<span class="text-sm font-medium">All Issues</span>
+</div>
+<span class="bg-primary text-white text-[10px] px-2 py-0.5 rounded-full font-mono font-bold">36</span>
+</button>
+<button class="w-full flex items-center justify-between px-3 py-2.5 rounded-md hover:bg-white/5 text-slate-300 hover:text-white transition-colors border border-transparent hover:border-white/5">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-neon-red" style="font-size: 20px;">error</span>
+<span class="text-sm">Critical Errors</span>
+</div>
+<span class="bg-white/5 text-slate-400 text-[10px] px-2 py-0.5 rounded-full font-mono">12</span>
+</button>
+<button class="w-full flex items-center justify-between px-3 py-2.5 rounded-md hover:bg-white/5 text-slate-300 hover:text-white transition-colors border border-transparent hover:border-white/5">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-neon-yellow" style="font-size: 20px;">warning</span>
+<span class="text-sm">Warnings</span>
+</div>
+<span class="bg-white/5 text-slate-400 text-[10px] px-2 py-0.5 rounded-full font-mono">5</span>
+</button>
+<button class="w-full flex items-center justify-between px-3 py-2.5 rounded-md hover:bg-white/5 text-slate-300 hover:text-white transition-colors border border-transparent hover:border-white/5">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-neon-blue" style="font-size: 20px;">info</span>
+<span class="text-sm">Info</span>
+</div>
+<span class="bg-white/5 text-slate-400 text-[10px] px-2 py-0.5 rounded-full font-mono">1</span>
+</button>
+</div>
+</div>
+<div class="w-full h-px bg-white/5"></div>
+<div class="space-y-2">
+<div class="px-1 py-1 text-[11px] font-bold text-slate-500 uppercase tracking-wide">Category</div>
+<div class="space-y-1">
+<label class="flex items-center px-3 py-2 hover:bg-white/5 rounded-md cursor-pointer gap-3 group transition-colors">
+<input checked="" class="rounded border-white/20 bg-background-dark text-primary focus:ring-offset-background-dark focus:ring-primary/50 w-4 h-4" type="checkbox"/>
+<span class="text-sm text-slate-400 group-hover:text-white font-medium">String Tables</span>
+</label>
+<label class="flex items-center px-3 py-2 hover:bg-white/5 rounded-md cursor-pointer gap-3 group transition-colors">
+<input checked="" class="rounded border-white/20 bg-background-dark text-primary focus:ring-offset-background-dark focus:ring-primary/50 w-4 h-4" type="checkbox"/>
+<span class="text-sm text-slate-400 group-hover:text-white font-medium">Tuning XML</span>
+</label>
+<label class="flex items-center px-3 py-2 hover:bg-white/5 rounded-md cursor-pointer gap-3 group transition-colors">
+<input class="rounded border-white/20 bg-background-dark text-primary focus:ring-offset-background-dark focus:ring-primary/50 w-4 h-4" type="checkbox"/>
+<span class="text-sm text-slate-400 group-hover:text-white font-medium">Python Scripts</span>
+</label>
+<label class="flex items-center px-3 py-2 hover:bg-white/5 rounded-md cursor-pointer gap-3 group transition-colors">
+<input class="rounded border-white/20 bg-background-dark text-primary focus:ring-offset-background-dark focus:ring-primary/50 w-4 h-4" type="checkbox"/>
+<span class="text-sm text-slate-400 group-hover:text-white font-medium">Sim Data</span>
+</label>
+</div>
+</div>
+<div class="w-full h-px bg-white/5"></div>
+<div class="space-y-2">
+<div class="px-1 py-1 text-[11px] font-bold text-slate-500 uppercase tracking-wide">Scope</div>
+<div class="space-y-1">
+<label class="flex items-center px-3 py-2 hover:bg-white/5 rounded-md cursor-pointer gap-3 group transition-colors">
+<input checked="" class="bg-background-dark border-white/20 text-primary focus:ring-offset-background-dark focus:ring-primary/50 w-4 h-4" name="scope" type="radio"/>
+<span class="text-sm text-slate-400 group-hover:text-white font-medium">Current Project</span>
+</label>
+<label class="flex items-center px-3 py-2 hover:bg-white/5 rounded-md cursor-pointer gap-3 group transition-colors">
+<input class="bg-background-dark border-white/20 text-primary focus:ring-offset-background-dark focus:ring-primary/50 w-4 h-4" name="scope" type="radio"/>
+<span class="text-sm text-slate-400 group-hover:text-white font-medium">All Dependencies</span>
+</label>
+</div>
+</div>
+</div>
+</aside>
+<main class="flex-1 bg-background-dark flex flex-col min-w-0 overflow-hidden relative shadow-inner">
+<div class="grid grid-cols-[44px_1fr_140px_180px_110px] gap-4 px-6 py-4 border-b border-border-dark bg-surface-dark/50 text-xs font-bold text-slate-500 uppercase tracking-wider backdrop-blur-sm sticky top-0 z-20">
+<div class="text-center">Sev</div>
+<div>Description / Summary</div>
+<div>Entity ID</div>
+<div>File Source</div>
+<div class="text-right">Action</div>
+</div>
+<div class="flex-1 overflow-y-auto custom-scroll">
+<div class="sticky top-0 z-10 bg-background-dark/95 backdrop-blur-md border-y border-border-dark px-6 py-3 flex items-center gap-2 shadow-sm">
+<button class="hover:bg-white/10 rounded p-0.5"><span class="material-symbols-outlined text-slate-500" style="font-size: 18px;">expand_more</span></button>
+<h3 class="text-xs font-bold text-neon-red uppercase tracking-wider flex items-center gap-2">
+                    Critical Errors <span class="bg-neon-red/10 text-neon-red px-1.5 rounded text-[10px] font-mono border border-neon-red/20">3</span>
+</h3>
+</div>
+<div class="group grid grid-cols-[44px_1fr_140px_180px_110px] gap-4 px-6 py-4 border-b border-white/5 hover:bg-white/5 cursor-pointer bg-white/[0.03] border-l-[3px] border-l-primary relative transition-colors">
+<div class="flex items-start justify-center pt-0.5">
+<span class="material-symbols-outlined text-neon-red drop-shadow-[0_0_8px_rgba(255,77,109,0.4)]" style="font-size: 22px;">cancel</span>
+</div>
+<div class="min-w-0">
+<div class="text-sm font-semibold text-white mb-1.5 flex items-center gap-2">
+                        Missing String Table Key
+                        <span class="text-[10px] px-1.5 py-0.5 rounded bg-white/10 text-slate-400 font-mono border border-white/5">#4092</span>
+</div>
+<div class="text-sm text-slate-400 truncate pr-4">Reference ID <span class="font-mono text-neon-red bg-neon-red/10 px-1 rounded mx-0.5 text-xs">0x3E291A</span> not found in EN_US matrix.</div>
+</div>
+<div class="pt-0.5 min-w-0">
+<span class="font-mono text-xs text-slate-300 bg-surface-card px-2 py-1 rounded border border-white/10 truncate block w-fit max-w-full">stbl_001</span>
+</div>
+<div class="pt-0.5 min-w-0">
+<span class="text-xs text-slate-400 flex items-center gap-1.5 truncate hover:text-primary transition-colors cursor-pointer" title="strings_eng.package">
+<span class="material-symbols-outlined text-slate-600" style="font-size: 16px;">description</span>
+<span class="truncate">strings_eng.package</span>
+</span>
+</div>
+<div class="flex justify-end pt-0.5 opacity-100 transition-opacity">
+<button class="h-7 px-3 bg-primary/20 hover:bg-primary text-primary hover:text-white border border-primary/30 rounded text-xs font-semibold transition-all shadow-sm">Quick Fix</button>
+</div>
+</div>
+<div class="group grid grid-cols-[44px_1fr_140px_180px_110px] gap-4 px-6 py-4 border-b border-white/5 hover:bg-white/5 cursor-pointer border-l-[3px] border-l-transparent transition-colors">
+<div class="flex items-start justify-center pt-0.5">
+<span class="material-symbols-outlined text-neon-red" style="font-size: 22px;">cancel</span>
+</div>
+<div class="min-w-0">
+<div class="text-sm font-semibold text-slate-200 mb-1.5 group-hover:text-white">Invalid Tuning Reference</div>
+<div class="text-sm text-slate-500 group-hover:text-slate-400 truncate pr-4">Instance <span class="font-mono text-slate-400">buff_Social_Happy</span> cannot be resolved in interaction_core.</div>
+</div>
+<div class="pt-0.5 min-w-0">
+<span class="font-mono text-xs text-slate-500 bg-white/5 px-2 py-1 rounded border border-white/5 group-hover:text-slate-300 group-hover:bg-surface-card group-hover:border-white/10 transition-colors truncate block w-fit max-w-full">interaction_core</span>
+</div>
+<div class="pt-0.5 min-w-0">
+<span class="text-xs text-slate-500 flex items-center gap-1.5 truncate group-hover:text-slate-400" title="interactions.xml">
+<span class="material-symbols-outlined text-slate-600 group-hover:text-slate-500" style="font-size: 16px;">code</span>
+<span class="truncate">interactions.xml</span>
+</span>
+</div>
+<div class="flex justify-end pt-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="h-7 w-8 flex items-center justify-center rounded hover:bg-white/10 text-slate-400 hover:text-white transition-colors">
+<span class="material-symbols-outlined" style="font-size: 20px;">open_in_new</span>
+</button>
+</div>
+</div>
+<div class="sticky top-0 z-10 bg-background-dark/95 backdrop-blur-md border-y border-border-dark px-6 py-3 flex items-center gap-2 mt-2 shadow-sm">
+<button class="hover:bg-white/10 rounded p-0.5"><span class="material-symbols-outlined text-slate-500" style="font-size: 18px;">expand_more</span></button>
+<h3 class="text-xs font-bold text-neon-yellow uppercase tracking-wider flex items-center gap-2">
+                    Warnings <span class="bg-neon-yellow/10 text-neon-yellow px-1.5 rounded text-[10px] font-mono border border-neon-yellow/20">5</span>
+</h3>
+</div>
+<div class="group grid grid-cols-[44px_1fr_140px_180px_110px] gap-4 px-6 py-4 border-b border-white/5 hover:bg-white/5 cursor-pointer border-l-[3px] border-l-transparent transition-colors">
+<div class="flex items-start justify-center pt-0.5">
+<span class="material-symbols-outlined text-neon-yellow" style="font-size: 22px;">warning</span>
+</div>
+<div class="min-w-0">
+<div class="text-sm font-semibold text-slate-200 mb-1.5 group-hover:text-white">Deprecated XML Tag</div>
+<div class="text-sm text-slate-500 group-hover:text-slate-400 truncate pr-4">Tag <span class="font-mono text-slate-400">&lt;U&gt;</span> is deprecated in v1.42 schema.</div>
+</div>
+<div class="pt-0.5 min-w-0">
+<span class="font-mono text-xs text-slate-500 bg-white/5 px-2 py-1 rounded border border-white/5 group-hover:text-slate-300 group-hover:bg-surface-card group-hover:border-white/10 transition-colors truncate block w-fit max-w-full">buff_core_02</span>
+</div>
+<div class="pt-0.5 min-w-0">
+<span class="text-xs text-slate-500 flex items-center gap-1.5 truncate group-hover:text-slate-400" title="buffs_gameplay_core.xml">
+<span class="material-symbols-outlined text-slate-600 group-hover:text-slate-500" style="font-size: 16px;">code</span>
+<span class="truncate">buffs_gameplay_core.xml</span>
+</span>
+</div>
+<div class="flex justify-end pt-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="h-7 px-3 bg-primary/20 hover:bg-primary text-primary hover:text-white border border-primary/30 rounded text-xs font-semibold transition-all">Auto-Fix</button>
+</div>
+</div>
+<div class="group grid grid-cols-[44px_1fr_140px_180px_110px] gap-4 px-6 py-4 border-b border-white/5 hover:bg-white/5 cursor-pointer border-l-[3px] border-l-transparent transition-colors">
+<div class="flex items-start justify-center pt-0.5">
+<span class="material-symbols-outlined text-neon-yellow" style="font-size: 22px;">warning</span>
+</div>
+<div class="min-w-0">
+<div class="text-sm font-semibold text-slate-200 mb-1.5 group-hover:text-white">Unused Variable</div>
+<div class="text-sm text-slate-500 group-hover:text-slate-400 truncate pr-4">'sim_id' declared but never used.</div>
+</div>
+<div class="pt-0.5 min-w-0">
+<span class="font-mono text-xs text-slate-500 bg-white/5 px-2 py-1 rounded border border-white/5 group-hover:text-slate-300 group-hover:bg-surface-card group-hover:border-white/10 transition-colors truncate block w-fit max-w-full">script_main.py</span>
+</div>
+<div class="pt-0.5 min-w-0">
+<span class="text-xs text-slate-500 flex items-center gap-1.5 truncate group-hover:text-slate-400" title="script_main.py">
+<span class="material-symbols-outlined text-slate-600 group-hover:text-slate-500" style="font-size: 16px;">terminal</span>
+<span class="truncate">script_main.py</span>
+</span>
+</div>
+<div class="flex justify-end pt-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="h-7 w-8 flex items-center justify-center rounded hover:bg-white/10 text-slate-400 hover:text-white transition-colors">
+<span class="material-symbols-outlined" style="font-size: 20px;">open_in_new</span>
+</button>
+</div>
+</div>
+<div class="sticky top-0 z-10 bg-background-dark/95 backdrop-blur-md border-y border-border-dark px-6 py-3 flex items-center gap-2 mt-2 shadow-sm">
+<button class="hover:bg-white/10 rounded p-0.5"><span class="material-symbols-outlined text-slate-500" style="font-size: 18px;">expand_more</span></button>
+<h3 class="text-xs font-bold text-neon-blue uppercase tracking-wider flex items-center gap-2">
+                    Info <span class="bg-neon-blue/10 text-neon-blue px-1.5 rounded text-[10px] font-mono border border-neon-blue/20">1</span>
+</h3>
+</div>
+<div class="group grid grid-cols-[44px_1fr_140px_180px_110px] gap-4 px-6 py-4 border-b border-white/5 hover:bg-white/5 cursor-pointer border-l-[3px] border-l-transparent transition-colors">
+<div class="flex items-start justify-center pt-0.5">
+<span class="material-symbols-outlined text-neon-blue" style="font-size: 22px;">info</span>
+</div>
+<div class="min-w-0">
+<div class="text-sm font-semibold text-slate-200 mb-1.5 group-hover:text-white">Build Optimization</div>
+<div class="text-sm text-slate-500 group-hover:text-slate-400 truncate pr-4">Compress textures for better runtime performance.</div>
+</div>
+<div class="pt-0.5 min-w-0">
+<span class="font-mono text-xs text-slate-500 bg-white/5 px-2 py-1 rounded border border-white/5 group-hover:text-slate-300 group-hover:bg-surface-card group-hover:border-white/10 transition-colors truncate block w-fit max-w-full">global</span>
+</div>
+<div class="pt-0.5 min-w-0">
+<span class="text-xs text-slate-500 flex items-center gap-1.5 truncate group-hover:text-slate-400">
+<span class="material-symbols-outlined text-slate-600 group-hover:text-slate-500" style="font-size: 16px;">folder</span>
+<span class="truncate">assets/</span>
+</span>
+</div>
+<div class="flex justify-end pt-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="h-7 w-8 flex items-center justify-center rounded hover:bg-white/10 text-slate-400 hover:text-white transition-colors">
+<span class="material-symbols-outlined" style="font-size: 20px;">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+<div class="bg-surface-dark border-t border-border-dark px-6 py-2.5 flex justify-between items-center text-xs text-slate-500">
+<div class="flex items-center gap-6">
+<span class="flex items-center gap-2 hover:text-slate-300 transition-colors cursor-help" title="Build completed successfully">
+<span class="relative flex h-2 w-2">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]"></span>
+</span>
+                    Last build: 2m ago
+                </span>
+<span>Found 18 problems in 5 files</span>
+</div>
+<div class="flex gap-6 font-mono text-[10px]">
+<span class="hover:text-slate-300 cursor-pointer">UTF-8</span>
+<span class="hover:text-slate-300 cursor-pointer">Python 3.7</span>
+<span class="hover:text-slate-300 cursor-pointer">v2.4.0-rc1</span>
+</div>
+</div>
+</main>
+<aside class="w-[360px] bg-surface-card border-l border-border-dark flex flex-col shrink-0 shadow-2xl z-20">
+<div class="p-6 border-b border-border-dark bg-surface-card">
+<div class="flex items-center justify-between mb-3">
+<div class="flex items-center gap-2">
+<span class="px-2 py-1 rounded bg-neon-red/10 text-neon-red text-[10px] font-bold uppercase tracking-wider border border-neon-red/20 shadow-sm">Critical</span>
+<span class="text-[11px] text-slate-500 font-mono">ID: err_4092</span>
+</div>
+<div class="flex gap-1">
+<button class="p-1 hover:bg-white/10 rounded text-slate-500 hover:text-white"><span class="material-symbols-outlined" style="font-size: 16px;">keyboard_arrow_up</span></button>
+<button class="p-1 hover:bg-white/10 rounded text-slate-500 hover:text-white"><span class="material-symbols-outlined" style="font-size: 16px;">keyboard_arrow_down</span></button>
+</div>
+</div>
+<h2 class="text-xl font-bold text-white leading-snug mb-3">Missing String Table Key</h2>
+<div class="text-sm text-slate-400 leading-relaxed">
+                The reference ID <span class="font-mono text-neon-red bg-neon-red/10 px-1 rounded mx-0.5">0x3E291A</span> does not exist in the current translation matrix for <span class="text-white font-medium">EN_US</span>.
+            </div>
+</div>
+<div class="flex-1 overflow-y-auto custom-scroll p-6 space-y-8">
+<div class="space-y-3">
+<div class="flex justify-between items-end">
+<label class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Source Context</label>
+<button class="text-xs text-primary hover:text-white flex items-center gap-1.5 font-medium transition-colors">
+                        Open File <span class="material-symbols-outlined" style="font-size: 16px;">open_in_new</span>
+</button>
+</div>
+<div class="bg-background-dark rounded-md border border-white/10 p-4 font-mono text-xs overflow-x-auto relative group shadow-inner">
+<div class="absolute right-3 top-3 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-1.5 hover:bg-white/10 rounded transition-colors"><span class="material-symbols-outlined text-slate-400" style="font-size: 16px;">content_copy</span></button>
+</div>
+<div class="text-slate-500/70 select-none border-r border-white/5 pr-3 mr-3 inline-block text-right">12<br/>13<br/>14<br/>15</div>
+<div class="inline-block align-top">
+<div class="text-slate-400">&lt;T n="display_name"&gt;0x892B10&lt;/T&gt;</div>
+<div class="text-slate-400">&lt;T n="description"&gt;0x442A9C&lt;/T&gt;</div>
+<div class="bg-neon-red/10 -mx-2 px-2 border-l-2 border-neon-red text-slate-200 w-[240px]">&lt;T n="tooltip"&gt;0x3E291A&lt;/T&gt;</div>
+<div class="text-slate-400">&lt;L n="tests"&gt;</div>
+</div>
+</div>
+</div>
+<div class="space-y-3">
+<label class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Location Details</label>
+<div class="space-y-1.5 text-sm bg-background-dark/50 p-3 rounded border border-white/5">
+<div class="flex gap-3">
+<span class="text-slate-500 w-20 shrink-0 text-xs uppercase tracking-wide pt-0.5">File</span>
+<span class="text-slate-300 font-mono text-xs break-all hover:text-white cursor-pointer hover:underline underline-offset-4 decoration-slate-600">strings_eng.package</span>
+</div>
+<div class="flex gap-3">
+<span class="text-slate-500 w-20 shrink-0 text-xs uppercase tracking-wide pt-0.5">Resource</span>
+<span class="text-slate-300 font-mono text-xs">stbl_001 (0x239A...)</span>
+</div>
+<div class="flex gap-3">
+<span class="text-slate-500 w-20 shrink-0 text-xs uppercase tracking-wide pt-0.5">Line</span>
+<span class="text-slate-300 font-mono text-xs">14</span>
+</div>
+</div>
+</div>
+<div class="space-y-3 pt-4 border-t border-border-dark">
+<label class="text-[11px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
+<span class="material-symbols-outlined text-primary" style="font-size: 18px;">lightbulb</span>
+                    Suggested Fixes
+                </label>
+<div class="space-y-2">
+<button class="w-full text-left group p-4 rounded-lg bg-background-dark border border-white/5 hover:border-primary/50 hover:bg-surface-hover transition-all shadow-sm">
+<div class="flex items-center gap-2 mb-1.5">
+<span class="font-bold text-sm text-white group-hover:text-primary transition-colors">Create new key</span>
+<span class="bg-primary/20 text-primary px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide border border-primary/20">Recommended</span>
+</div>
+<p class="text-xs text-slate-400 group-hover:text-slate-300 leading-relaxed">
+                            Add key <span class="font-mono text-slate-300">0x3E291A</span> to the English string table with a placeholder value.
+                        </p>
+</button>
+<button class="w-full text-left group p-4 rounded-lg bg-background-dark border border-white/5 hover:border-primary/50 hover:bg-surface-hover transition-all shadow-sm">
+<div class="flex items-center gap-2 mb-1.5">
+<span class="font-bold text-sm text-white group-hover:text-primary transition-colors">Search similar</span>
+</div>
+<p class="text-xs text-slate-400 group-hover:text-slate-300 leading-relaxed">
+                            Find keys with similar hash values in other tables or backup files.
+                        </p>
+</button>
+<button class="w-full text-left group p-4 rounded-lg bg-background-dark border border-white/5 hover:border-neon-red/50 hover:bg-surface-hover transition-all shadow-sm opacity-80 hover:opacity-100">
+<div class="flex items-center gap-2 mb-1.5">
+<span class="font-bold text-sm text-neon-red">Suppress warning</span>
+</div>
+<p class="text-xs text-slate-400 group-hover:text-slate-300 leading-relaxed">
+                            Ignore this error for the current session.
+                        </p>
+</button>
+</div>
+</div>
+</div>
+<div class="p-6 border-t border-border-dark bg-surface-dark/80 backdrop-blur-sm z-10">
+<button class="w-full py-3 bg-primary hover:bg-primary-dark text-white text-sm font-bold rounded shadow-lg shadow-primary/25 transition-all flex items-center justify-center gap-2 ring-1 ring-white/10 hover:ring-white/20">
+<span class="material-symbols-outlined" style="font-size: 20px;">auto_fix</span>
+                Apply Recommended Fix
+            </button>
+</div>
+</aside>
+</div>
+<style>
+    .toggle-checkbox:checked {
+        right: 0;
+        border-color: #761ff9;
+    }
+    .toggle-checkbox:checked + .toggle-label {
+        background-color: #761ff9;
+    }
+</style>
+</body></html>

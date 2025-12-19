@@ -794,3 +794,768 @@ class Radio(QAbstractButton):
         p.setPen(QColor(COLORS.text_primary))
         p.drawText(text_x, 0, self.width() - text_x, self.height(),
                   Qt.AlignLeft | Qt.AlignVCenter, self.text())
+
+
+# ============================================================================
+# MOLECULAR COMPONENTS - Atoms combined into repeating UI patterns
+# ============================================================================
+
+
+class TopBar(QFrame):
+    """
+    Top app bar with back button, title, and action icons.
+    Fixed 64px height with glassmorphic styling.
+    """
+
+    from PySide6.QtCore import Signal
+
+    back_clicked = Signal()
+
+    def __init__(self, title: str, *, has_back: bool = False, actions: list[str] | None = None) -> None:
+        from PySide6.QtWidgets import QHBoxLayout
+
+        super().__init__()
+        self.setObjectName("Card")
+        self.setFixedHeight(64)
+
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(SPACING.lg, 0, SPACING.lg, 0)
+        layout.setSpacing(SPACING.md)
+
+        # Back button
+        if has_back:
+            back_btn = IconCircleButton(label="", glyph="←")
+            back_btn.clicked.connect(self.back_clicked.emit)
+            layout.addWidget(back_btn)
+
+        # Title
+        title_label = H1(title)
+        title_label.setStyleSheet("font-weight: 600;")
+        layout.addWidget(title_label)
+
+        layout.addStretch(1)
+
+        # Action icons
+        if actions:
+            for icon_name in actions:
+                icon_btn = IconCircleButton(label="", glyph=icon_name)
+                layout.addWidget(icon_btn)
+
+
+class FilterChipsRow(QFrame):
+    """
+    Horizontal row of filter chips with exclusive selection.
+    Active chip shows accent background and border.
+    """
+
+    from PySide6.QtCore import Signal
+
+    chip_clicked = Signal(str)  # Emits chip label
+
+    def __init__(self, chips: list[str], *, active_chip: str | None = None) -> None:
+        from PySide6.QtWidgets import QHBoxLayout
+
+        super().__init__()
+
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(SPACING.xs)
+
+        self.buttons: list[ChipButton] = []
+
+        for chip_text in chips:
+            btn = ChipButton(chip_text, active=(chip_text == active_chip))
+            btn.clicked.connect(lambda checked, text=chip_text: self._on_chip_clicked(text))
+            layout.addWidget(btn)
+            self.buttons.append(btn)
+
+        layout.addStretch(1)
+
+    def _on_chip_clicked(self, text: str) -> None:
+        # Uncheck other buttons (exclusive selection)
+        for btn in self.buttons:
+            if btn.text() != text:
+                btn.setChecked(False)
+            else:
+                btn.setChecked(True)
+
+        self.chip_clicked.emit(text)
+
+
+class ListCard(QFrame):
+    """
+    Rounded card container with title, metadata, and status pill.
+    Includes hover effects with background color change.
+    """
+
+    from PySide6.QtCore import Signal
+
+    clicked = Signal()
+
+    def __init__(self, title: str, *, metadata: str = "", status: str = "", status_variant: str = "neutral") -> None:
+        from PySide6.QtWidgets import QVBoxLayout, QHBoxLayout
+
+        super().__init__()
+        self.setObjectName("Card")
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(SPACING.md, SPACING.md, SPACING.md, SPACING.md)
+        layout.setSpacing(SPACING.xs)
+
+        # Top row: title + status
+        top_row = QHBoxLayout()
+        top_row.setSpacing(SPACING.sm)
+
+        title_label = QLabel(title)
+        title_label.setStyleSheet(f"font-size: 15px; font-weight: 600; color: {COLORS.text_primary};")
+        top_row.addWidget(title_label, 1)
+
+        if status:
+            pill = Pill(status, variant=status_variant)
+            top_row.addWidget(pill)
+
+        layout.addLayout(top_row)
+
+        # Metadata
+        if metadata:
+            meta_label = Muted(metadata)
+            meta_label.setStyleSheet(f"font-size: 12px; color: {COLORS.text_secondary};")
+            layout.addWidget(meta_label)
+
+    def mousePressEvent(self, event) -> None:
+        super().mousePressEvent(event)
+        if event.button() == Qt.MouseButton.LeftButton:
+            self.clicked.emit()
+
+
+class DiagnosticsRow(QFrame):
+    """
+    Diagnostics list row with severity icon, title, subtitle, and timestamp.
+    Color-coded by severity level (error, warning, info).
+    """
+
+    SEVERITY_ICONS = {
+        "error": ("error_outline", COLORS.error),
+        "warning": ("warning", COLORS.warning),
+        "info": ("info", COLORS.info),
+    }
+
+    def __init__(self, severity: str, title: str, *, subtitle: str = "", timestamp: str = "") -> None:
+        from PySide6.QtWidgets import QHBoxLayout, QVBoxLayout
+
+        super().__init__()
+        self.setStyleSheet(f"background: transparent; border-bottom: 1px solid {COLORS.stroke_0}; padding: {SPACING.md}px 0;")
+
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(0, SPACING.sm, 0, SPACING.sm)
+        layout.setSpacing(SPACING.md)
+
+        # Severity icon
+        icon_name, icon_color = self.SEVERITY_ICONS.get(severity, self.SEVERITY_ICONS["info"])
+        icon = MaterialIcon(icon_name, size_px=20)
+        icon.setStyleSheet(f"color: {icon_color};")
+        layout.addWidget(icon)
+
+        # Text column
+        text_col = QVBoxLayout()
+        text_col.setSpacing(4)
+
+        title_label = QLabel(title)
+        title_label.setStyleSheet(f"font-size: 14px; font-weight: 600; color: {COLORS.text_primary};")
+        text_col.addWidget(title_label)
+
+        if subtitle:
+            subtitle_label = Muted(subtitle)
+            subtitle_label.setStyleSheet(f"font-size: 12px; color: {COLORS.text_secondary};")
+            text_col.addWidget(subtitle_label)
+
+        layout.addLayout(text_col, 1)
+
+        # Timestamp
+        if timestamp:
+            time_label = QLabel(timestamp)
+            time_label.setStyleSheet(f"font-size: 11px; color: {COLORS.text_tertiary};")
+            layout.addWidget(time_label)
+
+
+class CodeInlineWarning(QFrame):
+    """
+    Inline code warning with line number highlight, message, and severity pill.
+    Used in code editor contexts to highlight problematic lines.
+    """
+
+    def __init__(self, line_num: int, message: str, *, severity: str = "warning") -> None:
+        from PySide6.QtWidgets import QHBoxLayout
+
+        super().__init__()
+
+        variant_bg = COLORS.warning_bg if severity == "warning" else COLORS.error_bg
+        variant_color = COLORS.warning if severity == "warning" else COLORS.error
+        variant_pill = "warn" if severity == "warning" else "error"
+
+        self.setStyleSheet(f"""
+            background: {variant_bg};
+            border-left: 3px solid {variant_color};
+            border-radius: {RADIUS.sm}px;
+            padding: {SPACING.xs}px {SPACING.sm}px;
+        """)
+
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(SPACING.sm, SPACING.xs, SPACING.sm, SPACING.xs)
+        layout.setSpacing(SPACING.sm)
+
+        # Line number
+        line_label = QLabel(f"L{line_num}")
+        line_label.setStyleSheet(f"font-family: {mono_font_stack()}; font-size: 11px; color: {COLORS.text_tertiary};")
+        layout.addWidget(line_label)
+
+        # Message
+        msg_label = QLabel(message)
+        msg_label.setStyleSheet(f"font-size: 12px; color: {COLORS.text_secondary};")
+        layout.addWidget(msg_label, 1)
+
+        # Pill
+        pill = Pill(severity.upper(), variant=variant_pill)
+        layout.addWidget(pill)
+
+
+class ModalAlert(QFrame):
+    """
+    Modal dialog for warnings/errors with icon, title, code snippet, message, and actions.
+    Features glassmorphism styling and glow effects.
+    """
+
+    from PySide6.QtCore import Signal
+
+    ignored = Signal()
+    quick_fixed = Signal()
+
+    def __init__(
+        self,
+        title: str,
+        *,
+        code_snippet: str = "",
+        message: str = "",
+        icon: str = "warning",
+    ) -> None:
+        from PySide6.QtWidgets import QVBoxLayout, QHBoxLayout
+
+        super().__init__()
+        self.setWindowFlags(Qt.FramelessWindowHint | Qt.Dialog)
+        self.setModal(True)
+        self.setFixedWidth(520)
+
+        # Glassmorphism background
+        self.setStyleSheet(f"""
+            QFrame {{
+                background: {COLORS.glass_overlay};
+                border: 1px solid {COLORS.glass_border};
+                border-radius: {RADIUS.xl}px;
+            }}
+        """)
+
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(SPACING.xl, SPACING.xl, SPACING.xl, SPACING.xl)
+        layout.setSpacing(SPACING.lg)
+
+        # Header: icon + title
+        header = QHBoxLayout()
+        header.setSpacing(SPACING.md)
+
+        icon_label = MaterialIcon(icon, size_px=32)
+        icon_label.setStyleSheet(f"color: {COLORS.warning};")
+        header.addWidget(icon_label)
+
+        title_label = H2(title)
+        title_label.setStyleSheet("font-weight: 600;")
+        header.addWidget(title_label, 1)
+
+        layout.addLayout(header)
+
+        # Code pill
+        if code_snippet:
+            code_pill = Pill(code_snippet, variant="neutral")
+            code_pill.setStyleSheet(f"""
+                background: {COLORS.surface_0};
+                color: {COLORS.accent_primary};
+                font-family: {mono_font_stack()};
+                font-size: 12px;
+                padding: 6px 14px;
+            """)
+            layout.addWidget(code_pill)
+
+        # Message
+        if message:
+            msg_label = QLabel(message)
+            msg_label.setWordWrap(True)
+            msg_label.setStyleSheet(f"font-size: 13px; color: {COLORS.text_secondary}; line-height: 1.5;")
+            layout.addWidget(msg_label)
+
+        # Actions
+        actions_row = QHBoxLayout()
+        actions_row.setSpacing(SPACING.sm)
+        actions_row.addStretch(1)
+
+        ignore_btn = Button("Ignore", variant="ghost")
+        ignore_btn.clicked.connect(self.ignored.emit)
+        ignore_btn.clicked.connect(self.close)
+        actions_row.addWidget(ignore_btn)
+
+        fix_btn = Button("Quick Fix", variant="primary")
+        fix_btn.clicked.connect(self.quick_fixed.emit)
+        fix_btn.clicked.connect(self.close)
+        actions_row.addWidget(fix_btn)
+
+        layout.addLayout(actions_row)
+
+
+class Divider(QFrame):
+    """
+    Horizontal divider line with subtle border color.
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.setFrameShape(QFrame.HLine)
+        self.setFixedHeight(1)
+        self.setStyleSheet(f"background: {COLORS.stroke_0}; border: none;")
+
+
+class Badge(QLabel):
+    """
+    Status badge pill component with multiple variants.
+    Replaces/complements BadgeLabel with more options.
+    """
+
+    def __init__(self, text: str, *, variant: str = "primary", size: str = "md") -> None:
+        super().__init__(text)
+        self.setAlignment(Qt.AlignCenter)
+
+        variants = {
+            "primary": (COLORS.accent_primary, COLORS.accent_bg),
+            "success": (COLORS.success, COLORS.success_bg),
+            "warning": (COLORS.warning, COLORS.warning_bg),
+            "error": (COLORS.error, COLORS.error_bg),
+            "info": (COLORS.info, COLORS.info_bg),
+            "neutral": (COLORS.text_secondary, COLORS.surface_1),
+        }
+
+        fg, bg = variants.get(variant, variants["neutral"])
+
+        size_map = {
+            "sm": (f"padding: 2px 8px; font-size: 10px;", RADIUS.sm),
+            "md": (f"padding: 4px 12px; font-size: 11px;", RADIUS.md),
+            "lg": (f"padding: 6px 14px; font-size: 12px;", RADIUS.lg),
+        }
+
+        size_css, radius = size_map.get(size, size_map["md"])
+
+        self.setStyleSheet(f"""
+            QLabel {{
+                background: {bg};
+                color: {fg};
+                border-radius: {radius}px;
+                {size_css}
+                font-weight: 600;
+                letter-spacing: 0.5px;
+            }}
+        """)
+
+
+class Pill(Badge):
+    """
+    Alias for Badge - status pill with rounded corners.
+    Kept for backward compatibility with existing code.
+    """
+
+    pass
+
+
+class ProgressBar(QFrame):
+    """
+    Progress bar component with glowing fill and accent color.
+    8px height with gradient effect.
+    """
+
+    def __init__(self, *, value: int = 0, max_value: int = 100) -> None:
+        from PySide6.QtWidgets import QHBoxLayout, QProgressBar
+
+        super().__init__()
+        self.setFixedHeight(12)
+
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+
+        self.progress_bar = QProgressBar()
+        self.progress_bar.setMinimum(0)
+        self.progress_bar.setMaximum(max_value)
+        self.progress_bar.setValue(value)
+        self.progress_bar.setTextVisible(False)
+
+        self.progress_bar.setStyleSheet(f"""
+            QProgressBar {{
+                background: {COLORS.surface_0};
+                border: none;
+                border-radius: 6px;
+            }}
+            QProgressBar::chunk {{
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                    stop:0 {COLORS.accent_pressed},
+                    stop:1 {COLORS.accent_primary});
+                border-radius: 6px;
+            }}
+        """)
+
+        # Add glow effect
+        shadow = QGraphicsDropShadowEffect()
+        shadow.setBlurRadius(12)
+        shadow.setColor(QColor(157, 92, 255, 46))
+        shadow.setOffset(0, 0)
+        self.progress_bar.setGraphicsEffect(shadow)
+
+        layout.addWidget(self.progress_bar)
+
+    def setValue(self, value: int) -> None:
+        self.progress_bar.setValue(value)
+
+    def value(self) -> int:
+        return self.progress_bar.value()
+
+
+# ============================================================================
+# ORGANISM COMPONENTS - Screen-level building blocks
+# ============================================================================
+
+
+class BuildHistoryItem(CardFrame):
+    """
+    Build history card with status pill, progress bar, and timestamp.
+    Combines CardFrame, ProgressBar, and Badge components.
+    """
+
+    from PySide6.QtCore import Signal
+
+    clicked = Signal()
+
+    def __init__(
+        self,
+        *,
+        title: str = "Build",
+        status: str = "Success",
+        status_variant: str = "success",
+        progress: int = 100,
+        timestamp: str = "2h ago",
+    ) -> None:
+        from PySide6.QtWidgets import QVBoxLayout, QHBoxLayout
+
+        super().__init__(shadow=False)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(SPACING.lg, SPACING.lg, SPACING.lg, SPACING.lg)
+        layout.setSpacing(SPACING.md)
+
+        # Header row: Title + Status
+        header = QHBoxLayout()
+
+        title_label = QLabel(title)
+        title_label.setProperty("role", "h3")
+        header.addWidget(title_label, 1)
+
+        badge = BadgeLabel(status, variant=status_variant)
+        header.addWidget(badge)
+
+        layout.addLayout(header)
+
+        # Progress bar (if running)
+        if status == "running" or status.lower() == "in progress":
+            progress_bar = ProgressBar(value=progress)
+            layout.addWidget(progress_bar)
+
+        # Bottom row: timestamp
+        time_label = Muted(timestamp)
+        time_label.setProperty("role", "caption")
+        layout.addWidget(time_label)
+
+    def mousePressEvent(self, event) -> None:
+        super().mousePressEvent(event)
+        if event.button() == Qt.MouseButton.LeftButton:
+            self.clicked.emit()
+
+
+class InspectorHeader(CardFrame):
+    """
+    Inspector header with entity name, badges, and action buttons.
+    Used at the top of detail/inspector panels.
+    """
+
+    from PySide6.QtCore import Signal
+
+    action_clicked = Signal(str)  # Emits action name
+
+    def __init__(
+        self,
+        entity_name: str,
+        *,
+        badges: list[tuple[str, str]] | None = None,
+        actions: list[str] | None = None,
+    ) -> None:
+        from PySide6.QtWidgets import QVBoxLayout, QHBoxLayout
+
+        super().__init__(shadow=False)
+
+        layout = QVBoxLayout(self)
+        layout.setSpacing(SPACING.md)
+
+        # Top row: name + actions
+        top_row = QHBoxLayout()
+
+        name_label = H2(entity_name)
+        name_label.setStyleSheet("font-weight: 600;")
+        top_row.addWidget(name_label, 1)
+
+        # Action buttons
+        if actions:
+            for action_name in actions:
+                btn = IconCircleButton(label="", glyph=action_name)
+                btn.clicked.connect(lambda checked, name=action_name: self.action_clicked.emit(name))
+                top_row.addWidget(btn)
+
+        layout.addLayout(top_row)
+
+        # Badges row
+        if badges:
+            badges_row = QHBoxLayout()
+            badges_row.setSpacing(SPACING.xs)
+
+            for badge_text, badge_variant in badges:
+                pill = Pill(badge_text, variant=badge_variant)
+                badges_row.addWidget(pill)
+
+            badges_row.addStretch(1)
+            layout.addLayout(badges_row)
+
+
+class PropertiesTable(QFrame):
+    """
+    Key-value properties table for displaying entity/object metadata.
+    Simple layout with labels and values in rows.
+    """
+
+    def __init__(self, properties: dict[str, str]) -> None:
+        from PySide6.QtWidgets import QVBoxLayout, QHBoxLayout
+
+        super().__init__()
+
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(SPACING.sm)
+
+        for key, value in properties.items():
+            row = QHBoxLayout()
+            row.setSpacing(SPACING.md)
+
+            key_label = QLabel(key)
+            key_label.setStyleSheet(
+                f"font-size: 12px; font-weight: 600; color: {COLORS.text_secondary}; min-width: 120px;"
+            )
+            row.addWidget(key_label)
+
+            value_label = Mono(str(value))
+            value_label.setStyleSheet(f"font-size: 13px; color: {COLORS.text_primary};")
+            row.addWidget(value_label, 1)
+
+            layout.addLayout(row)
+
+
+class TabPanel(QFrame):
+    """
+    Tabbed panel container for displaying multiple views (code, logs, etc).
+    Used for detail/inspector views with multiple tab options.
+    """
+
+    from PySide6.QtCore import Signal
+
+    tab_changed = Signal(int)  # Emits tab index
+
+    def __init__(self, *, tabs: list[tuple[str, QWidget]] | None = None) -> None:
+        from PySide6.QtWidgets import QVBoxLayout, QTabWidget
+
+        super().__init__()
+        self.setObjectName("Card")
+
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+
+        self.tab_widget = QTabWidget()
+        self.tab_widget.setStyleSheet(f"""
+            QTabWidget::pane {{ border: none; }}
+            QTabBar::tab {{
+                background: transparent;
+                padding: {SPACING.md}px {SPACING.lg}px;
+                border-top-left-radius: {RADIUS.md}px;
+                border-top-right-radius: {RADIUS.md}px;
+            }}
+            QTabBar::tab:selected {{
+                background: {COLORS.accent_bg};
+                color: {COLORS.accent_primary};
+                border-bottom: 2px solid {COLORS.accent_primary};
+            }}
+            QTabBar::tab:!selected {{
+                color: {COLORS.text_secondary};
+            }}
+        """)
+
+        if tabs:
+            for tab_name, tab_widget in tabs:
+                self.tab_widget.addTab(tab_widget, tab_name)
+
+        self.tab_widget.currentChanged.connect(self.tab_changed.emit)
+
+        layout.addWidget(self.tab_widget)
+
+    def addTab(self, widget: QWidget, title: str) -> int:
+        return self.tab_widget.addTab(widget, title)
+
+    def currentIndex(self) -> int:
+        return self.tab_widget.currentIndex()
+
+    def setCurrentIndex(self, index: int) -> None:
+        self.tab_widget.setCurrentIndex(index)
+
+
+class Callout(QFrame):
+    """
+    Alert callout box with severity icon and message.
+    Used for warnings, errors, info messages.
+    """
+
+    def __init__(self, title: str, *, message: str = "", variant: str = "warning") -> None:
+        from PySide6.QtWidgets import QHBoxLayout, QVBoxLayout
+
+        super().__init__()
+
+        variants = {
+            "warning": (COLORS.warning, COLORS.warning_bg, "warning"),
+            "error": (COLORS.error, COLORS.error_bg, "error"),
+            "info": (COLORS.info, COLORS.info_bg, "info"),
+            "success": (COLORS.success, COLORS.success_bg, "check_circle"),
+        }
+
+        fg, bg, icon_name = variants.get(variant, variants["warning"])
+
+        self.setStyleSheet(f"""
+            QFrame {{
+                background: {bg};
+                border: 1px solid {fg}40;
+                border-left: 3px solid {fg};
+                border-radius: {RADIUS.md}px;
+                padding: {SPACING.md}px;
+            }}
+        """)
+
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(SPACING.md, SPACING.md, SPACING.md, SPACING.md)
+        layout.setSpacing(SPACING.sm)
+
+        # Icon
+        icon = MaterialIcon(icon_name, size_px=20)
+        icon.setStyleSheet(f"color: {fg};")
+        layout.addWidget(icon)
+
+        # Text content
+        text_col = QVBoxLayout()
+        text_col.setSpacing(4)
+
+        title_label = QLabel(title)
+        title_label.setStyleSheet(f"font-weight: 600; color: {fg};")
+        text_col.addWidget(title_label)
+
+        if message:
+            msg_label = Muted(message)
+            msg_label.setStyleSheet(f"font-size: 12px;")
+            msg_label.setWordWrap(True)
+            text_col.addWidget(msg_label)
+
+        layout.addLayout(text_col, 1)
+
+
+class StatsCard(CardFrame):
+    """
+    Statistics card displaying a single metric with label.
+    Used in dashboard summaries.
+    """
+
+    def __init__(self, value: str, *, label: str = "", icon: str = "") -> None:
+        from PySide6.QtWidgets import QVBoxLayout, QHBoxLayout
+
+        super().__init__(shadow=False)
+
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(SPACING.lg, SPACING.lg, SPACING.lg, SPACING.lg)
+        layout.setSpacing(SPACING.md)
+
+        # Value row
+        value_row = QHBoxLayout()
+
+        if icon:
+            icon_label = MaterialIcon(icon, size_px=28)
+            icon_label.setStyleSheet(f"color: {COLORS.accent_primary};")
+            value_row.addWidget(icon_label)
+
+        value_label = QLabel(value)
+        value_label.setStyleSheet("font-size: 24px; font-weight: 700;")
+        value_row.addWidget(value_label, 1)
+
+        layout.addLayout(value_row)
+
+        # Label
+        if label:
+            label_lbl = Muted(label)
+            label_lbl.setStyleSheet("font-size: 11px;")
+            layout.addWidget(label_lbl)
+
+
+class FormSection(QFrame):
+    """
+    Form section container with title and form fields.
+    Used in settings/configuration screens.
+    """
+
+    def __init__(self, title: str, *, fields: list[tuple[str, QWidget]] | None = None) -> None:
+        from PySide6.QtWidgets import QVBoxLayout, QHBoxLayout
+
+        super().__init__()
+
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(SPACING.md)
+
+        # Section title
+        title_label = QLabel(title)
+        title_label.setStyleSheet(
+            f"font-size: 11px; font-weight: 700; letter-spacing: 1.5px; color: {COLORS.text_secondary}; text-transform: uppercase;"
+        )
+        layout.addWidget(title_label)
+
+        # Fields
+        if fields:
+            for label, widget in fields:
+                field_row = QHBoxLayout()
+                field_row.setSpacing(SPACING.lg)
+
+                label_widget = QLabel(label)
+                label_widget.setStyleSheet(
+                    f"font-size: 14px; font-weight: 500; color: {COLORS.text_primary}; min-width: 150px;"
+                )
+                field_row.addWidget(label_widget)
+
+                field_row.addWidget(widget, 1)
+
+                layout.addLayout(field_row)
+
+        # Divider
+        divider = Divider()
+        layout.addWidget(divider)

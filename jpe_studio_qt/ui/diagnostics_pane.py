@@ -116,7 +116,7 @@ class GlobalDiagnosticsPane(QFrame):
                 margin: 2px 0px;
             }}
             QTreeWidget::item:selected {{
-                background: rgba(157,92,255,0.15);
+                background: rgba(134,56,250,0.15);
             }}
             QTreeWidget::header {{
                 background: transparent;

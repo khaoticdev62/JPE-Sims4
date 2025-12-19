@@ -546,7 +546,7 @@ class MainWindow(QMainWindow):
                 except Exception:
                     icon.setText("DIR")
                 icon.setStyleSheet(
-                    "border-radius: 10px; background: rgba(157,92,255,0.12); color: #9d5cff;"
+                    "border-radius: 10px; background: rgba(134,56,250,0.12); color: #8638fa;"
                 )
                 row.addWidget(icon)
 
@@ -2147,7 +2147,7 @@ class WorkspacePage(QWidget):
                         from PySide6.QtGui import QColor, QBrush, QFont
 
                         child.setForeground(1, QColor("#ffffff"))
-                        child.setBackground(1, QBrush(QColor(157, 92, 255, 130)))
+                        child.setBackground(1, QBrush(QColor(134, 56, 250, 130)))  # #8638fa
                         f = QFont()
                         f.setBold(True)
                         f.setPointSize(8)
@@ -2162,7 +2162,7 @@ class WorkspacePage(QWidget):
                     try:
                         from PySide6.QtGui import QColor, QBrush
 
-                        child.setBackground(0, QBrush(QColor(157, 92, 255, 50)))
+                        child.setBackground(0, QBrush(QColor(134, 56, 250, 50)))  # #8638fa
                     except Exception:
                         pass
                 grp_open.addChild(child)
@@ -2237,7 +2237,7 @@ class WorkspacePage(QWidget):
                     try:
                         from PySide6.QtGui import QColor, QBrush
 
-                        leaf.setBackground(0, QBrush(QColor(157, 92, 255, 50)))
+                        leaf.setBackground(0, QBrush(QColor(134, 56, 250, 50)))  # #8638fa
                     except Exception:
                         pass
                 parent.addChild(leaf)

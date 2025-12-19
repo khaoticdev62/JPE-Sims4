@@ -79,6 +79,8 @@ from jpe_studio_qt.ui.pages.design_system_pages import (
     DesignSystemDashboardPage,
     DesignSystemDetailPage,
     DesignSystemSettingsPage,
+    DesignSystemExplorerPage,
+    DesignSystemWorkspacePage,
 )
 from jpe_studio_qt.animations import fade_in, fade_out  # Phase 5: Animation integration
 from jpe_studio_qt.state_widgets import LoadingSpinner, ErrorState  # Phase 5: State widget integration
@@ -345,15 +347,25 @@ class MainWindow(QMainWindow):
 
         self.stack.addWidget(self.dashboard_page)
         # 1 Projects (Explorer)
-        self.explorer_page = Explorer2Page()
-        self.explorer_page.request_translate.connect(lambda: self._select_page(2))
-        self.explorer_page.request_build.connect(lambda: self._select_page(4))
-        self.explorer_page.request_settings.connect(lambda: self._select_page(11))
-        self.explorer_page.request_build.connect(lambda: self._select_page(4))
+        if USE_DESIGN_SYSTEM_PAGES:
+            self.explorer_page = DesignSystemExplorerPage()
+            self.explorer_page.translate_requested.connect(lambda: self._select_page(2))
+            self.explorer_page.build_requested.connect(lambda: self._select_page(4))
+            self.explorer_page.request_nav_index.connect(self._select_page)
+        else:
+            self.explorer_page = Explorer2Page()
+            self.explorer_page.request_translate.connect(lambda: self._select_page(2))
+            self.explorer_page.request_build.connect(lambda: self._select_page(4))
+            self.explorer_page.request_settings.connect(lambda: self._select_page(11))
+            self.explorer_page.request_build.connect(lambda: self._select_page(4))
         self.stack.addWidget(self.explorer_page)
         # 2 Translate (dual-pane / segments)
-        self.workspace_page = WorkspacePage()
-        self.workspace_page.save_requested.connect(self._save_project)
+        if USE_DESIGN_SYSTEM_PAGES:
+            self.workspace_page = DesignSystemWorkspacePage()
+            self.workspace_page.save_requested.connect(self._save_project)
+        else:
+            self.workspace_page = WorkspacePage()
+            self.workspace_page.save_requested.connect(self._save_project)
         self.stack.addWidget(self.workspace_page)
         # 3 Issues
         self.qa_page = DiagnosticsTab2Page()

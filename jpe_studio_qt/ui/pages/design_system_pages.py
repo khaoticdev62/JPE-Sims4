@@ -19,7 +19,7 @@ from PySide6.QtCore import Signal
 from PySide6.QtWidgets import QWidget, QVBoxLayout
 
 from jpe_sims4.project import Project
-from jpe_studio_qt.ui.screens import DashboardScreen, DetailScreen, SettingsScreen
+from jpe_studio_qt.ui.screens import DashboardScreen, DetailScreen, SettingsScreen, ExplorerScreen, WorkspaceScreen
 
 
 class DesignSystemDashboardPage(QWidget):
@@ -265,3 +265,159 @@ class DesignSystemSettingsPage(QWidget):
             # Fallback: keep default values if settings loading fails
             import logging
             logging.warning(f"Failed to load settings: {e}")
+
+
+class DesignSystemExplorerPage(QWidget):
+    """
+    Explorer/File Browser page wrapper for ExplorerScreen.
+
+    Integrates the new design system explorer into the MainWindow page management system.
+    Provides signals for navigation and project operations.
+    Displays file tree and project structure with quick action buttons.
+
+    Usage in MainWindow:
+        page = DesignSystemExplorerPage()
+        page.set_project(current_project)
+        main_window.stack.addWidget(page)
+
+    Signals:
+        request_nav_index: Navigate to page by index
+        build_requested: Build action triggered
+        translate_requested: Translate action triggered
+    """
+
+    request_nav_index = Signal(int)
+    build_requested = Signal()
+    translate_requested = Signal()
+
+    def __init__(self) -> None:
+        super().__init__()
+
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+
+        # Create the design system explorer screen
+        self.explorer_screen = ExplorerScreen()
+        layout.addWidget(self.explorer_screen)
+
+        # Store reference to current project
+        self._current_project: Optional[Project] = None
+
+        # Connect screen signals to page signals
+        self.explorer_screen.request_build.connect(self.build_requested.emit)
+        self.explorer_screen.request_translate.connect(self.translate_requested.emit)
+        self.explorer_screen.request_settings.connect(lambda: self.request_nav_index.emit(11))
+
+    def set_project(self, project: Optional[Project]) -> None:
+        """
+        Load project data into the explorer.
+
+        This method should be called by MainWindow whenever the current project changes.
+        """
+        self._current_project = project
+        if project:
+            self._load_project_files()
+
+    def _load_project_files(self) -> None:
+        """
+        Load and display project files in the explorer.
+
+        Retrieves the project file structure and updates the explorer display.
+        """
+        if not self._current_project:
+            return
+
+        # TODO: Load actual project file structure
+        # For now, the explorer screen displays sample data
+        try:
+            self.explorer_screen.set_project(self._current_project)
+        except Exception as e:
+            # Fallback: keep sample data if loading fails
+            import logging
+            logging.warning(f"Failed to load project files: {e}")
+
+
+class DesignSystemWorkspacePage(QWidget):
+    """
+    Workspace/Translation page wrapper for WorkspaceScreen.
+
+    Integrates the new design system workspace into the MainWindow page management system.
+    Provides a dual-pane editor for source and translation content with save functionality.
+
+    Usage in MainWindow:
+        page = DesignSystemWorkspacePage()
+        page.set_project(current_project)
+        page.set_file(file_path)
+        main_window.stack.addWidget(page)
+
+    Signals:
+        request_nav_index: Navigate to page by index
+        save_requested: Save translation changes
+    """
+
+    request_nav_index = Signal(int)
+    save_requested = Signal()
+
+    def __init__(self) -> None:
+        super().__init__()
+
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+
+        # Create the design system workspace screen
+        self.workspace_screen = WorkspaceScreen()
+        layout.addWidget(self.workspace_screen)
+
+        # Store references to current project and file
+        self._current_project: Optional[Project] = None
+        self._current_file: str = ""
+
+        # Connect screen signals to page signals
+        self.workspace_screen.save_requested.connect(self.save_requested.emit)
+
+    def set_project(self, project: Optional[Project]) -> None:
+        """
+        Set the current project for the workspace.
+
+        This method should be called by MainWindow whenever the current project changes.
+        """
+        self._current_project = project
+        if project:
+            self.workspace_screen.set_project(project)
+
+    def set_file_scope(self, file_path: str) -> None:
+        """
+        Load a specific file into the workspace editor.
+
+        Args:
+            file_path: The path to the file to load
+        """
+        self._current_file = file_path
+        try:
+            self.workspace_screen.set_file_scope(file_path)
+            self._load_file_content()
+        except Exception as e:
+            # Fallback: keep current content if loading fails
+            import logging
+            logging.warning(f"Failed to load file: {e}")
+
+    def _load_file_content(self) -> None:
+        """
+        Load the actual file content into the workspace editor.
+
+        Retrieves file content from the project and updates the editor display.
+        """
+        if not self._current_project or not self._current_file:
+            return
+
+        # TODO: Load actual file content from project
+        # For now, the workspace screen displays sample data
+        try:
+            # Placeholder for loading actual file content
+            pass
+        except Exception as e:
+            # Fallback: keep sample data if loading fails
+            import logging
+            logging.warning(f"Failed to load file content: {e}")

@@ -1,10 +1,13 @@
 """
 Complete screen mockups using atomic, molecular, and organism components.
 
-This module provides three complete screen implementations:
+This module provides complete screen implementations:
 1. DashboardScreen - Main screen with search, filters, and project cards
 2. DetailScreen - Detail view with inspector and tabbed content
 3. SettingsScreen - Settings form with sections and fields
+4. ExplorerScreen - Project file browser with tree view
+5. WorkspaceScreen - Dual-pane translation/edit workspace
+6. ComponentShowcase - Component gallery and documentation
 """
 
 from __future__ import annotations
@@ -22,6 +25,8 @@ from PySide6.QtWidgets import (
     QTextEdit,
     QSizePolicy,
     QSpacerItem,
+    QTreeWidget,
+    QTreeWidgetItem,
 )
 
 from jpe_studio_qt.design_tokens import DESIGN, COLORS, SPACING, RADIUS, SHADOWS
@@ -567,6 +572,252 @@ class SettingsScreen(QWidget):
                 saved_settings[key] = widget.text()
 
         self.settings_changed.emit(saved_settings)
+
+
+class ExplorerScreen(QWidget):
+    """
+    Explorer screen: Project file browser with tree view and details panel.
+    Shows project files and folders in a hierarchical tree structure.
+
+    Features:
+    - Tree view of project files and directories
+    - File selection and navigation
+    - Quick action buttons (Build, Translate, Settings)
+    - File count and statistics
+
+    Usage:
+        explorer = ExplorerScreen()
+        explorer.set_project(project)
+    """
+
+    request_build = Signal()
+    request_translate = Signal()
+    request_settings = Signal()
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.setStyleSheet(f"background: {COLORS.bg_0};")
+        self.setProperty("full_shell", True)
+
+        # Store project reference
+        self._project = None
+
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+
+        # TopBar
+        top_bar = TopBar("Projects", has_back=False, actions=[])
+        layout.addWidget(top_bar)
+
+        # Main content area
+        content = QWidget()
+        content_layout = QHBoxLayout(content)
+        content_layout.setContentsMargins(SPACING.xl, SPACING.lg, SPACING.xl, SPACING.xl)
+        content_layout.setSpacing(SPACING.lg)
+
+        # Left panel: File tree
+        left_panel = QFrame()
+        left_panel.setStyleSheet(f"background: {COLORS.surface_0}; border-radius: {RADIUS.lg}px;")
+        left_layout = QVBoxLayout(left_panel)
+        left_layout.setContentsMargins(SPACING.md, SPACING.md, SPACING.md, SPACING.md)
+
+        tree_label = H2("Files")
+        left_layout.addWidget(tree_label)
+
+        # File tree widget
+        self.file_tree = QTreeWidget()
+        self.file_tree.setColumnCount(1)
+        self.file_tree.setHeaderLabel("Project Files")
+        self.file_tree.setStyleSheet(f"""
+            QTreeWidget {{
+                background: {COLORS.bg_1};
+                color: {COLORS.text_primary};
+                border: 1px solid {COLORS.stroke_0};
+                border-radius: {RADIUS.md}px;
+            }}
+            QTreeWidget::item:selected {{
+                background: {COLORS.accent_bg};
+            }}
+        """)
+        left_layout.addWidget(self.file_tree)
+
+        content_layout.addWidget(left_panel, 1)
+
+        # Right panel: Quick actions and details
+        right_panel = QFrame()
+        right_panel.setStyleSheet(f"background: {COLORS.surface_0}; border-radius: {RADIUS.lg}px;")
+        right_layout = QVBoxLayout(right_panel)
+        right_layout.setContentsMargins(SPACING.md, SPACING.md, SPACING.md, SPACING.md)
+
+        detail_label = H2("Actions")
+        right_layout.addWidget(detail_label)
+
+        # Quick action buttons
+        button_layout = QVBoxLayout()
+        button_layout.setSpacing(SPACING.sm)
+
+        build_btn = Button("Build Project", variant="primary")
+        build_btn.clicked.connect(self.request_build.emit)
+        button_layout.addWidget(build_btn)
+
+        translate_btn = Button("Translate", variant="secondary")
+        translate_btn.clicked.connect(self.request_translate.emit)
+        button_layout.addWidget(translate_btn)
+
+        settings_btn = Button("Settings", variant="ghost")
+        settings_btn.clicked.connect(self.request_settings.emit)
+        button_layout.addWidget(settings_btn)
+
+        right_layout.addLayout(button_layout)
+
+        # Stats
+        stats_label = H2("Statistics")
+        right_layout.addWidget(stats_label)
+
+        self.file_count_label = QLabel("Files: 0")
+        self.file_count_label.setStyleSheet(f"color: {COLORS.text_secondary}; font-size: 13px;")
+        right_layout.addWidget(self.file_count_label)
+
+        self.size_label = QLabel("Size: 0 KB")
+        self.size_label.setStyleSheet(f"color: {COLORS.text_secondary}; font-size: 13px;")
+        right_layout.addWidget(self.size_label)
+
+        right_layout.addStretch(1)
+
+        content_layout.addWidget(right_panel, 0)
+
+        layout.addWidget(content)
+
+        # Load sample data
+        self._load_sample_project()
+
+    def _load_sample_project(self) -> None:
+        """Load sample project data for demonstration."""
+        self.file_tree.clear()
+
+        root = QTreeWidgetItem(self.file_tree)
+        root.setText(0, "project_root/")
+
+        # Add sample folders
+        src_folder = QTreeWidgetItem(root)
+        src_folder.setText(0, "src/")
+
+        file1 = QTreeWidgetItem(src_folder)
+        file1.setText(0, "main.py")
+
+        file2 = QTreeWidgetItem(src_folder)
+        file2.setText(0, "utils.py")
+
+        data_folder = QTreeWidgetItem(root)
+        data_folder.setText(0, "data/")
+
+        file3 = QTreeWidgetItem(data_folder)
+        file3.setText(0, "config.json")
+
+        self.file_tree.expandAll()
+        self.file_count_label.setText("Files: 3")
+
+    def set_project(self, project) -> None:
+        """Load project data into the explorer."""
+        self._project = project
+        # TODO: Load actual project files and update tree
+        self._load_sample_project()
+
+
+class WorkspaceScreen(QWidget):
+    """
+    Workspace screen: Dual-pane translation/edit interface.
+    Shows file editor on left and translation content on right.
+
+    Features:
+    - Dual-pane layout with file editor and translation view
+    - Tab switching (Editor, Diff, History views)
+    - Save functionality
+    - File navigation
+
+    Usage:
+        workspace = WorkspaceScreen()
+        workspace.set_project(project)
+        workspace.set_file_scope(file_path)
+    """
+
+    save_requested = Signal()
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.setStyleSheet(f"background: {COLORS.bg_0};")
+        self.setProperty("full_shell", True)
+
+        # Store state
+        self._project = None
+
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+
+        # TopBar
+        top_bar = TopBar("Translate", has_back=False, actions=["save", "more_vert"])
+        layout.addWidget(top_bar)
+
+        # Main splitter: Left (editor) | Right (translation)
+        splitter = QSplitter(Qt.Horizontal)
+
+        # Left panel: Code editor
+        left_panel = QWidget()
+        left_layout = QVBoxLayout(left_panel)
+        left_layout.setContentsMargins(SPACING.lg, SPACING.lg, SPACING.md, SPACING.lg)
+
+        editor_label = H2("Source")
+        left_layout.addWidget(editor_label)
+
+        self.editor = QTextEdit()
+        self.editor.setPlainText("// Source code here\nfunction example() {\n  return 'Hello';\n}")
+        self.editor.setStyleSheet(f"""
+            background: {COLORS.bg_1};
+            color: {COLORS.text_primary};
+            border: 1px solid {COLORS.stroke_0};
+            border-radius: {RADIUS.md}px;
+            font-family: 'JetBrains Mono';
+            font-size: 11pt;
+        """)
+        left_layout.addWidget(self.editor)
+
+        # Right panel: Translation view
+        right_panel = QWidget()
+        right_layout = QVBoxLayout(right_panel)
+        right_layout.setContentsMargins(SPACING.md, SPACING.lg, SPACING.xl, SPACING.lg)
+
+        translation_label = H2("Translation")
+        right_layout.addWidget(translation_label)
+
+        self.translation_view = QTextEdit()
+        self.translation_view.setPlainText("// Translated content here\nfunction example() {\n  return 'Bonjour';\n}")
+        self.translation_view.setStyleSheet(f"""
+            background: {COLORS.bg_1};
+            color: {COLORS.text_primary};
+            border: 1px solid {COLORS.stroke_0};
+            border-radius: {RADIUS.md}px;
+            font-family: 'JetBrains Mono';
+            font-size: 11pt;
+        """)
+        right_layout.addWidget(self.translation_view)
+
+        splitter.addWidget(left_panel)
+        splitter.addWidget(right_panel)
+        splitter.setSizes([400, 400])
+        splitter.setStyleSheet(f"background: {COLORS.bg_0};")
+
+        layout.addWidget(splitter)
+
+    def set_project(self, project) -> None:
+        """Set the current project."""
+        self._project = project
+
+    def set_file_scope(self, file_path: str) -> None:
+        """Set the current file being edited."""
+        # TODO: Load actual file content
+        pass
 
 
 class ComponentShowcase(QWidget):

@@ -1797,3 +1797,313 @@ class Toast(QFrame):
         self.timer = QTimer()
         self.timer.timeout.connect(self.close)
         self.timer.start(duration)
+
+
+class SkeletonScreen(QFrame):
+    """Skeleton screen placeholder for perceived performance.
+
+    Features:
+    - Animated placeholder bars (pulse effect)
+    - Customizable line count and width
+    - Simulates loading content before real data arrives
+
+    Usage:
+        skeleton = SkeletonScreen(lines=5, title=True)
+        layout.addWidget(skeleton)
+        # Replace with real content when data loads
+    """
+
+    def __init__(self, lines: int = 4, title: bool = True) -> None:
+        super().__init__()
+        from PySide6.QtCore import QTimer, QSize
+        from PySide6.QtGui import QBrush, QColor
+        from PySide6.QtWidgets import QVBoxLayout
+
+        self.setStyleSheet("background: transparent;")
+
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(SPACING.md)
+
+        # Title skeleton (if enabled)
+        if title:
+            title_skeleton = self._create_skeleton_bar(width=200, height=24)
+            layout.addWidget(title_skeleton)
+
+        # Content skeleton lines
+        for i in range(lines):
+            # Vary widths for more natural appearance
+            width = 400 if i % 3 != 2 else 320
+            line_skeleton = self._create_skeleton_bar(width=width, height=12)
+            layout.addWidget(line_skeleton)
+
+        layout.addStretch(1)
+
+        # Start pulse animation
+        self._animate_pulse()
+
+    def _create_skeleton_bar(self, width: int = 300, height: int = 12) -> QFrame:
+        """Create a single skeleton bar."""
+        bar = QFrame()
+        bar.setFixedSize(width, height)
+        bar.setStyleSheet(f"""
+            QFrame {{
+                background: {COLORS.surface_0};
+                border-radius: {RADIUS.sm}px;
+                border: 1px solid {COLORS.stroke_0};
+            }}
+        """)
+        return bar
+
+    def _animate_pulse(self) -> None:
+        """Start pulse animation for skeleton bars."""
+        from PySide6.QtCore import QTimer
+
+        self.pulse_timer = QTimer()
+        self.pulse_dir = 1  # 1 for increasing, -1 for decreasing
+        self.opacity_level = 0.5
+
+        def update_pulse():
+            self.opacity_level += 0.05 * self.pulse_dir
+            if self.opacity_level >= 1.0:
+                self.pulse_dir = -1
+            elif self.opacity_level <= 0.5:
+                self.pulse_dir = 1
+
+            # Update all skeleton bars
+            for i in range(self.layout().count()):
+                widget = self.layout().itemAt(i).widget()
+                if widget and isinstance(widget, QFrame):
+                    widget.setStyleSheet(f"""
+                        QFrame {{
+                            background: {COLORS.surface_0};
+                            border-radius: {RADIUS.sm}px;
+                            border: 1px solid {COLORS.stroke_0};
+                            opacity: {self.opacity_level};
+                        }}
+                    """)
+
+        self.pulse_timer.timeout.connect(update_pulse)
+        self.pulse_timer.start(100)
+
+
+class ErrorDialog(QFrame):
+    """Error/Warning dialog with retry mechanism.
+
+    Features:
+    - Error icon, title, and detailed message
+    - Retry button for recovery actions
+    - Dismiss button to close
+    - Modal-style overlay effect
+
+    Usage:
+        error = ErrorDialog(
+            title="Failed to load builds",
+            message="Network error occurred. Please check your connection.",
+            show_retry=True
+        )
+        error.retry_clicked.connect(self.retry_load_builds)
+        layout.addWidget(error)
+    """
+
+    from PySide6.QtCore import Signal
+
+    retry_clicked = Signal()
+    dismiss_clicked = Signal()
+
+    def __init__(
+        self,
+        title: str = "Error",
+        message: str = "",
+        error_code: str = "",
+        show_retry: bool = True,
+        variant: str = "error",
+    ) -> None:
+        super().__init__()
+        from PySide6.QtWidgets import QHBoxLayout
+
+        # Variant icons and colors
+        variants = {
+            "error": ("error", COLORS.error, "Something went wrong"),
+            "warning": ("warning", COLORS.warning, "Warning"),
+            "info": ("info", COLORS.info, "Information"),
+        }
+
+        icon_name, color, _ = variants.get(variant, variants["error"])
+
+        self.setStyleSheet(f"""
+            QFrame {{
+                background: {COLORS.surface_0};
+                border: 1px solid {color}30;
+                border-left: 4px solid {color};
+                border-radius: {RADIUS.md}px;
+                padding: {SPACING.lg}px;
+            }}
+        """)
+        self.setMinimumHeight(120)
+
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(SPACING.lg, SPACING.md, SPACING.lg, SPACING.md)
+        layout.setSpacing(SPACING.lg)
+
+        # Icon section
+        icon = MaterialIcon(icon_name, size_px=40)
+        icon.setStyleSheet(f"color: {color};")
+        layout.addWidget(icon)
+
+        # Content section
+        content_layout = QVBoxLayout()
+        content_layout.setSpacing(SPACING.sm)
+
+        # Title
+        title_label = H2(title)
+        title_label.setStyleSheet(f"color: {color};")
+        content_layout.addWidget(title_label)
+
+        # Message
+        if message:
+            msg_label = QLabel(message)
+            msg_label.setWordWrap(True)
+            msg_label.setStyleSheet(f"color: {COLORS.text_secondary}; font-size: 13px;")
+            content_layout.addWidget(msg_label)
+
+        # Error code (if provided)
+        if error_code:
+            code_label = QLabel(f"Error Code: {error_code}")
+            code_label.setStyleSheet(
+                f"color: {COLORS.text_tertiary}; font-size: 11px; font-family: monospace;"
+            )
+            content_layout.addWidget(code_label)
+
+        layout.addLayout(content_layout, 1)
+
+        # Action buttons
+        action_layout = QVBoxLayout()
+        action_layout.setSpacing(SPACING.xs)
+
+        if show_retry:
+            retry_btn = QPushButton("Retry")
+            retry_btn.setObjectName("Primary")
+            retry_btn.setFixedHeight(36)
+            retry_btn.clicked.connect(self.retry_clicked.emit)
+            action_layout.addWidget(retry_btn)
+
+        dismiss_btn = QPushButton("Dismiss")
+        dismiss_btn.setObjectName("Secondary")
+        dismiss_btn.setFixedHeight(36)
+        dismiss_btn.clicked.connect(self.dismiss_clicked.emit)
+        action_layout.addWidget(dismiss_btn)
+
+        layout.addLayout(action_layout)
+
+
+class SearchableComboBox(QFrame):
+    """Searchable dropdown with filtering capability.
+
+    Features:
+    - Real-time search/filter of items
+    - Keyboard navigation (arrow keys, enter)
+    - Customizable placeholder
+    - Emits selection changes
+
+    Usage:
+        combo = SearchableComboBox(
+            items=["Build", "Translate", "Validate", "Export"],
+            placeholder="Search..."
+        )
+        combo.selection_changed.connect(self.on_selection)
+        layout.addWidget(combo)
+    """
+
+    from PySide6.QtCore import Signal
+
+    selection_changed = Signal(str)
+
+    def __init__(self, items: list[str] = None, placeholder: str = "Search...") -> None:
+        super().__init__()
+        from PySide6.QtWidgets import QVBoxLayout, QListWidget, QListWidgetItem, QLineEdit
+
+        self.items = items or []
+        self.filtered_items = self.items.copy()
+        self.is_open = False
+
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+
+        # Search input
+        self.search_input = QLineEdit()
+        self.search_input.setPlaceholderText(placeholder)
+        self.search_input.setFixedHeight(40)
+        self.search_input.setStyleSheet(f"""
+            QLineEdit {{
+                background: {COLORS.surface_0};
+                color: {COLORS.text_primary};
+                border: 1px solid {COLORS.stroke_0};
+                border-radius: {RADIUS.md}px;
+                padding: 0 {SPACING.md}px;
+                font-size: 13px;
+            }}
+            QLineEdit:focus {{
+                border-color: {COLORS.accent_primary};
+            }}
+        """)
+        self.search_input.textChanged.connect(self._filter_items)
+        self.search_input.returnPressed.connect(self._select_first)
+        layout.addWidget(self.search_input)
+
+        # Dropdown list
+        self.list_widget = QListWidget()
+        self.list_widget.setMaximumHeight(200)
+        self.list_widget.setStyleSheet(f"""
+            QListWidget {{
+                background: {COLORS.surface_1};
+                color: {COLORS.text_primary};
+                border: 1px solid {COLORS.stroke_0};
+                border-top: none;
+                border-radius: 0 0 {RADIUS.md}px {RADIUS.md}px;
+            }}
+            QListWidget::item:selected {{
+                background: {COLORS.accent_bg};
+                color: {COLORS.accent_primary};
+            }}
+            QListWidget::item:hover {{
+                background: {COLORS.surface_0};
+            }}
+        """)
+        self.list_widget.itemClicked.connect(self._on_item_selected)
+        layout.addWidget(self.list_widget)
+
+        # Populate initial items
+        self._populate_list()
+
+    def _populate_list(self) -> None:
+        """Populate list with filtered items."""
+        from PySide6.QtWidgets import QListWidgetItem
+
+        self.list_widget.clear()
+        for item in self.filtered_items:
+            list_item = QListWidgetItem(item)
+            self.list_widget.addItem(list_item)
+
+    def _filter_items(self, search_text: str) -> None:
+        """Filter items based on search text."""
+        search_text_lower = search_text.lower()
+        self.filtered_items = [
+            item for item in self.items if search_text_lower in item.lower()
+        ]
+        self._populate_list()
+
+    def _on_item_selected(self, item) -> None:
+        """Handle item selection from list."""
+        self.search_input.setText(item.text())
+        self.selection_changed.emit(item.text())
+
+    def _select_first(self) -> None:
+        """Select first filtered item on enter."""
+        if self.filtered_items:
+            self.selection_changed.emit(self.filtered_items[0])
+
+    def get_selected(self) -> str:
+        """Get currently selected/searched text."""
+        return self.search_input.text()

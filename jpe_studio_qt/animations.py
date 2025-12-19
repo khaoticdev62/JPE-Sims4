@@ -211,3 +211,123 @@ def smooth_scroll(scroll_widget, target_value: int, duration: int = 400) -> QPro
     animation.start()
 
     return animation
+
+
+def slide_in_from_left(widget: QWidget, duration: int = 300) -> QPropertyAnimation:
+    """
+    Slide in animation from the left side.
+
+    Args:
+        widget: Widget to animate
+        duration: Animation duration in milliseconds (default: 300ms)
+
+    Returns:
+        QPropertyAnimation instance (starts automatically)
+    """
+    target_pos = widget.pos()
+    start_pos = (target_pos[0] - widget.width(), target_pos[1])
+
+    animation = QPropertyAnimation(widget, b"pos")
+    animation.setDuration(duration)
+    animation.setStartValue(start_pos)
+    animation.setEndValue(target_pos)
+    animation.setEasingCurve(QEasingCurve.Type.OutCubic)
+    animation.start()
+
+    return animation
+
+
+def slide_in_from_right(widget: QWidget, duration: int = 300) -> QPropertyAnimation:
+    """
+    Slide in animation from the right side.
+
+    Args:
+        widget: Widget to animate
+        duration: Animation duration in milliseconds (default: 300ms)
+
+    Returns:
+        QPropertyAnimation instance (starts automatically)
+    """
+    target_pos = widget.pos()
+    start_pos = (target_pos[0] + widget.width(), target_pos[1])
+
+    animation = QPropertyAnimation(widget, b"pos")
+    animation.setDuration(duration)
+    animation.setStartValue(start_pos)
+    animation.setEndValue(target_pos)
+    animation.setEasingCurve(QEasingCurve.Type.OutCubic)
+    animation.start()
+
+    return animation
+
+
+def slide_out_left(widget: QWidget, duration: int = 300) -> QPropertyAnimation:
+    """
+    Slide out animation to the left side.
+
+    Args:
+        widget: Widget to animate
+        duration: Animation duration in milliseconds (default: 300ms)
+
+    Returns:
+        QPropertyAnimation instance (starts automatically)
+    """
+    current_pos = widget.pos()
+    end_pos = (current_pos[0] - widget.width(), current_pos[1])
+
+    animation = QPropertyAnimation(widget, b"pos")
+    animation.setDuration(duration)
+    animation.setStartValue(current_pos)
+    animation.setEndValue(end_pos)
+    animation.setEasingCurve(QEasingCurve.Type.InCubic)
+    animation.start()
+
+    return animation
+
+
+def slide_out_right(widget: QWidget, duration: int = 300) -> QPropertyAnimation:
+    """
+    Slide out animation to the right side.
+
+    Args:
+        widget: Widget to animate
+        duration: Animation duration in milliseconds (default: 300ms)
+
+    Returns:
+        QPropertyAnimation instance (starts automatically)
+    """
+    current_pos = widget.pos()
+    end_pos = (current_pos[0] + widget.width(), current_pos[1])
+
+    animation = QPropertyAnimation(widget, b"pos")
+    animation.setDuration(duration)
+    animation.setStartValue(current_pos)
+    animation.setEndValue(end_pos)
+    animation.setEasingCurve(QEasingCurve.Type.InCubic)
+    animation.start()
+
+    return animation
+
+
+def pulse(widget: QWidget, duration: int = 600) -> QPropertyAnimation:
+    """
+    Pulse animation (opacity fade in/out).
+
+    Args:
+        widget: Widget to pulse
+        duration: Animation duration in milliseconds (default: 600ms)
+
+    Returns:
+        QPropertyAnimation instance (starts automatically)
+    """
+    effect = QGraphicsOpacityEffect(widget)
+    widget.setGraphicsEffect(effect)
+
+    animation = QPropertyAnimation(effect, b"opacity")
+    animation.setDuration(duration)
+    animation.setStartValue(0.5)
+    animation.setEndValue(1.0)
+    animation.setEasingCurve(QEasingCurve.Type.InOutQuad)
+    animation.start()
+
+    return animation

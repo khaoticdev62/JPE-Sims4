@@ -75,6 +75,11 @@ from jpe_studio_qt.ui.pages.diagnostics_tab2 import DiagnosticsTab2Page
 from jpe_studio_qt.ui.diagnostics_pane import GlobalDiagnosticsPane
 from jpe_studio_qt.ui.entity_detail_dialog import EntityDetailDialog, EntityRef
 from jpe_studio_qt.ui.pages.entity_jpe_view import EntityJpeViewPage
+from jpe_studio_qt.ui.pages.design_system_pages import (
+    DesignSystemDashboardPage,
+    DesignSystemDetailPage,
+    DesignSystemSettingsPage,
+)
 from jpe_studio_qt.animations import fade_in, fade_out  # Phase 5: Animation integration
 from jpe_studio_qt.state_widgets import LoadingSpinner, ErrorState  # Phase 5: State widget integration
 
@@ -321,12 +326,23 @@ class MainWindow(QMainWindow):
             return
 
     def _build_pages(self) -> None:
-        # 0 Dashboard
-        self.dashboard_page = Dashboard2Page()
-        self.dashboard_page.request_nav_index.connect(self._select_page)
-        self.dashboard_page.request_import.connect(self._open_import)
-        self.dashboard_page.request_open_project_json.connect(lambda p: self._open_project_json(Path(p)))
-        self.dashboard_page.request_open_project_detail_json.connect(lambda p: self._open_project_detail_json(Path(p)))
+        # 0 Dashboard - Use new design system dashboard
+        # Set USE_DESIGN_SYSTEM_PAGES = False to revert to Dashboard2Page
+        USE_DESIGN_SYSTEM_PAGES = True
+
+        if USE_DESIGN_SYSTEM_PAGES:
+            self.dashboard_page = DesignSystemDashboardPage()
+            self.dashboard_page.request_nav_index.connect(self._select_page)
+            self.dashboard_page.request_import.connect(self._open_import)
+            self.dashboard_page.request_open_project_json.connect(lambda p: self._open_project_json(Path(p)))
+            self.dashboard_page.request_open_project_detail_json.connect(lambda p: self._open_project_detail_json(Path(p)))
+        else:
+            self.dashboard_page = Dashboard2Page()
+            self.dashboard_page.request_nav_index.connect(self._select_page)
+            self.dashboard_page.request_import.connect(self._open_import)
+            self.dashboard_page.request_open_project_json.connect(lambda p: self._open_project_json(Path(p)))
+            self.dashboard_page.request_open_project_detail_json.connect(lambda p: self._open_project_detail_json(Path(p)))
+
         self.stack.addWidget(self.dashboard_page)
         # 1 Projects (Explorer)
         self.explorer_page = Explorer2Page()
@@ -371,10 +387,16 @@ class MainWindow(QMainWindow):
         self.entity_jpe_page = EntityJpeViewPage()
         self.entity_jpe_page.back_requested.connect(lambda: self._select_page(9))
         self.stack.addWidget(self.entity_jpe_page)
-        # 11 Settings
-        self.settings_page = Settings2Page()
-        self.settings_page.request_back.connect(lambda: self._select_page(0))
-        self.settings_page.apply_settings.connect(self._apply_settings)
+        # 11 Settings - Use new design system settings
+        if USE_DESIGN_SYSTEM_PAGES:
+            self.settings_page = DesignSystemSettingsPage()
+            self.settings_page.request_back.connect(lambda: self._select_page(0))
+            self.settings_page.apply_settings.connect(self._apply_settings)
+        else:
+            self.settings_page = Settings2Page()
+            self.settings_page.request_back.connect(lambda: self._select_page(0))
+            self.settings_page.apply_settings.connect(self._apply_settings)
+
         self.stack.addWidget(self.settings_page)
 
     def _page_stub(self, title: str, msg: str) -> QWidget:

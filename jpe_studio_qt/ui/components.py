@@ -126,7 +126,8 @@ class IconCircleButton(QToolButton):
         self.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
         # Using glyph text keeps us dependency-free vs icon packs; QSS styles it as a circle.
         self.setText(label)
-        self.setIconText(glyph)
+        # Set the icon text using Material Symbols
+        set_toolbutton_icon(self, glyph, size_px=24)
 
 
 def apply_mono_font(widget) -> None:

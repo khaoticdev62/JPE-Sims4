@@ -179,6 +179,8 @@ class DesignSystemColors:
         self.primary_bg = COLORS.accent_bg
         self.text = COLORS.text_primary
         self.text_muted = COLORS.text_secondary
+        self.text_secondary = COLORS.text_secondary
+        self.text_tertiary = COLORS.text_tertiary
         self.success = COLORS.success
         self.success_bg = COLORS.success_bg
         self.error = COLORS.error
@@ -187,12 +189,20 @@ class DesignSystemColors:
         self.warning_bg = COLORS.warning_bg
         self.info = COLORS.info
         self.info_bg = COLORS.info_bg
+        # Additional attributes for backward compatibility
+        self.surface_hover = COLORS.surface_1
+        self.surface_active = COLORS.accent_bg
+        self.code_primary_bg = COLORS.bg_1
+        self.code_output_bg = COLORS.bg_1
+        self.stroke = COLORS.stroke_0
+        self.stroke_hover = COLORS.stroke_1
 
 
 class DesignSystemSpacing:
     """Legacy spacing interface for backward compatibility."""
 
     def __init__(self):
+        self.xxs = SPACING.xxs
         self.xs = SPACING.xs
         self.sm = SPACING.sm
         self.md = SPACING.md
@@ -201,12 +211,21 @@ class DesignSystemSpacing:
         self.xxl = SPACING.xxl
 
 
+class DesignSystemTypography:
+    """Legacy typography interface for backward compatibility."""
+
+    def __init__(self):
+        self.icon_font = TYPOGRAPHY.code_font
+
+
 class DesignSystem:
     """Legacy design system interface for backward compatibility with existing code."""
 
     def __init__(self):
         self.colors = DesignSystemColors()
         self.spacing = DesignSystemSpacing()
+        self.radius = RADIUS  # Add radius tokens for backward compatibility
+        self.typography = DesignSystemTypography()  # Add typography tokens
 
 
 # Global DESIGN instance for legacy compatibility

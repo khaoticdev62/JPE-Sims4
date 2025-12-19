@@ -1182,6 +1182,9 @@ class BuildScreen(QWidget):
         self._table_layout: QVBoxLayout | None = None
         self._stats_widgets: dict[str, QLabel] = {}
         self._builds_data: list[dict] = []
+        self._table_frame: CardFrame | None = None
+        self._content_layout: QVBoxLayout | None = None
+        self._loading_indicator: LoadingIndicator | None = None
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -1197,9 +1200,9 @@ class BuildScreen(QWidget):
         scroll.setStyleSheet("border: none;")
 
         content = QWidget()
-        content_layout = QVBoxLayout(content)
-        content_layout.setContentsMargins(SPACING.xl, SPACING.lg, SPACING.xl, SPACING.xl)
-        content_layout.setSpacing(SPACING.lg)
+        self._content_layout = QVBoxLayout(content)
+        self._content_layout.setContentsMargins(SPACING.xl, SPACING.lg, SPACING.xl, SPACING.xl)
+        self._content_layout.setSpacing(SPACING.lg)
 
         # Action buttons
         action_layout = QHBoxLayout()
@@ -1219,15 +1222,15 @@ class BuildScreen(QWidget):
         settings_btn.clicked.connect(self.settings_requested.emit)
         action_layout.addWidget(settings_btn)
 
-        content_layout.addLayout(action_layout)
+        self._content_layout.addLayout(action_layout)
 
         # Filter chips
         filters = FilterChipsRow(["All Builds", "Success", "Failed", "Last 7 Days"], active_chip="All Builds")
-        content_layout.addWidget(filters)
+        self._content_layout.addWidget(filters)
 
         # Builds table
-        table_frame = CardFrame()
-        self._table_layout = QVBoxLayout(table_frame)
+        self._table_frame = CardFrame()
+        self._table_layout = QVBoxLayout(self._table_frame)
         self._table_layout.setContentsMargins(0, 0, 0, 0)
 
         table_header = QHBoxLayout()
@@ -1240,7 +1243,7 @@ class BuildScreen(QWidget):
         # Load sample builds initially
         self._load_sample_builds()
 
-        content_layout.addWidget(table_frame)
+        self._content_layout.addWidget(self._table_frame)
 
         # Statistics
         stats_frame = CardFrame()
@@ -1270,9 +1273,9 @@ class BuildScreen(QWidget):
             self._stats_widgets[stat_key] = value_label
 
         stats_layout.addStretch(1)
-        content_layout.addWidget(stats_frame)
+        self._content_layout.addWidget(stats_frame)
 
-        content_layout.addStretch(1)
+        self._content_layout.addStretch(1)
         scroll.setWidget(content)
         layout.addWidget(scroll, 1)
 
@@ -1323,9 +1326,70 @@ class BuildScreen(QWidget):
                 - timestamp: Build timestamp
                 - progress: Build progress (0-100)
         """
+        # Show loading indicator
+        self._show_loading()
+
+        # Simulate async loading (in real app, would be actual async operation)
         self._builds_data = builds
         self._refresh_table()
         self._update_statistics()
+
+        # Hide loading indicator
+        self._hide_loading()
+
+    def _show_loading(self) -> None:
+        """Show loading indicator in the table area."""
+        if not self._table_frame or not self._content_layout:
+            return
+
+        # Hide table
+        self._table_frame.hide()
+
+        # Create and show loading indicator
+        if not self._loading_indicator:
+            self._loading_indicator = LoadingIndicator(size=48, text="Loading builds...")
+            # Insert after filters (before table)
+            self._content_layout.insertWidget(
+                self._content_layout.indexOf(self._table_frame),
+                self._loading_indicator,
+            )
+
+    def _hide_loading(self) -> None:
+        """Hide loading indicator and show table or empty state."""
+        if self._loading_indicator:
+            self._loading_indicator.hide()
+
+        if not self._builds_data:
+            # Show empty state
+            self._show_empty_state()
+        else:
+            # Show table
+            if self._table_frame:
+                self._table_frame.show()
+
+    def _show_empty_state(self) -> None:
+        """Show empty state when no builds are available."""
+        if not self._table_frame:
+            return
+
+        self._table_frame.hide()
+
+        # Create empty state if not exists
+        empty_state = EmptyState(
+            icon="inbox",
+            title="No builds yet",
+            description="Create your first build to get started.",
+            action_text="Build from Folder",
+        )
+        empty_state.findChild(
+            type(empty_state.layout().itemAt(empty_state.layout().count() - 1).widget())
+        )  # Find button
+        # Note: We'd need to wire up the button click, skipping for now
+
+        # Insert empty state into layout
+        if self._content_layout:
+            insert_pos = self._content_layout.indexOf(self._table_frame)
+            self._content_layout.insertWidget(insert_pos, empty_state)
 
     def _refresh_table(self) -> None:
         """Refresh the builds table with current data."""

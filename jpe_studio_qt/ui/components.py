@@ -31,9 +31,9 @@ class CardFrame(QFrame):
         self.setObjectName("Card")
         if shadow:
             eff = QGraphicsDropShadowEffect(self)
-            eff.setBlurRadius(22)
-            eff.setOffset(0, 10)
-            eff.setColor(QColor(157, 92, 255, 45))  # Updated primary @ ~18%
+            eff.setBlurRadius(16)  # Stitch spec: Card hover shadow blur 16px
+            eff.setOffset(0, 0)  # Centered glow (not offset)
+            eff.setColor(QColor(134, 56, 250, 77))  # #8638fa @ 0.3 opacity (77 ≈ 255*0.3)
             self.setGraphicsEffect(eff)
 
 
@@ -319,10 +319,10 @@ class ToggleSwitch(QAbstractButton):
         border_off = QColor(71, 47, 106, 255)
         knob_off = QColor(167, 142, 204, 255)
 
-        # Updated to new primary color
-        track_on = QColor(157, 92, 255, 50)
-        border_on = QColor(157, 92, 255, 130)
-        knob_on = QColor(157, 92, 255, 255)
+        # Updated to new primary color #8638fa (was #9d5cff)
+        track_on = QColor(134, 56, 250, 50)
+        border_on = QColor(134, 56, 250, 130)
+        knob_on = QColor(134, 56, 250, 255)
 
         if not self.isEnabled():
             track_off.setAlpha(100)
@@ -455,7 +455,7 @@ class ProgressCard(CardFrame):
                 border: none;
             }}
             QProgressBar::chunk {{
-                background: #9d5cff;
+                background: #8638fa;
                 border-radius: 4px;
             }}
         """)

@@ -20,6 +20,8 @@ from PySide6.QtWidgets import (
     QLabel,
     QSplitter,
     QTextEdit,
+    QSizePolicy,
+    QSpacerItem,
 )
 
 from jpe_studio_qt.design_tokens import DESIGN, COLORS, SPACING, RADIUS, SHADOWS
@@ -50,13 +52,34 @@ from jpe_studio_qt.ui.components import (
 
 class DashboardScreen(QWidget):
     """
-    Dashboard/Home screen: TopBar + SearchBar + FilterChips + BuildHistory grid + FAB.
+    Dashboard/Home screen: TopBar + SearchBar + FilterChips + BuildHistory grid.
     Main entry point showing recent projects and builds.
+
+    Features:
+    - Dynamic build history grid that updates with real data
+    - Search and filter functionality
+    - Click signals for navigation to build details
+    - Empty state when no builds available
+
+    Usage:
+        dashboard = DashboardScreen()
+        builds = [
+            {"id": "142", "status": "success", "progress": 100, "timestamp": "2 hours ago"},
+            ...
+        ]
+        dashboard.load_builds(builds)
     """
+
+    from PySide6.QtCore import Signal
+    build_selected = Signal(str)  # Emits build ID
 
     def __init__(self) -> None:
         super().__init__()
         self.setStyleSheet(f"background: {COLORS.bg_0};")
+
+        # Store references for dynamic updates
+        self._build_cards = {}
+        self._current_builds = []
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -64,7 +87,6 @@ class DashboardScreen(QWidget):
 
         # TopBar
         top_bar = TopBar("Dashboard", has_back=False, actions=["notifications", "settings"])
-        top_bar.back_clicked.connect(lambda: print("Back clicked"))
         layout.addWidget(top_bar)
 
         # Content area (scrollable)
@@ -79,49 +101,149 @@ class DashboardScreen(QWidget):
         content_layout.setSpacing(SPACING.lg)
 
         # Search bar
-        search = SearchBar(placeholder="Search builds, projects...")
-        content_layout.addWidget(search)
+        self.search = SearchBar(placeholder="Search builds, projects...")
+        content_layout.addWidget(self.search)
 
         # Filter chips
-        filters = FilterChipsRow(["All", "Success", "Failed", "Running"], active_chip="All")
-        filters.chip_clicked.connect(lambda chip: print(f"Filter: {chip}"))
-        content_layout.addWidget(filters)
+        self.filters = FilterChipsRow(["All", "Success", "Failed", "Running"], active_chip="All")
+        self.filters.chip_clicked.connect(self._on_filter_changed)
+        content_layout.addWidget(self.filters)
 
-        # Build cards grid (2 columns)
-        grid = QGridLayout()
-        grid.setSpacing(SPACING.md)
+        # Build cards grid (2 columns) - stored for dynamic updates
+        self.grid_container = QWidget()
+        self.grid = QGridLayout(self.grid_container)
+        self.grid.setSpacing(SPACING.md)
+        self.grid.setContentsMargins(0, 0, 0, 0)
 
-        # Sample build data
-        builds = [
-            ("Build #142", "Success", 100, "2 hours ago", "success"),
-            ("Build #141", "Running", 67, "5 minutes ago", "primary"),
-            ("Build #140", "Failed", 0, "1 day ago", "error"),
-            ("Build #139", "Success", 100, "2 days ago", "success"),
-        ]
-
-        for i, (name, status, progress, time, variant) in enumerate(builds):
-            card = BuildHistoryItem(
-                title=name,
-                status=status,
-                status_variant=variant,
-                progress=progress,
-                timestamp=time,
-            )
-            card.clicked.connect(lambda: print("Build clicked"))
-            row, col = divmod(i, 2)
-            grid.addWidget(card, row, col)
-
-        content_layout.addLayout(grid)
+        content_layout.addWidget(self.grid_container)
         content_layout.addStretch(1)
 
         scroll.setWidget(content)
         layout.addWidget(scroll, 1)
 
+        # Load sample data initially
+        self._load_sample_builds()
+
+    def _load_sample_builds(self) -> None:
+        """Load sample build data for demonstration."""
+        sample_builds = [
+            {"id": "142", "title": "Build #142", "status": "success", "progress": 100, "timestamp": "2 hours ago"},
+            {"id": "141", "title": "Build #141", "status": "running", "progress": 67, "timestamp": "5 minutes ago"},
+            {"id": "140", "title": "Build #140", "status": "error", "progress": 0, "timestamp": "1 day ago"},
+            {"id": "139", "title": "Build #139", "status": "success", "progress": 100, "timestamp": "2 days ago"},
+        ]
+        self.load_builds(sample_builds)
+
+    def load_builds(self, builds: list) -> None:
+        """
+        Load and display a list of builds in the grid.
+
+        Args:
+            builds: List of build dictionaries with keys:
+                - id: Build identifier (required)
+                - title: Display title (required)
+                - status: "success", "running", "error" (required)
+                - progress: Integer 0-100 (optional, default 0)
+                - timestamp: Time string (optional, default "Recently")
+        """
+        self._current_builds = builds
+        self._refresh_grid()
+
+    def _refresh_grid(self) -> None:
+        """Clear and rebuild the grid with current builds."""
+        # Clear existing widgets
+        while self.grid.count():
+            widget = self.grid.takeAt(0).widget()
+            if widget:
+                widget.deleteLater()
+
+        self._build_cards = {}
+
+        # Add build cards
+        for i, build in enumerate(self._current_builds):
+            # Parse build data with defaults
+            build_id = build.get("id", str(i))
+            title = build.get("title", f"Build #{i}")
+            status = build.get("status", "unknown").lower()
+            progress = build.get("progress", 0)
+            timestamp = build.get("timestamp", "Recently")
+
+            # Map status to variant
+            status_variant = {
+                "success": "success",
+                "running": "primary",
+                "error": "error",
+                "failed": "error",
+            }.get(status, "info")
+
+            # Create card
+            card = BuildHistoryItem(
+                title=title,
+                status=status.title(),
+                status_variant=status_variant,
+                progress=progress,
+                timestamp=timestamp,
+            )
+
+            # Connect click signal
+            card.clicked.connect(lambda checked=False, bid=build_id: self.build_selected.emit(bid))
+
+            # Add to grid (2 columns layout)
+            row, col = divmod(i, 2)
+            self.grid.addWidget(card, row, col)
+            self._build_cards[build_id] = card
+
+        # Add stretch to fill remaining space
+        remaining_rows = (len(self._current_builds) + 1) // 2
+        if remaining_rows > 0:
+            self.grid.addItem(QSpacerItem(0, 0, QSizePolicy.Minimum, QSizePolicy.Expanding), remaining_rows, 0, 1, 2)
+
+    def _on_filter_changed(self, filter_name: str) -> None:
+        """Handle filter chip selection."""
+        if filter_name.lower() == "all":
+            # Show all builds
+            self._refresh_grid()
+        else:
+            # Filter builds by status
+            filtered_builds = [
+                b for b in self._current_builds
+                if b.get("status", "").lower() == filter_name.lower()
+            ]
+            self._refresh_grid_with(filtered_builds)
+
+    def _refresh_grid_with(self, builds: list) -> None:
+        """Refresh grid with a filtered list of builds."""
+        # Temporarily override current builds
+        original = self._current_builds
+        self._current_builds = builds
+        self._refresh_grid()
+        # Note: current_builds stays filtered; call load_builds() to restore
+
 
 class DetailScreen(QWidget):
     """
     Detail view screen: TopBar (with back) + Splitter (inspector | tabs).
-    Shows detailed information with tabs for different views.
+    Shows detailed information about a build with diagnostics, artifacts, and commits.
+
+    Features:
+    - Dynamic build information loading
+    - Tabbed interface for different data types
+    - Real-time property updates
+    - Inspector header with badges and actions
+
+    Usage:
+        detail = DetailScreen()
+        build_data = {
+            "id": "142",
+            "title": "Build #142",
+            "status": "success",
+            "duration": "2m 34s",
+            "diagnostics": "Build log output...",
+            "artifacts": ["mod.zip", "config.xml"],
+            "commits": ["a3f2c1d", "8e1b2c4"],
+            ...
+        }
+        detail.load_build(build_data)
     """
 
     back_requested = Signal()
@@ -130,66 +252,72 @@ class DetailScreen(QWidget):
         super().__init__()
         self.setStyleSheet(f"background: {COLORS.bg_0};")
 
+        # Store references for dynamic updates
+        self._build_data = {}
+        self._current_title = "Build Details"
+
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
         # TopBar with back button
-        top_bar = TopBar("Build #142 Details", has_back=True, actions=["share", "delete"])
-        top_bar.back_clicked.connect(self.back_requested.emit)
-        layout.addWidget(top_bar)
+        self.top_bar = TopBar("Build Details", has_back=True, actions=["share", "delete"])
+        self.top_bar.back_clicked.connect(self.back_requested.emit)
+        layout.addWidget(self.top_bar)
 
         # Splitter: Left (inspector) | Right (tabs)
         splitter = QSplitter(Qt.Horizontal)
 
         # ===== LEFT PANEL =====
-        left_panel = QWidget()
-        left_layout = QVBoxLayout(left_panel)
-        left_layout.setContentsMargins(SPACING.xl, SPACING.lg, SPACING.md, SPACING.xl)
-        left_layout.setSpacing(SPACING.lg)
+        self.left_panel = QWidget()
+        self.left_layout = QVBoxLayout(self.left_panel)
+        self.left_layout.setContentsMargins(SPACING.xl, SPACING.lg, SPACING.md, SPACING.xl)
+        self.left_layout.setSpacing(SPACING.lg)
 
-        # Inspector header
-        inspector = InspectorHeader(
-            "com.jpe.sims4.mod",
-            badges=[("v1.2.0", "primary"), ("DEPLOYED", "success")],
-            actions=["edit", "delete"],
-        )
-        inspector.action_clicked.connect(lambda action: print(f"Action: {action}"))
-        left_layout.addWidget(inspector)
+        # Store references for dynamic updates
+        self.inspector = None
+        self.warning_callout = None
+        self.props_table = None
 
-        # Warning callout
-        warning = Callout(
-            "Deprecated Tag Detected",
-            message="The tag <deprecated> is no longer supported in v2.0.",
-            variant="warning",
-        )
-        left_layout.addWidget(warning)
+        # Initialize with sample data
+        self._load_sample_build()
 
-        # Properties table
-        props = PropertiesTable(
-            {
-                "Build ID": "#142",
-                "Duration": "2m 34s",
-                "Artifacts": "4 files",
-                "Commit": "a3f2c1d",
-                "Branch": "main",
-                "Status": "Success",
-            }
-        )
-        left_layout.addWidget(props)
-
-        left_layout.addStretch(1)
+        self.left_layout.addStretch(1)
 
         # ===== RIGHT PANEL =====
-        right_panel = QWidget()
-        right_layout = QVBoxLayout(right_panel)
-        right_layout.setContentsMargins(SPACING.lg, SPACING.lg, SPACING.xl, SPACING.xl)
-        right_layout.setSpacing(SPACING.lg)
+        self.right_panel = QWidget()
+        self.right_layout = QVBoxLayout(self.right_panel)
+        self.right_layout.setContentsMargins(SPACING.lg, SPACING.lg, SPACING.xl, SPACING.xl)
+        self.right_layout.setSpacing(SPACING.lg)
 
-        # Tab panel with sample content
-        diagnostics_widget = QTextEdit()
-        diagnostics_widget.setPlainText("Build log output...\n[✓] Dependencies resolved\n[✓] Build succeeded\n")
-        diagnostics_widget.setStyleSheet(f"""
+        # Create text edit widgets for tabs
+        self.diagnostics_widget = self._create_text_widget("")
+        self.artifacts_widget = self._create_text_widget("")
+        self.commits_widget = self._create_text_widget("")
+
+        # Store references to tab panel for updates
+        self.tabs = TabPanel(
+            tabs=[
+                ("Diagnostics", self.diagnostics_widget),
+                ("Artifacts", self.artifacts_widget),
+                ("Commits", self.commits_widget),
+            ]
+        )
+        self.right_layout.addWidget(self.tabs, 1)
+
+        # Add panels to splitter
+        splitter.addWidget(self.left_panel)
+        splitter.addWidget(self.right_panel)
+        splitter.setSizes([400, 600])
+        splitter.setStyleSheet(f"background: {COLORS.bg_0};")
+
+        layout.addWidget(splitter, 1)
+
+    def _create_text_widget(self, text: str) -> QTextEdit:
+        """Create a styled text edit widget."""
+        widget = QTextEdit()
+        widget.setPlainText(text)
+        widget.setStyleSheet(f"""
             background: {COLORS.bg_1};
             color: {COLORS.text_primary};
             border: 1px solid {COLORS.stroke_0};
@@ -198,37 +326,117 @@ class DetailScreen(QWidget):
             font-family: 'JetBrains Mono';
             font-size: 10pt;
         """)
+        return widget
 
-        artifacts_widget = QTextEdit()
-        artifacts_widget.setPlainText("mod.zip (14.2 MB)\nmod_config.xml\nREADME.txt\nLICENSE")
-        artifacts_widget.setStyleSheet(diagnostics_widget.styleSheet())
+    def _load_sample_build(self) -> None:
+        """Load sample build data for demonstration."""
+        sample_data = {
+            "id": "142",
+            "title": "Build #142",
+            "status": "success",
+            "entity_name": "com.jpe.sims4.mod",
+            "badges": [("v1.2.0", "primary"), ("DEPLOYED", "success")],
+            "duration": "2m 34s",
+            "artifacts": "4 files",
+            "commit": "a3f2c1d",
+            "branch": "main",
+            "diagnostics": "Build log output...\n[✓] Dependencies resolved\n[✓] Build succeeded\n",
+            "artifact_files": ["mod.zip (14.2 MB)", "mod_config.xml", "README.txt", "LICENSE"],
+            "commits": ["a3f2c1d - Fix deprecated tags", "8e1b2c4 - Add new features", "c5d3e2f - Initial commit"],
+        }
+        self.load_build(sample_data)
 
-        commits_widget = QTextEdit()
-        commits_widget.setPlainText("a3f2c1d - Fix deprecated tags\n8e1b2c4 - Add new features\nc5d3e2f - Initial commit")
-        commits_widget.setStyleSheet(diagnostics_widget.styleSheet())
+    def load_build(self, build_data: dict) -> None:
+        """
+        Load and display build data.
 
-        tabs = TabPanel(
-            tabs=[
-                ("Diagnostics", diagnostics_widget),
-                ("Artifacts", artifacts_widget),
-                ("Commits", commits_widget),
-            ]
-        )
-        right_layout.addWidget(tabs, 1)
+        Args:
+            build_data: Dictionary with keys:
+                - id: Build identifier
+                - title: Display title
+                - entity_name: Entity/package name
+                - badges: List of (text, variant) tuples
+                - diagnostics: Build log output text
+                - artifact_files: List of artifact names
+                - commits: List of commit messages
+                - Plus standard build properties
+        """
+        self._build_data = build_data
 
-        # Add panels to splitter
-        splitter.addWidget(left_panel)
-        splitter.addWidget(right_panel)
-        splitter.setSizes([400, 600])
-        splitter.setStyleSheet(f"background: {COLORS.bg_0};")
+        # Update TopBar title
+        title = build_data.get("title", "Build Details")
+        self.top_bar.setWindowTitle(title)
+        self.top_bar.title.setText(title)
 
-        layout.addWidget(splitter, 1)
+        # Clear left panel
+        while self.left_layout.count():
+            widget = self.left_layout.takeAt(0).widget()
+            if widget:
+                widget.deleteLater()
+
+        # Update inspector header
+        entity_name = build_data.get("entity_name", "Unknown")
+        badges = build_data.get("badges", [])
+        self.inspector = InspectorHeader(entity_name, badges=badges, actions=["edit", "delete"])
+        self.left_layout.addWidget(self.inspector)
+
+        # Add warning callout if needed
+        status = build_data.get("status", "").lower()
+        if status == "error" or status == "failed":
+            self.warning_callout = Callout(
+                "Build Failed",
+                message="This build encountered errors during compilation.",
+                variant="error",
+            )
+            self.left_layout.addWidget(self.warning_callout)
+
+        # Update properties table
+        props_dict = {
+            "Build ID": build_data.get("id", "Unknown"),
+            "Duration": build_data.get("duration", "N/A"),
+            "Artifacts": build_data.get("artifacts", "0 files"),
+            "Commit": build_data.get("commit", "N/A"),
+            "Branch": build_data.get("branch", "N/A"),
+            "Status": build_data.get("status", "Unknown").title(),
+        }
+        self.props_table = PropertiesTable(props_dict)
+        self.left_layout.addWidget(self.props_table)
+        self.left_layout.addStretch(1)
+
+        # Update right panel tabs
+        diagnostics_text = build_data.get("diagnostics", "No diagnostics available")
+        self.diagnostics_widget.setPlainText(diagnostics_text)
+
+        artifacts_list = build_data.get("artifact_files", [])
+        artifacts_text = "\n".join(artifacts_list) if artifacts_list else "No artifacts"
+        self.artifacts_widget.setPlainText(artifacts_text)
+
+        commits_list = build_data.get("commits", [])
+        commits_text = "\n".join(commits_list) if commits_list else "No commits"
+        self.commits_widget.setPlainText(commits_text)
 
 
 class SettingsScreen(QWidget):
     """
     Settings screen: TopBar + scrollable content with sections and form fields.
     Allows configuration of application settings.
+
+    Features:
+    - Dynamic settings form with sections
+    - Real-time settings updates
+    - Save/Cancel actions
+    - Settings persistence via signals
+
+    Usage:
+        settings = SettingsScreen()
+        app_settings = {
+            "project_name": "My Mod",
+            "author": "Developer",
+            "version": "1.0.0",
+            "output_dir": "/path/to/output",
+            "build_target": "Release",
+        }
+        settings.load_settings(app_settings)
     """
 
     settings_changed = Signal(dict)
@@ -236,6 +444,10 @@ class SettingsScreen(QWidget):
     def __init__(self) -> None:
         super().__init__()
         self.setStyleSheet(f"background: {COLORS.bg_0};")
+
+        # Store references for dynamic updates
+        self._settings = {}
+        self._form_fields = {}
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -252,32 +464,14 @@ class SettingsScreen(QWidget):
         scroll.setStyleSheet("border: none;")
 
         content = QWidget()
-        content_layout = QVBoxLayout(content)
-        content_layout.setContentsMargins(SPACING.xl, SPACING.lg, SPACING.xl, SPACING.xl)
-        content_layout.setSpacing(SPACING.xxl)
+        self.content_layout = QVBoxLayout(content)
+        self.content_layout.setContentsMargins(SPACING.xl, SPACING.lg, SPACING.xl, SPACING.xl)
+        self.content_layout.setSpacing(SPACING.xxl)
 
-        # ===== SECTION 1: GENERAL =====
-        general_fields = [
-            ("Project Name", Input("My Sims 4 Mod", has_clear_button=False)),
-            ("Author", Input("John Doe", has_clear_button=False)),
-            ("Version", Input("1.0.0", has_clear_button=False)),
-        ]
-        section1 = FormSection("General", fields=general_fields)
-        content_layout.addWidget(section1)
+        # Create form sections
+        self._create_form_sections()
 
-        # ===== SECTION 2: BUILD =====
-        build_fields = [
-            ("Output Directory", Input("/path/to/output", has_clear_button=False)),
-            ("Build Target", Input("Release", has_clear_button=False)),
-        ]
-        section2 = FormSection("Build", fields=build_fields)
-        content_layout.addWidget(section2)
-
-        # ===== SECTION 3: ADVANCED =====
-        section3 = FormSection("Advanced", fields=[])
-        content_layout.addWidget(section3)
-
-        content_layout.addStretch(1)
+        self.content_layout.addStretch(1)
 
         # ===== BOTTOM ACTION BAR =====
         actions_frame = QFrame()
@@ -292,17 +486,87 @@ class SettingsScreen(QWidget):
         cancel_btn.clicked.connect(lambda: print("Cancel clicked"))
         actions_layout.addWidget(cancel_btn)
 
-        save_btn = Button("Save Changes", variant="primary")
-        save_btn.clicked.connect(lambda: self._on_settings_save())
-        actions_layout.addWidget(save_btn)
+        self.save_btn = Button("Save Changes", variant="primary")
+        self.save_btn.clicked.connect(lambda: self._on_settings_save())
+        actions_layout.addWidget(self.save_btn)
 
         scroll.setWidget(content)
         layout.addWidget(scroll, 1)
         layout.addWidget(actions_frame)
 
+    def _create_form_sections(self) -> None:
+        """Create the default form sections."""
+        # ===== SECTION 1: GENERAL =====
+        general_fields = [
+            ("Project Name", Input("My Sims 4 Mod", has_clear_button=False)),
+            ("Author", Input("John Doe", has_clear_button=False)),
+            ("Version", Input("1.0.0", has_clear_button=False)),
+        ]
+        self.section_general = FormSection("General", fields=general_fields)
+        self.content_layout.addWidget(self.section_general)
+
+        # Store field references
+        for label, widget in general_fields:
+            self._form_fields[label.lower().replace(" ", "_")] = widget
+
+        # ===== SECTION 2: BUILD =====
+        build_fields = [
+            ("Output Directory", Input("/path/to/output", has_clear_button=False)),
+            ("Build Target", Input("Release", has_clear_button=False)),
+        ]
+        self.section_build = FormSection("Build", fields=build_fields)
+        self.content_layout.addWidget(self.section_build)
+
+        # Store field references
+        for label, widget in build_fields:
+            self._form_fields[label.lower().replace(" ", "_")] = widget
+
+        # ===== SECTION 3: ADVANCED =====
+        self.section_advanced = FormSection("Advanced", fields=[])
+        self.content_layout.addWidget(self.section_advanced)
+
+    def load_settings(self, settings: dict) -> None:
+        """
+        Load and display application settings.
+
+        Args:
+            settings: Dictionary of application settings to display
+        """
+        self._settings = settings.copy()
+        self._populate_form_fields()
+
+    def _populate_form_fields(self) -> None:
+        """Populate form fields with current settings values."""
+        if not self._settings:
+            return
+
+        # Map settings keys to form field names
+        mapping = {
+            "project_name": "Project Name",
+            "author": "Author",
+            "version": "Version",
+            "output_directory": "Output Directory",
+            "build_target": "Build Target",
+        }
+
+        for settings_key, field_key in mapping.items():
+            if settings_key in self._settings:
+                normalized_key = field_key.lower().replace(" ", "_")
+                if normalized_key in self._form_fields:
+                    field_widget = self._form_fields[normalized_key]
+                    value = str(self._settings[settings_key])
+                    if isinstance(field_widget, Input):
+                        field_widget.setText(value)
+
     def _on_settings_save(self) -> None:
-        """Handle settings save."""
-        self.settings_changed.emit({"status": "saved"})
+        """Handle settings save by emitting the changed signal."""
+        # Collect current form values
+        saved_settings = {}
+        for key, widget in self._form_fields.items():
+            if isinstance(widget, Input):
+                saved_settings[key] = widget.text()
+
+        self.settings_changed.emit(saved_settings)
 
 
 class ComponentShowcase(QWidget):

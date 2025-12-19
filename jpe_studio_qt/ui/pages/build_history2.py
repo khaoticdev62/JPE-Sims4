@@ -40,6 +40,7 @@ class BuildHistory2Page(QWidget):
 
         # Header section
         header = QFrame()
+        header.setFixedHeight(64)  # Stitch spec: Header 64px (was variable)
         header.setStyleSheet(f"background: qlineargradient(x1:0,y1:0,x2:1,y2:1, stop:0 {c.surface}, stop:1 {c.background});")
         header_l = QVBoxLayout(header)
         header_l.setContentsMargins(DESIGN.spacing.xl, DESIGN.spacing.xl, DESIGN.spacing.xl, DESIGN.spacing.xl)  # 24px margins
@@ -75,12 +76,12 @@ class BuildHistory2Page(QWidget):
 
         build_folder_btn = QPushButton("Build from Folder")
         build_folder_btn.setObjectName("Primary")
-        build_folder_btn.setFixedHeight(42)
+        build_folder_btn.setFixedHeight(56)  # Stitch spec: Build button 56px height (was 42px)
         build_folder_btn.clicked.connect(self.request_build_folder.emit)
 
         build_zip_btn = QPushButton("Build from ZIP")
         build_zip_btn.setObjectName("Chip")
-        build_zip_btn.setFixedHeight(42)
+        build_zip_btn.setFixedHeight(40)  # Secondary button 40px height
         build_zip_btn.clicked.connect(self.request_build_zip.emit)
 
         settings_btn = QPushButton()
@@ -163,11 +164,12 @@ class BuildHistory2Page(QWidget):
                 border: none;
             }}
             QTreeWidget::item {{
+                height: 48px;
                 padding: 12px 16px;
                 border-bottom: 1px solid rgba(255,255,255,0.05);
             }}
             QTreeWidget::item:selected {{
-                background: rgba(157,92,255,0.10);
+                background: rgba(134,56,250,0.10);
             }}
             QTreeWidget::header {{
                 background: transparent;
@@ -351,8 +353,8 @@ class BuildHistory2Page(QWidget):
             return "rgba(239,68,68,0.25)"
         elif variant == "warning":
             return "rgba(234,179,8,0.25)"
-        else:  # primary (in progress)
-            return "rgba(157,92,255,0.25)"
+        else:  # primary (in progress) - Stitch spec: #8638fa color (was #9d5cff)
+            return "rgba(134,56,250,0.25)"
 
 
 def set_toolbutton_icon(button, name: str, size_px: int = 18) -> None:

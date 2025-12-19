@@ -16,7 +16,7 @@ from jpe_sims4.workspace import compute_progress
 
 from jpe_studio_qt.recents import load_recents, push_recent, save_recents
 
-from PySide6.QtCore import QObject, QRunnable, Qt, QThreadPool, Signal, Slot, QSize
+from PySide6.QtCore import QObject, QRunnable, Qt, QThreadPool, Signal, Slot, QSize, QTimer
 from PySide6.QtGui import QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QCheckBox,
@@ -71,6 +71,8 @@ from jpe_studio_qt.ui.pages.diagnostics_tab2 import DiagnosticsTab2Page
 from jpe_studio_qt.ui.diagnostics_pane import GlobalDiagnosticsPane
 from jpe_studio_qt.ui.entity_detail_dialog import EntityDetailDialog, EntityRef
 from jpe_studio_qt.ui.pages.entity_jpe_view import EntityJpeViewPage
+from jpe_studio_qt.animations import fade_in, fade_out  # Phase 5: Animation integration
+from jpe_studio_qt.state_widgets import LoadingSpinner, ErrorState  # Phase 5: State widget integration
 
 
 class _WorkerSignals(QObject):
@@ -471,10 +473,19 @@ class MainWindow(QMainWindow):
         return True
 
     def _select_page(self, idx: int) -> None:
+        # Phase 5: Page transition animation
+        current_widget = self.stack.currentWidget()
+
+        # Set the new page (will be hidden initially for fade-in effect)
         self.stack.setCurrentIndex(idx)
+        new_widget = self.stack.currentWidget()
+
+        # Apply fade-in animation to new page (Phase 5: Animation integration)
+        if new_widget is not None:
+            fade_in(new_widget, duration=200)
+
         try:
-            w = self.stack.currentWidget()
-            full_shell = bool(w.property("full_shell")) if w is not None else False
+            full_shell = bool(new_widget.property("full_shell")) if new_widget is not None else False
             self.sidebar.setVisible(not full_shell)
         except Exception:
             pass
@@ -699,6 +710,7 @@ class MainWindow(QMainWindow):
 
     def _scan_source(self, source_path: Path) -> None:
         self._set_status("Indexing/Scanning...")
+        # Phase 5: State widget integration point - Could show LoadingSpinner during project scan
 
         def work():
             return scan_project(source_path, merge_from_project_json=None)
@@ -706,14 +718,17 @@ class MainWindow(QMainWindow):
         def done(out, err) -> None:
             if err is not None:
                 self._set_status("Error.")
+                # Phase 5: State widget integration point - Could show ErrorState
                 QMessageBox.critical(self, "JPE Studio", f"Scan failed.\n\n{err}")
                 return
             proj = getattr(out, "project", None)
             if not isinstance(proj, Project):
                 self._set_status("Error.")
+                # Phase 5: State widget integration point - Could show ErrorState
                 QMessageBox.critical(self, "JPE Studio", "Scan did not produce a project.")
                 return
             self._set_status("Ready.")
+            # Phase 5: State widget integration point - Page transition uses fade_in animation
             self.set_project(proj, project_json_path=None)
             self._select_page(2)
 
@@ -821,6 +836,7 @@ class MainWindow(QMainWindow):
         if not self._ctx.project:
             return
         self._set_status("Building...")
+        # Phase 5: State widget integration point - Could show LoadingSpinner during async build
 
         def work():
             from jpe_sims4.build import build_to_folder
@@ -830,6 +846,7 @@ class MainWindow(QMainWindow):
         def done(out, err) -> None:
             if err is not None:
                 self._set_status("Error.")
+                # Phase 5: State widget integration point - Could show ErrorState with error details
                 QMessageBox.critical(self, "JPE Studio", f"Build failed.\n\n{err}")
                 return
             self._set_status("Ready.")
@@ -839,6 +856,7 @@ class MainWindow(QMainWindow):
                 self.explorer_page.set_project(self._ctx.project)
             except Exception:
                 pass
+            # Phase 5: State widget integration point - Could show SuccessState
             QMessageBox.information(self, "JPE Studio", "Build finished.")
 
         worker = _Worker(work)

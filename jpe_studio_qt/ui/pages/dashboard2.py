@@ -33,6 +33,7 @@ from jpe_studio_qt.design_system import DESIGN
 from jpe_studio_qt.ui.components import CardFrame, H1, H2, MaterialIcon, Muted, set_toolbutton_icon
 from jpe_studio_qt.ui.glass_widgets import GlassFrame, NeonButton
 from jpe_studio_qt.responsive import ResponsiveGrid
+from jpe_studio_qt.animations import fade_in  # Phase 5: Animation integration
 
 
 class Dashboard2Page(QWidget):
@@ -244,10 +245,12 @@ class Dashboard2Page(QWidget):
             self._projects_layout.addWidget(empty_msg, 0, 0)
             return
 
-        # Create cards for each project
-        for project_path in recents[:12]:
+        # Create cards for each project with fade-in animation (Phase 5)
+        for idx, project_path in enumerate(recents[:12]):
             card = self._create_project_card(project_path)
             self._projects_layout.addWidget(card)
+            # Stagger animations slightly for smooth cascade effect
+            QTimer.singleShot(idx * 50, lambda c=card: fade_in(c, duration=150))
 
         # Setup responsive grid (280px min, 3 columns max on large screens)
         if self._responsive_grid is None:

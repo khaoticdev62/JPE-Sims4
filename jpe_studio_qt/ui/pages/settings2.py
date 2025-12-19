@@ -20,6 +20,7 @@ from jpe_sims4.project import Project
 
 from jpe_studio_qt.design_system import DESIGN
 from jpe_studio_qt.ui.components import CardFrame, H2, MaterialIcon, Muted, ToggleSwitch, set_toolbutton_icon
+from jpe_studio_qt.ui.glass_widgets import GlassFrame
 
 
 class Settings2Page(QWidget):
@@ -44,7 +45,7 @@ class Settings2Page(QWidget):
         root.setSpacing(0)
         self.setStyleSheet(f"background: {c.background};")
 
-        header = QFrame()
+        header = GlassFrame()  # Glass-morphism header (Phase 3)
         header.setFixedHeight(64)  # Stitch spec: Header 64px fixed (was setMinimumHeight)
         header.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
         header.setStyleSheet(

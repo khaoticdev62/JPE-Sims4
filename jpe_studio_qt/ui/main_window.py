@@ -57,6 +57,7 @@ from jpe_studio_qt.ui.components import (
     CardFrame, H1, H2, MaterialIcon, Muted, BadgeLabel, FAB, SearchBar,
     EmptyStateWidget, ProgressCard, ChipButton, set_toolbutton_icon
 )
+from jpe_studio_qt.ui.glass_widgets import GlassFrame
 from jpe_studio_qt.ui.code_editor import CodeEditor
 from jpe_studio_qt.ui.pages.docs_hub import DocsHubPage
 from jpe_studio_qt.ui.pages.about import AboutSystemInfoPage
@@ -1612,8 +1613,8 @@ class WorkspacePage(QWidget):
         outer.setContentsMargins(0, 0, 0, 0)
         outer.setSpacing(0)
 
-        # Header aligned to `dual-pane_jpe/xml_editor_2` (desktop).
-        header = QFrame()
+        # Header aligned to `dual-pane_jpe/xml_editor_2` (desktop) with glass-morphism effect.
+        header = GlassFrame()  # Glass-morphism header (Phase 3)
         header.setFixedHeight(56)  # Stitch spec: Editor header 56px (was 64px)
         header.setStyleSheet("background: rgba(24,16,35,1.0); border-bottom: 1px solid rgba(255,255,255,0.10);")
         hl = QHBoxLayout(header)

@@ -20,6 +20,7 @@ from jpe_sims4.project import Project
 
 from jpe_studio_qt.design_system import DESIGN
 from jpe_studio_qt.ui.components import CardFrame, H2, MaterialIcon, Muted, set_toolbutton_icon
+from jpe_studio_qt.ui.glass_widgets import GlassFrame
 from jpe_studio_qt.ui.diagnostics_pane import GlobalDiagnosticsPane
 
 
@@ -55,7 +56,7 @@ class DiagnosticsTab2Page(QWidget):
         root.setContentsMargins(0, 0, 0, 0)
         root.setSpacing(0)
 
-        header = QFrame()
+        header = GlassFrame()  # Glass-morphism header (Phase 3)
         header.setFixedHeight(64)  # Stitch spec: Header 64px (was variable)
         header.setStyleSheet("background: rgba(23,15,35,0.90); border-bottom: 1px solid rgba(255,255,255,0.06);")
         hl = QVBoxLayout(header)

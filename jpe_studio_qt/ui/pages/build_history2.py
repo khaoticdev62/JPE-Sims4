@@ -16,6 +16,7 @@ from PySide6.QtWidgets import (
 
 from jpe_studio_qt.design_system import DESIGN
 from jpe_studio_qt.ui.components import CardFrame, H1, H2, MaterialIcon, Muted
+from jpe_studio_qt.ui.glass_widgets import GlassFrame
 
 
 class BuildHistory2Page(QWidget):
@@ -38,8 +39,8 @@ class BuildHistory2Page(QWidget):
         root.setContentsMargins(0, 0, 0, 0)
         root.setSpacing(0)
 
-        # Header section
-        header = QFrame()
+        # Header section with glass-morphism effect
+        header = GlassFrame()  # Glass-morphism header (Phase 3)
         header.setFixedHeight(64)  # Stitch spec: Header 64px (was variable)
         header.setStyleSheet(f"background: qlineargradient(x1:0,y1:0,x2:1,y2:1, stop:0 {c.surface}, stop:1 {c.background});")
         header_l = QVBoxLayout(header)

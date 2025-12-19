@@ -26,6 +26,7 @@ from jpe_sims4.project import Project
 from jpe_studio_qt.ui.code_editor import CodeEditor
 from jpe_studio_qt.design_system import DESIGN
 from jpe_studio_qt.ui.components import H2, Muted, set_toolbutton_icon
+from jpe_studio_qt.ui.glass_widgets import GlassFrame
 
 
 @dataclass(frozen=True)
@@ -65,8 +66,8 @@ class Explorer2Page(QWidget):
         root.setSpacing(0)
         self.setStyleSheet(f"background: {COL.background};")
 
-        # Header (56px height - Stitch spec).
-        header = QFrame()
+        # Header (56px height - Stitch spec) with glass-morphism effect.
+        header = GlassFrame()  # Glass-morphism header (Phase 3)
         header.setFixedHeight(56)
         header.setStyleSheet(f"background: {COL.surface}; border-bottom: 1px solid {COL.border_rgba};")
         hl = QHBoxLayout(header)

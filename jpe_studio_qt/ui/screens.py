@@ -1053,6 +1053,7 @@ class BuildScreen(QWidget):
     - Filter chips (All, Success, Failed, Last 7 Days)
     - Build history table with status, duration, and date
     - Statistics summary (Total Builds, Success Rate, Avg. Duration, Last Build)
+    - Real data loading from project build_history
 
     Signals:
         build_folder_requested: Build from folder action triggered
@@ -1068,6 +1069,11 @@ class BuildScreen(QWidget):
         super().__init__()
         self.setStyleSheet(f"background: {COLORS.bg_0};")
         self.setProperty("full_shell", True)
+
+        # Store references for dynamic updates
+        self._table_layout: QVBoxLayout | None = None
+        self._stats_widgets: dict[str, QLabel] = {}
+        self._builds_data: list[dict] = []
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -1113,44 +1119,18 @@ class BuildScreen(QWidget):
 
         # Builds table
         table_frame = CardFrame()
-        table_layout = QVBoxLayout(table_frame)
-        table_layout.setContentsMargins(0, 0, 0, 0)
+        self._table_layout = QVBoxLayout(table_frame)
+        self._table_layout.setContentsMargins(0, 0, 0, 0)
 
         table_header = QHBoxLayout()
         for header_text in ["Project", "Status", "Duration", "Date"]:
             header_label = QLabel(header_text)
             header_label.setStyleSheet(f"font-weight: 600; color: {COLORS.text_secondary};")
             table_header.addWidget(header_label)
-        table_layout.addLayout(table_header)
+        self._table_layout.addLayout(table_header)
 
-        # Sample builds
-        builds_data = [
-            ("Sims4_UI_Enhancement", "success", "1m 45s", "Today, 14:30"),
-            ("Furniture_Pack_2", "failed", "3m 12s", "Today, 12:15"),
-            ("Gameplay_Tweaks", "success", "2m 08s", "Yesterday, 09:45"),
-            ("Clothing_Collection", "success", "1m 30s", "Yesterday, 16:20"),
-        ]
-
-        for project, status, duration, date in builds_data:
-            row_layout = QHBoxLayout()
-            row_layout.setSpacing(SPACING.md)
-
-            proj_label = QLabel(project)
-            proj_label.setStyleSheet(f"color: {COLORS.text_primary};")
-            row_layout.addWidget(proj_label)
-
-            status_pill = Pill(status.upper(), variant="success" if status == "success" else "error")
-            row_layout.addWidget(status_pill)
-
-            dur_label = QLabel(duration)
-            dur_label.setStyleSheet(f"color: {COLORS.text_secondary};")
-            row_layout.addWidget(dur_label)
-
-            date_label = QLabel(date)
-            date_label.setStyleSheet(f"color: {COLORS.text_secondary};")
-            row_layout.addWidget(date_label)
-
-            table_layout.addLayout(row_layout)
+        # Load sample builds initially
+        self._load_sample_builds()
 
         content_layout.addWidget(table_frame)
 
@@ -1160,13 +1140,13 @@ class BuildScreen(QWidget):
         stats_layout.setSpacing(SPACING.xl)
 
         stats_data = [
-            ("Total Builds", "24"),
-            ("Success Rate", "95%"),
-            ("Avg. Duration", "2m 15s"),
-            ("Last Build", "Today, 14:30")
+            ("total_builds", "Total Builds", "24"),
+            ("success_rate", "Success Rate", "95%"),
+            ("avg_duration", "Avg. Duration", "2m 15s"),
+            ("last_build", "Last Build", "Today, 14:30")
         ]
 
-        for label, value in stats_data:
+        for stat_key, label, value in stats_data:
             stat_layout = QVBoxLayout()
             stat_layout.setSpacing(SPACING.xs)
 
@@ -1179,6 +1159,7 @@ class BuildScreen(QWidget):
             stat_layout.addWidget(label_label)
 
             stats_layout.addLayout(stat_layout)
+            self._stats_widgets[stat_key] = value_label
 
         stats_layout.addStretch(1)
         content_layout.addWidget(stats_frame)
@@ -1186,6 +1167,110 @@ class BuildScreen(QWidget):
         content_layout.addStretch(1)
         scroll.setWidget(content)
         layout.addWidget(scroll, 1)
+
+    def _load_sample_builds(self) -> None:
+        """Load sample builds data into the table."""
+        if not self._table_layout:
+            return
+
+        # Sample builds (header is already added)
+        builds = [
+            {"project": "Sims4_UI_Enhancement", "status": "success", "duration": "1m 45s", "date": "Today, 14:30"},
+            {"project": "Furniture_Pack_2", "status": "failed", "duration": "3m 12s", "date": "Today, 12:15"},
+            {"project": "Gameplay_Tweaks", "status": "success", "duration": "2m 08s", "date": "Yesterday, 09:45"},
+            {"project": "Clothing_Collection", "status": "success", "duration": "1m 30s", "date": "Yesterday, 16:20"},
+        ]
+
+        for build in builds:
+            row_layout = QHBoxLayout()
+            row_layout.setSpacing(SPACING.md)
+
+            proj_label = QLabel(build["project"])
+            proj_label.setStyleSheet(f"color: {COLORS.text_primary};")
+            row_layout.addWidget(proj_label)
+
+            status_pill = Pill(build["status"].upper(), variant="success" if build["status"] == "success" else "error")
+            row_layout.addWidget(status_pill)
+
+            dur_label = QLabel(build["duration"])
+            dur_label.setStyleSheet(f"color: {COLORS.text_secondary};")
+            row_layout.addWidget(dur_label)
+
+            date_label = QLabel(build["date"])
+            date_label.setStyleSheet(f"color: {COLORS.text_secondary};")
+            row_layout.addWidget(date_label)
+
+            self._table_layout.addLayout(row_layout)
+
+    def load_builds(self, builds: list[dict]) -> None:
+        """
+        Load real build history into the screen.
+
+        Args:
+            builds: List of build data dictionaries with keys:
+                - id: Build identifier
+                - title: Build display title
+                - status: success, failed, running
+                - duration: Build duration string
+                - timestamp: Build timestamp
+                - progress: Build progress (0-100)
+        """
+        self._builds_data = builds
+        self._refresh_table()
+        self._update_statistics()
+
+    def _refresh_table(self) -> None:
+        """Refresh the builds table with current data."""
+        if not self._table_layout or not self._builds_data:
+            return
+
+        # Clear existing rows (keep header)
+        while self._table_layout.count() > 1:  # Keep header row
+            layout_item = self._table_layout.takeAt(1)
+            if layout_item and layout_item.layout():
+                while layout_item.layout().count():
+                    layout_item.layout().takeAt(0)
+
+        # Add new rows from data
+        for build in self._builds_data:
+            row_layout = QHBoxLayout()
+            row_layout.setSpacing(SPACING.md)
+
+            proj_label = QLabel(build.get("title", "Build"))
+            proj_label.setStyleSheet(f"color: {COLORS.text_primary};")
+            row_layout.addWidget(proj_label)
+
+            status = build.get("status", "unknown").lower()
+            status_pill = Pill(status.upper(), variant="success" if status == "success" else ("warning" if status == "running" else "error"))
+            row_layout.addWidget(status_pill)
+
+            duration = build.get("duration", "-")
+            dur_label = QLabel(duration)
+            dur_label.setStyleSheet(f"color: {COLORS.text_secondary};")
+            row_layout.addWidget(dur_label)
+
+            timestamp = build.get("timestamp", "-")
+            date_label = QLabel(timestamp)
+            date_label.setStyleSheet(f"color: {COLORS.text_secondary};")
+            row_layout.addWidget(date_label)
+
+            self._table_layout.addLayout(row_layout)
+
+    def _update_statistics(self) -> None:
+        """Update statistics display based on current builds."""
+        if not self._builds_data or not self._stats_widgets:
+            return
+
+        total = len(self._builds_data)
+        successful = sum(1 for b in self._builds_data if b.get("status", "").lower() == "success")
+        success_rate = int((successful / total * 100)) if total > 0 else 0
+
+        # Update labels
+        if "total_builds" in self._stats_widgets:
+            self._stats_widgets["total_builds"].setText(str(total))
+        if "success_rate" in self._stats_widgets:
+            self._stats_widgets["success_rate"].setText(f"{success_rate}%")
+        # Duration and last build would need more data processing
 
 
 class DiagnosticsScreen(QWidget):
@@ -1197,6 +1282,7 @@ class DiagnosticsScreen(QWidget):
     - Search bar for finding issues
     - Issues list with severity, code, and message
     - Action buttons (Open Pane, Share, Clear, Fix Next)
+    - Real data loading from project diagnostics
 
     Signals:
         open_pane_requested: Open full diagnostics pane
@@ -1214,6 +1300,10 @@ class DiagnosticsScreen(QWidget):
         super().__init__()
         self.setStyleSheet(f"background: {COLORS.bg_0};")
         self.setProperty("full_shell", True)
+
+        # Store reference for dynamic updates
+        self._issues_layout: QVBoxLayout | None = None
+        self._issues_data: list[dict] = []
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -1263,46 +1353,11 @@ class DiagnosticsScreen(QWidget):
 
         # Issues list
         issues_frame = CardFrame()
-        issues_layout = QVBoxLayout(issues_frame)
-        issues_layout.setSpacing(SPACING.md)
+        self._issues_layout = QVBoxLayout(issues_frame)
+        self._issues_layout.setSpacing(SPACING.md)
 
-        issues_data = [
-            ("error", "ERR_001", "Syntax error in pattern validation", "components/validator.py", "L42"),
-            ("warning", "WARN_005", "Deprecated function usage detected", "utils/helpers.py", "L128"),
-            ("error", "ERR_012", "Missing required field in entity definition", "data/entities.py", "L87"),
-            ("info", "INFO_003", "Consider using const instead of let", "scripts/main.js", "L15"),
-        ]
-
-        for severity, code, message, file_path, location in issues_data:
-            issue_layout = QHBoxLayout()
-            issue_layout.setSpacing(SPACING.md)
-
-            # Severity indicator
-            severity_variants = {"error": "error", "warning": "warning", "info": "info"}
-            severity_pill = Pill(severity.upper(), variant=severity_variants.get(severity, "neutral"))
-            issue_layout.addWidget(severity_pill)
-
-            # Issue details
-            details_layout = QVBoxLayout()
-            details_layout.setSpacing(SPACING.xs)
-
-            title_label = QLabel(f"{code}: {message}")
-            title_label.setStyleSheet(f"color: {COLORS.text_primary}; font-weight: 600;")
-            details_layout.addWidget(title_label)
-
-            path_label = QLabel(f"{file_path} {location}")
-            path_label.setStyleSheet(f"color: {COLORS.text_secondary}; font-size: 11px;")
-            details_layout.addWidget(path_label)
-
-            issue_layout.addLayout(details_layout, 1)
-            issue_layout.addStretch(1)
-
-            # Action button
-            fix_btn = Button("Fix", variant="ghost")
-            fix_btn.setMaximumWidth(60)
-            issue_layout.addWidget(fix_btn)
-
-            issues_layout.addLayout(issue_layout)
+        # Load sample issues initially
+        self._load_sample_issues()
 
         content_layout.addWidget(issues_frame)
         content_layout.addStretch(1)
@@ -1312,6 +1367,92 @@ class DiagnosticsScreen(QWidget):
         scroll.setStyleSheet("border: none;")
         scroll.setWidget(content)
         layout.addWidget(scroll, 1)
+
+    def _load_sample_issues(self) -> None:
+        """Load sample issues data into the list."""
+        if not self._issues_layout:
+            return
+
+        issues = [
+            {"severity": "error", "code": "ERR_001", "message": "Syntax error in pattern validation", "file": "components/validator.py", "location": "L42"},
+            {"severity": "warning", "code": "WARN_005", "message": "Deprecated function usage detected", "file": "utils/helpers.py", "location": "L128"},
+            {"severity": "error", "code": "ERR_012", "message": "Missing required field in entity definition", "file": "data/entities.py", "location": "L87"},
+            {"severity": "info", "code": "INFO_003", "message": "Consider using const instead of let", "file": "scripts/main.js", "location": "L15"},
+        ]
+
+        for issue in issues:
+            self._add_issue_row(issue)
+
+    def _add_issue_row(self, issue: dict) -> None:
+        """Add a single issue row to the layout."""
+        if not self._issues_layout:
+            return
+
+        issue_layout = QHBoxLayout()
+        issue_layout.setSpacing(SPACING.md)
+
+        # Severity indicator
+        severity = issue.get("severity", "info")
+        severity_variants = {"error": "error", "warning": "warning", "info": "info"}
+        severity_pill = Pill(severity.upper(), variant=severity_variants.get(severity, "neutral"))
+        issue_layout.addWidget(severity_pill)
+
+        # Issue details
+        details_layout = QVBoxLayout()
+        details_layout.setSpacing(SPACING.xs)
+
+        code = issue.get("code", "UNKNOWN")
+        message = issue.get("message", "No description")
+        title_label = QLabel(f"{code}: {message}")
+        title_label.setStyleSheet(f"color: {COLORS.text_primary}; font-weight: 600;")
+        details_layout.addWidget(title_label)
+
+        file_path = issue.get("file", "unknown")
+        location = issue.get("location", "")
+        path_label = QLabel(f"{file_path} {location}")
+        path_label.setStyleSheet(f"color: {COLORS.text_secondary}; font-size: 11px;")
+        details_layout.addWidget(path_label)
+
+        issue_layout.addLayout(details_layout, 1)
+        issue_layout.addStretch(1)
+
+        # Action button
+        fix_btn = Button("Fix", variant="ghost")
+        fix_btn.setMaximumWidth(60)
+        issue_layout.addWidget(fix_btn)
+
+        self._issues_layout.addLayout(issue_layout)
+
+    def load_issues(self, issues: list[dict]) -> None:
+        """
+        Load real diagnostic issues into the screen.
+
+        Args:
+            issues: List of issue data dictionaries with keys:
+                - severity: error, warning, info
+                - code: Issue code (e.g., ERR_001)
+                - message: Issue message
+                - file: File path where issue occurs
+                - location: Line number or location info
+        """
+        self._issues_data = issues
+        self._refresh_issues_list()
+
+    def _refresh_issues_list(self) -> None:
+        """Refresh the issues list with current data."""
+        if not self._issues_layout or not self._issues_data:
+            return
+
+        # Clear existing rows
+        while self._issues_layout.count() > 0:
+            layout_item = self._issues_layout.takeAt(0)
+            if layout_item and layout_item.layout():
+                while layout_item.layout().count():
+                    layout_item.layout().takeAt(0)
+
+        # Add new rows from data
+        for issue in self._issues_data:
+            self._add_issue_row(issue)
 
 
 class ProjectDetailScreen(QWidget):

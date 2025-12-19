@@ -442,6 +442,7 @@ class DesignSystemBuildPage(QWidget):
 
     Integrates the design system build history page into MainWindow.
     Manages build operations and displays build history.
+    Loads real build history from project data.
 
     Signals:
         build_folder_requested: Build from folder action
@@ -466,6 +467,62 @@ class DesignSystemBuildPage(QWidget):
         self.build_screen.build_zip_requested.connect(self.build_zip_requested.emit)
         self.build_screen.settings_requested.connect(self.settings_requested.emit)
 
+        # Store reference to current project
+        self._current_project: Optional[Project] = None
+
+    def set_project(self, project: Optional[Project]) -> None:
+        """
+        Load project data into the build page.
+
+        This method should be called by MainWindow whenever the current project changes.
+        """
+        self._current_project = project
+        if project:
+            self._load_build_history()
+
+    def _load_build_history(self) -> None:
+        """
+        Load and display real build history from the project.
+
+        Retrieves the latest builds from the project and updates the build screen display.
+        """
+        if not self._current_project or not self._current_project.build_history:
+            return
+
+        # Get all builds, most recent first
+        raw_builds = list(self._current_project.build_history or [])
+
+        # Transform project build data to screen format
+        formatted_builds = []
+        for build_info in raw_builds:
+            build_id = build_info.get("id", "Unknown")
+            status = build_info.get("status", "unknown").lower()
+            duration = build_info.get("duration", "-")
+            timestamp = build_info.get("timestamp", "Recently")
+
+            # Handle timestamp format
+            if isinstance(timestamp, str):
+                pass  # Already a string
+            else:
+                timestamp = str(timestamp) if timestamp else "Recently"
+
+            formatted_builds.append({
+                "id": build_id,
+                "title": f"Build #{build_id}",
+                "status": status,
+                "duration": duration,
+                "timestamp": timestamp,
+                "progress": build_info.get("progress", 0),
+            })
+
+        # Update the build screen with real data
+        try:
+            self.build_screen.load_builds(formatted_builds)
+        except Exception as e:
+            # Fallback: keep sample data if real data fails
+            import logging
+            logging.warning(f"Failed to load builds: {e}")
+
 
 class DesignSystemDiagnosticsPage(QWidget):
     """
@@ -473,6 +530,7 @@ class DesignSystemDiagnosticsPage(QWidget):
 
     Integrates the design system diagnostics page into MainWindow.
     Manages issue tracking and quality control.
+    Loads real diagnostic data from project.
 
     Signals:
         open_pane_requested, share_requested, clear_requested, fix_next_requested
@@ -496,6 +554,53 @@ class DesignSystemDiagnosticsPage(QWidget):
         self.diagnostics_screen.share_requested.connect(self.share_requested.emit)
         self.diagnostics_screen.clear_requested.connect(self.clear_requested.emit)
         self.diagnostics_screen.fix_next_requested.connect(self.fix_next_requested.emit)
+
+        # Store reference to current project
+        self._current_project: Optional[Project] = None
+
+    def set_project(self, project: Optional[Project]) -> None:
+        """
+        Load project data into the diagnostics page.
+
+        This method should be called by MainWindow whenever the current project changes.
+        """
+        self._current_project = project
+        if project:
+            self._load_diagnostics()
+
+    def _load_diagnostics(self) -> None:
+        """
+        Load and display real diagnostics from the project.
+
+        Retrieves the diagnostics from the project and updates the screen display.
+        """
+        if not self._current_project or not self._current_project.diagnostics:
+            return
+
+        # Transform project diagnostic data to screen format
+        formatted_issues = []
+        for diagnostic in self._current_project.diagnostics:
+            severity = diagnostic.get("severity", "info").lower()
+            code = diagnostic.get("code", diagnostic.get("type", "UNKNOWN"))
+            message = diagnostic.get("message", "No description")
+            file_path = diagnostic.get("file", "unknown")
+            location = diagnostic.get("location", diagnostic.get("line", ""))
+
+            formatted_issues.append({
+                "severity": severity,
+                "code": code,
+                "message": message,
+                "file": file_path,
+                "location": location,
+            })
+
+        # Update the diagnostics screen with real data
+        try:
+            self.diagnostics_screen.load_issues(formatted_issues)
+        except Exception as e:
+            # Fallback: keep sample data if real data fails
+            import logging
+            logging.warning(f"Failed to load diagnostics: {e}")
 
 
 class DesignSystemProjectDetailPage(QWidget):

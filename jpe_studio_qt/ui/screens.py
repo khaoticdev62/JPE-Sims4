@@ -307,8 +307,19 @@ class SettingsScreen(QWidget):
 
 class ComponentShowcase(QWidget):
     """
-    Showcase screen displaying all components with examples.
-    Useful for design system documentation and testing.
+    Comprehensive showcase screen displaying all design system components.
+
+    This screen serves as:
+    - Living documentation for all available components
+    - Design system testing and validation
+    - Reference implementation for developers
+    - Interactive component gallery
+
+    Categories:
+    - Atoms: Basic building blocks (Buttons, Inputs, Badges, Progress bars)
+    - Molecules: Combined components (TopBar, FilterChips, ListCard, Callout)
+    - Organisms: Screen-level components (BuildHistoryItem, InspectorHeader)
+    - Design Tokens: Visual reference for colors, spacing, radius, shadows
     """
 
     def __init__(self) -> None:
@@ -332,29 +343,80 @@ class ComponentShowcase(QWidget):
         content = QWidget()
         content_layout = QVBoxLayout(content)
         content_layout.setContentsMargins(SPACING.xl, SPACING.lg, SPACING.xl, SPACING.xl)
-        content_layout.setSpacing(SPACING.lg)
+        content_layout.setSpacing(SPACING.xxl)
+
+        # ===== DESIGN TOKENS REFERENCE =====
+        tokens_section = CardFrame(shadow=False)
+        tokens_layout = QVBoxLayout(tokens_section)
+        tokens_layout.addWidget(H2("Design Tokens"))
+        tokens_layout.addWidget(Muted("Color palette, spacing scale, and typography"))
+
+        # Colors grid
+        colors_grid = QGridLayout()
+        colors_grid.setSpacing(SPACING.md)
+        color_samples = [
+            ("Primary", COLORS.accent_primary),
+            ("Success", COLORS.success),
+            ("Warning", COLORS.warning),
+            ("Error", COLORS.error),
+            ("Info", COLORS.info),
+            ("Surface", COLORS.surface_0),
+        ]
+        for i, (label, color) in enumerate(color_samples):
+            color_box = QFrame()
+            color_box.setFixedSize(80, 60)
+            color_box.setStyleSheet(f"background: {color}; border-radius: {RADIUS.md}px;")
+            color_label = QLabel(label)
+            color_label.setStyleSheet(f"font-size: 11px; color: {COLORS.text_secondary};")
+            color_col = QVBoxLayout()
+            color_col.addWidget(color_box)
+            color_col.addWidget(color_label)
+            colors_grid.addLayout(color_col, 0, i)
+
+        tokens_layout.addLayout(colors_grid)
+        content_layout.addWidget(tokens_section)
 
         # ===== ATOMS SHOWCASE =====
         atoms_section = CardFrame(shadow=False)
         atoms_layout = QVBoxLayout(atoms_section)
         atoms_layout.addWidget(H2("Atoms"))
-        atoms_layout.addWidget(Muted("Basic building blocks"))
+        atoms_layout.addWidget(Muted("Basic building blocks and primitives"))
 
-        # Buttons
+        # Buttons (all variants)
+        atoms_layout.addWidget(H3("Buttons"))
         button_row = QHBoxLayout()
         button_row.addWidget(Button("Primary", variant="primary"))
         button_row.addWidget(Button("Secondary", variant="secondary"))
         button_row.addWidget(Button("Ghost", variant="ghost"))
+        button_row.addWidget(Button("Disabled", variant="primary"))
+        button_row.lastWidget().setEnabled(False)
         button_row.addStretch(1)
         atoms_layout.addLayout(button_row)
 
-        # Badges
+        # Badges (all variants)
+        atoms_layout.addWidget(H3("Status Badges"))
         badge_row = QHBoxLayout()
-        for variant in ["primary", "success", "warning", "error"]:
-            from jpe_studio_qt.ui.components import Badge
-            badge_row.addWidget(Badge("Badge", variant=variant))
+        for variant in ["primary", "success", "warning", "error", "info"]:
+            badge_row.addWidget(BadgeLabel(variant.upper(), variant=variant))
         badge_row.addStretch(1)
         atoms_layout.addLayout(badge_row)
+
+        # Inputs
+        atoms_layout.addWidget(H3("Input Fields"))
+        input_row = QHBoxLayout()
+        input_row.addWidget(Input("Standard input"))
+        input_row.addWidget(Input("Placeholder text..."))
+        input_row.addStretch(1)
+        atoms_layout.addLayout(input_row)
+
+        # Progress bars
+        atoms_layout.addWidget(H3("Progress Bars"))
+        prog_row = QHBoxLayout()
+        prog_row.addWidget(ProgressBar(25))
+        prog_row.addWidget(ProgressBar(50))
+        prog_row.addWidget(ProgressBar(75))
+        prog_row.addWidget(ProgressBar(100))
+        atoms_layout.addLayout(prog_row)
 
         content_layout.addWidget(atoms_section)
 
@@ -362,17 +424,29 @@ class ComponentShowcase(QWidget):
         molecules_section = CardFrame(shadow=False)
         molecules_layout = QVBoxLayout(molecules_section)
         molecules_layout.addWidget(H2("Molecules"))
-        molecules_layout.addWidget(Muted("Combined components"))
+        molecules_layout.addWidget(Muted("Combined components and patterns"))
 
         # Filter chips
-        filters = FilterChipsRow(["All", "Recent", "Archived"], active_chip="All")
+        molecules_layout.addWidget(H3("Filter Chips"))
+        filters = FilterChipsRow(["All", "Recent", "Archived", "Starred"], active_chip="All")
         molecules_layout.addWidget(filters)
 
         # List cards
+        molecules_layout.addWidget(H3("List Cards"))
         card_row = QHBoxLayout()
-        card_row.addWidget(ListCard("Item 1", metadata="Last updated 2h ago", status="Active", status_variant="success"))
-        card_row.addWidget(ListCard("Item 2", metadata="Last updated 1d ago", status="Draft", status_variant="info"))
+        card_row.addWidget(ListCard("Build #142", metadata="2 hours ago", status="Success", status_variant="success"))
+        card_row.addWidget(ListCard("Build #141", metadata="5 minutes ago", status="Running", status_variant="primary"))
+        card_row.addWidget(ListCard("Build #140", metadata="1 day ago", status="Failed", status_variant="error"))
+        card_row.addStretch(1)
         molecules_layout.addLayout(card_row)
+
+        # Callouts
+        molecules_layout.addWidget(H3("Callouts"))
+        callout_row = QHBoxLayout()
+        callout_row.addWidget(Callout("Warning Message", "This is a warning notification", variant="warning"))
+        callout_row.addWidget(Callout("Error Alert", "An error has occurred", variant="error"))
+        callout_row.addStretch(1)
+        molecules_layout.addLayout(callout_row)
 
         content_layout.addWidget(molecules_section)
 
@@ -380,27 +454,62 @@ class ComponentShowcase(QWidget):
         organisms_section = CardFrame(shadow=False)
         organisms_layout = QVBoxLayout(organisms_section)
         organisms_layout.addWidget(H2("Organisms"))
-        organisms_layout.addWidget(Muted("Screen-level components"))
+        organisms_layout.addWidget(Muted("Screen-level and complex components"))
 
-        # Build history item
-        build_item = BuildHistoryItem(
-            title="Latest Build",
-            status="Success",
-            status_variant="success",
-            progress=100,
-            timestamp="Just now",
-        )
-        organisms_layout.addWidget(build_item)
+        # Build history items (different states)
+        organisms_layout.addWidget(H3("Build History States"))
+        build_row = QHBoxLayout()
+        build_row.addWidget(BuildHistoryItem("Build #142", "success", 100, "2 hours ago"))
+        build_row.addWidget(BuildHistoryItem("Build #141", "running", 67, "5 minutes ago"))
+        build_row.addWidget(BuildHistoryItem("Build #140", "error", 0, "1 day ago"))
+        organisms_layout.addLayout(build_row)
 
         # Stats cards
+        organisms_layout.addWidget(H3("Statistics Cards"))
         stats_row = QHBoxLayout()
         stats_row.addWidget(StatsCard("24", label="Total Builds", icon="task"))
         stats_row.addWidget(StatsCard("95%", label="Success Rate", icon="trending_up"))
         stats_row.addWidget(StatsCard("2m 30s", label="Avg Duration", icon="schedule"))
+        stats_row.addStretch(1)
         organisms_layout.addLayout(stats_row)
 
         content_layout.addWidget(organisms_section)
 
+        # ===== SPACING REFERENCE =====
+        spacing_section = CardFrame(shadow=False)
+        spacing_layout = QVBoxLayout(spacing_section)
+        spacing_layout.addWidget(H2("Spacing Scale"))
+        spacing_layout.addWidget(Muted("4px-based spacing system"))
+
+        spacing_demo = QHBoxLayout()
+        for name, value in [
+            ("xxs", SPACING.xxs),
+            ("xs", SPACING.xs),
+            ("sm", SPACING.sm),
+            ("md", SPACING.md),
+            ("lg", SPACING.lg),
+        ]:
+            space_box = QFrame()
+            space_box.setFixedWidth(value * 4)  # Scale up for visibility
+            space_box.setFixedHeight(40)
+            space_box.setStyleSheet(f"background: {COLORS.accent_primary}; border-radius: {RADIUS.md}px;")
+            space_label = QLabel(f"{name}\n{value}px")
+            space_label.setStyleSheet(f"font-size: 9px; color: {COLORS.text_secondary}; text-align: center;")
+            space_col = QVBoxLayout()
+            space_col.addWidget(space_box)
+            space_col.addWidget(space_label)
+            spacing_demo.addLayout(space_col)
+
+        spacing_layout.addLayout(spacing_demo)
+        content_layout.addWidget(spacing_section)
+
         content_layout.addStretch(1)
         scroll.setWidget(content)
         layout.addWidget(scroll, 1)
+
+
+def H3(text: str) -> QLabel:
+    """Helper function to create H3-styled labels."""
+    label = QLabel(text)
+    label.setStyleSheet(f"font-size: 14px; font-weight: 600; color: {COLORS.text_primary};")
+    return label

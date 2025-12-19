@@ -99,6 +99,9 @@ from jpe_studio_qt.settings_manager import SettingsManager, DEFAULT_SETTINGS
 from jpe_studio_qt.theme_manager import ThemeManager
 from jpe_studio_qt.import_export import ImportExportManager
 
+# Phase 22: UI Dialogs for settings and theme control
+from jpe_studio_qt.ui.dialogs import SettingsDialog
+
 
 # Entity Editor Model for displaying entity data (dataclass for passing entity info to UI)
 @dataclass
@@ -171,6 +174,9 @@ class MainWindow(QMainWindow):
 
         # Import/Export Manager - Handles data import/export
         self.import_export_manager = ImportExportManager()
+
+        # Phase 22: Initialize settings dialog
+        self.settings_dialog = None  # Lazy-loaded on first open
 
         shell = QFrame()
         shell.setObjectName("AppShell")
@@ -315,7 +321,8 @@ class MainWindow(QMainWindow):
         self.btn_settings.setIcon(self.style().standardIcon(QStyle.SP_FileDialogContentsView))
         self.btn_settings.setText("Settings")
         self.btn_settings.setCheckable(True)
-        self.btn_settings.clicked.connect(lambda: self._select_page(11))
+        # Phase 22: Open settings dialog instead of navigating to settings page
+        self.btn_settings.clicked.connect(self._open_settings)
         s_l.addWidget(self.btn_settings)
 
         profile = CardFrame(shadow=False)
@@ -652,6 +659,29 @@ class MainWindow(QMainWindow):
             self.status.setText(f"Theme: {theme_name.capitalize()}")
         except Exception as e:
             logger.warning(f"Failed to apply theme change: {e}")
+
+    def _open_settings(self) -> None:
+        """Open the settings dialog.
+
+        Phase 22: Settings dialog UI integration.
+        """
+        try:
+            # Lazy-load settings dialog on first open
+            if self.settings_dialog is None:
+                self.settings_dialog = SettingsDialog(
+                    settings_manager=self.settings_manager,
+                    theme_manager=self.theme_manager,
+                    parent=self
+                )
+
+            # Uncheck the button after opening
+            self.btn_settings.setChecked(False)
+
+            # Open the dialog
+            self.settings_dialog.exec()
+        except Exception as e:
+            logger.error(f"Failed to open settings dialog: {e}", exc_info=True)
+            QMessageBox.critical(self, "Error", f"Failed to open settings dialog.\n\n{e}")
 
     def _render_recents(self) -> None:
         try:

@@ -5,7 +5,7 @@ from dataclasses import dataclass
 
 @dataclass(frozen=True)
 class ColorTokens:
-    # Shared desktop dark base.
+    # Shared desktop dark base (Stitch reference).
     background: str = "#170f23"
     surface: str = "#181023"
     surface_lighter: str = "#231b30"
@@ -13,9 +13,9 @@ class ColorTokens:
     surface_hover: str = "#36274a"
     border: str = "#472f6a"
 
-    # Brand + states.
-    primary: str = "#9d5cff"  # Updated to match assets
-    primary_hover: str = "#b584ff"  # Lighter variant
+    # Brand + states - CRITICAL FIX: Use #8638fa (Stitch), NOT #9d5cff
+    primary: str = "#8638fa"  # Deep purple from Stitch designs
+    primary_hover: str = "#9d5cff"  # Lighter variant
     primary_light: str = "#b584ff"  # For disabled states
     success: str = "#22c55e"
     warning: str = "#eab308"
@@ -29,17 +29,25 @@ class ColorTokens:
     text_tertiary: str = "#6b5885"  # Darker muted
 
     # Badge backgrounds.
-    primary_bg: str = "rgba(157, 92, 255, 0.15)"
+    primary_bg: str = "rgba(134, 56, 250, 0.15)"  # Updated for #8638fa
     success_bg: str = "rgba(34, 197, 94, 0.10)"
     warning_bg: str = "rgba(234, 179, 8, 0.10)"
     error_bg: str = "rgba(239, 68, 68, 0.10)"
     info_bg: str = "rgba(76, 201, 240, 0.10)"
 
-    # Shadows.
-    shadow_sm: str = "0 2px 8px rgba(157, 92, 255, 0.15)"
-    shadow_md: str = "0 4px 16px rgba(157, 92, 255, 0.20)"
-    shadow_lg: str = "0 10px 24px rgba(157, 92, 255, 0.25)"
-    shadow_fab: str = "0 6px 20px rgba(157, 92, 255, 0.40)"
+    # Shadows (updated for #8638fa primary).
+    shadow_sm: str = "0 2px 8px rgba(134, 56, 250, 0.15)"
+    shadow_md: str = "0 4px 16px rgba(134, 56, 250, 0.20)"
+    shadow_lg: str = "0 10px 24px rgba(134, 56, 250, 0.25)"
+    shadow_fab: str = "0 6px 20px rgba(134, 56, 250, 0.40)"
+
+    # Glass-morphism overlays (new).
+    glass_overlay: str = "rgba(23, 15, 35, 0.7)"
+    glass_border: str = "rgba(134, 56, 250, 0.2)"
+
+    # Neon shadow colors (new).
+    neon_shadow: str = "rgba(134, 56, 250, 0.5)"
+    neon_shadow_strong: str = "rgba(134, 56, 250, 0.8)"
 
     # Code panes (dual-pane editor).
     code_primary_bg: str = "#130d1c"
@@ -58,9 +66,11 @@ class TypographyTokens:
 
 @dataclass(frozen=True)
 class RadiusTokens:
-    sm: int = 10
-    md: int = 12
-    lg: int = 14
+    # Stitch uses minimal border radius (2px-16px)
+    sm: int = 2
+    md: int = 4
+    lg: int = 8
+    xl: int = 16
     pill: int = 999
 
 

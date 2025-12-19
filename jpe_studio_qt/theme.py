@@ -29,7 +29,7 @@ def qss() -> str:
 
     QFrame#AppShell {{
       background: qradialgradient(cx: 1, cy: 0, radius: 1.2, fx: 1, fy: 0,
-                                  stop: 0 rgba(157,92,255,0.14),
+                                  stop: 0 rgba(134,56,250,0.14),
                                   stop: 0.35 rgba(59,130,246,0.05),
                                   stop: 1 {c.background});
     }}
@@ -239,8 +239,8 @@ def qss() -> str:
       border-color: rgba(255,255,255,0.05);
     }}
     QToolButton#NavButton:checked {{
-      background: rgba(157,92,255,0.12);
-      border-color: rgba(157,92,255,0.22);
+      background: rgba(134,56,250,0.12);
+      border-color: rgba(134,56,250,0.22);
       color: {c.primary};
     }}
 
@@ -348,7 +348,7 @@ def qss() -> str:
       padding: 10px 10px;
     }}
     QToolButton#QuickTile:hover {{
-      border: 1px solid rgba(157,92,255,0.25);
+      border: 1px solid rgba(134,56,250,0.25);
       background: rgba(255,255,255,0.03);
     }}
 
@@ -372,7 +372,7 @@ def qss() -> str:
       border-radius: {r.lg}px;
     }}
     QFrame#Card:hover {{
-      border: 1px solid rgba(157,92,255,0.15);
+      border: 1px solid rgba(134,56,250,0.15);
     }}
 
     QFrame#Card[variant="EditorHeader"] {{
@@ -396,7 +396,7 @@ def qss() -> str:
     }}
     QPushButton#CardButton:hover {{
       background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(157,92,255,0.18);
+      border: 1px solid rgba(134,56,250,0.18);
     }}
 
     QHeaderView::section {{
@@ -428,7 +428,7 @@ def qss() -> str:
     }}
     QCheckBox::indicator:checked {{
       background: {c.primary};
-      border: 1px solid rgba(157,92,255,0.45);
+      border: 1px solid rgba(134,56,250,0.45);
     }}
 
     QScrollBar:vertical {{
@@ -475,7 +475,7 @@ def qss() -> str:
     QLabel[role="badge"][variant="primary"] {{
       background: {c.primary_bg};
       color: {c.primary};
-      border: 1px solid rgba(157,92,255,0.25);
+      border: 1px solid rgba(134,56,250,0.25);
     }}
     QLabel[role="badge"][variant="success"] {{
       background: {c.success_bg};

@@ -1614,7 +1614,7 @@ class WorkspacePage(QWidget):
 
         # Header aligned to `dual-pane_jpe/xml_editor_2` (desktop).
         header = QFrame()
-        header.setFixedHeight(64)
+        header.setFixedHeight(56)  # Stitch spec: Editor header 56px (was 64px)
         header.setStyleSheet("background: rgba(24,16,35,1.0); border-bottom: 1px solid rgba(255,255,255,0.10);")
         hl = QHBoxLayout(header)
         hl.setContentsMargins(18, 10, 18, 10)
@@ -1732,10 +1732,11 @@ class WorkspacePage(QWidget):
         self.file_tree.itemSelectionChanged.connect(self._on_file_tree_selection_changed)
         self.file_tree.setStyleSheet(
             "QTreeWidget{background: rgba(0,0,0,0.10); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 6px;}"
-            "QTreeWidget::item{padding: 6px 8px; border-radius: 10px;}"
-            "QTreeWidget::item:selected{background: rgba(157,92,255,0.18); border-left: 3px solid #9d5cff;}"
+            "QTreeWidget::item{height: 32px; padding: 6px 8px; border-radius: 10px;}"
+            "QTreeWidget::item:selected{background: rgba(134,56,250,0.18); border-left: 3px solid #8638fa;}"
         )
         split = QSplitter(Qt.Horizontal)
+        split.setHandleWidth(4)  # Stitch spec: 4px splitter handle (was 2px default)
         root.addWidget(split, 1)
         self.main_split = split
 
@@ -1824,6 +1825,7 @@ class WorkspacePage(QWidget):
         self.editor_header.setVisible(False)
 
         self.dual_split = QSplitter(Qt.Vertical)
+        self.dual_split.setHandleWidth(4)  # Stitch spec: 4px splitter handle
         mid_l.addWidget(self.dual_split, 1)
 
         top_card = CardFrame(shadow=False)

@@ -6,7 +6,9 @@ Contains dialog implementations for settings, import/export, and other UI intera
 from __future__ import annotations
 
 from .settings_dialog import SettingsDialog
+from .export_dialog import ExportDialog
 
 __all__ = [
     "SettingsDialog",
+    "ExportDialog",
 ]

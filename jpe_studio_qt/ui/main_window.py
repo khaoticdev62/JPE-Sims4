@@ -100,7 +100,7 @@ from jpe_studio_qt.theme_manager import ThemeManager
 from jpe_studio_qt.import_export import ImportExportManager
 
 # Phase 22: UI Dialogs for settings and theme control
-from jpe_studio_qt.ui.dialogs import SettingsDialog
+from jpe_studio_qt.ui.dialogs import SettingsDialog, ExportDialog
 
 
 # Entity Editor Model for displaying entity data (dataclass for passing entity info to UI)
@@ -682,6 +682,36 @@ class MainWindow(QMainWindow):
         except Exception as e:
             logger.error(f"Failed to open settings dialog: {e}", exc_info=True)
             QMessageBox.critical(self, "Error", f"Failed to open settings dialog.\n\n{e}")
+
+    def _open_export_dialog(self) -> None:
+        """Open the export dialog for projects, builds, and diagnostics.
+
+        Phase 23: Export UI integration.
+        """
+        if not self._ensure_project_loaded():
+            return
+
+        try:
+            export_dialog = ExportDialog(
+                import_export_manager=self.import_export_manager,
+                project=self._ctx.project,
+                parent=self
+            )
+            export_dialog.export_complete.connect(self._on_export_complete)
+            export_dialog.exec()
+        except Exception as e:
+            logger.error(f"Failed to open export dialog: {e}", exc_info=True)
+            QMessageBox.critical(self, "Error", f"Failed to open export dialog.\n\n{e}")
+
+    @Slot(str)
+    def _on_export_complete(self, export_path: str) -> None:
+        """Handle successful export completion.
+
+        Args:
+            export_path: Path to exported file
+        """
+        self._set_status(f"Exported to: {export_path}")
+        logger.info(f"Export completed: {export_path}")
 
     def _render_recents(self) -> None:
         try:

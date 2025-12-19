@@ -18,6 +18,7 @@ from PySide6.QtWidgets import (
 
 from jpe_sims4.project import Project
 
+from jpe_studio_qt.ai.validation import validate_api_key, test_api_connection
 from jpe_studio_qt.design_system import DESIGN
 from jpe_studio_qt.ui.components import CardFrame, H2, MaterialIcon, Muted, ToggleSwitch, set_toolbutton_icon
 from jpe_studio_qt.ui.glass_widgets import GlassFrame
@@ -170,6 +171,107 @@ class Settings2Page(QWidget):
         ppl.addWidget(reset, 0, Qt.AlignLeft)
         l.addWidget(plugins)
 
+        # AI Assistant (Gemini Integration)
+        ai = CardFrame(shadow=False)
+        ail = QVBoxLayout(ai)
+        ail.setContentsMargins(DESIGN.spacing.lg, DESIGN.spacing.lg, DESIGN.spacing.lg, DESIGN.spacing.lg)  # 16px margins
+        ail.setSpacing(DESIGN.spacing.sm)  # 10px spacing
+        aih = QHBoxLayout()
+        aih.setSpacing(DESIGN.spacing.sm)  # 10px spacing
+        aih.addWidget(MaterialIcon("smart_toy", size_px=20))
+        aih.addWidget(H2("AI Assistant"))
+        aih.addStretch(1)
+        ai_enable = QPushButton("Get API Key")
+        ai_enable.setObjectName("Chip")
+        aih.addWidget(ai_enable)
+        ail.addLayout(aih)
+
+        # AI enabled toggle
+        ail.addWidget(self._toggle_row("Enable AI Features", "Use Gemini AI for code completions and error analysis", checked=True, key="ai_enabled"))
+
+        # API Key field (editable)
+        self.ai_api_key_widget = QWidget()
+        api_key_layout = QVBoxLayout(self.ai_api_key_widget)
+        api_key_layout.setContentsMargins(0, 0, 0, 0)
+        api_key_layout.setSpacing(DESIGN.spacing.xs)  # 6px spacing
+        api_key_label = QLabel("Gemini API Key")
+        api_key_label.setStyleSheet("font-weight: 700; color: rgba(255,255,255,0.70);")
+        api_key_layout.addWidget(api_key_label)
+
+        self.ai_api_key = QLineEdit()
+        self.ai_api_key.setPlaceholderText("Paste your Gemini API key here...")
+        self.ai_api_key.setEchoMode(QLineEdit.Password)
+        self.ai_api_key.setStyleSheet(
+            "QLineEdit { "
+            "    background: rgba(0,0,0,0.18); "
+            "    border: 1px solid rgba(255,255,255,0.07); "
+            "    border-radius: 12px; "
+            "    padding: 8px 12px; "
+            "    color: rgba(255,255,255,0.9); "
+            "    font-family: Consolas; "
+            "} "
+            "QLineEdit:focus { "
+            "    border: 1px solid rgba(157,92,255,0.3); "
+            "    background: rgba(0,0,0,0.25); "
+            "}"
+        )
+        api_key_layout.addWidget(self.ai_api_key)
+        ail.addWidget(self.ai_api_key_widget)
+
+        # Model selection
+        model_row = QFrame()
+        model_row.setFixedHeight(56)
+        mrl = QHBoxLayout(model_row)
+        mrl.setContentsMargins(DESIGN.spacing.xs, DESIGN.spacing.sm, DESIGN.spacing.xs, DESIGN.spacing.sm)
+        mrl.setSpacing(DESIGN.spacing.md)
+        model_col = QVBoxLayout()
+        model_col.setContentsMargins(0, 0, 0, 0)
+        model_col.setSpacing(DESIGN.spacing.xxs)
+        model_title = QLabel("Default Model")
+        model_title.setStyleSheet("font-weight: 800;")
+        model_col.addWidget(model_title)
+        model_col.addWidget(Muted("gemini-1.5-flash for speed, gemini-1.5-pro for quality"))
+        mrl.addLayout(model_col, 1)
+        model_sel = QPushButton("Flash")
+        model_sel.setObjectName("Chip")
+        model_sel.setFixedWidth(80)
+        mrl.addWidget(model_sel)
+        ail.addWidget(model_row)
+
+        # Confidence threshold
+        conf_row = QFrame()
+        conf_row.setFixedHeight(56)
+        crl = QHBoxLayout(conf_row)
+        crl.setContentsMargins(DESIGN.spacing.xs, DESIGN.spacing.sm, DESIGN.spacing.xs, DESIGN.spacing.sm)
+        crl.setSpacing(DESIGN.spacing.md)
+        conf_col = QVBoxLayout()
+        conf_col.setContentsMargins(0, 0, 0, 0)
+        conf_col.setSpacing(DESIGN.spacing.xxs)
+        conf_title = QLabel("Min Confidence Threshold")
+        conf_title.setStyleSheet("font-weight: 800;")
+        conf_col.addWidget(conf_title)
+        conf_col.addWidget(Muted("Minimum AI confidence to auto-apply fixes"))
+        crl.addLayout(conf_col, 1)
+        conf_val = QLabel("0.85")
+        conf_val.setStyleSheet("font-weight: 700; color: #9d5cff;")
+        crl.addWidget(conf_val)
+        ail.addWidget(conf_row)
+
+        # Fallback toggle
+        ail.addWidget(self._toggle_row("Use Local AI Fallback", "Use built-in AI when Gemini is unavailable", checked=True, key="ai_local_fallback"))
+
+        # Test connection button
+        test_row = QHBoxLayout()
+        test_row.addStretch(1)
+        self.btn_test_connection = QPushButton("Test Connection")
+        self.btn_test_connection.setObjectName("Primary")
+        self.btn_test_connection.setFixedWidth(180)
+        self.btn_test_connection.clicked.connect(self._on_test_api_connection)
+        test_row.addWidget(self.btn_test_connection)
+        ail.addLayout(test_row)
+
+        l.addWidget(ai)
+
         l.addStretch(1)
 
     def set_project(self, project: Project) -> None:
@@ -264,6 +366,68 @@ class Settings2Page(QWidget):
         wl.addWidget(btn)
         l.addWidget(wrap)
         return outer
+
+    def _on_test_api_connection(self) -> None:
+        """Test Gemini API connection with the provided API key."""
+        from PySide6.QtWidgets import QMessageBox
+        from PySide6.QtCore import QTimer
+
+        api_key = self.ai_api_key.text().strip()
+
+        if not api_key:
+            QMessageBox.warning(
+                self,
+                "Empty API Key",
+                "Please enter your Gemini API key before testing the connection."
+            )
+            return
+
+        # Validate format first
+        format_result = validate_api_key(api_key)
+        if not format_result.success:
+            QMessageBox.warning(
+                self,
+                "Invalid API Key Format",
+                f"{format_result.message}\n\nDetails: {format_result.details or ''}"
+            )
+            return
+
+        # Disable button and change text during test
+        self.btn_test_connection.setEnabled(False)
+        original_text = self.btn_test_connection.text()
+        self.btn_test_connection.setText("Testing...")
+
+        def perform_test():
+            """Perform the actual API connection test."""
+            try:
+                result = test_api_connection(api_key, timeout=10)
+
+                if result.success:
+                    QMessageBox.information(
+                        self,
+                        "Connection Successful",
+                        f"✓ {result.message}\n\n{result.details or ''}"
+                    )
+                else:
+                    QMessageBox.critical(
+                        self,
+                        f"Connection Failed ({result.error_code})",
+                        f"✗ {result.message}\n\nDetails: {result.details or ''}"
+                    )
+            except Exception as e:
+                QMessageBox.critical(
+                    self,
+                    "Test Error",
+                    f"An error occurred while testing the connection:\n\n{str(e)}"
+                )
+            finally:
+                # Re-enable button
+                self.btn_test_connection.setEnabled(True)
+                self.btn_test_connection.setText(original_text)
+
+        # Run test in a way that doesn't block the UI
+        # Use a timer to defer execution to next event loop iteration
+        QTimer.singleShot(0, perform_test)
 
     def _emit_apply(self) -> None:
         # Keep payload minimal and forward-compatible.

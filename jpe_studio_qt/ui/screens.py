@@ -613,8 +613,9 @@ class ExplorerScreen(QWidget):
         self.setStyleSheet(f"background: {COLORS.bg_0};")
         self.setProperty("full_shell", True)
 
-        # Store project reference
+        # Store project reference and file data
         self._project = None
+        self._files_data: list[dict] = []
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -732,11 +733,118 @@ class ExplorerScreen(QWidget):
         self.file_tree.expandAll()
         self.file_count_label.setText("Files: 3")
 
+    def load_files(self, files_data: list[dict]) -> None:
+        """Load real file structure into the tree view.
+
+        Expected format: [{"path": "src/main.py", "name": "main.py", "type": "file"}, ...]
+        """
+        self._files_data = files_data
+        self._refresh_tree()
+        self._update_statistics()
+
+    def _refresh_tree(self) -> None:
+        """Refresh the file tree with current data."""
+        self.file_tree.clear()
+
+        if not self._files_data:
+            self._load_sample_project()
+            return
+
+        # Build hierarchical structure from flat file list
+        root_items: dict[str, QTreeWidgetItem] = {}
+
+        for file_info in self._files_data:
+            path = file_info.get("path", "")
+            name = file_info.get("name", path.split("/")[-1] if "/" in path else path)
+            file_type = file_info.get("type", "file")
+
+            if not path:
+                continue
+
+            # Split path into components
+            parts = path.replace("\\", "/").split("/")
+
+            # Create root item if needed
+            root_key = parts[0]
+            if root_key not in root_items:
+                root_item = QTreeWidgetItem(self.file_tree)
+                root_item.setText(0, root_key + ("/" if len(parts) > 1 else ""))
+                root_items[root_key] = root_item
+
+            # Navigate/create hierarchy
+            current_parent = root_items[root_key]
+            for i, part in enumerate(parts[1:], 1):
+                is_last = i == len(parts) - 1
+                child_key = "/".join(parts[:i+1])
+
+                # Find or create child
+                found_child = None
+                for j in range(current_parent.childCount()):
+                    child = current_parent.child(j)
+                    if child.text(0).rstrip("/") == part:
+                        found_child = child
+                        break
+
+                if found_child is None:
+                    found_child = QTreeWidgetItem(current_parent)
+                    found_child.setText(0, part + ("/" if not is_last else ""))
+
+                current_parent = found_child
+
+        self.file_tree.expandAll()
+
+    def _update_statistics(self) -> None:
+        """Update file statistics display."""
+        if not self._files_data:
+            self.file_count_label.setText("Files: 0")
+            self.size_label.setText("Size: 0 KB")
+            return
+
+        # Count files and estimate size
+        file_count = len(self._files_data)
+        total_size = sum(f.get("size", 0) for f in self._files_data if isinstance(f.get("size"), (int, float)))
+
+        # Format size
+        if total_size < 1024:
+            size_str = f"Size: {total_size} B"
+        elif total_size < 1024 * 1024:
+            size_str = f"Size: {total_size // 1024} KB"
+        else:
+            size_str = f"Size: {total_size // (1024 * 1024)} MB"
+
+        self.file_count_label.setText(f"Files: {file_count}")
+        self.size_label.setText(size_str)
+
     def set_project(self, project) -> None:
         """Load project data into the explorer."""
         self._project = project
-        # TODO: Load actual project files and update tree
-        self._load_sample_project()
+        if project and hasattr(project, "files") and project.files:
+            self._load_real_files()
+        else:
+            self._load_sample_project()
+
+    def _load_real_files(self) -> None:
+        """Load real files from project data."""
+        if not self._project or not self._project.files:
+            return
+
+        try:
+            # Transform project files to expected format
+            formatted_files = []
+            for file_path in self._project.files:
+                if isinstance(file_path, str):
+                    formatted_files.append({
+                        "path": file_path,
+                        "name": file_path.split("/")[-1] if "/" in file_path else file_path,
+                        "type": "file",
+                        "size": 0,
+                    })
+
+            self.load_files(formatted_files)
+        except Exception as e:
+            import logging
+            logging.warning(f"Failed to load files: {e}")
+            self._load_sample_project()
 
 
 class WorkspaceScreen(QWidget):
@@ -1480,6 +1588,11 @@ class ProjectDetailScreen(QWidget):
         self.setStyleSheet(f"background: {COLORS.bg_0};")
         self.setProperty("full_shell", True)
 
+        # Store project reference and metadata
+        self._project = None
+        self._metadata: dict = {}
+        self._stats_labels: dict[str, QLabel] = {}
+
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
@@ -1503,17 +1616,17 @@ class ProjectDetailScreen(QWidget):
         header_layout = QVBoxLayout(header_frame)
         header_layout.setSpacing(SPACING.md)
 
-        project_name = H2("Sims 4 UI Enhancement")
-        header_layout.addWidget(project_name)
+        self.project_name = H2("Sims 4 UI Enhancement")
+        header_layout.addWidget(self.project_name)
 
-        version_label = QLabel("v2.1.0 • Last updated: Yesterday at 3:45 PM")
-        version_label.setStyleSheet(f"color: {COLORS.text_secondary}; font-size: 12px;")
-        header_layout.addWidget(version_label)
+        self.version_label = QLabel("v2.1.0 • Last updated: Yesterday at 3:45 PM")
+        self.version_label.setStyleSheet(f"color: {COLORS.text_secondary}; font-size: 12px;")
+        header_layout.addWidget(self.version_label)
 
-        desc_label = QLabel("A comprehensive UI enhancement pack that improves the visual design and user experience of The Sims 4 game interface.")
-        desc_label.setStyleSheet(f"color: {COLORS.text_secondary};")
-        desc_label.setWordWrap(True)
-        header_layout.addWidget(desc_label)
+        self.desc_label = QLabel("A comprehensive UI enhancement pack that improves the visual design and user experience of The Sims 4 game interface.")
+        self.desc_label.setStyleSheet(f"color: {COLORS.text_secondary};")
+        self.desc_label.setWordWrap(True)
+        header_layout.addWidget(self.desc_label)
 
         # Action buttons
         action_layout = QHBoxLayout()
@@ -1535,16 +1648,19 @@ class ProjectDetailScreen(QWidget):
         content_layout.addWidget(header_frame)
 
         # Project metadata
-        meta_frame = CardFrame()
-        meta_layout = QVBoxLayout(meta_frame)
-        meta_layout.setSpacing(SPACING.md)
+        self.meta_frame = CardFrame()
+        self.meta_layout = QVBoxLayout(self.meta_frame)
+        self.meta_layout.setSpacing(SPACING.md)
 
+        # Create metadata rows dynamically
         metadata = [
             ("Author", "Jane Developer"),
             ("Created", "March 15, 2023"),
             ("Last Modified", "December 19, 2024"),
             ("Status", "Active"),
         ]
+
+        self.meta_value_labels: dict[str, QLabel] = {}
 
         for key, value in metadata:
             row = QHBoxLayout()
@@ -1558,9 +1674,10 @@ class ProjectDetailScreen(QWidget):
             value_label.setStyleSheet(f"color: {COLORS.text_primary};")
             row.addWidget(value_label, 1)
 
-            meta_layout.addLayout(row)
+            self.meta_value_labels[key] = value_label
+            self.meta_layout.addLayout(row)
 
-        content_layout.addWidget(meta_frame)
+        content_layout.addWidget(self.meta_frame)
 
         # Statistics
         stats_frame = CardFrame()
@@ -1582,6 +1699,7 @@ class ProjectDetailScreen(QWidget):
             stat_layout.addWidget(label_label)
 
             stats_layout.addLayout(stat_layout)
+            self._stats_labels[label] = value_label
 
         stats_layout.addStretch(1)
         content_layout.addWidget(stats_frame)
@@ -1589,6 +1707,117 @@ class ProjectDetailScreen(QWidget):
         content_layout.addStretch(1)
         scroll.setWidget(content)
         layout.addWidget(scroll, 1)
+
+    def load_metadata(self, metadata: dict) -> None:
+        """Load project metadata and statistics.
+
+        Expected format: {
+            "name": "Project Name",
+            "version": "v1.0.0",
+            "description": "Project description",
+            "author": "Author Name",
+            "created": "Date created",
+            "modified": "Date modified",
+            "status": "Active",
+            "files": 100,
+            "size": "50 MB",
+            "builds": 10,
+            "success_rate": "95%"
+        }
+        """
+        self._metadata = metadata
+        self._refresh_metadata()
+        self._update_statistics()
+
+    def _refresh_metadata(self) -> None:
+        """Refresh metadata display with current data."""
+        if not self._metadata:
+            return
+
+        # Update header info
+        name = self._metadata.get("name", "Unnamed Project")
+        self.project_name.setText(name)
+
+        version = self._metadata.get("version", "v1.0.0")
+        modified = self._metadata.get("modified", "Unknown")
+        self.version_label.setText(f"{version} • Last updated: {modified}")
+
+        description = self._metadata.get("description", "No description provided")
+        self.desc_label.setText(description)
+
+        # Update metadata fields
+        metadata_fields = {
+            "Author": self._metadata.get("author", "Unknown"),
+            "Created": self._metadata.get("created", "Unknown"),
+            "Last Modified": self._metadata.get("modified", "Unknown"),
+            "Status": self._metadata.get("status", "Active"),
+        }
+
+        for key, value in metadata_fields.items():
+            if key in self.meta_value_labels:
+                self.meta_value_labels[key].setText(str(value))
+
+    def _update_statistics(self) -> None:
+        """Update statistics display."""
+        if not self._metadata:
+            return
+
+        # Update stats
+        stats_mapping = {
+            "Files": self._metadata.get("files", "0"),
+            "Size": self._metadata.get("size", "0 KB"),
+            "Builds": self._metadata.get("builds", "0"),
+            "Success Rate": self._metadata.get("success_rate", "0%"),
+        }
+
+        for label, value in stats_mapping.items():
+            if label in self._stats_labels:
+                self._stats_labels[label].setText(str(value))
+
+    def set_project(self, project) -> None:
+        """Load project metadata into the detail view."""
+        self._project = project
+        if project:
+            self._load_real_metadata()
+
+    def _load_real_metadata(self) -> None:
+        """Load real project metadata from project data."""
+        if not self._project:
+            return
+
+        try:
+            # Transform project data to metadata format
+            metadata = {
+                "name": getattr(self._project, "name", "Unnamed Project"),
+                "version": getattr(self._project, "version", "v1.0.0"),
+                "description": getattr(self._project, "description", "No description"),
+                "author": getattr(self._project, "author", "Unknown Author"),
+                "created": str(getattr(self._project, "created", "Unknown")),
+                "modified": str(getattr(self._project, "modified", "Unknown")),
+                "status": getattr(self._project, "status", "Active"),
+                "files": len(getattr(self._project, "files", [])),
+                "size": "0 KB",  # TODO: Calculate from file_index if available
+                "builds": len(getattr(self._project, "build_history", [])),
+                "success_rate": self._calculate_success_rate(),
+            }
+
+            self.load_metadata(metadata)
+        except Exception as e:
+            import logging
+            logging.warning(f"Failed to load project metadata: {e}")
+
+    def _calculate_success_rate(self) -> str:
+        """Calculate success rate from build history."""
+        if not self._project or not hasattr(self._project, "build_history"):
+            return "0%"
+
+        builds = self._project.build_history or []
+        if not builds:
+            return "0%"
+
+        success_count = sum(1 for b in builds if b.get("status", "").lower() == "success")
+        rate = int((success_count / len(builds)) * 100) if builds else 0
+        return f"{rate}%"
 
 
 class AboutScreen(QWidget):

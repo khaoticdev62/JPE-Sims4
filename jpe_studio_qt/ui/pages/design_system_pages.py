@@ -627,9 +627,29 @@ class DesignSystemProjectDetailPage(QWidget):
         self.project_detail_screen = ProjectDetailScreen()
         layout.addWidget(self.project_detail_screen)
 
+        # Store reference to current project
+        self._current_project: Optional[Project] = None
+
         self.project_detail_screen.edit_requested.connect(self.edit_requested.emit)
         self.project_detail_screen.share_requested.connect(self.share_requested.emit)
         self.project_detail_screen.archive_requested.connect(self.archive_requested.emit)
+
+    def set_project(self, project: Optional[Project]) -> None:
+        """Load project data into the project detail screen."""
+        self._current_project = project
+        if project:
+            self._load_project_metadata()
+
+    def _load_project_metadata(self) -> None:
+        """Load and display project metadata."""
+        if not self._current_project:
+            return
+
+        try:
+            self.project_detail_screen.set_project(self._current_project)
+        except Exception as e:
+            import logging
+            logging.warning(f"Failed to load project metadata: {e}")
 
 
 class DesignSystemAboutPage(QWidget):

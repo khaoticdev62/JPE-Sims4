@@ -2107,3 +2107,391 @@ class SearchableComboBox(QFrame):
     def get_selected(self) -> str:
         """Get currently selected/searched text."""
         return self.search_input.text()
+
+
+# ============================================================================
+# PHASE 1-6 COMPLETION: MISSING COMPONENTS
+# ============================================================================
+
+
+class BadgeDot(QLabel):
+    """Colored status dot for indicating connection/active state.
+
+    Phase 2: Missing Atom Component
+
+    Variants: success (green), warn (amber), error (red), info (blue), neutral (grey)
+    Typical use: Status indicators, online/offline badges
+    """
+
+    VARIANTS = {
+        "success": COLORS.success,
+        "warn": COLORS.warning,
+        "error": COLORS.error,
+        "info": COLORS.info,
+        "neutral": COLORS.text_tertiary,
+    }
+
+    def __init__(self, variant: str = "success", size: int = 8, parent=None):
+        """Initialize badge dot.
+
+        Args:
+            variant: Color variant (success, warn, error, info, neutral)
+            size: Diameter in pixels (default 8px)
+        """
+        super().__init__(parent)
+        self.setFixedSize(size, size)
+
+        color = self.VARIANTS.get(variant, COLORS.success)
+        self.setStyleSheet(f"""
+            QLabel {{
+                background: {color};
+                border-radius: {size // 2}px;
+                border: none;
+            }}
+        """)
+
+
+class BuildDetailPanel(QFrame):
+    """Build detail view with tabbed interface for diagnostics, artifacts, commits.
+
+    Phase 4: Missing Organism Component
+
+    Features:
+    - Tabbed interface (Diagnostics, Artifacts, Commits)
+    - Text editing for each tab
+    - Dynamic content updates
+    """
+
+    def __init__(self, parent=None):
+        """Initialize build detail panel."""
+        from PySide6.QtWidgets import QVBoxLayout, QTabWidget, QTextEdit
+
+        super().__init__(parent)
+
+        self.setStyleSheet(f"""
+            QFrame {{
+                background: {COLORS.surface_0};
+                border: 1px solid {COLORS.stroke_0};
+                border-radius: {RADIUS.lg}px;
+            }}
+        """)
+
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+
+        # Tabs
+        tabs = QTabWidget()
+        tabs.setStyleSheet(f"""
+            QTabWidget::pane {{
+                border: none;
+                background: transparent;
+            }}
+            QTabBar::tab {{
+                background: transparent;
+                color: {COLORS.text_secondary};
+                padding: {SPACING.md}px {SPACING.lg}px;
+                border: none;
+                border-bottom: 2px solid transparent;
+            }}
+            QTabBar::tab:selected {{
+                color: {COLORS.accent_primary};
+                border-bottom-color: {COLORS.accent_primary};
+            }}
+            QTabBar::tab:hover {{
+                color: {COLORS.text_primary};
+            }}
+        """)
+
+        # Tab 1: Diagnostics
+        diag_tab = QTextEdit()
+        diag_tab.setPlaceholderText("Diagnostics output...")
+        diag_tab.setStyleSheet(f"""
+            QTextEdit {{
+                background: {COLORS.bg_1};
+                color: {COLORS.text_primary};
+                border: none;
+                padding: {SPACING.md}px;
+                font-family: {TYPOGRAPHY.code_font};
+                font-size: 11pt;
+            }}
+        """)
+        tabs.addTab(diag_tab, "Diagnostics")
+        self.diagnostics_tab = diag_tab
+
+        # Tab 2: Artifacts
+        artifacts_tab = QTextEdit()
+        artifacts_tab.setPlaceholderText("Build artifacts...")
+        artifacts_tab.setStyleSheet(diag_tab.styleSheet())
+        tabs.addTab(artifacts_tab, "Artifacts")
+        self.artifacts_tab = artifacts_tab
+
+        # Tab 3: Commits
+        commits_tab = QTextEdit()
+        commits_tab.setPlaceholderText("Commit history...")
+        commits_tab.setStyleSheet(diag_tab.styleSheet())
+        tabs.addTab(commits_tab, "Commits")
+        self.commits_tab = commits_tab
+
+        layout.addWidget(tabs)
+
+
+class BottomNav(QFrame):
+    """Bottom navigation bar with 4-5 items and active state glow.
+
+    Phase 4: Missing Organism Component
+
+    Features:
+    - Icon + label per item
+    - Active glow effect
+    - Exclusive selection
+    - Mobile-friendly layout
+    """
+
+    nav_clicked = Signal(int)  # Emits selected index
+
+    def __init__(self, items: list[tuple[str, str]], parent=None):
+        """Initialize bottom navigation.
+
+        Args:
+            items: List of (icon_name, label) tuples
+        """
+        super().__init__(parent)
+        self.setFixedHeight(72)
+        self.setStyleSheet(f"""
+            QFrame {{
+                background: {COLORS.surface_0};
+                border-top: 1px solid {COLORS.stroke_0};
+            }}
+        """)
+
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+
+        self.buttons = []
+
+        for i, (icon, label) in enumerate(items):
+            btn = QPushButton()
+            btn.setCheckable(True)
+            btn.setChecked(i == 0)  # First item active by default
+            btn.setCursor(Qt.PointingHandCursor)
+            btn.setFlat(True)
+            btn.setMinimumWidth(80)
+
+            btn_layout = QVBoxLayout(btn)
+            btn_layout.setSpacing(4)
+            btn_layout.setContentsMargins(0, SPACING.sm, 0, SPACING.sm)
+
+            icon_label = QLabel(icon)
+            icon_label.setAlignment(Qt.AlignCenter)
+            icon_label.setStyleSheet("font-size: 20px;")
+            btn_layout.addWidget(icon_label)
+
+            text_label = QLabel(label)
+            text_label.setAlignment(Qt.AlignCenter)
+            text_label.setStyleSheet("font-size: 11px;")
+            btn_layout.addWidget(text_label)
+
+            btn.clicked.connect(lambda checked=False, idx=i: self._on_item_clicked(idx))
+            layout.addWidget(btn)
+            self.buttons.append((btn, icon_label, text_label))
+
+        self._apply_styles()
+
+    def _apply_styles(self) -> None:
+        """Apply styles to all buttons."""
+        for i, (btn, icon_lbl, text_lbl) in enumerate(self.buttons):
+            active = btn.isChecked()
+            if active:
+                icon_lbl.setStyleSheet(f"font-size: 20px; color: {COLORS.accent_primary};")
+                text_lbl.setStyleSheet(f"font-size: 11px; color: {COLORS.accent_primary}; font-weight: 600;")
+                # Add glow
+                shadow = QGraphicsDropShadowEffect()
+                shadow.setBlurRadius(16)
+                shadow.setColor(QColor(COLORS.accent_glow))
+                shadow.setOffset(0, 0)
+                btn.setGraphicsEffect(shadow)
+            else:
+                icon_lbl.setStyleSheet(f"font-size: 20px; color: {COLORS.text_tertiary};")
+                text_lbl.setStyleSheet(f"font-size: 11px; color: {COLORS.text_tertiary};")
+                btn.setGraphicsEffect(None)
+
+    def _on_item_clicked(self, idx: int) -> None:
+        """Handle item selection."""
+        for i, (btn, _, _) in enumerate(self.buttons):
+            btn.setChecked(i == idx)
+        self._apply_styles()
+        self.nav_clicked.emit(idx)
+
+
+class TabsWidget(QTabWidget):
+    """Tab widget with custom styling matching design system.
+
+    Phase 6: Missing Component
+
+    Features:
+    - Underline active indicator
+    - Accent color highlighting
+    - Smooth transitions
+    """
+
+    def __init__(self, parent=None):
+        """Initialize tabs widget."""
+        super().__init__(parent)
+
+        self.setStyleSheet(f"""
+            QTabWidget::pane {{
+                border: none;
+                background: transparent;
+            }}
+            QTabBar::tab {{
+                background: transparent;
+                color: {COLORS.text_secondary};
+                padding: {SPACING.md}px {SPACING.lg}px;
+                border: none;
+                border-bottom: 2px solid transparent;
+                font-size: 13px;
+                font-weight: 500;
+            }}
+            QTabBar::tab:selected {{
+                color: {COLORS.accent_primary};
+                border-bottom-color: {COLORS.accent_primary};
+                font-weight: 600;
+            }}
+            QTabBar::tab:hover {{
+                color: {COLORS.text_primary};
+            }}
+        """)
+
+
+class ModalDialog(QDialog):
+    """Glassmorphism modal dialog base class.
+
+    Phase 6: Missing Component
+
+    Features:
+    - Glassmorphism styling (semi-transparent blur effect)
+    - Centered on parent
+    - Glow border effect
+    - Proper z-ordering
+    """
+
+    def __init__(self, title: str = "", width: int = 520, parent=None):
+        """Initialize modal dialog.
+
+        Args:
+            title: Dialog title
+            width: Dialog width in pixels
+        """
+        super().__init__(parent)
+        self.setWindowFlags(Qt.FramelessWindowHint | Qt.Dialog)
+        self.setModal(True)
+        self.setFixedWidth(width)
+
+        # Glassmorphism styling
+        self.setStyleSheet(f"""
+            QDialog {{
+                background: {COLORS.glass_overlay};
+                border: 1px solid {COLORS.glass_border};
+                border-radius: {RADIUS.xl}px;
+            }}
+        """)
+
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(SPACING.xl, SPACING.xl, SPACING.xl, SPACING.xl)
+        layout.setSpacing(SPACING.lg)
+
+        # Store layout for subclasses to add content
+        self.content_layout = layout
+
+
+class TableWidget(QTableWidget):
+    """Data table with design system styling.
+
+    Phase 6: Missing Component
+
+    Features:
+    - Alternating row colors
+    - Header styling
+    - Selection highlighting
+    - Proper text alignment
+    """
+
+    def __init__(self, rows: int = 0, cols: int = 0, parent=None):
+        """Initialize table widget.
+
+        Args:
+            rows: Number of rows
+            cols: Number of columns
+        """
+        super().__init__(rows, cols, parent)
+
+        self.setStyleSheet(f"""
+            QTableWidget {{
+                background: {COLORS.bg_1};
+                color: {COLORS.text_primary};
+                border: 1px solid {COLORS.stroke_0};
+                gridline-color: {COLORS.stroke_0};
+                font-size: 12px;
+            }}
+            QTableWidget::item {{
+                padding: {SPACING.sm}px;
+                background: transparent;
+            }}
+            QTableWidget::item:selected {{
+                background: {COLORS.accent_bg};
+                color: {COLORS.accent_primary};
+            }}
+            QHeaderView::section {{
+                background: {COLORS.surface_0};
+                color: {COLORS.text_secondary};
+                padding: {SPACING.sm}px;
+                border: none;
+                border-bottom: 1px solid {COLORS.stroke_1};
+                font-weight: 600;
+                text-transform: uppercase;
+                font-size: 10px;
+            }}
+        """)
+
+        self.setAlternatingRowColors(True)
+        self.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.horizontalHeader().setStretchLastSection(True)
+
+
+class TooltipLabel(QLabel):
+    """Label with tooltip on hover.
+
+    Phase 6: Missing Component
+
+    Features:
+    - Custom tooltip styling
+    - Hover detection
+    - Follows cursor
+    """
+
+    def __init__(self, text: str = "", tooltip_text: str = "", parent=None):
+        """Initialize tooltip label.
+
+        Args:
+            text: Label text
+            tooltip_text: Tooltip text to show on hover
+        """
+        super().__init__(text, parent)
+        if tooltip_text:
+            self.setToolTip(tooltip_text)
+
+        # Style the tooltip
+        self.setStyleSheet(f"""
+            QToolTip {{
+                background: {COLORS.surface_1};
+                color: {COLORS.text_primary};
+                border: 1px solid {COLORS.stroke_1};
+                border-radius: {RADIUS.sm}px;
+                padding: {SPACING.xs}px {SPACING.sm}px;
+                font-size: 11px;
+            }}
+        """)
+
+        self.setCursor(Qt.HelpCursor)

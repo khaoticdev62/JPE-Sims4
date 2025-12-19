@@ -56,6 +56,7 @@ class DiagnosticsTab2Page(QWidget):
         root.setSpacing(0)
 
         header = QFrame()
+        header.setFixedHeight(64)  # Stitch spec: Header 64px (was variable)
         header.setStyleSheet("background: rgba(23,15,35,0.90); border-bottom: 1px solid rgba(255,255,255,0.06);")
         hl = QVBoxLayout(header)
         hl.setContentsMargins(18, 14, 18, 10)
@@ -121,7 +122,7 @@ class DiagnosticsTab2Page(QWidget):
         self.scroll.setWidget(self.host)
         self.list_layout = QVBoxLayout(self.host)
         self.list_layout.setContentsMargins(DESIGN.spacing.lg, DESIGN.spacing.lg, DESIGN.spacing.lg, DESIGN.spacing.lg)  # 18px margins
-        self.list_layout.setSpacing(DESIGN.spacing.sm)  # 10px spacing
+        self.list_layout.setSpacing(12)  # Stitch spec: 12px gap between cards (was 10px)
         self.list_layout.addStretch(1)
 
         self.summary = Muted("")
@@ -230,7 +231,7 @@ class DiagnosticsTab2Page(QWidget):
         btn.setStyleSheet(
             "QPushButton{padding: 14px; border-radius: 16px; text-align:left;"
             "background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06);}"
-            "QPushButton:hover{background: rgba(255,255,255,0.04); border-color: rgba(157,92,255,0.16);}"
+            "QPushButton:hover{background: rgba(255,255,255,0.04); border-color: rgba(134,56,250,0.16);}"  # Stitch spec: #8638fa color (was #9d5cff)
         )
         l = QHBoxLayout(btn)
         l.setContentsMargins(0, 0, 0, 0)

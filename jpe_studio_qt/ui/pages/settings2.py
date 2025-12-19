@@ -45,7 +45,7 @@ class Settings2Page(QWidget):
         self.setStyleSheet(f"background: {c.background};")
 
         header = QFrame()
-        header.setMinimumHeight(64)
+        header.setFixedHeight(64)  # Stitch spec: Header 64px fixed (was setMinimumHeight)
         header.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
         header.setStyleSheet(
             "background: rgba(23,15,35,0.90);"
@@ -72,6 +72,7 @@ class Settings2Page(QWidget):
 
         self.btn_save = QPushButton("Save Changes")
         self.btn_save.setObjectName("Primary")
+        self.btn_save.setFixedHeight(40)  # Stitch spec: Save button 40px height
         self.btn_save.clicked.connect(self._emit_apply)
         hl.addWidget(self.btn_save)
         root.addWidget(header)
@@ -187,7 +188,7 @@ class Settings2Page(QWidget):
         row.setStyleSheet(
             "QPushButton{padding: 12px; border-radius: 14px; text-align:left;"
             "background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06);}"
-            "QPushButton:hover{background: rgba(255,255,255,0.04); border-color: rgba(157,92,255,0.18);}"
+            "QPushButton:hover{background: rgba(255,255,255,0.04); border-color: rgba(134,56,250,0.18);}"  # Stitch spec: #8638fa color (was #9d5cff)
         )
         l = QHBoxLayout(row)
         l.setContentsMargins(0, 0, 0, 0)
@@ -212,6 +213,7 @@ class Settings2Page(QWidget):
 
     def _toggle_row(self, title: str, desc: str, *, checked: bool, key: str | None = None) -> QWidget:
         row = QFrame()
+        row.setFixedHeight(56)  # Stitch spec: Setting rows 56px height
         rl = QHBoxLayout(row)
         rl.setContentsMargins(DESIGN.spacing.xs, DESIGN.spacing.sm, DESIGN.spacing.xs, DESIGN.spacing.sm)  # 8,10,8,10px margins
         rl.setSpacing(DESIGN.spacing.md)  # 12px spacing

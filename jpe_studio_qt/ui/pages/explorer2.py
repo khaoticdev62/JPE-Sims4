@@ -30,8 +30,8 @@ from jpe_studio_qt.ui.components import H2, Muted, set_toolbutton_icon
 
 @dataclass(frozen=True)
 class _ExplorerColors:
-    primary: str = "#9d5cff"  # Updated to match design system
-    primary_hover: str = "#b584ff"  # Updated to match design system
+    primary: str = "#8638fa"  # Deep purple from Stitch
+    primary_hover: str = "#9d5cff"  # Lighter variant
     background: str = "#171022"
     surface: str = "#231b2e"
     surface_highlight: str = "#322249"
@@ -65,10 +65,9 @@ class Explorer2Page(QWidget):
         root.setSpacing(0)
         self.setStyleSheet(f"background: {COL.background};")
 
-        # Header.
+        # Header (56px height - Stitch spec).
         header = QFrame()
-        header.setMinimumHeight(48)  # Allow header to have minimum height but expand if needed
-        header.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+        header.setFixedHeight(56)
         header.setStyleSheet(f"background: {COL.surface}; border-bottom: 1px solid {COL.border_rgba};")
         hl = QHBoxLayout(header)
         hl.setContentsMargins(18, 10, 18, 10)
@@ -78,7 +77,7 @@ class Explorer2Page(QWidget):
         brand.setSpacing(10)
         brand_icon = QFrame()
         brand_icon.setFixedSize(34, 34)
-        brand_icon.setStyleSheet(f"border-radius: 10px; background: rgba(157,92,255,0.18); border: 1px solid rgba(157,92,255,0.20);")
+        brand_icon.setStyleSheet(f"border-radius: 10px; background: rgba(134,56,250,0.18); border: 1px solid rgba(134,56,250,0.20);")
         bi = QLabel()
         bi.setAlignment(Qt.AlignCenter)
         try:
@@ -160,16 +159,15 @@ class Explorer2Page(QWidget):
 
         root.addWidget(header)
 
-        # Body.
+        # Body (splitter with 4px handle - Stitch spec).
         split = QSplitter(Qt.Horizontal)
-        split.setHandleWidth(2)
+        split.setHandleWidth(4)
         root.addWidget(split, 1)
 
-        # Left: Explorer sidebar.
+        # Left: Explorer sidebar (280px fixed width - Stitch spec).
         left = QFrame()
         left.setStyleSheet(f"background: {COL.sidebar_bg}; border-right: 1px solid {COL.border_rgba};")
-        left.setMinimumWidth(360)
-        left.setMaximumWidth(460)
+        left.setFixedWidth(280)
         ll = QVBoxLayout(left)
         ll.setContentsMargins(DESIGN.spacing.lg, DESIGN.spacing.lg, DESIGN.spacing.lg, DESIGN.spacing.lg)  # 16px margins
         ll.setSpacing(DESIGN.spacing.md)  # 12px spacing
@@ -230,13 +228,13 @@ class Explorer2Page(QWidget):
         self.tree = QTreeWidget()
         self.tree.setColumnCount(2)
         self.tree.setHeaderHidden(True)
-        self.tree.setIndentation(14)
+        self.tree.setIndentation(14)  # 14px indent per level - Stitch spec
         self.tree.setAnimated(True)
         self.tree.itemSelectionChanged.connect(self._on_tree_selected)
         self.tree.setColumnWidth(1, 74)
         self.tree.setStyleSheet(
             f"background: transparent; border: 1px solid {COL.border_rgba}; border-radius: 12px; padding: 6px;"
-            "QTreeWidget::item { padding: 8px 6px; border-radius: 8px; }"
+            "QTreeWidget::item { height: 32px; padding: 8px 6px; border-radius: 8px; }"  # 32px height - Stitch spec
             f"QTreeWidget::item:selected {{ background: rgba(255,255,255,0.06); border-left: 2px solid {COL.primary}; }}"
             "QTreeWidget::item:hover { background: rgba(255,255,255,0.04); }"
             "QTreeWidget::item:selected:active { outline: none; }"
@@ -300,7 +298,7 @@ class Explorer2Page(QWidget):
 
         split.addWidget(left)
 
-        # Right: code preview.
+        # Right: code preview (40px gutter for line numbers - Stitch spec).
         right = QFrame()
         right.setStyleSheet(f"background: {COL.background};")
         rl = QVBoxLayout(right)
@@ -338,8 +336,8 @@ class Explorer2Page(QWidget):
         split.addWidget(right)
         split.setStretchFactor(0, 0)
         split.setStretchFactor(1, 1)
-        # Use initial sizes that adapt better to different window sizes
-        split.setSizes([360, self.width() - 360])  # Use available space for the right panel
+        # Use initial sizes: 280px sidebar (fixed) + remaining space for editor
+        split.setSizes([280, self.width() - 280])
 
         # Bottom status bar.
         status = QFrame()

@@ -15,6 +15,7 @@ from PySide6.QtWidgets import (
 
 from jpe_studio_qt.design_system import DESIGN
 from jpe_studio_qt.ui.components import CardFrame, H1, H2, MaterialIcon, Muted, SearchBar
+from jpe_studio_qt.ui.glass_widgets import GlassFrame
 
 
 class DocsHubPage(QWidget):
@@ -33,8 +34,9 @@ class DocsHubPage(QWidget):
         root.setContentsMargins(0, 0, 0, 0)
         root.setSpacing(0)
 
-        # Header section
-        header = QFrame()
+        # Header section with glass-morphism effect
+        header = GlassFrame()  # Glass-morphism header (Phase 4)
+        header.setFixedHeight(64)  # Stitch spec: Header 64px
         header.setStyleSheet(f"background: qlineargradient(x1:0,y1:0,x2:1,y2:1, stop:0 {c.surface}, stop:1 {c.background});")
         header_l = QVBoxLayout(header)
         header_l.setContentsMargins(24, 24, 24, 24)
@@ -190,13 +192,13 @@ class DocsHubPage(QWidget):
         icon_frame.setFixedSize(40, 40)
         icon_frame.setStyleSheet("""
             border-radius: 12px;
-            background: rgba(157, 92, 255, 0.15);
-            border: 1px solid rgba(157, 92, 255, 0.25);
+            background: rgba(134, 56, 250, 0.15);
+            border: 1px solid rgba(134, 56, 250, 0.25);
         """)
         icon_l = QHBoxLayout(icon_frame)
         icon_l.setContentsMargins(0, 0, 0, 0)
         icon_lbl = MaterialIcon(icon, size_px=20)
-        icon_lbl.setStyleSheet("color: #9d5cff;")
+        icon_lbl.setStyleSheet("color: #8638fa;")
         icon_l.addWidget(icon_lbl, 0, Qt.AlignCenter)
         top_row.addWidget(icon_frame)
 

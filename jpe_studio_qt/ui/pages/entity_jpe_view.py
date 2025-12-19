@@ -45,7 +45,7 @@ class EntityJpeViewPage(QWidget):
 
         # Back button
         back_btn = QLabel("← Back")
-        back_btn.setStyleSheet("font-size: 11pt; color: #9d5cff; cursor: pointer; padding: 6px 12px;")
+        back_btn.setStyleSheet("font-size: 11pt; color: #8638fa; cursor: pointer; padding: 6px 12px;")
         back_btn.setProperty("role", "clickable")
         back_btn.mousePressEvent = lambda e: self.back_requested.emit()  # type: ignore[method-assign]
         hl.addWidget(back_btn)
@@ -62,7 +62,7 @@ class EntityJpeViewPage(QWidget):
         status_badge.setProperty("variant", "primary")
         status_badge.setStyleSheet(
             "padding: 4px 10px; border-radius: 10px; font-size: 9pt; font-weight: 700;"
-            "background: rgba(157,92,255,0.14); color: #9d5cff; border: 1px solid rgba(157,92,255,0.20);"
+            "background: rgba(157,92,255,0.14); color: #8638fa; border: 1px solid rgba(157,92,255,0.20);"
         )
         hl.addWidget(status_badge)
 
@@ -192,9 +192,9 @@ class EntityJpeViewPage(QWidget):
                 border-top-right-radius: 8px;
             }
             QTabBar::tab:selected { 
-                background: rgba(157, 92, 255, 0.15); 
-                color: #9d5cff;
-                border-bottom: 2px solid #9d5cff;
+                background: rgba(134, 56, 250, 0.15); 
+                color: #8638fa;
+                border-bottom: 2px solid #8638fa;
             }
             QTabBar::tab:!selected { 
                 color: rgba(255, 255, 255, 0.55); 
@@ -222,15 +222,15 @@ class EntityJpeViewPage(QWidget):
         actions_l.setSpacing(12)
 
         copy_btn = QLabel("Copy JPE")
-        copy_btn.setStyleSheet("font-size: 10pt; color: #9d5cff; cursor: pointer; padding: 6px 12px;")
+        copy_btn.setStyleSheet("font-size: 10pt; color: #8638fa; cursor: pointer; padding: 6px 12px;")
         copy_btn.setProperty("role", "clickable")
 
         export_btn = QLabel("Export")
-        export_btn.setStyleSheet("font-size: 10pt; color: #9d5cff; cursor: pointer; padding: 6px 12px;")
+        export_btn.setStyleSheet("font-size: 10pt; color: #8638fa; cursor: pointer; padding: 6px 12px;")
         export_btn.setProperty("role", "clickable")
 
         validate_btn = QLabel("Validate")
-        validate_btn.setStyleSheet("font-size: 10pt; color: #9d5cff; cursor: pointer; padding: 6px 12px;")
+        validate_btn.setStyleSheet("font-size: 10pt; color: #8638fa; cursor: pointer; padding: 6px 12px;")
         validate_btn.setProperty("role", "clickable")
 
         actions_l.addWidget(copy_btn)

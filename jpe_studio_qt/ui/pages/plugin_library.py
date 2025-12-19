@@ -127,13 +127,13 @@ class PluginLibraryPage(QWidget):
         icon_frame.setFixedSize(44, 44)
         icon_frame.setStyleSheet(f"""
             border-radius: {DESIGN.radius.lg}px;
-            background: rgba(157, 92, 255, 0.15);
-            border: 1px solid rgba(157, 92, 255, 0.25);
+            background: rgba(134, 56, 250, 0.15);
+            border: 1px solid rgba(134, 56, 250, 0.25);
         """)
         icon_l = QHBoxLayout(icon_frame)
         icon_l.setContentsMargins(0, 0, 0, 0)
         icon_lbl = MaterialIcon(icon, size_px=22)
-        icon_lbl.setStyleSheet("color: #9d5cff;")
+        icon_lbl.setStyleSheet("color: #8638fa;")
         icon_l.addWidget(icon_lbl, 0, Qt.AlignmentFlag.AlignCenter)
         top_row.addWidget(icon_frame)
 

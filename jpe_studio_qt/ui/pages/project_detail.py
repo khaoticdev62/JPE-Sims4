@@ -61,7 +61,7 @@ class ProjectDetailPage(QWidget):
         back_col.setContentsMargins(0, 0, 0, 0)
         back_col.setSpacing(4)
         back_btn = QLabel("← Back to Projects")
-        back_btn.setStyleSheet("font-size: 11pt; color: #9d5cff; cursor: pointer;")
+        back_btn.setStyleSheet("font-size: 11pt; color: #8638fa; cursor: pointer;")
         back_btn.setProperty("role", "clickable")
         back_btn.mousePressEvent = lambda e: self.go_files.emit()  # type: ignore[method-assign]
         back_col.addWidget(back_btn)
@@ -78,10 +78,10 @@ class ProjectDetailPage(QWidget):
         actions = QHBoxLayout()
         actions.setSpacing(10)
         btn_edit = QLabel("Edit")
-        btn_edit.setStyleSheet("font-size: 11pt; color: #9d5cff; cursor: pointer; padding: 6px 12px;")
+        btn_edit.setStyleSheet("font-size: 11pt; color: #8638fa; cursor: pointer; padding: 6px 12px;")
         btn_edit.setProperty("role", "clickable")
         btn_export = QLabel("Export")
-        btn_export.setStyleSheet("font-size: 11pt; color: #9d5cff; cursor: pointer; padding: 6px 12px;")
+        btn_export.setStyleSheet("font-size: 11pt; color: #8638fa; cursor: pointer; padding: 6px 12px;")
         btn_export.setProperty("role", "clickable")
         actions.addWidget(btn_edit)
         actions.addWidget(btn_export)
@@ -107,9 +107,9 @@ class ProjectDetailPage(QWidget):
                 border-top-right-radius: 8px;
             }
             QTabBar::tab:selected { 
-                background: rgba(157, 92, 255, 0.15); 
-                color: #9d5cff;
-                border-bottom: 2px solid #9d5cff;
+                background: rgba(134, 56, 250, 0.15); 
+                color: #8638fa;
+                border-bottom: 2px solid #8638fa;
             }
             QTabBar::tab:!selected { 
                 color: rgba(255, 255, 255, 0.55); 
@@ -158,7 +158,7 @@ class ProjectDetailPage(QWidget):
         progress_status.setProperty("variant", "primary")
         progress_status.setStyleSheet(
             "padding: 4px 8px; border-radius: 6px; font-size: 9pt; font-weight: 700;"
-            "background: rgba(157, 92, 255, 0.15); color: #9d5cff; border: 1px solid rgba(157,92,255,0.25);"
+            "background: rgba(134, 56, 250, 0.15); color: #8638fa; border: 1px solid rgba(157,92,255,0.25);"
         )
         progress_header.addWidget(progress_status)
         progress_l.addLayout(progress_header)
@@ -345,13 +345,13 @@ class ProjectDetailPage(QWidget):
         progress_fill.setFixedHeight(8)
         
         if color_variant == "primary":
-            progress_fill.setStyleSheet(f"border-radius: 4px; background: #9d5cff; max-width: {value}%")
+            progress_fill.setStyleSheet(f"border-radius: 4px; background: #8638fa; max-width: {value}%")
         elif color_variant == "info":
             progress_fill.setStyleSheet(f"border-radius: 4px; background: #4cc9f0; max-width: {value}%")
         elif color_variant == "success":
             progress_fill.setStyleSheet(f"border-radius: 4px; background: #22c55e; max-width: {value}%")
         else:
-            progress_fill.setStyleSheet(f"border-radius: 4px; background: #9d5cff; max-width: {value}%")
+            progress_fill.setStyleSheet(f"border-radius: 4px; background: #8638fa; max-width: {value}%")
         
         bar_l.addWidget(progress_fill)
         layout.addWidget(bar_container)

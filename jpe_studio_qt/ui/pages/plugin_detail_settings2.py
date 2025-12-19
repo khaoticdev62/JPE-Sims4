@@ -48,7 +48,7 @@ class PluginDetailSettings2Page(QWidget):
         back_col.setSpacing(4)
 
         back_btn = QLabel("← Back to Marketplace")
-        back_btn.setStyleSheet("font-size: 11pt; color: #9d5cff; cursor: pointer;")
+        back_btn.setStyleSheet("font-size: 11pt; color: #8638fa; cursor: pointer;")
         back_btn.setProperty("role", "clickable")
         back_col.addWidget(back_btn)
 
@@ -60,13 +60,13 @@ class PluginDetailSettings2Page(QWidget):
         icon_frame.setFixedSize(48, 48)
         icon_frame.setStyleSheet(f"""
             border-radius: 14px;
-            background: rgba(157, 92, 255, 0.15);
-            border: 1px solid rgba(157, 92, 255, 0.25);
+            background: rgba(134, 56, 250, 0.15);
+            border: 1px solid rgba(134, 56, 250, 0.25);
         """)
         icon_l = QHBoxLayout(icon_frame)
         icon_l.setContentsMargins(0, 0, 0, 0)
         icon_lbl = MaterialIcon("extension", size_px=24)
-        icon_lbl.setStyleSheet("color: #9d5cff;")
+        icon_lbl.setStyleSheet("color: #8638fa;")
         icon_l.addWidget(icon_lbl, 0, Qt.AlignCenter)
         plugin_row.addWidget(icon_frame)
 
@@ -131,9 +131,9 @@ class PluginDetailSettings2Page(QWidget):
                 border-top-right-radius: 8px;
             }
             QTabBar::tab:selected { 
-                background: rgba(157, 92, 255, 0.15); 
-                color: #9d5cff;
-                border-bottom: 2px solid #9d5cff;
+                background: rgba(134, 56, 250, 0.15); 
+                color: #8638fa;
+                border-bottom: 2px solid #8638fa;
             }
             QTabBar::tab:!selected { 
                 color: rgba(255,255,255,0.55); 
@@ -357,7 +357,7 @@ class PluginDetailSettings2Page(QWidget):
 
         # Version 2.4.1
         v241_title = QLabel("Version 2.4.1 - 2023-12-10")
-        v241_title.setStyleSheet("font-weight: 600; color: #9d5cff;")
+        v241_title.setStyleSheet("font-weight: 600; color: #8638fa;")
         changelog_l.addWidget(v241_title)
 
         v241_changes = [
@@ -374,7 +374,7 @@ class PluginDetailSettings2Page(QWidget):
         # Version 2.4.0
         changelog_l.addSpacing(10)
         v240_title = QLabel("Version 2.4.0 - 2023-11-20")
-        v240_title.setStyleSheet("font-weight: 600; color: #9d5cff;")
+        v240_title.setStyleSheet("font-weight: 600; color: #8638fa;")
         changelog_l.addWidget(v240_title)
 
         v240_changes = [

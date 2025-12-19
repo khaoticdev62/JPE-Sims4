@@ -15,7 +15,7 @@ from PySide6.QtWidgets import (
 )
 
 from jpe_studio_qt.fonts import has_font_family
-from jpe_studio_qt.design_system import DESIGN, mono_font_stack
+from jpe_studio_qt.design_tokens import DESIGN, SPACING, COLORS, RADIUS, SHADOWS, mono_font_stack
 from jpe_studio_qt.icons import icon_font_family, icon_text
 
 
@@ -480,3 +480,317 @@ class ProgressCard(CardFrame):
         super().mousePressEvent(event)
         if event.button() == Qt.MouseButton.LeftButton:
             self.clicked.emit()
+
+
+# ============================================================================
+# ATOMIC COMPONENTS - Button, Input, Select, Checkbox, Radio, Toggle, etc.
+# ============================================================================
+
+
+class Button(QPushButton):
+    """
+    Primary button component with three variants: primary, secondary, ghost.
+
+    Features:
+    - Primary: neon purple (#8638fa) with glow effect
+    - Secondary: outlined with border
+    - Ghost: minimal, transparent
+    """
+
+    def __init__(self, text: str, *, variant: str = "primary") -> None:
+        super().__init__(text)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.setMinimumHeight(40)
+
+        if variant == "primary":
+            self._apply_primary_style()
+        elif variant == "secondary":
+            self._apply_secondary_style()
+        else:  # ghost
+            self._apply_ghost_style()
+
+    def _apply_primary_style(self) -> None:
+        """Primary button: neon purple with glow."""
+        self.setStyleSheet(f"""
+            QPushButton {{
+                background: {COLORS.accent_primary};
+                color: {COLORS.text_primary};
+                border: none;
+                border-radius: {RADIUS.md}px;
+                padding: 0 {SPACING.lg}px;
+                font-size: 14px;
+                font-weight: 600;
+            }}
+            QPushButton:hover {{
+                background: {COLORS.accent_hover};
+            }}
+            QPushButton:pressed {{
+                background: {COLORS.accent_pressed};
+            }}
+            QPushButton:disabled {{
+                background: {COLORS.surface_1};
+                color: {COLORS.text_disabled};
+            }}
+        """)
+
+        # Add glow effect
+        shadow = QGraphicsDropShadowEffect()
+        shadow.setBlurRadius(SHADOWS.glow_accent_blur)
+        shadow.setColor(QColor(157, 92, 255, 46))  # accent_glow color with alpha
+        shadow.setOffset(0, 0)
+        self.setGraphicsEffect(shadow)
+
+    def _apply_secondary_style(self) -> None:
+        """Secondary button: outlined with border."""
+        self.setStyleSheet(f"""
+            QPushButton {{
+                background: transparent;
+                color: {COLORS.text_primary};
+                border: 1px solid {COLORS.stroke_1};
+                border-radius: {RADIUS.md}px;
+                padding: 0 {SPACING.lg}px;
+                font-size: 14px;
+                font-weight: 600;
+            }}
+            QPushButton:hover {{
+                background: {COLORS.surface_1};
+                border-color: {COLORS.accent_primary};
+            }}
+            QPushButton:pressed {{
+                background: {COLORS.accent_bg};
+            }}
+            QPushButton:disabled {{
+                color: {COLORS.text_disabled};
+                border-color: {COLORS.stroke_0};
+            }}
+        """)
+
+    def _apply_ghost_style(self) -> None:
+        """Ghost button: minimal, no border."""
+        self.setStyleSheet(f"""
+            QPushButton {{
+                background: transparent;
+                color: {COLORS.text_secondary};
+                border: none;
+                border-radius: {RADIUS.md}px;
+                padding: 0 {SPACING.md}px;
+                font-size: 14px;
+                font-weight: 500;
+            }}
+            QPushButton:hover {{
+                background: {COLORS.surface_0};
+                color: {COLORS.text_primary};
+            }}
+            QPushButton:pressed {{
+                background: {COLORS.surface_1};
+            }}
+            QPushButton:disabled {{
+                color: {COLORS.text_disabled};
+            }}
+        """)
+
+
+class Input(QFrame):
+    """
+    Input field component (QLineEdit wrapper) with consistent styling.
+    """
+
+    from PySide6.QtCore import Signal
+
+    textChanged = Signal(str)
+    returnPressed = Signal()
+
+    def __init__(self, placeholder: str = "", *, has_clear_button: bool = True) -> None:
+        from PySide6.QtWidgets import QHBoxLayout, QLineEdit, QToolButton
+
+        super().__init__()
+        self.setObjectName("Card")
+        self.setMinimumHeight(44)
+
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(SPACING.md, 0, SPACING.md, 0)
+        layout.setSpacing(0)
+
+        # Input field
+        self._input = QLineEdit()
+        self._input.setPlaceholderText(placeholder)
+        self._input.setFrame(False)
+        self._input.setStyleSheet("QLineEdit { background: transparent; border: none; padding: 0px; }")
+        self._input.textChanged.connect(self.textChanged.emit)
+        self._input.returnPressed.connect(self.returnPressed.emit)
+        layout.addWidget(self._input, 1)
+
+        # Clear button (optional)
+        if has_clear_button:
+            self._clear_btn = QToolButton()
+            self._clear_btn.setObjectName("IconButton")
+            set_toolbutton_icon(self._clear_btn, "close", size_px=16)
+            self._clear_btn.clicked.connect(self._input.clear)
+            self._clear_btn.setVisible(False)
+            self._input.textChanged.connect(lambda txt: self._clear_btn.setVisible(bool(txt)))
+            layout.addWidget(self._clear_btn)
+
+    def text(self) -> str:
+        return self._input.text()
+
+    def setText(self, text: str) -> None:
+        self._input.setText(text)
+
+    def clear(self) -> None:
+        self._input.clear()
+
+    def setPlaceholderText(self, text: str) -> None:
+        self._input.setPlaceholderText(text)
+
+
+class Select(QPushButton):
+    """
+    Dropdown select component (simplified as button with menu).
+    """
+
+    from PySide6.QtCore import Signal
+
+    currentIndexChanged = Signal(int)
+
+    def __init__(self, options: list[str], *, placeholder: str = "Select...") -> None:
+        from PySide6.QtWidgets import QMenu
+
+        super().__init__(placeholder)
+        self.setMinimumHeight(44)
+        self.setMinimumWidth(200)
+        self.setObjectName("Chip")
+
+        self._options = options
+        self._current_index = -1
+
+        # Create menu
+        self._menu = QMenu(self)
+        for i, option in enumerate(options):
+            self._menu.addAction(option, lambda checked=False, idx=i: self._on_option_selected(idx))
+
+        self.setMenu(self._menu)
+
+    def _on_option_selected(self, index: int) -> None:
+        self._current_index = index
+        self.setText(self._options[index])
+        self.currentIndexChanged.emit(index)
+
+    def currentIndex(self) -> int:
+        return self._current_index
+
+    def currentText(self) -> str:
+        return self._options[self._current_index] if self._current_index >= 0 else ""
+
+
+class Checkbox(QAbstractButton):
+    """
+    Custom checkbox component with design system styling.
+    """
+
+    from PySide6.QtCore import Signal
+
+    toggled = Signal(bool)
+
+    def __init__(self, label: str = "", *, checked: bool = False) -> None:
+        super().__init__(label)
+        self.setCheckable(True)
+        self.setChecked(checked)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.setFocusPolicy(Qt.StrongFocus)
+        self.toggled.connect(self.toggled.emit)
+
+        self.setStyleSheet(f"""
+            QAbstractButton {{
+                color: {COLORS.text_primary};
+                font-size: 14px;
+                spacing: 8px;
+            }}
+        """)
+
+    def sizeHint(self) -> QSize:
+        return QSize(200, 24)
+
+    def paintEvent(self, event) -> None:
+        """Paint the checkbox with custom styling."""
+        from PySide6.QtGui import QColor, QPainter, QRect
+
+        p = QPainter(self)
+        p.setRenderHint(QPainter.Antialiasing, True)
+
+        # Checkbox box
+        box_rect = QRect(0, (self.height() - 20) // 2, 20, 20)
+
+        # Draw background
+        if self.isChecked():
+            p.fillRect(box_rect, QColor(COLORS.accent_primary))
+        else:
+            p.fillRect(box_rect, QColor(COLORS.surface_0))
+
+        # Draw border
+        p.setPen(QColor(COLORS.accent_primary if self.isChecked() else COLORS.stroke_1))
+        p.drawRect(box_rect)
+
+        # Draw text
+        text_rect = QRect(28, 0, self.width() - 28, self.height())
+        p.setPen(QColor(COLORS.text_primary))
+        p.drawText(text_rect, Qt.AlignVCenter, self.text())
+
+
+class Radio(QAbstractButton):
+    """
+    Custom radio button component with design system styling.
+    """
+
+    from PySide6.QtCore import Signal
+
+    toggled = Signal(bool)
+
+    def __init__(self, label: str = "", *, checked: bool = False) -> None:
+        super().__init__(label)
+        self.setCheckable(True)
+        self.setChecked(checked)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.setFocusPolicy(Qt.StrongFocus)
+        self.toggled.connect(self.toggled.emit)
+
+        self.setStyleSheet(f"""
+            QAbstractButton {{
+                color: {COLORS.text_primary};
+                font-size: 14px;
+                spacing: 8px;
+            }}
+        """)
+
+    def sizeHint(self) -> QSize:
+        return QSize(200, 24)
+
+    def paintEvent(self, event) -> None:
+        """Paint the radio button with custom styling."""
+        from PySide6.QtGui import QColor, QPainter
+
+        p = QPainter(self)
+        p.setRenderHint(QPainter.Antialiasing, True)
+
+        # Radio circle
+        circle_center_x = 10
+        circle_center_y = self.height() // 2
+        circle_radius = 8
+
+        # Draw background
+        if self.isChecked():
+            p.fillEllipse(circle_center_x - circle_radius, circle_center_y - circle_radius,
+                         circle_radius * 2, circle_radius * 2, QColor(COLORS.accent_primary))
+        else:
+            p.fillEllipse(circle_center_x - circle_radius, circle_center_y - circle_radius,
+                         circle_radius * 2, circle_radius * 2, QColor(COLORS.surface_0))
+
+        # Draw border
+        p.setPen(QColor(COLORS.accent_primary if self.isChecked() else COLORS.stroke_1))
+        p.drawEllipse(circle_center_x - circle_radius, circle_center_y - circle_radius,
+                     circle_radius * 2, circle_radius * 2)
+
+        # Draw text
+        text_x = 28
+        p.setPen(QColor(COLORS.text_primary))
+        p.drawText(text_x, 0, self.width() - text_x, self.height(),
+                  Qt.AlignLeft | Qt.AlignVCenter, self.text())

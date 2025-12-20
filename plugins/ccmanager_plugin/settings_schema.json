@@ -1,0 +1,65 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CC Manager Settings",
+  "type": "object",
+  "properties": {
+    "cc_paths": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "title": "CC Directories",
+      "description": "Folders to scan for custom content and mods"
+    },
+    "metadata_sources": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "title": "Metadata Sources",
+      "description": "Manifest files (JSON/CSV) for additional mod info"
+    },
+    "use_ts4rebels_index": {
+      "type": "boolean",
+      "title": "Use TS4Rebels Index",
+      "description": "Integration with TS4Rebels vault if available",
+      "default": true
+    },
+    "cache_enabled": {
+      "type": "boolean",
+      "title": "Enable Caching",
+      "description": "Store results to speed up next startup",
+      "default": true
+    },
+    "cache_ttl_hours": {
+      "type": "integer",
+      "title": "Cache TTL (Hours)",
+      "description": "How long to keep cache before rescanning",
+      "default": 24,
+      "minimum": 0
+    },
+    "default_view_mode": {
+      "type": "string",
+      "enum": ["tree", "grid"],
+      "title": "Default View Mode",
+      "default": "tree"
+    },
+    "show_thumbnails": {
+      "type": "boolean",
+      "title": "Show Thumbnails",
+      "default": true
+    },
+    "extract_package_metadata": {
+      "type": "boolean",
+      "title": "Extract Package Metadata",
+      "description": "Read deep info from .package files (slower)",
+      "default": false
+    },
+    "fallback_to_filename_parsing": {
+      "type": "boolean",
+      "title": "Fallback to Filename Parsing",
+      "description": "Try to guess creator from filenames",
+      "default": true
+    }
+  }
+}

@@ -4,9 +4,9 @@
 - [x] Task: Define Core Style Tokens (JSON format) [d48e303]
     - [x] Write validation script/tests for JSON structure
     - [x] Implement Token definitions (Colors, Typography, Spacing)
-- [~] Task: Create Atomic Prompts for Core Components (Buttons, Inputs)
-    - [~] Write acceptance criteria/tests for prompt clarity
-    - [ ] Implement prompts for atomic components
+- [x] Task: Create Atomic Prompts for Core Components (Buttons, Inputs) [c720b84]
+    - [x] Write acceptance criteria/tests for prompt clarity
+    - [x] Implement prompts for atomic components
 - [ ] Task: Create Atomic Prompts for Layout Components (Cards, Modals)
     - [ ] Write acceptance criteria/tests for layout prompts
     - [ ] Implement prompts for layout components

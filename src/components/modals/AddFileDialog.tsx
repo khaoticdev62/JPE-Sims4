@@ -15,7 +15,7 @@ export default function AddFileDialog({ isOpen, onClose }: AddFileDialogProps) {
   const [error, setError] = useState('')
 
   const { currentProject, addFile, setError: setStoreError } = useProjectStore()
-  const { openTab } = useEditorStore()
+  const { openTab, updateTabContent } = useEditorStore()
 
   if (!currentProject) {
     return (
@@ -41,14 +41,13 @@ export default function AddFileDialog({ isOpen, onClose }: AddFileDialogProps) {
         return
       }
 
-      // TODO: Read file contents and add to project
-      // For now, just show success message
-      console.log('Selected files:', filePaths)
-
       // Create file objects and add to project
       for (const filePath of filePaths) {
         const fileName = filePath.split('\\').pop() || filePath
         const fileType = fileName.split('.').pop() || 'txt'
+
+        // Read file content
+        const fileContent = await FileService.readFile(filePath)
 
         const newFile = {
           id: `file-${Date.now()}-${Math.random()}`,
@@ -56,21 +55,27 @@ export default function AddFileDialog({ isOpen, onClose }: AddFileDialogProps) {
           name: fileName,
           path: filePath,
           type: fileType as any,
-          content: '// File content will be loaded here',
+          content: fileContent.success ? fileContent.content || '' : '',
           isDirty: false,
-          size: 0,
+          size: fileContent.size || 0,
           lastModified: Date.now(),
         }
 
         addFile(newFile)
 
         // Open file in editor
+        const tabId = `tab-${newFile.id}`
         openTab({
-          id: `tab-${newFile.id}`,
+          id: tabId,
           fileId: newFile.id,
           name: newFile.name,
           isDirty: false,
         })
+
+        // Load content into editor
+        if (fileContent.success && fileContent.content) {
+          updateTabContent(tabId, fileContent.content)
+        }
       }
 
       onClose()

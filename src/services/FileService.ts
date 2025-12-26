@@ -3,6 +3,37 @@
  * Bridges the gap between Electron IPC and the application logic
  */
 
+export interface FileReadResult {
+  success: boolean
+  content?: string
+  size?: number
+  modified?: number
+  error?: string
+}
+
+export interface FileWriteResult {
+  success: boolean
+  size?: number
+  modified?: number
+  error?: string
+}
+
+export interface FileListResult {
+  success: boolean
+  files?: Array<{
+    name: string
+    isDirectory: boolean
+    isFile: boolean
+  }>
+  error?: string
+}
+
+export interface FileExistsResult {
+  success: boolean
+  exists?: boolean
+  error?: string
+}
+
 export class FileService {
   /**
    * Open a folder dialog and return the selected path
@@ -45,8 +76,8 @@ export class FileService {
    */
   static async fileExists(path: string): Promise<boolean> {
     try {
-      // This will be implemented with Electron fs access
-      return false
+      const result = (await window.electron.file.exists(path)) as FileExistsResult
+      return result.success ? result.exists ?? false : false
     } catch (error) {
       console.error('Failed to check file existence', error)
       return false
@@ -56,36 +87,40 @@ export class FileService {
   /**
    * Read file content as text
    */
-  static async readFile(path: string): Promise<string | null> {
+  static async readFile(path: string): Promise<FileReadResult> {
     try {
-      // This will be implemented with Electron fs access
-      return null
+      return (await window.electron.file.readFile(path)) as FileReadResult
     } catch (error) {
-      console.error('Failed to read file', error)
-      return null
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      }
     }
   }
 
   /**
    * Write content to file
    */
-  static async writeFile(path: string, content: string): Promise<boolean> {
+  static async writeFile(path: string, content: string): Promise<FileWriteResult> {
     try {
-      // This will be implemented with Electron fs access
-      return true
+      return (await window.electron.file.writeFile(path, content)) as FileWriteResult
     } catch (error) {
-      console.error('Failed to write file', error)
-      return false
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      }
     }
   }
 
   /**
    * Delete a file
    */
-  static async deleteFile(path: string): Promise<boolean> {
+  static async deleteFile(_path: string): Promise<boolean> {
     try {
       // This will be implemented with Electron fs access
-      return true
+      // For now, return false as deletion is a destructive operation
+      console.warn('File deletion not yet implemented')
+      return false
     } catch (error) {
       console.error('Failed to delete file', error)
       return false
@@ -95,13 +130,14 @@ export class FileService {
   /**
    * List files in a directory
    */
-  static async listDirectory(path: string): Promise<string[]> {
+  static async listDirectory(path: string): Promise<FileListResult> {
     try {
-      // This will be implemented with Electron fs access
-      return []
+      return (await window.electron.file.listDirectory(path)) as FileListResult
     } catch (error) {
-      console.error('Failed to list directory', error)
-      return []
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      }
     }
   }
 }

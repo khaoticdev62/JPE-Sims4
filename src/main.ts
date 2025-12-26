@@ -1,5 +1,6 @@
 import { app, BrowserWindow, Menu, ipcMain, dialog } from 'electron'
 import path from 'path'
+import fs from 'fs'
 
 let mainWindow: BrowserWindow | null = null
 
@@ -48,7 +49,7 @@ app.on('activate', () => {
   }
 })
 
-// IPC Handlers
+// IPC Handlers for File System Access
 ipcMain.handle('file:open', async () => {
   const result = await dialog.showOpenDialog(mainWindow!, {
     properties: ['openDirectory'],
@@ -74,4 +75,76 @@ ipcMain.handle('file:openFile', async () => {
     ],
   })
   return result.filePaths
+})
+
+// IPC Handler to read file content
+ipcMain.handle('file:readFile', async (_event, filePath: string) => {
+  try {
+    const content = fs.readFileSync(filePath, 'utf-8')
+    const stats = fs.statSync(filePath)
+    return {
+      success: true,
+      content,
+      size: stats.size,
+      modified: stats.mtimeMs,
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    }
+  }
+})
+
+// IPC Handler to write file content
+ipcMain.handle('file:writeFile', async (_event, filePath: string, content: string) => {
+  try {
+    fs.writeFileSync(filePath, content, 'utf-8')
+    const stats = fs.statSync(filePath)
+    return {
+      success: true,
+      size: stats.size,
+      modified: stats.mtimeMs,
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    }
+  }
+})
+
+// IPC Handler to list files in directory
+ipcMain.handle('file:listDirectory', async (_event, dirPath: string) => {
+  try {
+    const files = fs.readdirSync(dirPath, { withFileTypes: true })
+    return {
+      success: true,
+      files: files.map((file) => ({
+        name: file.name,
+        isDirectory: file.isDirectory(),
+        isFile: file.isFile(),
+      })),
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    }
+  }
+})
+
+// IPC Handler to check file exists
+ipcMain.handle('file:exists', async (_event, filePath: string) => {
+  try {
+    return {
+      success: true,
+      exists: fs.existsSync(filePath),
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    }
+  }
 })

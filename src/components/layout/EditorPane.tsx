@@ -1,5 +1,87 @@
+import { useMemo } from 'react'
 import { useEditorStore } from '@stores/useEditorStore'
 import { useProjectStore } from '@stores/useProjectStore'
+import { useFileLoader } from '@hooks/useFileLoader'
+
+/**
+ * Simple syntax highlighter component
+ */
+function SyntaxHighlightedCode({
+  content,
+  language,
+}: {
+  content: string
+  language: string
+}) {
+  const highlightedLines = useMemo(() => {
+    const lines = content.split('\n')
+
+    return lines.map((line, lineIndex) => {
+      if (language === 'xml') {
+        // Simple XML syntax highlighting
+        const parts: JSX.Element[] = []
+        let lastIndex = 0
+
+        // Match XML tags
+        const tagRegex = /(<[^>]+>)/g
+        let match
+
+        while ((match = tagRegex.exec(line)) !== null) {
+          // Add text before tag
+          if (match.index > lastIndex) {
+            parts.push(
+              <span key={`text-${lastIndex}`} className="text-slate-300">
+                {line.substring(lastIndex, match.index)}
+              </span>
+            )
+          }
+
+          // Add tag with color
+          const tag = match[1]
+          const isClosing = tag.startsWith('</')
+          parts.push(
+            <span
+              key={`tag-${match.index}`}
+              className={
+                isClosing ? 'text-red-400' : 'text-blue-400'
+              }
+            >
+              {tag}
+            </span>
+          )
+
+          lastIndex = match.index + tag.length
+        }
+
+        // Add remaining text
+        if (lastIndex < line.length) {
+          parts.push(
+            <span key={`text-end-${lineIndex}`} className="text-slate-300">
+              {line.substring(lastIndex)}
+            </span>
+          )
+        }
+
+        return (
+          <div key={lineIndex} className="whitespace-pre">
+            <span className="text-slate-600 mr-4">{lineIndex + 1}</span>
+            {parts.length > 0 ? parts : <span className="text-slate-300">{line}</span>}
+          </div>
+        )
+      }
+
+      // Default highlighting for other languages
+      return (
+        <div key={lineIndex} className="whitespace-pre">
+          <span className="text-slate-600 mr-4">{lineIndex + 1}</span>
+          <span className="text-slate-300">{line}</span>
+        </div>
+      )
+    })
+  }, [content, language])
+
+  return <>{highlightedLines}</>
+}
 
 export default function EditorPane() {
   const { tabs, activeTabId, setActiveTab, closeTab, editorContent } = useEditorStore()
@@ -7,7 +89,11 @@ export default function EditorPane() {
 
   const activeTab = tabs.find((t) => t.id === activeTabId)
   const activeFile = activeTab ? getFile(activeTab.fileId) : null
-  const fileContent = activeFile ? editorContent.get(activeTab!.id) || activeFile.content : ''
+
+  // Load file content when tab changes
+  useFileLoader(activeTab?.id ?? null, activeFile?.id ?? null)
+
+  const fileContent = activeFile ? editorContent.get(activeTab!.id) || '' : ''
 
   return (
     <div className="flex-1 flex flex-col bg-slate-950 overflow-hidden">
@@ -55,10 +141,19 @@ export default function EditorPane() {
               <span className="ml-4">{activeFile.size} bytes</span>
             </div>
 
-            {/* CodeMirror will go here - for now showing placeholder */}
-            <div className="flex-1 overflow-auto">
-              <pre className="p-4 text-xs font-mono text-slate-300 whitespace-pre-wrap break-words">
-                {fileContent || '// File content will be displayed here\n// CodeMirror integration coming in Phase 2'}
+            {/* Text content display with basic syntax highlighting */}
+            <div className="flex-1 overflow-auto bg-slate-950">
+              <pre className="p-4 text-xs font-mono whitespace-pre-wrap break-words leading-relaxed">
+                {fileContent ? (
+                  <SyntaxHighlightedCode
+                    content={fileContent}
+                    language={activeFile.type}
+                  />
+                ) : (
+                  <span className="text-slate-500">
+                    No content loaded
+                  </span>
+                )}
               </pre>
             </div>
 

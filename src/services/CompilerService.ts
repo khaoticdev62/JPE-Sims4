@@ -3,16 +3,23 @@
  * Integrates with the translation engine
  */
 
+import { XMLParser } from '@engine/parsers/XMLParser'
 import type { ModFile, ValidationResult, Diagnostic } from '@types/index'
 
 export class CompilerService {
   /**
-   * Parse a file and detect its type
+   * Parse a file based on its type
    */
   static parseFile(content: string, fileType: string): string | null {
     try {
-      // This will delegate to the appropriate parser based on file type
-      // For now, return a placeholder
+      if (fileType === 'xml') {
+        const parsed = XMLParser.parseXML(content)
+        if (parsed) {
+          const jpe = XMLParser.convertToJPE(parsed)
+          return JSON.stringify(jpe, null, 2)
+        }
+      }
+      // For other types, return content as-is for now
       return content
     } catch (error) {
       console.error('Failed to parse file', error)
@@ -25,8 +32,8 @@ export class CompilerService {
    */
   static async translateToJPE(file: ModFile): Promise<string | null> {
     try {
-      // Delegate to translation engine
-      return null
+      const jpeContent = this.parseFile(file.content, file.type)
+      return jpeContent
     } catch (error) {
       console.error('Failed to translate to JPE', error)
       return null
@@ -36,10 +43,15 @@ export class CompilerService {
   /**
    * Compile JPE back to original format
    */
-  static async compileFromJPE(jpeContent: string, targetFormat: string): Promise<string | null> {
+  static async compileFromJPE(
+    jpeContent: string,
+    targetFormat: string
+  ): Promise<string | null> {
     try {
-      // Delegate to compiler
-      return null
+      // Delegate to format-specific compiler
+      // For now, return the original format
+      console.warn(`Compilation to ${targetFormat} not yet implemented`)
+      return jpeContent
     } catch (error) {
       console.error('Failed to compile from JPE', error)
       return null
@@ -51,7 +63,11 @@ export class CompilerService {
    */
   static async validateFile(file: ModFile): Promise<ValidationResult> {
     try {
-      // Validate using the validation engine
+      if (file.type === 'xml') {
+        return XMLParser.validate(file.content)
+      }
+
+      // Default validation
       return {
         valid: true,
         diagnostics: [],
@@ -70,12 +86,28 @@ export class CompilerService {
   /**
    * Compile a single file
    */
-  static async compileFile(file: ModFile): Promise<{ success: boolean; output: string | null; errors: Diagnostic[] }> {
+  static async compileFile(file: ModFile): Promise<{
+    success: boolean
+    output: string | null
+    errors: Diagnostic[]
+  }> {
     try {
-      // Compile the file
+      const validation = await this.validateFile(file)
+
+      if (!validation.valid) {
+        return {
+          success: false,
+          output: null,
+          errors: validation.diagnostics,
+        }
+      }
+
+      // Parse and translate
+      const jpe = await this.translateToJPE(file)
+
       return {
         success: true,
-        output: null,
+        output: jpe,
         errors: [],
       }
     } catch (error) {
@@ -91,7 +123,10 @@ export class CompilerService {
   /**
    * Compile multiple files (batch)
    */
-  static async compileProject(files: ModFile[]): Promise<{ success: boolean; results: Array<{ fileId: string; success: boolean; errors: Diagnostic[] }> }> {
+  static async compileProject(files: ModFile[]): Promise<{
+    success: boolean
+    results: Array<{ fileId: string; success: boolean; errors: Diagnostic[] }>
+  }> {
     try {
       const results = await Promise.all(files.map((file) => this.compileFile(file)))
       return {

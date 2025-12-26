@@ -31,7 +31,7 @@ export class ProjectService {
       await openProject(projectPath)
 
       // Attempt to load project metadata
-      const files = await FileService.listDirectory(projectPath)
+      const dirResult = await FileService.listDirectory(projectPath)
       const newProject: Project = {
         id: `project-${Date.now()}`,
         name: projectPath.split('/').pop() || 'Untitled',
@@ -53,15 +53,56 @@ export class ProjectService {
   }
 
   /**
-   * Save current project
+   * Save current project and all modified files to disk
    */
   static async saveProject(): Promise<boolean> {
     try {
-      const { saveProject } = useProjectStore.getState()
-      await saveProject()
-      return true
+      const { currentProject, setCurrentProject } = useProjectStore.getState()
+      if (!currentProject) return false
+
+      let allSuccess = true
+
+      // Save all files that have been modified
+      for (const file of currentProject.files) {
+        if (file.isDirty || file.content) {
+          const result = await FileService.writeFile(file.path, file.content)
+          if (!result.success) {
+            console.error(`Failed to save file ${file.name}:`, result.error)
+            allSuccess = false
+          }
+        }
+      }
+
+      // Update project metadata
+      const updatedProject = {
+        ...currentProject,
+        metadata: {
+          ...currentProject.metadata,
+          updatedAt: Date.now(),
+        },
+      }
+
+      setCurrentProject(updatedProject)
+      return allSuccess
     } catch (error) {
       console.error('Failed to save project', error)
+      return false
+    }
+  }
+
+  /**
+   * Save a single file
+   */
+  static async saveFile(fileId: string): Promise<boolean> {
+    try {
+      const { getFile } = useProjectStore.getState()
+      const file = getFile(fileId)
+      if (!file) return false
+
+      const result = await FileService.writeFile(file.path, file.content)
+      return result.success
+    } catch (error) {
+      console.error('Failed to save file', error)
       return false
     }
   }

@@ -3,7 +3,9 @@
  * Integrates with the translation engine
  */
 
-import { XMLParser } from '@engine/parsers/XMLParser'
+import { XMLParser, type JPEModule } from '@engine/parsers/XMLParser'
+import { XMLCompiler } from '@engine/compilers/XMLCompiler'
+import { ValidationEngine } from '@engine/validators/ValidationEngine'
 import type { ModFile, ValidationResult, Diagnostic } from '@types/index'
 
 export class CompilerService {
@@ -41,20 +43,77 @@ export class CompilerService {
   }
 
   /**
-   * Compile JPE back to original format
+   * Compile JPE back to original XML format
    */
   static async compileFromJPE(
-    jpeContent: string,
-    targetFormat: string
-  ): Promise<string | null> {
+    jpeModule: JPEModule | string,
+    targetFormat: string = 'xml'
+  ): Promise<{
+    success: boolean
+    output?: string
+    errors: Diagnostic[]
+  }> {
     try {
-      // Delegate to format-specific compiler
-      // For now, return the original format
-      console.warn(`Compilation to ${targetFormat} not yet implemented`)
-      return jpeContent
+      if (targetFormat !== 'xml') {
+        return {
+          success: false,
+          errors: [
+            {
+              id: 'compile-001',
+              fileId: '',
+              line: 0,
+              column: 0,
+              severity: 'error',
+              message: `Compilation to ${targetFormat} not yet supported`,
+              code: 'COMPILE001',
+            },
+          ],
+        }
+      }
+
+      // Parse JPE module if it's a string
+      let module: JPEModule
+      if (typeof jpeModule === 'string') {
+        try {
+          module = JSON.parse(jpeModule)
+        } catch {
+          return {
+            success: false,
+            errors: [
+              {
+                id: 'compile-002',
+                fileId: '',
+                line: 0,
+                column: 0,
+                severity: 'error',
+                message: 'Invalid JPE module format',
+                code: 'COMPILE002',
+              },
+            ],
+          }
+        }
+      } else {
+        module = jpeModule
+      }
+
+      // Compile to XML
+      return XMLCompiler.compileToXML(module, true)
     } catch (error) {
       console.error('Failed to compile from JPE', error)
-      return null
+      return {
+        success: false,
+        errors: [
+          {
+            id: 'compile-003',
+            fileId: '',
+            line: 0,
+            column: 0,
+            severity: 'error',
+            message: `Compilation error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+            code: 'COMPILE003',
+          },
+        ],
+      }
     }
   }
 

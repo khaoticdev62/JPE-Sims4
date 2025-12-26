@@ -3,7 +3,8 @@
     "allow": [
       "Bash(gh pr view:*)",
       "Bash(dir:*)",
-      "Bash(tree:*)"
+      "Bash(tree:*)",
+      "Bash(git add:*)"
     ]
   }
 }

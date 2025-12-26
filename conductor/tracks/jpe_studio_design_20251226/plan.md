@@ -7,9 +7,9 @@
 - [x] Task: Create Atomic Prompts for Core Components (Buttons, Inputs) [c720b84]
     - [x] Write acceptance criteria/tests for prompt clarity
     - [x] Implement prompts for atomic components
-- [~] Task: Create Atomic Prompts for Layout Components (Cards, Modals)
-    - [~] Write acceptance criteria/tests for layout prompts
-    - [ ] Implement prompts for layout components
+- [x] Task: Create Atomic Prompts for Layout Components (Cards, Modals) [3215018]
+    - [x] Write acceptance criteria/tests for layout prompts
+    - [x] Implement prompts for layout components
 - [ ] Task: Conductor - User Manual Verification 'Foundation' (Protocol in workflow.md)
 
 ## Phase 2: Dashboard Design (Studio Home)

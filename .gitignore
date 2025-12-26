@@ -1,4 +1,11 @@
-# BMAD (local only)
-.bmad-core/
-.bmad-*/
+# BMAD local IDE configurations only (not core framework)
+.claude/
+.gemini/
+.qwen/
+# Non-installed expansion packs
+.bmad-creative-writing/
+.bmad-godot-game-dev/
+.bmad-2d-unity-game-dev/
+.bmad-2d-phaser-game-dev/
+# Other
 nul

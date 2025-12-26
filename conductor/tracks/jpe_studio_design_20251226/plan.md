@@ -1,8 +1,8 @@
 # Track Plan: JPE Studio Design System & Core Screen Prompts
 
 ## Phase 1: Foundation (Tokens & Components)
-- [ ] Task: Define Core Style Tokens (JSON format)
-    - [ ] Write validation script/tests for JSON structure
+- [~] Task: Define Core Style Tokens (JSON format)
+    - [~] Write validation script/tests for JSON structure
     - [ ] Implement Token definitions (Colors, Typography, Spacing)
 - [ ] Task: Create Atomic Prompts for Core Components (Buttons, Inputs)
     - [ ] Write acceptance criteria/tests for prompt clarity

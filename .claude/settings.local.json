@@ -4,7 +4,9 @@
       "Bash(gh pr view:*)",
       "Bash(dir:*)",
       "Bash(tree:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git config:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nfix: Comprehensive codebase review and scaffolding for development\n\n## Critical Fixes\n- Removed 4 non-installed expansion pack web bundles \\(phaser, unity, godot, creative-writing\\)\n- Fixed typo in infra-devops-platform.md \\(IIDE -> IDE-FILE-RESOLUTION\\)\n- Added infra-devops-platform agent to team-fullstack and team-no-ui\n- Updated AGENTS.md with infrastructure agent when-to-use guidance\n- Fixed broken reference in bmad-kb.md \\(removed non-existent GUIDING-PRINCIPLES.md reference\\)\n- Removed codex IDE from install manifests \\(not implemented\\)\n\n## Documentation Scaffolding\n- Created comprehensive project root README.md\n- Created .bmad-core/README.md with framework overview\n- Created agents/README.md with agent directory guide\n- Created tasks/README.md with task workflow documentation\n- Created templates/README.md with template usage guide\n- Created workflows/README.md with workflow orchestration guide\n\n## Project Status\n- All core documentation in place\n- Framework is properly structured and documented\n- Ready for development teams to begin projects\n- IDE integrations \\(Claude, Gemini, Qwen\\) properly configured\n- Infrastructure DevOps expansion pack integrated\n\n🤖 Generated with Claude Code\nEOF\n\\)\")"
     ]
   }
 }

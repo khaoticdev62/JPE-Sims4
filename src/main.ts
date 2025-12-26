@@ -1,8 +1,9 @@
 import { app, BrowserWindow, Menu, ipcMain, dialog } from 'electron'
 import path from 'path'
-import isDev from 'electron-is-dev'
 
 let mainWindow: BrowserWindow | null = null
+
+const isDev = process.env.NODE_ENV === 'development'
 
 const createWindow = () => {
   mainWindow = new BrowserWindow({

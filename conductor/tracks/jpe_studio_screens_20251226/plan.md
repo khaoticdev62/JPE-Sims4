@@ -4,9 +4,9 @@
 This track focuses on defining the visual design and prompts for the core "Project Editor" workspace and auxiliary management screens (New Project, Settings) for JPE Mod Translator 2.0. It follows the "Modern Dark Mode" and "Apple TV UX" aesthetic established in the previous track.
 
 ## Phase 1: Project Editor Workspace
-- [ ] Task: Create Atomic Prompts for Editor Components (Tabs, Gutter, Status Bar)
-    - [ ] Write acceptance criteria for editor components
-    - [ ] Implement prompts for Editor UI elements
+- [x] Task: Create Atomic Prompts for Editor Components (Tabs, Gutter, Status Bar) [1c49e09]
+    - [x] Write acceptance criteria for editor components
+    - [x] Implement prompts for Editor UI elements
 - [ ] Task: Create Atomic Prompts for Right Panel (Diagnostics, Properties)
     - [ ] Write acceptance criteria for right panel components
     - [ ] Implement prompts for Diagnostics and Properties panels

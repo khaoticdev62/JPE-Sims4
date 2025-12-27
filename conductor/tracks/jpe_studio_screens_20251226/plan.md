@@ -1,0 +1,32 @@
+# Plan: JPE Studio Screen Designs
+
+## Context
+This track focuses on defining the visual design and prompts for the core "Project Editor" workspace and auxiliary management screens (New Project, Settings) for JPE Mod Translator 2.0. It follows the "Modern Dark Mode" and "Apple TV UX" aesthetic established in the previous track.
+
+## Phase 1: Project Editor Workspace
+- [ ] Task: Create Atomic Prompts for Editor Components (Tabs, Gutter, Status Bar)
+    - [ ] Write acceptance criteria for editor components
+    - [ ] Implement prompts for Editor UI elements
+- [ ] Task: Create Atomic Prompts for Right Panel (Diagnostics, Properties)
+    - [ ] Write acceptance criteria for right panel components
+    - [ ] Implement prompts for Diagnostics and Properties panels
+- [ ] Task: Create High-Fidelity Editor Screen Prompt (Assembly)
+    - [ ] Write acceptance criteria for full editor screen
+    - [ ] Implement detailed prompt for the Editor Workspace
+- [ ] Task: Conductor - User Manual Verification 'Editor Workspace'
+
+## Phase 2: Project Management Flows
+- [ ] Task: Create Atomic Prompts for Modals (Wizard, Settings)
+    - [ ] Write acceptance criteria for complex modals
+    - [ ] Implement prompts for New Project Wizard and Settings
+- [ ] Task: Create UX Flow for "New Project" Wizard
+    - [ ] Write validation steps for Wizard UX
+    - [ ] Implement Wizard flow documentation
+- [ ] Task: Conductor - User Manual Verification 'Management Flows'
+
+## Phase 3: Visual Polish & Icons
+- [ ] Task: Define Icon System (Lucide integration specs)
+    - [ ] Implement Icon System prompt
+- [ ] Task: Finalize Tooltips and Status Bar
+    - [ ] Implement Tooltips/Status Bar prompt
+- [ ] Task: Conductor - User Manual Verification 'Visual Polish'

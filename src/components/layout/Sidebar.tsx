@@ -9,8 +9,8 @@ export default function Sidebar() {
 
   if (sidebarCollapsed) {
     return (
-      <div className="w-12 bg-slate-900 border-r border-slate-800 flex flex-col items-center py-4">
-        <div className="text-xs text-slate-400">Files</div>
+      <div className="w-12 bg-bg-secondary border-r border-border-subtle flex flex-col items-center py-4">
+        <div className="text-xs text-text-secondary">Files</div>
       </div>
     )
   }
@@ -25,13 +25,13 @@ export default function Sidebar() {
   }
 
   return (
-    <div className="w-64 bg-slate-900 border-r border-slate-800 flex flex-col overflow-hidden">
-      <div className="h-12 border-b border-slate-800 flex items-center px-4">
-        <h2 className="text-sm font-semibold text-slate-100">
+    <div className="w-64 bg-bg-secondary border-r border-border-subtle flex flex-col overflow-hidden">
+      <div className="h-12 border-b border-border-subtle flex items-center px-4">
+        <h2 className="text-sm font-semibold text-text-primary">
           {currentProject?.name ? 'Project Files' : 'No Project'}
         </h2>
         {currentProject?.files && currentProject.files.length > 0 && (
-          <span className="ml-auto text-xs bg-slate-800 text-slate-400 px-2 py-1 rounded">
+          <span className="ml-auto text-xs bg-bg-tertiary text-text-secondary px-2 py-1 rounded">
             {currentProject.files.length}
           </span>
         )}
@@ -43,21 +43,21 @@ export default function Sidebar() {
               <div
                 key={file.id}
                 onClick={() => handleFileClick(file.id, file.name)}
-                className="px-3 py-2 text-xs text-slate-300 hover:bg-slate-700 bg-slate-800 rounded cursor-pointer truncate transition-colors group flex items-center justify-between"
+                className="px-3 py-2 text-xs text-text-secondary hover:bg-bg-tertiary hover:text-text-primary bg-bg-tertiary rounded cursor-pointer truncate transition-colors group flex items-center justify-between"
                 title={file.path}
               >
                 <span className="truncate flex-1">
                   {file.name}
-                  {file.isDirty && <span className="ml-1">●</span>}
+                  {file.isDirty && <span className="ml-1 text-state-warning">●</span>}
                 </span>
-                <span className="ml-1 text-slate-500 text-xs opacity-0 group-hover:opacity-100">
+                <span className="ml-1 text-text-secondary text-xs opacity-0 group-hover:opacity-100">
                   {file.type}
                 </span>
               </div>
             ))}
           </div>
         ) : (
-          <div className="p-4 text-xs text-slate-500 text-center">
+          <div className="p-4 text-xs text-text-secondary text-center">
             {currentProject
               ? 'No files in project\nUse File → Add File to add mods'
               : 'No project loaded\nUse File → New Project to start'}

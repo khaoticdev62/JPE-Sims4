@@ -15,26 +15,26 @@ export default function TitleBar() {
 
   return (
     <>
-      <div className="h-12 bg-slate-900 border-b border-slate-800 flex items-center px-4">
+      <div className="h-12 bg-bg-secondary border-b border-border-subtle flex items-center px-4 shadow-apple-md">
         {/* Menu Bar */}
         <div className="flex gap-4 flex-1">
           <div className="relative">
             <button
               onClick={() => setIsFileMenuOpen(!isFileMenuOpen)}
-              className="text-sm text-slate-100 hover:bg-slate-800 px-3 py-1 rounded transition-colors"
+              className="text-sm text-text-primary hover:text-accent-primary hover:bg-bg-tertiary px-3 py-1 rounded transition-colors"
             >
               File
             </button>
 
             {/* File Menu Dropdown */}
             {isFileMenuOpen && (
-              <div className="absolute top-full left-0 mt-0 bg-slate-800 border border-slate-700 rounded shadow-lg min-w-48 z-40">
+              <div className="absolute top-full left-0 mt-0 bg-bg-tertiary border border-border-subtle rounded shadow-apple-lg min-w-48 z-40">
                 <button
                   onClick={() => {
                     setIsFileMenuOpen(false)
                     setIsNewProjectOpen(true)
                   }}
-                  className="w-full text-left px-4 py-2 text-sm text-slate-100 hover:bg-slate-700 first:rounded-t transition-colors"
+                  className="w-full text-left px-4 py-2 text-sm text-text-primary hover:bg-bg-secondary hover:text-accent-primary first:rounded-t transition-colors"
                 >
                   New Project
                 </button>
@@ -43,7 +43,7 @@ export default function TitleBar() {
                     setIsFileMenuOpen(false)
                     setIsOpenProjectOpen(true)
                   }}
-                  className="w-full text-left px-4 py-2 text-sm text-slate-100 hover:bg-slate-700 transition-colors"
+                  className="w-full text-left px-4 py-2 text-sm text-text-primary hover:bg-bg-secondary hover:text-accent-primary transition-colors"
                 >
                   Open Project
                 </button>
@@ -54,13 +54,13 @@ export default function TitleBar() {
                   }}
                   disabled={!currentProject}
                   title={!currentProject ? 'Load a project first' : ''}
-                  className="w-full text-left px-4 py-2 text-sm text-slate-100 hover:bg-slate-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full text-left px-4 py-2 text-sm text-text-primary hover:bg-bg-secondary hover:text-accent-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Add File
                 </button>
-                <hr className="my-1 border-slate-700" />
+                <hr className="my-1 border-border-subtle" />
                 <button
-                  className="w-full text-left px-4 py-2 text-sm text-slate-100 hover:bg-slate-700 last:rounded-b transition-colors"
+                  className="w-full text-left px-4 py-2 text-sm text-text-primary hover:bg-bg-secondary hover:text-accent-primary last:rounded-b transition-colors"
                   disabled
                   title="Coming soon"
                 >
@@ -73,13 +73,13 @@ export default function TitleBar() {
 
         {/* Project Name */}
         <div className="flex-1 text-center">
-          <h1 className="text-sm font-semibold text-slate-100">
+          <h1 className="text-sm font-semibold text-text-primary">
             {projectName}
           </h1>
         </div>
 
         {/* Version */}
-        <div className="text-xs text-slate-400">
+        <div className="text-xs text-text-secondary">
           v1.0.0
         </div>
       </div>

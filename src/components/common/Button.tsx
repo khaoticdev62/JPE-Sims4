@@ -1,7 +1,7 @@
 import { ButtonHTMLAttributes, ReactNode } from 'react'
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'danger'
+  variant?: 'primary' | 'secondary' | 'danger' | 'ghost'
   size?: 'sm' | 'md' | 'lg'
   children: ReactNode
   isLoading?: boolean
@@ -16,17 +16,18 @@ export default function Button({
   className = '',
   ...props
 }: ButtonProps) {
-  const baseClasses = 'font-medium rounded transition-colors duration-200'
+  const baseClasses = 'font-medium rounded transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2'
 
   const variantClasses = {
-    primary: 'bg-blue-600 hover:bg-blue-700 text-white disabled:bg-blue-400',
+    primary: 'bg-accent-primary hover:bg-accent-focus text-bg-primary disabled:opacity-50 focus:ring-accent-primary',
     secondary:
-      'bg-slate-700 hover:bg-slate-600 text-slate-100 disabled:bg-slate-800',
-    danger: 'bg-red-600 hover:bg-red-700 text-white disabled:bg-red-400',
+      'bg-bg-secondary hover:bg-bg-tertiary text-text-primary border border-border-subtle disabled:opacity-50 focus:ring-accent-primary',
+    danger: 'bg-state-error hover:opacity-90 text-text-primary disabled:opacity-50 focus:ring-state-error',
+    ghost: 'text-text-primary hover:bg-bg-tertiary disabled:opacity-50 focus:ring-accent-primary',
   }
 
   const sizeClasses = {
-    sm: 'px-3 py-1 text-sm',
+    sm: 'px-3 py-1 text-xs',
     md: 'px-4 py-2 text-sm',
     lg: 'px-6 py-3 text-base',
   }

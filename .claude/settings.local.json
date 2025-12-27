@@ -31,7 +31,9 @@
       "mcp__plugin_playwright_playwright__browser_fill_form",
       "mcp__plugin_playwright_playwright__browser_press_key",
       "WebFetch(domain:)",
-      "Bash(wc:*)"
+      "Bash(wc:*)",
+      "Bash(git reset:*)",
+      "Bash(cat:*)"
     ]
   }
 }

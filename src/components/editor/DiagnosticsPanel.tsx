@@ -43,11 +43,11 @@ export default function DiagnosticsPanel({
   const filteredDiagnostics =
     filter === 'all' ? diagnostics : diagnostics.filter((d) => d.severity === filter)
 
-  // Severity colors and icons
+  // Severity colors and icons (per PRDs: Error #E12D39, Warning #F5A623, Info #2680C2)
   const severityConfig = {
-    error: { color: 'text-state-error', bg: 'bg-state-error bg-opacity-10', icon: '●' },
-    warning: { color: 'text-state-warning', bg: 'bg-state-warning bg-opacity-10', icon: '⚠' },
-    info: { color: 'text-accent-primary', bg: 'bg-accent-primary bg-opacity-10', icon: 'ℹ' },
+    error: { color: 'text-state-error', bg: 'bg-state-error bg-opacity-10', icon: '●', label: 'Error' },
+    warning: { color: 'text-state-warning', bg: 'bg-state-warning bg-opacity-10', icon: '⚠', label: 'Warning' },
+    info: { color: 'text-state-info', bg: 'bg-state-info bg-opacity-10', icon: 'ℹ', label: 'Info' },
   }
 
   if (!isOpen || diagnostics.length === 0) {

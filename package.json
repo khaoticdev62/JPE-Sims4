@@ -1,103 +1,59 @@
 {
-  "name": "jpe-mod-translator-2.0",
-  "version": "1.0.0",
-  "description": "Open-source toolchain for translating Sims 4 mods to Just Plain English (JPE)",
-  "author": "Sims 4 Modding Community",
-  "license": "MIT",
-  "private": true,
-  "type": "module",
-  "main": "dist-electron/main.js",
-  "homepage": "./",
-  "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build && electron-builder",
-    "build:web": "tsc && vite build",
-    "preview": "vite preview",
-    "electron": "electron .",
-    "electron-dev": "concurrently \"npm run dev\" \"wait-on http://localhost:5173 && electron .\"",
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage",
-    "lint": "eslint src --ext ts,tsx",
-    "type-check": "tsc --noEmit",
-    "format": "prettier --write \"src/**/*.{ts,tsx,json,css}\""
-  },
-  "dependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "zustand": "^4.4.7",
-    "@codemirror/lang-xml": "^6.0.2",
-    "@codemirror/lang-python": "^6.1.1",
-    "@codemirror/lang-json": "^6.0.1",
-    "@codemirror/view": "^6.20.0",
-    "@codemirror/state": "^6.2.1",
-    "@codemirror/basic-setup": "^0.20.0",
-    "@uiw/react-codemirror": "^4.25.4",
-    "zod": "^3.22.4",
-    "clsx": "^2.1.0",
-    "tailwind-merge": "^2.2.0",
-    "lucide-react": "^0.309.0",
-    "xml2js": "^0.6.2"
-  },
-  "devDependencies": {
-    "@types/node": "^20.8.0",
-    "@types/react": "^18.2.43",
-    "@types/react-dom": "^18.2.17",
-    "@typescript-eslint/eslint-plugin": "^6.14.0",
-    "@typescript-eslint/parser": "^6.14.0",
-    "@vitejs/plugin-react": "^4.2.1",
-    "@testing-library/react": "^14.0.0",
-    "@testing-library/jest-dom": "^6.1.4",
-    "autoprefixer": "^10.4.16",
-    "concurrently": "^8.2.1",
-    "electron": "^26.2.0",
-    "electron-builder": "^24.6.4",
-    "eslint": "^8.55.0",
-    "eslint-config-prettier": "^9.0.0",
-    "eslint-plugin-react": "^7.33.2",
-    "eslint-plugin-react-hooks": "^4.6.0",
-    "jest": "^29.7.0",
-    "jest-environment-jsdom": "^29.7.0",
-    "ts-jest": "^29.1.1",
-    "ts-node": "^10.9.1",
-    "postcss": "^8.4.32",
-    "prettier": "^3.0.3",
-    "tailwindcss": "^3.4.0",
-    "typescript": "^5.2.2",
-    "vite": "^5.0.8",
-    "wait-on": "^7.0.1"
-  },
-  "build": {
-    "appId": "com.jpemodtranslator.app",
-    "productName": "JPE Mod Translator",
-    "files": [
-      "dist/**/*",
-      "dist-electron/**/*"
-    ],
-    "directories": {
-      "buildResources": "assets"
-    },
-    "win": {
-      "target": [
-        {
-          "target": "nsis",
-          "arch": ["x64"]
-        },
-        {
-          "target": "portable",
-          "arch": ["x64"]
-        }
-      ]
-    },
-    "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true,
-      "createDesktopShortcut": true,
-      "createStartMenuShortcut": true
-    },
-    "mac": {
-      "target": ["dmg", "zip"],
-      "category": "public.app-category.developer-tools"
-    }
-  }
+      "name": "Define Color and Typography",
+      "version": "0.1.0",
+      "private": true,
+      "dependencies": {
+            "@radix-ui/react-accordion": "^1.2.3",
+            "@radix-ui/react-alert-dialog": "^1.1.6",
+            "@radix-ui/react-aspect-ratio": "^1.1.2",
+            "@radix-ui/react-avatar": "^1.1.3",
+            "@radix-ui/react-checkbox": "^1.1.4",
+            "@radix-ui/react-collapsible": "^1.1.3",
+            "@radix-ui/react-context-menu": "^2.2.6",
+            "@radix-ui/react-dialog": "^1.1.6",
+            "@radix-ui/react-dropdown-menu": "^2.1.6",
+            "@radix-ui/react-hover-card": "^1.1.6",
+            "@radix-ui/react-label": "^2.1.2",
+            "@radix-ui/react-menubar": "^1.1.6",
+            "@radix-ui/react-navigation-menu": "^1.2.5",
+            "@radix-ui/react-popover": "^1.1.6",
+            "@radix-ui/react-progress": "^1.1.2",
+            "@radix-ui/react-radio-group": "^1.2.3",
+            "@radix-ui/react-scroll-area": "^1.2.3",
+            "@radix-ui/react-select": "^2.1.6",
+            "@radix-ui/react-separator": "^1.1.2",
+            "@radix-ui/react-slider": "^1.2.3",
+            "@radix-ui/react-slot": "^1.1.2",
+            "@radix-ui/react-switch": "^1.1.3",
+            "@radix-ui/react-tabs": "^1.1.3",
+            "@radix-ui/react-toggle": "^1.1.2",
+            "@radix-ui/react-toggle-group": "^1.1.2",
+            "@radix-ui/react-tooltip": "^1.1.8",
+            "class-variance-authority": "^0.7.1",
+            "clsx": "*",
+            "cmdk": "^1.1.1",
+            "embla-carousel-react": "^8.6.0",
+            "input-otp": "^1.4.2",
+            "lucide-react": "^0.487.0",
+            "next-themes": "^0.4.6",
+            "react": "^18.3.1",
+            "react-day-picker": "^8.10.1",
+            "react-dom": "^18.3.1",
+            "react-hook-form": "^7.55.0",
+            "react-resizable-panels": "^2.1.7",
+            "recharts": "^2.15.2",
+            "sonner": "^2.0.3",
+            "tailwind-merge": "*",
+            "vaul": "^1.1.2",
+            "zod": "^4.2.1"
+      },
+      "devDependencies": {
+            "@types/node": "^20.10.0",
+            "@vitejs/plugin-react-swc": "^3.10.2",
+            "vite": "6.3.5"
+      },
+      "scripts": {
+            "dev": "vite",
+            "build": "vite build"
+      }
 }

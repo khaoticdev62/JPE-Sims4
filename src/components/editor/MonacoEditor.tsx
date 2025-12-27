@@ -130,7 +130,7 @@ function registerJpeLanguage(monaco: any) {
     rules: [
       { token: 'keyword', foreground: tokens.colors['accent-primary'].replace('#', ''), fontStyle: 'bold' },
       { token: 'string', foreground: tokens.colors['state-success'].replace('#', '') },
-      { token: 'attribute', foreground: '5AC8FA' }, // Light blue for attributes
+      { token: 'attribute', foreground: tokens.colors['state-info'].replace('#', '') },
       { token: 'operator', foreground: tokens.colors['state-warning'].replace('#', '') },
       { token: 'comment', foreground: tokens.colors['text-secondary'].replace('#', ''), fontStyle: 'italic' },
     ],
@@ -146,7 +146,7 @@ function registerJpeLanguage(monaco: any) {
       'editor.findMatchHighlightBackground': tokens.colors['state-warning'] + '20',
       'editorError.foreground': tokens.colors['state-error'],
       'editorWarning.foreground': tokens.colors['state-warning'],
-      'editorInfo.foreground': tokens.colors['accent-primary'],
+      'editorInfo.foreground': tokens.colors['state-info'],
     },
   })
 }

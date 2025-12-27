@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { StudioHomeDashboard } from "./components/StudioHomeDashboard";
 import EditorLayout from "@/components/layout/EditorLayout";
+import { ProjectsPage } from "@/components/ProjectsPage";
+import { SettingsPage } from "@/components/SettingsPage";
 
 export default function App() {
   const [activeView, setActiveView] = useState('home')
@@ -9,7 +11,8 @@ export default function App() {
     <>
       {activeView === 'home' && <StudioHomeDashboard onNavigate={setActiveView} />}
       {activeView === 'studio' && <EditorLayout onNavigate={setActiveView} />}
-      {/* Projects and Settings views can be added later */}
+      {activeView === 'projects' && <ProjectsPage onNavigate={setActiveView} />}
+      {activeView === 'settings' && <SettingsPage onNavigate={setActiveView} />}
     </>
   )
 }

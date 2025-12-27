@@ -79,20 +79,25 @@ import Button from '../../../components/common/Button'
 
 All design values must come from the official token file. Never hardcode colors, typography, or spacing.
 
-**Colors:**
+**Brand Palette Colors:**
 ```json
 {
-  "background-primary": "#000000",    // Deep dark base
-  "background-secondary": "#121212",  // Slightly lighter
-  "background-tertiary": "#1C1C1E",   // Card backgrounds
+  "background-primary": "#151A24",    // Brand Navy - Main background
+  "background-secondary": "#1E2633",  // Navy slightly lighter
+  "background-tertiary": "#2A3447",   // Navy darkest - Cards
+  "background-light": "#F5F7FA",      // Light backgrounds (future light mode)
   "text-primary": "#FFFFFF",          // Main text
-  "text-secondary": "#8E8E93",        // Secondary/disabled text
-  "accent-primary": "#0A84FF",        // Primary action blue
-  "accent-focus": "#007AFF",          // Focused state
-  "border-subtle": "#38383A",         // Dividers/borders
-  "state-error": "#FF453A",           // Error/destructive
-  "state-success": "#32D74B",         // Success/positive
-  "state-warning": "#FF9F0A"          // Warning/caution
+  "text-secondary": "#B0B0B0",        // Secondary text
+  "text-tertiary": "#777777",         // Tertiary/disabled text
+  "accent-primary": "#2EC4B6",        // Brand Teal - Primary action
+  "accent-focus": "#26A89B",          // Teal darker - Hover state
+  "accent-light": "#E6F8F6",          // Teal light - Backgrounds
+  "border-subtle": "#444444",         // Dividers/borders
+  "border-light": "#B0B0B0",          // Light borders
+  "state-error": "#E12D39",           // Error/destructive (red)
+  "state-warning": "#F5A623",         // Warning/caution (amber)
+  "state-info": "#2680C2",            // Info/informational (blue)
+  "state-success": "#2E8540"          // Success/positive (green)
 }
 ```
 
@@ -582,20 +587,30 @@ test: Add tests for validator
 
 ### Color Palettes
 
-**Brand Colors:**
-- Primary: `#0A84FF` (accent-primary)
-- Dark: `#000000` (background-primary)
-- Light: `#F5F7FA` (reserved for documentation)
+**Brand Colors (Official JPE Brand Palette):**
+- Accent Primary: `#2EC4B6` (Brand Teal - Primary actions)
+- Accent Focus: `#26A89B` (Teal darker - Hover state)
+- Background Primary: `#151A24` (Brand Navy - Main backgrounds)
+- Background Secondary: `#1E2633` (Navy lighter)
+- Background Tertiary: `#2A3447` (Navy darkest)
+- Text Primary: `#FFFFFF` (Main text)
+- Text Secondary: `#B0B0B0` (Secondary text)
+- Light Background: `#F5F7FA` (Reserved for light mode/documentation)
 
-**Diagnostic Colors:**
-- Error: `#FF453A` (destructive, failure)
-- Warning: `#FF9F0A` (caution, attention needed)
-- Info: `#2680C2` (informational)
-- Success: `#32D74B` (positive, success)
+**Diagnostic Colors (from PRD):**
+- Error: `#E12D39` (Destructive, failure)
+- Warning: `#F5A623` (Caution, attention needed)
+- Info: `#2680C2` (Informational)
+- Success: `#2E8540` (Positive, success)
+
+**Border Colors:**
+- Subtle: `#444444` (Dividers/borders - dark)
+- Light: `#B0B0B0` (Light borders)
 
 **Don't:**
 - Mix colors from other brands (especially Sims 4)
-- Hardcode arbitrary colors
+- Use Apple TV dark blue (#0A84FF) - this is NOT the brand color
+- Hardcode arbitrary colors - always use tokens
 - Change approved colors without design review
 
 ### Typography Hierarchy
@@ -673,6 +688,309 @@ When implementing designs from Figma:
 - **Component Stories**: View in Storybook (when available)
 - **Design System Tokens**: `src/design-system/tokens.json`
 - **Build Guide**: `BUILD_GUIDE.md`
+
+---
+
+## Design System Implementation Rules
+
+These rules ensure consistent application of design tokens across all UI components and pages. **These rules are MANDATORY for all UI development.**
+
+### Rule 1: Token-First Development
+
+- **IMPORTANT:** Never hardcode any color values. All colors must use design tokens from `src/design-system/tokens.json`
+- **IMPORTANT:** Never hardcode spacing values. Use the 4px-based scale defined in tokens
+- **IMPORTANT:** Never hardcode typography values. Use font sizes and weights from tokens
+
+**Implementation:**
+```tsx
+// ✅ CORRECT - Use tokens
+<div className="bg-background-secondary text-text-primary p-4 rounded-lg">
+  <h2 className="text-xl font-semibold">Heading</h2>
+  <p className="text-base text-text-secondary">Description</p>
+</div>
+
+// ❌ WRONG - Hardcoded values
+<div style={{ backgroundColor: '#1E2633', padding: '16px' }}>
+  Never do this!
+</div>
+```
+
+### Rule 2: Component Location and Organization
+
+- **IMPORTANT:** All UI components must be in `src/components/`
+- **Common/atomic components**: `src/components/common/` (Button, Input, Modal, etc.)
+- **Layout components**: `src/components/layout/` (TitleBar, Sidebar, EditorPane, RightPanel)
+- **Page components**: `src/components/` root level (StudioHomeDashboard, ProjectsPage, SettingsPage)
+- **Modal dialogs**: `src/components/modals/` (NewProjectDialog, OpenProjectDialog, AddFileDialog)
+- **Feature-specific**: `src/components/[featureName]/` (e.g., editor/, layout/)
+
+**File structure:**
+```
+src/components/
+├── common/
+│   ├── Button.tsx
+│   ├── TextInput.tsx
+│   └── Modal.tsx
+├── layout/
+│   ├── TitleBar.tsx
+│   ├── Sidebar.tsx
+│   ├── EditorPane.tsx
+│   └── RightPanel.tsx
+├── modals/
+│   ├── NewProjectDialog.tsx
+│   └── OpenProjectDialog.tsx
+├── editor/
+│   ├── MonacoEditor.tsx
+│   ├── DiagnosticsPanel.tsx
+│   └── SearchReplace.tsx
+├── StudioHomeDashboard.tsx
+├── ProjectsPage.tsx
+├── SettingsPage.tsx
+└── AppNavigation.tsx
+```
+
+### Rule 3: Styling Approach
+
+- **IMPORTANT:** Use Tailwind CSS utility classes for all styling
+- **IMPORTANT:** Map Tailwind classes to design tokens: `bg-background-primary`, `text-text-primary`, `border-border-subtle`
+- **IMPORTANT:** Accept and use `className` prop in all components for composition
+- **IMPORTANT:** Never use inline styles or CSS-in-JS for standard styling
+
+**Implementation:**
+```tsx
+interface ButtonProps extends HTMLButtonElement {
+  variant?: 'primary' | 'secondary' | 'danger'
+  size?: 'sm' | 'md' | 'lg'
+  className?: string
+}
+
+export default function Button({
+  variant = 'primary',
+  size = 'md',
+  className = '',
+  ...props
+}: ButtonProps) {
+  const variants = {
+    primary: 'bg-accent-primary hover:bg-accent-focus text-text-primary',
+    secondary: 'bg-background-secondary hover:bg-background-tertiary text-text-primary',
+    danger: 'bg-state-error hover:opacity-90 text-text-primary'
+  }
+
+  const sizes = {
+    sm: 'px-2 py-1 text-sm',
+    md: 'px-4 py-2 text-base',
+    lg: 'px-6 py-3 text-lg'
+  }
+
+  return (
+    <button
+      className={`
+        rounded-lg transition-colors
+        ${variants[variant]}
+        ${sizes[size]}
+        ${className}
+      `}
+      {...props}
+    />
+  )
+}
+```
+
+### Rule 4: Color Usage Guide
+
+**Background Colors:**
+- `bg-background-primary` - Main app backgrounds (#151A24)
+- `bg-background-secondary` - Secondary panels, headers (#1E2633)
+- `bg-background-tertiary` - Card backgrounds, tertiary panels (#2A3447)
+- `bg-background-light` - Light mode backgrounds (future use)
+
+**Text Colors:**
+- `text-text-primary` - Main readable text (#FFFFFF)
+- `text-text-secondary` - Secondary/metadata text (#B0B0B0)
+- `text-text-tertiary` - Disabled/faint text (#777777)
+
+**Accent Colors (Primary Actions):**
+- `bg-accent-primary` / `text-accent-primary` - Primary CTA, highlights (#2EC4B6 brand teal)
+- `hover:bg-accent-focus` - Hover state for accent elements (#26A89B)
+- `bg-accent-light` - Light accent backgrounds (#E6F8F6)
+
+**Diagnostic State Colors:**
+- `bg-state-error` / `text-state-error` - Errors, failures (#E12D39 red)
+- `bg-state-warning` / `text-state-warning` - Warnings, caution (#F5A623 amber)
+- `bg-state-info` / `text-state-info` - Info messages (#2680C2 blue)
+- `bg-state-success` / `text-state-success` - Success, completion (#2E8540 green)
+
+**Border Colors:**
+- `border-border-subtle` - Main borders, dividers (#444444)
+- `border-border-light` - Light borders (#B0B0B0)
+
+### Rule 5: State-Based Component Styling
+
+All interactive components must support multiple states with proper styling:
+
+**Button States:**
+```tsx
+// Active/focused state
+.hover:bg-accent-focus
+
+// Disabled state
+.disabled:opacity-50 .disabled:cursor-not-allowed
+
+// Loading state
+.disabled:opacity-75 // Show loading indicator
+```
+
+**Input Field States:**
+```tsx
+// Focus state
+.focus:border-accent-primary .focus:ring-1 .focus:ring-accent-primary
+
+// Error state
+.border-state-error .bg-state-error/10
+
+// Success state
+.border-state-success
+```
+
+### Rule 6: Component Composition Pattern
+
+Every component must:
+1. Accept a `className` prop for composition
+2. Use consistent prop naming (follow TypeScript conventions)
+3. Support `ref` forwarding where applicable
+4. Include TypeScript interfaces for props
+5. Default to sensible values
+
+**Example Pattern:**
+```tsx
+import { forwardRef, HTMLAttributes } from 'react'
+
+interface CardProps extends HTMLAttributes<HTMLDivElement> {
+  variant?: 'default' | 'elevated'
+}
+
+const Card = forwardRef<HTMLDivElement, CardProps>(
+  ({ variant = 'default', className = '', ...props }, ref) => {
+    return (
+      <div
+        ref={ref}
+        className={`
+          bg-background-secondary
+          border border-border-subtle
+          rounded-lg
+          ${variant === 'elevated' && 'shadow-lg'}
+          ${className}
+        `}
+        {...props}
+      />
+    )
+  }
+)
+
+Card.displayName = 'Card'
+export default Card
+```
+
+### Rule 7: Page and View Components
+
+All page components (Dashboard, Projects, Settings, Editor) must:
+- Include AppNavigation sidebar for navigation
+- Use consistent header styling (page title + description)
+- Apply brand navy background (`bg-background-primary`)
+- Structure content with consistent spacing using token scale
+- Implement responsive grid layouts
+
+**Page Template:**
+```tsx
+import { useState } from 'react'
+import { AppNavigation } from '@/components/AppNavigation'
+
+export function MyPage({ onNavigate }) {
+  const [activeNav, setActiveNav] = useState('pageName')
+
+  const handleNavigate = (item: string) => {
+    setActiveNav(item)
+    onNavigate?.(item)
+  }
+
+  return (
+    <div className="flex h-screen bg-background-primary">
+      <AppNavigation activeItem={activeNav} onNavigate={handleNavigate} />
+
+      <div className="flex-1 overflow-auto">
+        <div className="max-w-6xl mx-auto px-8 py-8 space-y-10">
+          <div className="space-y-2">
+            <h1 className="text-3xl font-bold text-text-primary">Page Title</h1>
+            <p className="text-text-secondary">Description</p>
+          </div>
+
+          {/* Content sections */}
+        </div>
+      </div>
+    </div>
+  )
+}
+```
+
+### Rule 8: Spacing and Layout
+
+Use the token-based spacing scale consistently:
+- `p-2` / `px-2` / `py-2` - 8px padding (use for small components)
+- `p-4` / `px-4` / `py-4` - 16px padding (standard spacing)
+- `p-6` / `px-6` / `py-6` - 24px padding (larger components)
+- `p-8` - 32px padding (major sections)
+- `gap-2` / `gap-4` / `gap-6` - Spacing between flex items
+
+**Grid layouts:**
+```tsx
+// 2-column responsive grid
+<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+  {items.map(item => <Card key={item.id}>{item}</Card>)}
+</div>
+
+// 3-column responsive grid
+<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+  {items.map(item => <Card key={item.id}>{item}</Card>)}
+</div>
+```
+
+### Rule 9: Diagnostic Components Styling
+
+Components displaying diagnostics (errors, warnings, info) must use state colors:
+
+**Error styling:**
+```tsx
+<div className="bg-state-error/10 border-l-4 border-state-error p-4 rounded">
+  <p className="text-state-error font-semibold">Error Title</p>
+  <p className="text-text-secondary text-sm">Error message</p>
+</div>
+```
+
+**Warning styling:**
+```tsx
+<div className="bg-state-warning/10 border-l-4 border-state-warning p-4 rounded">
+  <p className="text-state-warning font-semibold">Warning Title</p>
+</div>
+```
+
+### Rule 10: Import Paths and Aliases
+
+- **IMPORTANT:** Always use `@/` path aliases
+- Never use relative imports beyond parent directory
+- Group imports: React, third-party, internal, types
+
+**Correct patterns:**
+```tsx
+// ✅ CORRECT
+import { useState } from 'react'
+import { useProjectStore } from '@/stores/useProjectStore'
+import Button from '@/components/common/Button'
+import { CompilerService } from '@/services/CompilerService'
+import type { Project } from '@/types/index'
+
+// ❌ WRONG - Relative imports
+import Button from '../../../components/common/Button'
+```
 
 ---
 

@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { devtools } from 'zustand/middleware'
-import type { EditorTab } from '@types/index'
+import type { EditorTab } from '@/types/index'
 
 interface EditorState {
   tabs: EditorTab[]

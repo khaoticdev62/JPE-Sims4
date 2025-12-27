@@ -3,11 +3,11 @@
  * Tests the flow: XML Parse → JPE Convert → Validation → Compilation
  */
 
-import { XMLParser } from '@engine/parsers/XMLParser'
-import { XMLCompiler } from '@engine/compilers/XMLCompiler'
-import { ValidationEngine } from '@engine/validators/ValidationEngine'
-import { CompilerService } from '@services/CompilerService'
-import type { ModFile } from '@types/index'
+import { XMLParser } from '@/engine/parsers/XMLParser'
+import { XMLCompiler } from '@/engine/compilers/XMLCompiler'
+import { ValidationEngine } from '@/engine/validators/ValidationEngine'
+import { CompilerService } from '@/services/CompilerService'
+import type { ModFile } from '@/types/index'
 
 describe('Integration: XML Processing Pipeline', () => {
   describe('Full round-trip: Parse → Convert → Validate → Compile', () => {

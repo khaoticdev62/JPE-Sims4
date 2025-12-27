@@ -3,8 +3,8 @@
  * Handles round-trip compilation with proper formatting
  */
 
-import type { Diagnostic } from '@types/index'
-import type { JPEModule, JPESection } from '@engine/parsers/XMLParser'
+import type { Diagnostic } from '@/types/index'
+import type { JPEModule, JPESection } from '@/engine/parsers/XMLParser'
 
 export class XMLCompiler {
   /**

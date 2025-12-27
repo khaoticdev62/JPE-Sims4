@@ -1,10 +1,10 @@
 import { useState } from 'react'
-import MonacoEditor from '@components/editor/MonacoEditor'
-import { useEditorStore } from '@stores/useEditorStore'
-import { useProjectStore } from '@stores/useProjectStore'
-import { useDiagnosticStore } from '@stores/useDiagnosticStore'
-import { useFileLoader } from '@hooks/useFileLoader'
-import { useRealTimeValidation } from '@hooks/useRealTimeValidation'
+import MonacoEditor from '@/components/editor/MonacoEditor'
+import { useEditorStore } from '@/stores/useEditorStore'
+import { useProjectStore } from '@/stores/useProjectStore'
+import { useDiagnosticStore } from '@/stores/useDiagnosticStore'
+import { useFileLoader } from '@/hooks/useFileLoader'
+import { useRealTimeValidation } from '@/hooks/useRealTimeValidation'
 
 export default function EditorPane() {
   const { tabs, activeTabId, setActiveTab, closeTab, editorContent, updateTabContent } =

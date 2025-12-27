@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { devtools } from 'zustand/middleware'
-import type { Diagnostic } from '@types/index'
+import type { Diagnostic } from '@/types/index'
 
 interface DiagnosticState {
   diagnostics: Diagnostic[]

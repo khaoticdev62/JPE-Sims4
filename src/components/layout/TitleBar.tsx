@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import { useProjectStore } from '@stores/useProjectStore'
-import NewProjectDialog from '@components/modals/NewProjectDialog'
-import OpenProjectDialog from '@components/modals/OpenProjectDialog'
-import AddFileDialog from '@components/modals/AddFileDialog'
+import { useProjectStore } from '@/stores/useProjectStore'
+import NewProjectDialog from '@/components/modals/NewProjectDialog'
+import OpenProjectDialog from '@/components/modals/OpenProjectDialog'
+import AddFileDialog from '@/components/modals/AddFileDialog'
 
 export default function TitleBar() {
   const { currentProject } = useProjectStore()

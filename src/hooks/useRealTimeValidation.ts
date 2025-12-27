@@ -1,8 +1,8 @@
 import { useEffect, useRef, useCallback } from 'react'
-import { useDiagnosticStore } from '@stores/useDiagnosticStore'
-import { useProjectStore } from '@stores/useProjectStore'
-import { ValidationEngine } from '@engine/validators/ValidationEngine'
-import { XMLParser } from '@engine/parsers/XMLParser'
+import { useDiagnosticStore } from '@/stores/useDiagnosticStore'
+import { useProjectStore } from '@/stores/useProjectStore'
+import { ValidationEngine } from '@/engine/validators/ValidationEngine'
+import { XMLParser } from '@/engine/parsers/XMLParser'
 
 const VALIDATION_DEBOUNCE_MS = 500
 

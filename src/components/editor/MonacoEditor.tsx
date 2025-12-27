@@ -13,7 +13,7 @@
  */
 
 import { useEffect, useRef, useState } from 'react'
-import tokens from '@design-system/tokens.json'
+import tokens from '@/design-system/tokens.json'
 import type { Editor, IMarker } from 'monaco-editor'
 
 interface MonacoEditorProps {
@@ -75,40 +75,6 @@ function registerJpeLanguage(monaco: any) {
 
   // Define syntax highlighting rules
   monaco.languages.setMonarchTokensProvider('jpe', {
-    tokenizer: {
-      root: [
-        // Keywords (uppercase)
-        [
-          /\b(MODULE|DESCRIPTION|VERSION|AUTHOR|ITEMS|ITEM|COMPATIBILITY|LOCALIZATION|WHEN|DO|ONLY_IF|CONDITIONS)\b:/,
-          'keyword',
-        ],
-
-        // Quoted strings
-        [/"[^"]*"/, 'string'],
-        [/'[^']*'/, 'string'],
-
-        // Comments
-        [/\/\/.*$/, 'comment'],
-        [/\/\*/, 'comment', '@comment'],
-
-        // Block start (colon at end of line)
-        [/:$/, 'keyword'],
-
-        // Attribute names (before colon)
-        [/([a-z]+)(\s*):/, ['attribute', 'keyword']],
-
-        // List items
-        [/^\s*-\s/, 'operator'],
-
-        // Numbers
-        [/\b\d+(\.\d+)?\b/, 'number'],
-
-        // Whitespace
-        [/\s+/, 'white'],
-      ],
-      comment: [[/[^*/]+/, 'comment'], [/\*\//, 'comment', '@pop'], [/[*/]/, 'comment']],
-    },
-
     tokenizer: {
       root: [
         [/^(MODULE):/, 'keyword'],

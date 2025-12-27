@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { devtools, persist } from 'zustand/middleware'
-import type { Project, ModFile } from '@types/index'
+import type { Project, ModFile } from '@/types/index'
 
 interface ProjectState {
   currentProject: Project | null

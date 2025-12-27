@@ -4,7 +4,7 @@
  */
 
 import { CompilerService } from './CompilerService'
-import type { ModFile } from '@types/index'
+import type { ModFile } from '@/types/index'
 
 describe('CompilerService', () => {
   const sampleFile: ModFile = {

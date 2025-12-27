@@ -35,7 +35,11 @@ interface Activity {
   timeAgo: string;
 }
 
-export function StudioHomeDashboard() {
+interface StudioHomeDashboardProps {
+  onNavigate?: (view: string) => void
+}
+
+export function StudioHomeDashboard({ onNavigate }: StudioHomeDashboardProps = {}) {
   const [activeNav, setActiveNav] = useState("home");
   const [userName] = useState("User");
   const [greeting, setGreeting] = useState("Good Evening");
@@ -206,10 +210,15 @@ export function StudioHomeDashboard() {
     }
   };
 
+  const handleNavigate = (item: string) => {
+    setActiveNav(item)
+    onNavigate?.(item)
+  }
+
   return (
     <div className="flex h-screen bg-background-primary">
       {/* Sidebar Navigation */}
-      <AppNavigation activeItem={activeNav} onNavigate={setActiveNav} />
+      <AppNavigation activeItem={activeNav} onNavigate={handleNavigate} />
 
       {/* Main Content Area */}
       <div className="flex-1 overflow-auto">

@@ -3,10 +3,10 @@
  * Integrates with the translation engine
  */
 
-import { XMLParser, type JPEModule } from '@engine/parsers/XMLParser'
-import { XMLCompiler } from '@engine/compilers/XMLCompiler'
-import { ValidationEngine } from '@engine/validators/ValidationEngine'
-import type { ModFile, ValidationResult, Diagnostic } from '@types/index'
+import { XMLParser, type JPEModule } from '@/engine/parsers/XMLParser'
+import { XMLCompiler } from '@/engine/compilers/XMLCompiler'
+import { ValidationEngine } from '@/engine/validators/ValidationEngine'
+import type { ModFile, ValidationResult, Diagnostic } from '@/types/index'
 
 export class CompilerService {
   /**

@@ -1,5 +1,5 @@
-import { useDiagnosticStore } from '@stores/useDiagnosticStore'
-import { useUIStore } from '@stores/useUIStore'
+import { useDiagnosticStore } from '@/stores/useDiagnosticStore'
+import { useUIStore } from '@/stores/useUIStore'
 
 export default function RightPanel() {
   const { getFilteredDiagnostics } = useDiagnosticStore()

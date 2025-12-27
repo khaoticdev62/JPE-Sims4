@@ -3,7 +3,7 @@
  * Converts XML to intermediate JPE format
  */
 
-import type { ValidationResult, Diagnostic } from '@types/index'
+import type { ValidationResult, Diagnostic } from '@/types/index'
 
 export interface XMLElement {
   tag: string

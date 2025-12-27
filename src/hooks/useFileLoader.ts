@@ -1,7 +1,7 @@
 import { useEffect, useCallback } from 'react'
-import { useProjectStore } from '@stores/useProjectStore'
-import { useEditorStore } from '@stores/useEditorStore'
-import { FileService } from '@services/FileService'
+import { useProjectStore } from '@/stores/useProjectStore'
+import { useEditorStore } from '@/stores/useEditorStore'
+import { FileService } from '@/services/FileService'
 
 /**
  * Hook to load and display file content when a tab is activated

@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import { useProjectStore } from '@stores/useProjectStore'
-import { FileService } from '@services/FileService'
-import Modal from '@components/common/Modal'
-import Button from '@components/common/Button'
+import { useProjectStore } from '@/stores/useProjectStore'
+import { FileService } from '@/services/FileService'
+import Modal from '@/components/common/Modal'
+import Button from '@/components/common/Button'
 
 interface OpenProjectDialogProps {
   isOpen: boolean

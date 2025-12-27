@@ -3,7 +3,7 @@
  * Checks for syntax errors, semantic issues, and best practices
  */
 
-import type { Diagnostic, ValidationResult } from '@types/index'
+import type { Diagnostic, ValidationResult } from '@/types/index'
 
 export interface ValidationRule {
   id: string

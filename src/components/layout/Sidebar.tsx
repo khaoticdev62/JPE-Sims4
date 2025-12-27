@@ -1,6 +1,6 @@
-import { useProjectStore } from '@stores/useProjectStore'
-import { useEditorStore } from '@stores/useEditorStore'
-import { useUIStore } from '@stores/useUIStore'
+import { useProjectStore } from '@/stores/useProjectStore'
+import { useEditorStore } from '@/stores/useEditorStore'
+import { useUIStore } from '@/stores/useUIStore'
 
 export default function Sidebar() {
   const { currentProject } = useProjectStore()

@@ -10,8 +10,8 @@
  */
 
 import { useState } from 'react'
-import Button from '@components/common/Button'
-import TextInput from '@components/common/TextInput'
+import Button from '@/components/common/Button'
+import TextInput from '@/components/common/TextInput'
 
 interface SearchReplaceProps {
   onFind: (query: string, options: { caseSensitive: boolean; regex: boolean }) => number

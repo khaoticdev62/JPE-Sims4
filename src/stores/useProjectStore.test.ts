@@ -5,7 +5,7 @@
 
 import { renderHook, act } from '@testing-library/react'
 import { useProjectStore } from './useProjectStore'
-import type { ModFile } from '@types/index'
+import type { ModFile } from '@/types/index'
 
 describe('useProjectStore', () => {
   // Reset store before each test

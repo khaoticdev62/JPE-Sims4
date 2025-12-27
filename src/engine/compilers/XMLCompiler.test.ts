@@ -4,7 +4,7 @@
  */
 
 import { XMLCompiler } from './XMLCompiler'
-import type { JPEModule } from '@engine/parsers/XMLParser'
+import type { JPEModule } from '@/engine/parsers/XMLParser'
 
 describe('XMLCompiler', () => {
   const basicJPEModule: JPEModule = {

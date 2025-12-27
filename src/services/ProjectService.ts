@@ -3,9 +3,9 @@
  * Uses the project store and file service
  */
 
-import { useProjectStore } from '@stores/useProjectStore'
+import { useProjectStore } from '@/stores/useProjectStore'
 import { FileService } from './FileService'
-import type { Project, ModFile } from '@types/index'
+import type { Project, ModFile } from '@/types/index'
 
 export class ProjectService {
   /**

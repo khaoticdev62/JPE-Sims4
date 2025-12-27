@@ -1,9 +1,9 @@
 import { useState } from 'react'
-import { useProjectStore } from '@stores/useProjectStore'
-import { useEditorStore } from '@stores/useEditorStore'
-import { FileService } from '@services/FileService'
-import Modal from '@components/common/Modal'
-import Button from '@components/common/Button'
+import { useProjectStore } from '@/stores/useProjectStore'
+import { useEditorStore } from '@/stores/useEditorStore'
+import { FileService } from '@/services/FileService'
+import Modal from '@/components/common/Modal'
+import Button from '@/components/common/Button'
 
 interface AddFileDialogProps {
   isOpen: boolean

@@ -13,6 +13,7 @@
  */
 
 import { useEffect, useRef, useState } from 'react'
+import tokens from '@design-system/tokens.json'
 import type { Editor, IMarker } from 'monaco-editor'
 
 interface MonacoEditorProps {
@@ -121,24 +122,31 @@ function registerJpeLanguage(monaco: any) {
     },
   })
 
-  // Define theme for JPE
+  // Define theme for JPE using design tokens
+  // Colors come from src/design-system/tokens.json
   monaco.editor.defineTheme('jpe-dark', {
     base: 'vs-dark',
     inherit: true,
     rules: [
-      { token: 'keyword', foreground: '0A84FF', fontStyle: 'bold' },
-      { token: 'string', foreground: '32D74B' },
-      { token: 'attribute', foreground: '5AC8FA' },
-      { token: 'operator', foreground: 'FF9F0A' },
-      { token: 'comment', foreground: '8E8E93', fontStyle: 'italic' },
+      { token: 'keyword', foreground: tokens.colors['accent-primary'].replace('#', ''), fontStyle: 'bold' },
+      { token: 'string', foreground: tokens.colors['state-success'].replace('#', '') },
+      { token: 'attribute', foreground: '5AC8FA' }, // Light blue for attributes
+      { token: 'operator', foreground: tokens.colors['state-warning'].replace('#', '') },
+      { token: 'comment', foreground: tokens.colors['text-secondary'].replace('#', ''), fontStyle: 'italic' },
     ],
     colors: {
-      'editor.background': '#000000',
-      'editor.foreground': '#FFFFFF',
-      'editor.lineNumbersColumn.background': '#121212',
-      'editor.selectionBackground': '#0A84FF40',
-      'editor.lineHighlightBackground': '#1C1C1E',
-      'editor.cursorForeground': '#0A84FF',
+      'editor.background': tokens.colors['background-primary'],
+      'editor.foreground': tokens.colors['text-primary'],
+      'editor.lineNumbersColumn.background': tokens.colors['background-secondary'],
+      'editor.selectionBackground': tokens.colors['accent-primary'] + '40', // 40 = 25% opacity
+      'editor.lineHighlightBackground': tokens.colors['background-tertiary'],
+      'editor.cursorForeground': tokens.colors['accent-primary'],
+      'editor.border': tokens.colors['border-subtle'],
+      'editor.findMatchBackground': tokens.colors['accent-primary'] + '30',
+      'editor.findMatchHighlightBackground': tokens.colors['state-warning'] + '20',
+      'editorError.foreground': tokens.colors['state-error'],
+      'editorWarning.foreground': tokens.colors['state-warning'],
+      'editorInfo.foreground': tokens.colors['accent-primary'],
     },
   })
 }
@@ -270,7 +278,9 @@ export default function MonacoEditor({
       ref={containerRef}
       className={`w-full h-full ${className}`}
       style={{
-        background: theme === 'dark' ? '#000000' : '#F5F5F5',
+        background: theme === 'dark'
+          ? tokens.colors['background-primary']
+          : tokens.colors['background-primary'], // Light mode uses same for now
       }}
     />
   )

@@ -19,9 +19,9 @@ This track focuses on defining the visual design and prompts for the core "Proje
 - [x] Task: Create Atomic Prompts for Modals (Wizard, Settings) [32da940]
     - [x] Write acceptance criteria for complex modals
     - [x] Implement prompts for New Project Wizard and Settings
-- [ ] Task: Create UX Flow for "New Project" Wizard
-    - [ ] Write validation steps for Wizard UX
-    - [ ] Implement Wizard flow documentation
+- [x] Task: Create UX Flow for "New Project" Wizard [434f324]
+    - [x] Write validation steps for Wizard UX
+    - [x] Implement Wizard flow documentation
 - [ ] Task: Conductor - User Manual Verification 'Management Flows'
 
 ## Phase 3: Visual Polish & Icons

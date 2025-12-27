@@ -27,6 +27,6 @@ This track focuses on defining the visual design and prompts for the core "Proje
 ## Phase 3: Visual Polish & Icons
 - [x] Task: Define Icon System (Lucide integration specs) [69929eb]
     - [x] Implement Icon System prompt
-- [ ] Task: Finalize Tooltips and Status Bar
-    - [ ] Implement Tooltips/Status Bar prompt
+- [x] Task: Finalize Tooltips and Status Bar [b198c31]
+    - [x] Implement Tooltips/Status Bar prompt
 - [ ] Task: Conductor - User Manual Verification 'Visual Polish'

@@ -124,7 +124,7 @@ function registerJpeLanguage(monaco: any) {
 
   // Define theme for JPE using design tokens
   // Colors come from src/design-system/tokens.json
-  monaco.editor.defineTheme('jpe-dark', {
+  monaco.editor.defineTheme('jpe-brand', {
     base: 'vs-dark',
     inherit: true,
     rules: [
@@ -181,7 +181,7 @@ export default function MonacoEditor({
           const editor = monaco.editor.create(containerRef.current!, {
             value,
             language,
-            theme: theme === 'dark' ? 'jpe-dark' : 'vs',
+            theme: theme === 'dark' ? 'jpe-brand' : 'vs',
             readOnly,
             minimap: { enabled: true },
             scrollBeyondLastLine: false,
@@ -268,7 +268,7 @@ export default function MonacoEditor({
   // Handle theme changes
   useEffect(() => {
     if (isReady && monacoInstance) {
-      const themeName = theme === 'dark' ? 'jpe-dark' : 'vs'
+      const themeName = theme === 'dark' ? 'jpe-brand' : 'vs'
       monacoInstance.editor.setTheme(themeName)
     }
   }, [theme, isReady])

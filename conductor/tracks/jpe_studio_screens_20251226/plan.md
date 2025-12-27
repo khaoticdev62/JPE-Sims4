@@ -7,9 +7,9 @@ This track focuses on defining the visual design and prompts for the core "Proje
 - [x] Task: Create Atomic Prompts for Editor Components (Tabs, Gutter, Status Bar) [1c49e09]
     - [x] Write acceptance criteria for editor components
     - [x] Implement prompts for Editor UI elements
-- [ ] Task: Create Atomic Prompts for Right Panel (Diagnostics, Properties)
-    - [ ] Write acceptance criteria for right panel components
-    - [ ] Implement prompts for Diagnostics and Properties panels
+- [x] Task: Create Atomic Prompts for Right Panel (Diagnostics, Properties) [81537f1]
+    - [x] Write acceptance criteria for right panel components
+    - [x] Implement prompts for Diagnostics and Properties panels
 - [ ] Task: Create High-Fidelity Editor Screen Prompt (Assembly)
     - [ ] Write acceptance criteria for full editor screen
     - [ ] Implement detailed prompt for the Editor Workspace

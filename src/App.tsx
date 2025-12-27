@@ -40,7 +40,7 @@ function App() {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-slate-950 text-slate-100">
+    <div className="flex flex-col h-screen bg-bg-primary text-text-primary">
       <TitleBar />
       <div className="flex flex-1 overflow-hidden">
         <Sidebar />

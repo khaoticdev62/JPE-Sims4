@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import MonacoEditor from '@components/editor/MonacoEditor'
 import { useEditorStore } from '@stores/useEditorStore'
 import { useProjectStore } from '@stores/useProjectStore'
 import { useDiagnosticStore } from '@stores/useDiagnosticStore'
@@ -102,63 +103,21 @@ export default function EditorPane() {
               )}
             </div>
 
-            {/* Editor content area with line numbers and editable textarea */}
-            <div className="flex-1 overflow-auto bg-bg-primary flex font-mono text-xs">
-              {/* Line numbers gutter */}
-              <div className="bg-bg-secondary text-text-secondary px-3 py-4 select-none border-r border-border-subtle overflow-hidden">
-                {fileContent.split('\n').map((_, lineIndex) => (
-                  <div key={lineIndex} className="leading-relaxed h-5">
-                    {lineIndex + 1}
-                  </div>
-                ))}
-              </div>
-
-              {/* Editable content area */}
-              <div className="flex-1 relative">
-                <textarea
-                  value={fileContent}
-                  onChange={(e) => handleContentChange(e.target.value)}
-                  className="absolute inset-0 w-full h-full p-4 bg-bg-primary text-text-primary font-mono text-xs resize-none outline-none focus:outline-none whitespace-pre focus:ring-0 focus:border-0"
-                  spellCheck="false"
-                  style={{
-                    backgroundColor: 'transparent',
-                  }}
-                />
-
-                {/* Error/Warning indicators overlay */}
-                {fileDiagnostics.length > 0 && (
-                  <div className="absolute inset-0 pointer-events-none">
-                    {fileDiagnostics.map((diagnostic, diagIndex) => {
-                      if (diagnostic.line <= 0) return null
-                      const lines = fileContent.split('\n')
-                      const lineNumber = diagnostic.line
-                      if (lineNumber > lines.length) return null
-
-                      return (
-                        <div
-                          key={diagIndex}
-                          className={`absolute left-0 right-0 h-5 border-l-2 ${
-                            diagnostic.severity === 'error'
-                              ? 'border-state-error bg-state-error bg-opacity-10'
-                              : 'border-state-warning bg-state-warning bg-opacity-10'
-                          }`}
-                          style={{
-                            top: `${lineNumber * 1.25}rem + 1rem`, // 1rem for padding
-                          }}
-                          title={diagnostic.message}
-                        />
-                      )
-                    })}
-                  </div>
-                )}
-
-                {/* Placeholder for empty files */}
-                {!fileContent && (
-                  <div className="absolute inset-0 p-4 text-text-secondary pointer-events-none">
-                    <span>No content loaded</span>
-                  </div>
-                )}
-              </div>
+            {/* Monaco Editor with syntax highlighting and validation */}
+            <div className="flex-1 overflow-hidden bg-bg-primary">
+              <MonacoEditor
+                value={fileContent}
+                onChange={handleContentChange}
+                language={activeFile.type === 'jpe' ? 'jpe' : 'xml'}
+                theme="dark"
+                readOnly={false}
+                markers={fileDiagnostics.map((d) => ({
+                  line: d.line || 1,
+                  column: 1,
+                  severity: d.severity as 'error' | 'warning' | 'info',
+                  message: d.message,
+                }))}
+              />
             </div>
 
             {/* Status bar */}

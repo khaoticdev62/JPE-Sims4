@@ -38,7 +38,10 @@
       "Bash(pkill:*)",
       "Bash(npm uninstall:*)",
       "mcp__plugin_playwright_playwright__browser_close",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(npm run:*)",
+      "Bash(npx tsc:*)",
+      "mcp__plugin_playwright_playwright__browser_console_messages"
     ]
   }
 }

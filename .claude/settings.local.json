@@ -33,7 +33,11 @@
       "WebFetch(domain:)",
       "Bash(wc:*)",
       "Bash(git reset:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(npm run dev:*)",
+      "Bash(pkill:*)",
+      "Bash(npm uninstall:*)",
+      "mcp__plugin_playwright_playwright__browser_close"
     ]
   }
 }

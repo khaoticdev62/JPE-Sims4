@@ -126,8 +126,8 @@ describe('XMLCompiler', () => {
       const xml = '<root><child>content</child></root>'
       const pretty = XMLCompiler.prettifyXML(xml, 2)
       expect(pretty).toContain('\n')
-      // Should have indentation
-      expect(pretty).toMatch(/^\s+<child>/)
+      // Should have indentation - child should be indented on a new line
+      expect(pretty).toMatch(/<root>\n\s+<child>/)
     })
 
     it('should use custom indent size', () => {

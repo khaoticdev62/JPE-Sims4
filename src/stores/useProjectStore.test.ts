@@ -1,166 +1,128 @@
 /**
  * useProjectStore unit tests
- * Tests project state management
+ * Tests project and file state management
  */
 
-import { renderHook, act } from '@testing-library/react'
+import { describe, it, expect, beforeEach } from 'vitest'
 import { useProjectStore } from './useProjectStore'
-import type { ModFile } from '@/types/index'
+import type { Project, ModFile } from '@/types/index'
 
 describe('useProjectStore', () => {
-  // Reset store before each test
   beforeEach(() => {
     useProjectStore.setState({
-      projectId: null,
-      projectPath: null,
-      projectName: null,
-      files: [],
-      isDirty: false,
+      currentProject: null,
+      recentProjects: [],
+      isLoading: false,
+      error: null,
+    })
+  })
+
+  describe('initialization', () => {
+    it('should initialize with default state', () => {
+      const store = useProjectStore.getState()
+      expect(store.currentProject).toBeNull()
+      expect(store.recentProjects).toEqual([])
+      expect(store.isLoading).toBe(false)
+      expect(store.error).toBeNull()
     })
   })
 
   describe('project management', () => {
-    it('should initialize with empty state', () => {
-      const { result } = renderHook(() => useProjectStore())
-      expect(result.current.projectId).toBeNull()
-      expect(result.current.files).toEqual([])
-      expect(result.current.isDirty).toBe(false)
+    it('should create a new project', async () => {
+      let store = useProjectStore.getState()
+      await store.createProject('Test Project', '/path/to/project')
+      store = useProjectStore.getState()
+
+      expect(store.currentProject).not.toBeNull()
+      expect(store.currentProject?.name).toBe('Test Project')
+      expect(store.currentProject?.rootPath).toBe('/path/to/project')
     })
 
-    it('should create a new project', () => {
-      const { result } = renderHook(() => useProjectStore())
-      const projectId = 'proj-1'
-      const projectPath = '/path/to/project'
-      const projectName = 'Test Project'
+    it('should set current project', () => {
+      let store = useProjectStore.getState()
+      const mockProject: Project = {
+        id: 'test-1',
+        name: 'Test Project',
+        rootPath: '/test',
+        files: [],
+        metadata: {
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+          version: '1.0.0',
+        },
+      }
 
-      act(() => {
-        result.current.createProject(projectId, projectPath, projectName)
-      })
-
-      expect(result.current.projectId).toBe(projectId)
-      expect(result.current.projectPath).toBe(projectPath)
-      expect(result.current.projectName).toBe(projectName)
+      store.setCurrentProject(mockProject)
+      store = useProjectStore.getState()
+      expect(store.currentProject).toEqual(mockProject)
     })
 
-    it('should open an existing project', () => {
-      const { result } = renderHook(() => useProjectStore())
-      const projectId = 'proj-2'
+    it('should add project to recent projects when set', () => {
+      let store = useProjectStore.getState()
+      const mockProject: Project = {
+        id: 'test-1',
+        name: 'Test Project',
+        rootPath: '/test',
+        files: [],
+        metadata: {
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+          version: '1.0.0',
+        },
+      }
 
-      act(() => {
-        result.current.openProject(projectId)
-      })
-
-      expect(result.current.projectId).toBe(projectId)
+      store.setCurrentProject(mockProject)
+      store = useProjectStore.getState()
+      expect(store.recentProjects).toContain(mockProject)
     })
 
-    it('should close current project', () => {
-      const { result } = renderHook(() => useProjectStore())
+    it('should clear error when setting current project', () => {
+      let store = useProjectStore.getState()
+      store.setError('Some error')
+      store = useProjectStore.getState()
+      expect(store.error).toBe('Some error')
 
-      act(() => {
-        result.current.createProject('proj-1', '/path', 'Test')
-        result.current.closeProject()
-      })
+      const mockProject: Project = {
+        id: 'test-1',
+        name: 'Test Project',
+        rootPath: '/test',
+        files: [],
+        metadata: {
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+          version: '1.0.0',
+        },
+      }
 
-      expect(result.current.projectId).toBeNull()
-      expect(result.current.projectPath).toBeNull()
-      expect(result.current.projectName).toBeNull()
+      store.setCurrentProject(mockProject)
+      store = useProjectStore.getState()
+      expect(store.error).toBeNull()
     })
   })
 
   describe('file management', () => {
-    const sampleFile: ModFile = {
-      id: 'file-1',
-      name: 'test.xml',
-      path: '/test/test.xml',
-      type: 'xml',
-      content: 'content',
-      isDirty: false,
-      size: 7,
-      lastModified: new Date(),
-    }
-
-    it('should add a file', () => {
-      const { result } = renderHook(() => useProjectStore())
-
-      act(() => {
-        result.current.addFile(sampleFile)
-      })
-
-      expect(result.current.files).toHaveLength(1)
-      expect(result.current.files[0].id).toBe('file-1')
+    beforeEach(() => {
+      const store = useProjectStore.getState()
+      const project: Project = {
+        id: 'test-proj',
+        name: 'Test Project',
+        rootPath: '/test',
+        files: [],
+        metadata: {
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+          version: '1.0.0',
+        },
+      }
+      store.setCurrentProject(project)
     })
 
-    it('should add multiple files', () => {
-      const { result } = renderHook(() => useProjectStore())
-
-      act(() => {
-        result.current.addFile(sampleFile)
-        result.current.addFile({ ...sampleFile, id: 'file-2', name: 'test2.xml' })
-      })
-
-      expect(result.current.files).toHaveLength(2)
-    })
-
-    it('should get file by ID', () => {
-      const { result } = renderHook(() => useProjectStore())
-
-      act(() => {
-        result.current.addFile(sampleFile)
-      })
-
-      const file = result.current.getFile('file-1')
-      expect(file).not.toBeNull()
-      expect(file?.id).toBe('file-1')
-    })
-
-    it('should return null for non-existent file', () => {
-      const { result } = renderHook(() => useProjectStore())
-      const file = result.current.getFile('nonexistent')
-      expect(file).toBeNull()
-    })
-
-    it('should update file content', () => {
-      const { result } = renderHook(() => useProjectStore())
-
-      act(() => {
-        result.current.addFile(sampleFile)
-        result.current.updateFile('file-1', { content: 'new content', isDirty: true })
-      })
-
-      const file = result.current.getFile('file-1')
-      expect(file?.content).toBe('new content')
-      expect(file?.isDirty).toBe(true)
-    })
-
-    it('should remove file', () => {
-      const { result } = renderHook(() => useProjectStore())
-
-      act(() => {
-        result.current.addFile(sampleFile)
-        result.current.removeFile('file-1')
-      })
-
-      expect(result.current.files).toHaveLength(0)
-    })
-
-    it('should not error when removing non-existent file', () => {
-      const { result } = renderHook(() => useProjectStore())
-
-      expect(() => {
-        act(() => {
-          result.current.removeFile('nonexistent')
-        })
-      }).not.toThrow()
-    })
-  })
-
-  describe('project dirty state', () => {
-    it('should mark project as dirty when file is updated', () => {
-      const { result } = renderHook(() => useProjectStore())
-      const sampleFile: ModFile = {
+    it('should add a file to current project', () => {
+      let store = useProjectStore.getState()
+      const file: ModFile = {
         id: 'file-1',
         name: 'test.xml',
-        path: '/test/test.xml',
+        path: '/test.xml',
         type: 'xml',
         content: 'content',
         isDirty: false,
@@ -168,100 +130,124 @@ describe('useProjectStore', () => {
         lastModified: new Date(),
       }
 
-      act(() => {
-        result.current.addFile(sampleFile)
-        result.current.updateFile('file-1', { isDirty: true })
-      })
-
-      const hasDirtyFile = result.current.files.some((f) => f.isDirty)
-      expect(hasDirtyFile).toBe(true)
+      store.addFile(file)
+      store = useProjectStore.getState()
+      expect(store.currentProject?.files).toHaveLength(1)
+      expect(store.currentProject?.files[0].id).toBe('file-1')
     })
 
-    it('should clear dirty state', () => {
-      const { result } = renderHook(() => useProjectStore())
-      const sampleFile: ModFile = {
+    it('should get file by ID', () => {
+      let store = useProjectStore.getState()
+      const file: ModFile = {
         id: 'file-1',
         name: 'test.xml',
-        path: '/test/test.xml',
+        path: '/test.xml',
         type: 'xml',
         content: 'content',
-        isDirty: true,
+        isDirty: false,
         size: 7,
         lastModified: new Date(),
       }
 
-      act(() => {
-        result.current.addFile(sampleFile)
-        result.current.updateFile('file-1', { isDirty: false })
-      })
-
-      const file = result.current.getFile('file-1')
-      expect(file?.isDirty).toBe(false)
+      store.addFile(file)
+      store = useProjectStore.getState()
+      const retrieved = store.getFile('file-1')
+      expect(retrieved).toBeDefined()
+      expect(retrieved?.id).toBe('file-1')
     })
-  })
 
-  describe('file filtering', () => {
-    it('should filter files by type', () => {
-      const { result } = renderHook(() => useProjectStore())
+    it('should return undefined for non-existent file', () => {
+      const store = useProjectStore.getState()
+      const file = store.getFile('nonexistent')
+      expect(file).toBeUndefined()
+    })
 
-      act(() => {
-        result.current.addFile({
-          id: 'file-1',
-          name: 'test.xml',
-          path: '/test.xml',
+    it('should update file content and mark as dirty', () => {
+      let store = useProjectStore.getState()
+      const file: ModFile = {
+        id: 'file-1',
+        name: 'test.xml',
+        path: '/test.xml',
+        type: 'xml',
+        content: 'original',
+        isDirty: false,
+        size: 8,
+        lastModified: new Date(),
+      }
+
+      store.addFile(file)
+      store = useProjectStore.getState()
+      store.updateFile('file-1', { content: 'updated' })
+      store = useProjectStore.getState()
+
+      const updated = store.getFile('file-1')
+      expect(updated?.content).toBe('updated')
+      expect(updated?.isDirty).toBe(true)
+    })
+
+    it('should remove file from project', () => {
+      let store = useProjectStore.getState()
+      const file: ModFile = {
+        id: 'file-1',
+        name: 'test.xml',
+        path: '/test.xml',
+        type: 'xml',
+        content: 'content',
+        isDirty: false,
+        size: 7,
+        lastModified: new Date(),
+      }
+
+      store.addFile(file)
+      store = useProjectStore.getState()
+      expect(store.currentProject?.files).toHaveLength(1)
+
+      store.removeFile('file-1')
+      store = useProjectStore.getState()
+      expect(store.currentProject?.files).toHaveLength(0)
+    })
+
+    it('should handle multiple files', () => {
+      let store = useProjectStore.getState()
+
+      for (let i = 0; i < 3; i++) {
+        const file: ModFile = {
+          id: `file-${i}`,
+          name: `test${i}.xml`,
+          path: `/test${i}.xml`,
           type: 'xml',
-          content: 'content',
+          content: `content${i}`,
           isDirty: false,
           size: 7,
           lastModified: new Date(),
-        })
-        result.current.addFile({
-          id: 'file-2',
-          name: 'test.txt',
-          path: '/test.txt',
-          type: 'txt',
-          content: 'content',
-          isDirty: false,
-          size: 7,
-          lastModified: new Date(),
-        })
-      })
+        }
+        store.addFile(file)
+        store = useProjectStore.getState()
+      }
 
-      const xmlFiles = result.current.files.filter((f) => f.type === 'xml')
-      expect(xmlFiles).toHaveLength(1)
-      expect(xmlFiles[0].id).toBe('file-1')
+      expect(store.currentProject?.files).toHaveLength(3)
     })
   })
 
-  describe('batch operations', () => {
-    it('should handle multiple updates', () => {
-      const { result } = renderHook(() => useProjectStore())
+  describe('error handling', () => {
+    it('should set error message', () => {
+      let store = useProjectStore.getState()
+      const errorMsg = 'Test error'
 
-      act(() => {
-        for (let i = 0; i < 5; i++) {
-          result.current.addFile({
-            id: `file-${i}`,
-            name: `test${i}.xml`,
-            path: `/test${i}.xml`,
-            type: 'xml',
-            content: `content${i}`,
-            isDirty: false,
-            size: 7,
-            lastModified: new Date(),
-          })
-        }
-      })
+      store.setError(errorMsg)
+      store = useProjectStore.getState()
+      expect(store.error).toBe(errorMsg)
+    })
 
-      expect(result.current.files).toHaveLength(5)
+    it('should clear error when set to null', () => {
+      let store = useProjectStore.getState()
+      store.setError('Error')
+      store = useProjectStore.getState()
+      expect(store.error).toBe('Error')
 
-      act(() => {
-        result.current.files.forEach((f) => {
-          result.current.updateFile(f.id, { isDirty: true })
-        })
-      })
-
-      const dirtyCount = result.current.files.filter((f) => f.isDirty).length
-      expect(dirtyCount).toBe(5)
+      store.setError(null)
+      store = useProjectStore.getState()
+      expect(store.error).toBeNull()
     })
   })
 })

@@ -16,9 +16,9 @@ This track focuses on defining the visual design and prompts for the core "Proje
 - [x] Task: Conductor - User Manual Verification 'Editor Workspace' [cce58b2]
 
 ## Phase 2: Project Management Flows
-- [ ] Task: Create Atomic Prompts for Modals (Wizard, Settings)
-    - [ ] Write acceptance criteria for complex modals
-    - [ ] Implement prompts for New Project Wizard and Settings
+- [x] Task: Create Atomic Prompts for Modals (Wizard, Settings) [32da940]
+    - [x] Write acceptance criteria for complex modals
+    - [x] Implement prompts for New Project Wizard and Settings
 - [ ] Task: Create UX Flow for "New Project" Wizard
     - [ ] Write validation steps for Wizard UX
     - [ ] Implement Wizard flow documentation

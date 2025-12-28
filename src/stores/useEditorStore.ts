@@ -13,6 +13,7 @@ interface EditorState {
   closeTab: (tabId: string) => void
   setActiveTab: (tabId: string) => void
   updateTabContent: (tabId: string, content: string) => void
+  markTabClean: (tabId: string) => void
   setCursorPosition: (tabId: string, line: number, column: number) => void
   getCursorPosition: (tabId: string) => { line: number; column: number }
   closeAllTabs: () => void
@@ -69,6 +70,14 @@ export const useEditorStore = create<EditorState>()(
         updated.set(tabId, content)
         return { editorContent: updated }
       })
+    },
+
+    markTabClean: (tabId) => {
+      set((state) => ({
+        tabs: state.tabs.map((tab) =>
+          tab.id === tabId ? { ...tab, isDirty: false } : tab
+        ),
+      }))
     },
 
     setCursorPosition: (tabId, line, column) => {

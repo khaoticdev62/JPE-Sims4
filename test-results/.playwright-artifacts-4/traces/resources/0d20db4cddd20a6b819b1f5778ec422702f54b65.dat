@@ -1,0 +1,109 @@
+import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/components/common/Modal.tsx");import * as RefreshRuntime from "/@react-refresh";
+const inWebWorker = typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope;
+
+let prevRefreshReg;
+let prevRefreshSig;
+
+if (import.meta.hot && !inWebWorker) {
+  if (!window.$RefreshReg$) {
+    throw new Error(
+      "@vitejs/plugin-react-swc can't detect preamble. Something is wrong."
+    );
+  }
+
+  prevRefreshReg = window.$RefreshReg$;
+  prevRefreshSig = window.$RefreshSig$;
+  window.$RefreshReg$ = RefreshRuntime.getRefreshReg("C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/common/Modal.tsx");
+  window.$RefreshSig$ = RefreshRuntime.createSignatureFunctionForTransform;
+}
+
+import __vite__cjsImport2_react_jsxDevRuntime from "/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=818be9b9"; const _jsxDEV = __vite__cjsImport2_react_jsxDevRuntime["jsxDEV"];
+export default function Modal({ isOpen, title, onClose, children, closeOnBackdropClick = true }) {
+    if (!isOpen) return null;
+    const handleBackdropClick = ()=>{
+        if (closeOnBackdropClick) onClose();
+    };
+    return /*#__PURE__*/ _jsxDEV("div", {
+        className: "fixed inset-0 z-50 flex items-center justify-center",
+        children: [
+            /*#__PURE__*/ _jsxDEV("div", {
+                className: "absolute inset-0 bg-bg-primary bg-opacity-80",
+                onClick: handleBackdropClick
+            }, void 0, false, {
+                fileName: "C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/common/Modal.tsx",
+                lineNumber: 27,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ _jsxDEV("div", {
+                className: "relative bg-bg-secondary rounded-lg shadow-apple-lg max-w-md w-full mx-4 border border-border-subtle",
+                children: [
+                    /*#__PURE__*/ _jsxDEV("div", {
+                        className: "flex items-center justify-between px-6 py-4 border-b border-border-subtle",
+                        children: [
+                            /*#__PURE__*/ _jsxDEV("h2", {
+                                className: "text-lg font-semibold text-text-primary",
+                                children: title
+                            }, void 0, false, {
+                                fileName: "C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/common/Modal.tsx",
+                                lineNumber: 36,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ _jsxDEV("button", {
+                                onClick: onClose,
+                                className: "text-text-secondary hover:text-text-primary text-xl transition-colors",
+                                children: "✕"
+                            }, void 0, false, {
+                                fileName: "C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/common/Modal.tsx",
+                                lineNumber: 37,
+                                columnNumber: 11
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/common/Modal.tsx",
+                        lineNumber: 35,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ _jsxDEV("div", {
+                        className: "px-6 py-4 text-text-primary",
+                        children: children
+                    }, void 0, false, {
+                        fileName: "C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/common/Modal.tsx",
+                        lineNumber: 46,
+                        columnNumber: 9
+                    }, this)
+                ]
+            }, void 0, true, {
+                fileName: "C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/common/Modal.tsx",
+                lineNumber: 33,
+                columnNumber: 7
+            }, this)
+        ]
+    }, void 0, true, {
+        fileName: "C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/common/Modal.tsx",
+        lineNumber: 25,
+        columnNumber: 5
+    }, this);
+}
+_c = Modal;
+var _c;
+$RefreshReg$(_c, "Modal");
+
+
+if (import.meta.hot && !inWebWorker) {
+  window.$RefreshReg$ = prevRefreshReg;
+  window.$RefreshSig$ = prevRefreshSig;
+}
+
+
+if (import.meta.hot && !inWebWorker) {
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh("C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/common/Modal.tsx", currentExports);
+    import.meta.hot.accept((nextExports) => {
+      if (!nextExports) return;
+      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate("C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/common/Modal.tsx", currentExports, nextExports);
+      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+    });
+  });
+}
+
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIk1vZGFsLnRzeCJdLCJzb3VyY2VzQ29udGVudCI6WyJpbXBvcnQgeyBSZWFjdE5vZGUgfSBmcm9tICdyZWFjdCdcclxuXHJcbmludGVyZmFjZSBNb2RhbFByb3BzIHtcclxuICBpc09wZW46IGJvb2xlYW5cclxuICB0aXRsZTogc3RyaW5nXHJcbiAgb25DbG9zZTogKCkgPT4gdm9pZFxyXG4gIGNoaWxkcmVuOiBSZWFjdE5vZGVcclxuICBjbG9zZU9uQmFja2Ryb3BDbGljaz86IGJvb2xlYW5cclxufVxyXG5cclxuZXhwb3J0IGRlZmF1bHQgZnVuY3Rpb24gTW9kYWwoe1xyXG4gIGlzT3BlbixcclxuICB0aXRsZSxcclxuICBvbkNsb3NlLFxyXG4gIGNoaWxkcmVuLFxyXG4gIGNsb3NlT25CYWNrZHJvcENsaWNrID0gdHJ1ZSxcclxufTogTW9kYWxQcm9wcykge1xyXG4gIGlmICghaXNPcGVuKSByZXR1cm4gbnVsbFxyXG5cclxuICBjb25zdCBoYW5kbGVCYWNrZHJvcENsaWNrID0gKCkgPT4ge1xyXG4gICAgaWYgKGNsb3NlT25CYWNrZHJvcENsaWNrKSBvbkNsb3NlKClcclxuICB9XHJcblxyXG4gIHJldHVybiAoXHJcbiAgICA8ZGl2IGNsYXNzTmFtZT1cImZpeGVkIGluc2V0LTAgei01MCBmbGV4IGl0ZW1zLWNlbnRlciBqdXN0aWZ5LWNlbnRlclwiPlxyXG4gICAgICB7LyogQmFja2Ryb3AgKi99XHJcbiAgICAgIDxkaXZcclxuICAgICAgICBjbGFzc05hbWU9XCJhYnNvbHV0ZSBpbnNldC0wIGJnLWJnLXByaW1hcnkgYmctb3BhY2l0eS04MFwiXHJcbiAgICAgICAgb25DbGljaz17aGFuZGxlQmFja2Ryb3BDbGlja31cclxuICAgICAgLz5cclxuXHJcbiAgICAgIHsvKiBNb2RhbCAqL31cclxuICAgICAgPGRpdiBjbGFzc05hbWU9XCJyZWxhdGl2ZSBiZy1iZy1zZWNvbmRhcnkgcm91bmRlZC1sZyBzaGFkb3ctYXBwbGUtbGcgbWF4LXctbWQgdy1mdWxsIG14LTQgYm9yZGVyIGJvcmRlci1ib3JkZXItc3VidGxlXCI+XHJcbiAgICAgICAgey8qIEhlYWRlciAqL31cclxuICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImZsZXggaXRlbXMtY2VudGVyIGp1c3RpZnktYmV0d2VlbiBweC02IHB5LTQgYm9yZGVyLWIgYm9yZGVyLWJvcmRlci1zdWJ0bGVcIj5cclxuICAgICAgICAgIDxoMiBjbGFzc05hbWU9XCJ0ZXh0LWxnIGZvbnQtc2VtaWJvbGQgdGV4dC10ZXh0LXByaW1hcnlcIj57dGl0bGV9PC9oMj5cclxuICAgICAgICAgIDxidXR0b25cclxuICAgICAgICAgICAgb25DbGljaz17b25DbG9zZX1cclxuICAgICAgICAgICAgY2xhc3NOYW1lPVwidGV4dC10ZXh0LXNlY29uZGFyeSBob3Zlcjp0ZXh0LXRleHQtcHJpbWFyeSB0ZXh0LXhsIHRyYW5zaXRpb24tY29sb3JzXCJcclxuICAgICAgICAgID5cclxuICAgICAgICAgICAg4pyVXHJcbiAgICAgICAgICA8L2J1dHRvbj5cclxuICAgICAgICA8L2Rpdj5cclxuXHJcbiAgICAgICAgey8qIENvbnRlbnQgKi99XHJcbiAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJweC02IHB5LTQgdGV4dC10ZXh0LXByaW1hcnlcIj57Y2hpbGRyZW59PC9kaXY+XHJcbiAgICAgIDwvZGl2PlxyXG4gICAgPC9kaXY+XHJcbiAgKVxyXG59XHJcbiJdLCJuYW1lcyI6WyJNb2RhbCIsImlzT3BlbiIsInRpdGxlIiwib25DbG9zZSIsImNoaWxkcmVuIiwiY2xvc2VPbkJhY2tkcm9wQ2xpY2siLCJoYW5kbGVCYWNrZHJvcENsaWNrIiwiZGl2IiwiY2xhc3NOYW1lIiwib25DbGljayIsImgyIiwiYnV0dG9uIl0sIm1hcHBpbmdzIjoiOzs7Ozs7Ozs7Ozs7Ozs7Ozs7OztBQVVBLGVBQWUsU0FBU0EsTUFBTSxFQUM1QkMsTUFBTSxFQUNOQyxLQUFLLEVBQ0xDLE9BQU8sRUFDUEMsUUFBUSxFQUNSQyx1QkFBdUIsSUFBSSxFQUNoQjtJQUNYLElBQUksQ0FBQ0osUUFBUSxPQUFPO0lBRXBCLE1BQU1LLHNCQUFzQjtRQUMxQixJQUFJRCxzQkFBc0JGO0lBQzVCO0lBRUEscUJBQ0UsUUFBQ0k7UUFBSUMsV0FBVTs7MEJBRWIsUUFBQ0Q7Z0JBQ0NDLFdBQVU7Z0JBQ1ZDLFNBQVNIOzs7Ozs7MEJBSVgsUUFBQ0M7Z0JBQUlDLFdBQVU7O2tDQUViLFFBQUNEO3dCQUFJQyxXQUFVOzswQ0FDYixRQUFDRTtnQ0FBR0YsV0FBVTswQ0FBMkNOOzs7Ozs7MENBQ3pELFFBQUNTO2dDQUNDRixTQUFTTjtnQ0FDVEssV0FBVTswQ0FDWDs7Ozs7Ozs7Ozs7O2tDQU1ILFFBQUNEO3dCQUFJQyxXQUFVO2tDQUErQko7Ozs7Ozs7Ozs7Ozs7Ozs7OztBQUl0RDtLQXZDd0JKIn0=

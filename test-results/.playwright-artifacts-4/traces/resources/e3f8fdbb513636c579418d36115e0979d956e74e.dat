@@ -1,0 +1,94 @@
+import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/components/common/TextInput.tsx");import * as RefreshRuntime from "/@react-refresh";
+const inWebWorker = typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope;
+
+let prevRefreshReg;
+let prevRefreshSig;
+
+if (import.meta.hot && !inWebWorker) {
+  if (!window.$RefreshReg$) {
+    throw new Error(
+      "@vitejs/plugin-react-swc can't detect preamble. Something is wrong."
+    );
+  }
+
+  prevRefreshReg = window.$RefreshReg$;
+  prevRefreshSig = window.$RefreshSig$;
+  window.$RefreshReg$ = RefreshRuntime.getRefreshReg("C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/common/TextInput.tsx");
+  window.$RefreshSig$ = RefreshRuntime.createSignatureFunctionForTransform;
+}
+
+import __vite__cjsImport2_react_jsxDevRuntime from "/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=818be9b9"; const _jsxDEV = __vite__cjsImport2_react_jsxDevRuntime["jsxDEV"];
+export default function TextInput({ label, error, helperText, className = '', ...props }) {
+    return /*#__PURE__*/ _jsxDEV("div", {
+        className: "mb-4 last:mb-0",
+        children: [
+            label && /*#__PURE__*/ _jsxDEV("label", {
+                className: "block text-sm font-medium text-text-primary mb-1.5",
+                children: label
+            }, void 0, false, {
+                fileName: "C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/common/TextInput.tsx",
+                lineNumber: 19,
+                columnNumber: 9
+            }, this),
+            /*#__PURE__*/ _jsxDEV("input", {
+                ...props,
+                className: `
+          w-full px-3 py-2 bg-bg-tertiary border border-border-subtle rounded
+          text-text-primary placeholder-text-secondary
+          focus:outline-none focus:border-accent-primary focus:ring-1 focus:ring-accent-primary
+          disabled:bg-bg-secondary disabled:cursor-not-allowed disabled:opacity-50
+          transition-colors duration-200
+          ${error ? 'border-state-error focus:ring-state-error' : ''}
+          ${className}
+        `
+            }, void 0, false, {
+                fileName: "C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/common/TextInput.tsx",
+                lineNumber: 23,
+                columnNumber: 7
+            }, this),
+            error && /*#__PURE__*/ _jsxDEV("div", {
+                className: "text-sm text-state-error mt-1",
+                children: error
+            }, void 0, false, {
+                fileName: "C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/common/TextInput.tsx",
+                lineNumber: 35,
+                columnNumber: 17
+            }, this),
+            helperText && !error && /*#__PURE__*/ _jsxDEV("div", {
+                className: "text-sm text-text-secondary mt-1",
+                children: helperText
+            }, void 0, false, {
+                fileName: "C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/common/TextInput.tsx",
+                lineNumber: 37,
+                columnNumber: 9
+            }, this)
+        ]
+    }, void 0, true, {
+        fileName: "C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/common/TextInput.tsx",
+        lineNumber: 17,
+        columnNumber: 5
+    }, this);
+}
+_c = TextInput;
+var _c;
+$RefreshReg$(_c, "TextInput");
+
+
+if (import.meta.hot && !inWebWorker) {
+  window.$RefreshReg$ = prevRefreshReg;
+  window.$RefreshSig$ = prevRefreshSig;
+}
+
+
+if (import.meta.hot && !inWebWorker) {
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh("C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/common/TextInput.tsx", currentExports);
+    import.meta.hot.accept((nextExports) => {
+      if (!nextExports) return;
+      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate("C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/common/TextInput.tsx", currentExports, nextExports);
+      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+    });
+  });
+}
+
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIlRleHRJbnB1dC50c3giXSwic291cmNlc0NvbnRlbnQiOlsiaW1wb3J0IHsgSW5wdXRIVE1MQXR0cmlidXRlcyB9IGZyb20gJ3JlYWN0J1xyXG5cclxuaW50ZXJmYWNlIFRleHRJbnB1dFByb3BzIGV4dGVuZHMgSW5wdXRIVE1MQXR0cmlidXRlczxIVE1MSW5wdXRFbGVtZW50PiB7XHJcbiAgbGFiZWw/OiBzdHJpbmdcclxuICBlcnJvcj86IHN0cmluZ1xyXG4gIGhlbHBlclRleHQ/OiBzdHJpbmdcclxufVxyXG5cclxuZXhwb3J0IGRlZmF1bHQgZnVuY3Rpb24gVGV4dElucHV0KHtcclxuICBsYWJlbCxcclxuICBlcnJvcixcclxuICBoZWxwZXJUZXh0LFxyXG4gIGNsYXNzTmFtZSA9ICcnLFxyXG4gIC4uLnByb3BzXHJcbn06IFRleHRJbnB1dFByb3BzKSB7XHJcbiAgcmV0dXJuIChcclxuICAgIDxkaXYgY2xhc3NOYW1lPVwibWItNCBsYXN0Om1iLTBcIj5cclxuICAgICAge2xhYmVsICYmIChcclxuICAgICAgICA8bGFiZWwgY2xhc3NOYW1lPVwiYmxvY2sgdGV4dC1zbSBmb250LW1lZGl1bSB0ZXh0LXRleHQtcHJpbWFyeSBtYi0xLjVcIj5cclxuICAgICAgICAgIHtsYWJlbH1cclxuICAgICAgICA8L2xhYmVsPlxyXG4gICAgICApfVxyXG4gICAgICA8aW5wdXRcclxuICAgICAgICB7Li4ucHJvcHN9XHJcbiAgICAgICAgY2xhc3NOYW1lPXtgXHJcbiAgICAgICAgICB3LWZ1bGwgcHgtMyBweS0yIGJnLWJnLXRlcnRpYXJ5IGJvcmRlciBib3JkZXItYm9yZGVyLXN1YnRsZSByb3VuZGVkXHJcbiAgICAgICAgICB0ZXh0LXRleHQtcHJpbWFyeSBwbGFjZWhvbGRlci10ZXh0LXNlY29uZGFyeVxyXG4gICAgICAgICAgZm9jdXM6b3V0bGluZS1ub25lIGZvY3VzOmJvcmRlci1hY2NlbnQtcHJpbWFyeSBmb2N1czpyaW5nLTEgZm9jdXM6cmluZy1hY2NlbnQtcHJpbWFyeVxyXG4gICAgICAgICAgZGlzYWJsZWQ6YmctYmctc2Vjb25kYXJ5IGRpc2FibGVkOmN1cnNvci1ub3QtYWxsb3dlZCBkaXNhYmxlZDpvcGFjaXR5LTUwXHJcbiAgICAgICAgICB0cmFuc2l0aW9uLWNvbG9ycyBkdXJhdGlvbi0yMDBcclxuICAgICAgICAgICR7ZXJyb3IgPyAnYm9yZGVyLXN0YXRlLWVycm9yIGZvY3VzOnJpbmctc3RhdGUtZXJyb3InIDogJyd9XHJcbiAgICAgICAgICAke2NsYXNzTmFtZX1cclxuICAgICAgICBgfVxyXG4gICAgICAvPlxyXG4gICAgICB7ZXJyb3IgJiYgPGRpdiBjbGFzc05hbWU9XCJ0ZXh0LXNtIHRleHQtc3RhdGUtZXJyb3IgbXQtMVwiPntlcnJvcn08L2Rpdj59XHJcbiAgICAgIHtoZWxwZXJUZXh0ICYmICFlcnJvciAmJiAoXHJcbiAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJ0ZXh0LXNtIHRleHQtdGV4dC1zZWNvbmRhcnkgbXQtMVwiPntoZWxwZXJUZXh0fTwvZGl2PlxyXG4gICAgICApfVxyXG4gICAgPC9kaXY+XHJcbiAgKVxyXG59XHJcbiJdLCJuYW1lcyI6WyJUZXh0SW5wdXQiLCJsYWJlbCIsImVycm9yIiwiaGVscGVyVGV4dCIsImNsYXNzTmFtZSIsInByb3BzIiwiZGl2IiwiaW5wdXQiXSwibWFwcGluZ3MiOiI7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7O0FBUUEsZUFBZSxTQUFTQSxVQUFVLEVBQ2hDQyxLQUFLLEVBQ0xDLEtBQUssRUFDTEMsVUFBVSxFQUNWQyxZQUFZLEVBQUUsRUFDZCxHQUFHQyxPQUNZO0lBQ2YscUJBQ0UsUUFBQ0M7UUFBSUYsV0FBVTs7WUFDWkgsdUJBQ0MsUUFBQ0E7Z0JBQU1HLFdBQVU7MEJBQ2RIOzs7Ozs7MEJBR0wsUUFBQ007Z0JBQ0UsR0FBR0YsS0FBSztnQkFDVEQsV0FBVyxDQUFDOzs7Ozs7VUFNVixFQUFFRixRQUFRLDhDQUE4QyxHQUFHO1VBQzNELEVBQUVFLFVBQVU7UUFDZCxDQUFDOzs7Ozs7WUFFRkYsdUJBQVMsUUFBQ0k7Z0JBQUlGLFdBQVU7MEJBQWlDRjs7Ozs7O1lBQ3pEQyxjQUFjLENBQUNELHVCQUNkLFFBQUNJO2dCQUFJRixXQUFVOzBCQUFvQ0Q7Ozs7Ozs7Ozs7OztBQUkzRDtLQWhDd0JIIn0=

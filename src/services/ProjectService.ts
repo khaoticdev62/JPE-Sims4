@@ -23,25 +23,73 @@ export class ProjectService {
   }
 
   /**
-   * Open an existing project
+   * Open an existing project and discover files
    */
   static async openProject(projectPath: string): Promise<Project | null> {
     try {
-      const { openProject, setCurrentProject } = useProjectStore.getState()
+      const { openProject, setCurrentProject, addFile } = useProjectStore.getState()
       await openProject(projectPath)
 
-      // Attempt to load project metadata
-      const dirResult = await FileService.listDirectory(projectPath)
+      const projectName = projectPath.split(/[/\\]/).pop() || 'Untitled'
+
+      // Try to load project metadata from .jpe-project.json
+      const metadataPath = `${projectPath}/.jpe-project.json`
+      let projectMetadata: any = null
+
+      const metadataExists = await FileService.fileExists(metadataPath)
+      if (metadataExists) {
+        const metadataResult = await FileService.readFile(metadataPath)
+        if (metadataResult.success && metadataResult.content) {
+          try {
+            projectMetadata = JSON.parse(metadataResult.content)
+          } catch (e) {
+            console.warn('Failed to parse project metadata', e)
+          }
+        }
+      }
+
+      // Create project with loaded metadata or defaults
       const newProject: Project = {
-        id: `project-${Date.now()}`,
-        name: projectPath.split('/').pop() || 'Untitled',
+        id: projectMetadata?.id || `project-${Date.now()}`,
+        name: projectName,
         rootPath: projectPath,
         files: [],
-        metadata: {
+        metadata: projectMetadata?.metadata || {
           createdAt: Date.now(),
           updatedAt: Date.now(),
           version: '1.0.0',
         },
+      }
+
+      // Discover XML and JPE files in the project directory
+      const dirResult = await FileService.listDirectory(projectPath)
+      if (dirResult.success && dirResult.files) {
+        const supportedExtensions = ['.xml', '.jpe']
+
+        for (const file of dirResult.files) {
+          if (file.isFile && supportedExtensions.some(ext => file.name.endsWith(ext))) {
+            const filePath = `${projectPath}/${file.name}`
+            const fileContent = await FileService.readFile(filePath)
+
+            if (fileContent.success && fileContent.content) {
+              const fileType = file.name.endsWith('.jpe') ? 'jpe' : 'xml'
+              const newFile: ModFile = {
+                id: `file-${Date.now()}-${Math.random()}`,
+                projectId: newProject.id,
+                name: file.name,
+                path: filePath,
+                type: fileType as any,
+                content: fileContent.content,
+                isDirty: false,
+                size: fileContent.size || fileContent.content.length,
+                lastModified: fileContent.modified || Date.now(),
+              }
+
+              newProject.files.push(newFile)
+              addFile(newFile)
+            }
+          }
+        }
       }
 
       setCurrentProject(newProject)
@@ -80,6 +128,21 @@ export class ProjectService {
           ...currentProject.metadata,
           updatedAt: Date.now(),
         },
+      }
+
+      // Save project metadata to .jpe-project.json
+      const metadataPath = `${currentProject.rootPath}/.jpe-project.json`
+      const metadataContent = JSON.stringify({
+        id: updatedProject.id,
+        name: updatedProject.name,
+        metadata: updatedProject.metadata,
+        fileCount: updatedProject.files.length,
+      }, null, 2)
+
+      const metadataResult = await FileService.writeFile(metadataPath, metadataContent)
+      if (!metadataResult.success) {
+        console.error('Failed to save project metadata:', metadataResult.error)
+        allSuccess = false
       }
 
       setCurrentProject(updatedProject)

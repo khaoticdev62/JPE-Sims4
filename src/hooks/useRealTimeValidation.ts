@@ -50,13 +50,13 @@ export const useRealTimeValidation = (fileId: string | null, content: string | n
       fileId,
     }))
 
-    // Keep diagnostics from other files
-    const otherDiagnostics = getDiagnosticsForFile(fileId)
-      .filter((d) => !updatedDiagnostics.find((ud) => ud.id === d.id))
+    // Get ALL diagnostics from store and keep only those from OTHER files
+    const allStoredDiagnostics = useDiagnosticStore.getState().diagnostics || []
+    const otherDiagnostics = allStoredDiagnostics.filter((d) => d.fileId !== fileId)
 
-    // Set all diagnostics
+    // Set all diagnostics: updated for current file + diagnostics from other files
     setDiagnostics([...updatedDiagnostics, ...otherDiagnostics])
-  }, [fileId, content, getFile, setDiagnostics, getDiagnosticsForFile])
+  }, [fileId, content, getFile, setDiagnostics])
 
   // Debounce validation
   useEffect(() => {

@@ -1,0 +1,54 @@
+import __vite__cjsImport0_react from "/node_modules/.vite/deps/react.js?v=818be9b9"; const useEffect = __vite__cjsImport0_react["useEffect"]; const useCallback = __vite__cjsImport0_react["useCallback"];
+import { useProjectStore } from "/src/stores/useProjectStore.ts";
+import { useEditorStore } from "/src/stores/useEditorStore.ts";
+import { FileService } from "/src/services/FileService.ts";
+/**
+ * Hook to load and display file content when a tab is activated
+ */ export const useFileLoader = (tabId, fileId)=>{
+    const { getFile, updateFile } = useProjectStore();
+    const { updateTabContent, editorContent } = useEditorStore();
+    const loadFile = useCallback(async ()=>{
+        if (!tabId || !fileId) return;
+        try {
+            const file = getFile(fileId);
+            if (!file) return;
+            // Check if already loaded in editor
+            const cachedContent = editorContent.get(tabId);
+            if (cachedContent) {
+                return;
+            }
+            // Load from disk
+            const result = await FileService.readFile(file.path);
+            if (result.success && result.content) {
+                updateTabContent(tabId, result.content);
+                updateFile(fileId, {
+                    content: result.content,
+                    size: result.size || 0
+                });
+            } else if (result.error) {
+                console.error('Failed to load file:', result.error);
+                updateTabContent(tabId, `// Error loading file: ${result.error}`);
+            }
+        } catch (error) {
+            console.error('File loader error:', error);
+        }
+    }, [
+        tabId,
+        fileId,
+        getFile,
+        updateTabContent,
+        updateFile,
+        editorContent
+    ]);
+    useEffect(()=>{
+        if (tabId && fileId) {
+            loadFile();
+        }
+    }, [
+        tabId,
+        fileId,
+        loadFile
+    ]);
+};
+
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbInVzZUZpbGVMb2FkZXIudHMiXSwic291cmNlc0NvbnRlbnQiOlsiaW1wb3J0IHsgdXNlRWZmZWN0LCB1c2VDYWxsYmFjayB9IGZyb20gJ3JlYWN0J1xyXG5pbXBvcnQgeyB1c2VQcm9qZWN0U3RvcmUgfSBmcm9tICdAL3N0b3Jlcy91c2VQcm9qZWN0U3RvcmUnXHJcbmltcG9ydCB7IHVzZUVkaXRvclN0b3JlIH0gZnJvbSAnQC9zdG9yZXMvdXNlRWRpdG9yU3RvcmUnXHJcbmltcG9ydCB7IEZpbGVTZXJ2aWNlIH0gZnJvbSAnQC9zZXJ2aWNlcy9GaWxlU2VydmljZSdcclxuXHJcbi8qKlxyXG4gKiBIb29rIHRvIGxvYWQgYW5kIGRpc3BsYXkgZmlsZSBjb250ZW50IHdoZW4gYSB0YWIgaXMgYWN0aXZhdGVkXHJcbiAqL1xyXG5leHBvcnQgY29uc3QgdXNlRmlsZUxvYWRlciA9ICh0YWJJZDogc3RyaW5nIHwgbnVsbCwgZmlsZUlkOiBzdHJpbmcgfCBudWxsKSA9PiB7XHJcbiAgY29uc3QgeyBnZXRGaWxlLCB1cGRhdGVGaWxlIH0gPSB1c2VQcm9qZWN0U3RvcmUoKVxyXG4gIGNvbnN0IHsgdXBkYXRlVGFiQ29udGVudCwgZWRpdG9yQ29udGVudCB9ID0gdXNlRWRpdG9yU3RvcmUoKVxyXG5cclxuICBjb25zdCBsb2FkRmlsZSA9IHVzZUNhbGxiYWNrKGFzeW5jICgpID0+IHtcclxuICAgIGlmICghdGFiSWQgfHwgIWZpbGVJZCkgcmV0dXJuXHJcblxyXG4gICAgdHJ5IHtcclxuICAgICAgY29uc3QgZmlsZSA9IGdldEZpbGUoZmlsZUlkKVxyXG4gICAgICBpZiAoIWZpbGUpIHJldHVyblxyXG5cclxuICAgICAgLy8gQ2hlY2sgaWYgYWxyZWFkeSBsb2FkZWQgaW4gZWRpdG9yXHJcbiAgICAgIGNvbnN0IGNhY2hlZENvbnRlbnQgPSBlZGl0b3JDb250ZW50LmdldCh0YWJJZClcclxuICAgICAgaWYgKGNhY2hlZENvbnRlbnQpIHtcclxuICAgICAgICByZXR1cm5cclxuICAgICAgfVxyXG5cclxuICAgICAgLy8gTG9hZCBmcm9tIGRpc2tcclxuICAgICAgY29uc3QgcmVzdWx0ID0gYXdhaXQgRmlsZVNlcnZpY2UucmVhZEZpbGUoZmlsZS5wYXRoKVxyXG5cclxuICAgICAgaWYgKHJlc3VsdC5zdWNjZXNzICYmIHJlc3VsdC5jb250ZW50KSB7XHJcbiAgICAgICAgdXBkYXRlVGFiQ29udGVudCh0YWJJZCwgcmVzdWx0LmNvbnRlbnQpXHJcbiAgICAgICAgdXBkYXRlRmlsZShmaWxlSWQsIHtcclxuICAgICAgICAgIGNvbnRlbnQ6IHJlc3VsdC5jb250ZW50LFxyXG4gICAgICAgICAgc2l6ZTogcmVzdWx0LnNpemUgfHwgMCxcclxuICAgICAgICB9KVxyXG4gICAgICB9IGVsc2UgaWYgKHJlc3VsdC5lcnJvcikge1xyXG4gICAgICAgIGNvbnNvbGUuZXJyb3IoJ0ZhaWxlZCB0byBsb2FkIGZpbGU6JywgcmVzdWx0LmVycm9yKVxyXG4gICAgICAgIHVwZGF0ZVRhYkNvbnRlbnQodGFiSWQsIGAvLyBFcnJvciBsb2FkaW5nIGZpbGU6ICR7cmVzdWx0LmVycm9yfWApXHJcbiAgICAgIH1cclxuICAgIH0gY2F0Y2ggKGVycm9yKSB7XHJcbiAgICAgIGNvbnNvbGUuZXJyb3IoJ0ZpbGUgbG9hZGVyIGVycm9yOicsIGVycm9yKVxyXG4gICAgfVxyXG4gIH0sIFt0YWJJZCwgZmlsZUlkLCBnZXRGaWxlLCB1cGRhdGVUYWJDb250ZW50LCB1cGRhdGVGaWxlLCBlZGl0b3JDb250ZW50XSlcclxuXHJcbiAgdXNlRWZmZWN0KCgpID0+IHtcclxuICAgIGlmICh0YWJJZCAmJiBmaWxlSWQpIHtcclxuICAgICAgbG9hZEZpbGUoKVxyXG4gICAgfVxyXG4gIH0sIFt0YWJJZCwgZmlsZUlkLCBsb2FkRmlsZV0pXHJcbn1cclxuIl0sIm5hbWVzIjpbInVzZUVmZmVjdCIsInVzZUNhbGxiYWNrIiwidXNlUHJvamVjdFN0b3JlIiwidXNlRWRpdG9yU3RvcmUiLCJGaWxlU2VydmljZSIsInVzZUZpbGVMb2FkZXIiLCJ0YWJJZCIsImZpbGVJZCIsImdldEZpbGUiLCJ1cGRhdGVGaWxlIiwidXBkYXRlVGFiQ29udGVudCIsImVkaXRvckNvbnRlbnQiLCJsb2FkRmlsZSIsImZpbGUiLCJjYWNoZWRDb250ZW50IiwiZ2V0IiwicmVzdWx0IiwicmVhZEZpbGUiLCJwYXRoIiwic3VjY2VzcyIsImNvbnRlbnQiLCJzaXplIiwiZXJyb3IiLCJjb25zb2xlIl0sIm1hcHBpbmdzIjoiQUFBQSxTQUFTQSxTQUFTLEVBQUVDLFdBQVcsUUFBUSxRQUFPO0FBQzlDLFNBQVNDLGVBQWUsUUFBUSwyQkFBMEI7QUFDMUQsU0FBU0MsY0FBYyxRQUFRLDBCQUF5QjtBQUN4RCxTQUFTQyxXQUFXLFFBQVEseUJBQXdCO0FBRXBEOztDQUVDLEdBQ0QsT0FBTyxNQUFNQyxnQkFBZ0IsQ0FBQ0MsT0FBc0JDO0lBQ2xELE1BQU0sRUFBRUMsT0FBTyxFQUFFQyxVQUFVLEVBQUUsR0FBR1A7SUFDaEMsTUFBTSxFQUFFUSxnQkFBZ0IsRUFBRUMsYUFBYSxFQUFFLEdBQUdSO0lBRTVDLE1BQU1TLFdBQVdYLFlBQVk7UUFDM0IsSUFBSSxDQUFDSyxTQUFTLENBQUNDLFFBQVE7UUFFdkIsSUFBSTtZQUNGLE1BQU1NLE9BQU9MLFFBQVFEO1lBQ3JCLElBQUksQ0FBQ00sTUFBTTtZQUVYLG9DQUFvQztZQUNwQyxNQUFNQyxnQkFBZ0JILGNBQWNJLEdBQUcsQ0FBQ1Q7WUFDeEMsSUFBSVEsZUFBZTtnQkFDakI7WUFDRjtZQUVBLGlCQUFpQjtZQUNqQixNQUFNRSxTQUFTLE1BQU1aLFlBQVlhLFFBQVEsQ0FBQ0osS0FBS0ssSUFBSTtZQUVuRCxJQUFJRixPQUFPRyxPQUFPLElBQUlILE9BQU9JLE9BQU8sRUFBRTtnQkFDcENWLGlCQUFpQkosT0FBT1UsT0FBT0ksT0FBTztnQkFDdENYLFdBQVdGLFFBQVE7b0JBQ2pCYSxTQUFTSixPQUFPSSxPQUFPO29CQUN2QkMsTUFBTUwsT0FBT0ssSUFBSSxJQUFJO2dCQUN2QjtZQUNGLE9BQU8sSUFBSUwsT0FBT00sS0FBSyxFQUFFO2dCQUN2QkMsUUFBUUQsS0FBSyxDQUFDLHdCQUF3Qk4sT0FBT00sS0FBSztnQkFDbERaLGlCQUFpQkosT0FBTyxDQUFDLHVCQUF1QixFQUFFVSxPQUFPTSxLQUFLLEVBQUU7WUFDbEU7UUFDRixFQUFFLE9BQU9BLE9BQU87WUFDZEMsUUFBUUQsS0FBSyxDQUFDLHNCQUFzQkE7UUFDdEM7SUFDRixHQUFHO1FBQUNoQjtRQUFPQztRQUFRQztRQUFTRTtRQUFrQkQ7UUFBWUU7S0FBYztJQUV4RVgsVUFBVTtRQUNSLElBQUlNLFNBQVNDLFFBQVE7WUFDbkJLO1FBQ0Y7SUFDRixHQUFHO1FBQUNOO1FBQU9DO1FBQVFLO0tBQVM7QUFDOUIsRUFBQyJ9

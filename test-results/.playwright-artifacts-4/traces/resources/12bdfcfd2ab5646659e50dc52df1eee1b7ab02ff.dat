@@ -1,0 +1,178 @@
+import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/components/layout/Sidebar.tsx");import * as RefreshRuntime from "/@react-refresh";
+const inWebWorker = typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope;
+
+let prevRefreshReg;
+let prevRefreshSig;
+
+if (import.meta.hot && !inWebWorker) {
+  if (!window.$RefreshReg$) {
+    throw new Error(
+      "@vitejs/plugin-react-swc can't detect preamble. Something is wrong."
+    );
+  }
+
+  prevRefreshReg = window.$RefreshReg$;
+  prevRefreshSig = window.$RefreshSig$;
+  window.$RefreshReg$ = RefreshRuntime.getRefreshReg("C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/layout/Sidebar.tsx");
+  window.$RefreshSig$ = RefreshRuntime.createSignatureFunctionForTransform;
+}
+
+import __vite__cjsImport2_react_jsxDevRuntime from "/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=818be9b9"; const _jsxDEV = __vite__cjsImport2_react_jsxDevRuntime["jsxDEV"];
+var _s = $RefreshSig$();
+import { useProjectStore } from "/src/stores/useProjectStore.ts";
+import { useEditorStore } from "/src/stores/useEditorStore.ts";
+import { useUIStore } from "/src/stores/useUIStore.ts";
+export default function Sidebar() {
+    _s();
+    const { currentProject } = useProjectStore();
+    const { openTab } = useEditorStore();
+    const { sidebarCollapsed } = useUIStore();
+    if (sidebarCollapsed) {
+        return /*#__PURE__*/ _jsxDEV("div", {
+            className: "w-12 bg-bg-secondary border-r border-border-subtle flex flex-col items-center py-4",
+            children: /*#__PURE__*/ _jsxDEV("div", {
+                className: "text-xs text-text-secondary",
+                children: "Files"
+            }, void 0, false, {
+                fileName: "C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/layout/Sidebar.tsx",
+                lineNumber: 13,
+                columnNumber: 9
+            }, this)
+        }, void 0, false, {
+            fileName: "C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/layout/Sidebar.tsx",
+            lineNumber: 12,
+            columnNumber: 7
+        }, this);
+    }
+    const handleFileClick = (fileId, fileName)=>{
+        openTab({
+            id: `tab-${fileId}`,
+            fileId,
+            name: fileName,
+            isDirty: false
+        });
+    };
+    return /*#__PURE__*/ _jsxDEV("div", {
+        className: "w-64 bg-bg-secondary border-r border-border-subtle flex flex-col overflow-hidden",
+        children: [
+            /*#__PURE__*/ _jsxDEV("div", {
+                className: "h-12 border-b border-border-subtle flex items-center px-4",
+                children: [
+                    /*#__PURE__*/ _jsxDEV("h2", {
+                        className: "text-sm font-semibold text-text-primary",
+                        children: currentProject?.name ? 'Project Files' : 'No Project'
+                    }, void 0, false, {
+                        fileName: "C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/layout/Sidebar.tsx",
+                        lineNumber: 30,
+                        columnNumber: 9
+                    }, this),
+                    currentProject?.files && currentProject.files.length > 0 && /*#__PURE__*/ _jsxDEV("span", {
+                        className: "ml-auto text-xs bg-bg-tertiary text-text-secondary px-2 py-1 rounded",
+                        children: currentProject.files.length
+                    }, void 0, false, {
+                        fileName: "C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/layout/Sidebar.tsx",
+                        lineNumber: 34,
+                        columnNumber: 11
+                    }, this)
+                ]
+            }, void 0, true, {
+                fileName: "C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/layout/Sidebar.tsx",
+                lineNumber: 29,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ _jsxDEV("div", {
+                className: "flex-1 overflow-y-auto",
+                children: currentProject?.files && currentProject.files.length > 0 ? /*#__PURE__*/ _jsxDEV("div", {
+                    className: "p-2 space-y-1",
+                    children: currentProject.files.map((file)=>/*#__PURE__*/ _jsxDEV("div", {
+                            "data-testid": `file-${file.name}`,
+                            onClick: ()=>handleFileClick(file.id, file.name),
+                            className: "px-3 py-2 text-xs text-text-secondary hover:bg-bg-tertiary hover:text-text-primary bg-bg-tertiary rounded cursor-pointer truncate transition-colors group flex items-center justify-between",
+                            title: file.path,
+                            children: [
+                                /*#__PURE__*/ _jsxDEV("span", {
+                                    className: "truncate flex-1",
+                                    children: [
+                                        file.name,
+                                        file.isDirty && /*#__PURE__*/ _jsxDEV("span", {
+                                            className: "ml-1 text-state-warning",
+                                            children: "●"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/layout/Sidebar.tsx",
+                                            lineNumber: 52,
+                                            columnNumber: 36
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/layout/Sidebar.tsx",
+                                    lineNumber: 50,
+                                    columnNumber: 17
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV("span", {
+                                    className: "ml-1 text-text-secondary text-xs opacity-0 group-hover:opacity-100",
+                                    children: file.type
+                                }, void 0, false, {
+                                    fileName: "C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/layout/Sidebar.tsx",
+                                    lineNumber: 54,
+                                    columnNumber: 17
+                                }, this)
+                            ]
+                        }, file.id, true, {
+                            fileName: "C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/layout/Sidebar.tsx",
+                            lineNumber: 43,
+                            columnNumber: 15
+                        }, this))
+                }, void 0, false, {
+                    fileName: "C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/layout/Sidebar.tsx",
+                    lineNumber: 41,
+                    columnNumber: 11
+                }, this) : /*#__PURE__*/ _jsxDEV("div", {
+                    className: "p-4 text-xs text-text-secondary text-center",
+                    children: currentProject ? 'No files in project\nUse File → Add File to add mods' : 'No project loaded\nUse File → New Project to start'
+                }, void 0, false, {
+                    fileName: "C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/layout/Sidebar.tsx",
+                    lineNumber: 61,
+                    columnNumber: 11
+                }, this)
+            }, void 0, false, {
+                fileName: "C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/layout/Sidebar.tsx",
+                lineNumber: 39,
+                columnNumber: 7
+            }, this)
+        ]
+    }, void 0, true, {
+        fileName: "C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/layout/Sidebar.tsx",
+        lineNumber: 28,
+        columnNumber: 5
+    }, this);
+}
+_s(Sidebar, "Eyree5ZDgXbsak7AZlgrXPfc/VI=", false, function() {
+    return [
+        useProjectStore,
+        useEditorStore,
+        useUIStore
+    ];
+});
+_c = Sidebar;
+var _c;
+$RefreshReg$(_c, "Sidebar");
+
+
+if (import.meta.hot && !inWebWorker) {
+  window.$RefreshReg$ = prevRefreshReg;
+  window.$RefreshSig$ = prevRefreshSig;
+}
+
+
+if (import.meta.hot && !inWebWorker) {
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh("C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/layout/Sidebar.tsx", currentExports);
+    import.meta.hot.accept((nextExports) => {
+      if (!nextExports) return;
+      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate("C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/layout/Sidebar.tsx", currentExports, nextExports);
+      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+    });
+  });
+}
+
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIlNpZGViYXIudHN4Il0sInNvdXJjZXNDb250ZW50IjpbImltcG9ydCB7IHVzZVByb2plY3RTdG9yZSB9IGZyb20gJ0Avc3RvcmVzL3VzZVByb2plY3RTdG9yZSdcclxuaW1wb3J0IHsgdXNlRWRpdG9yU3RvcmUgfSBmcm9tICdAL3N0b3Jlcy91c2VFZGl0b3JTdG9yZSdcclxuaW1wb3J0IHsgdXNlVUlTdG9yZSB9IGZyb20gJ0Avc3RvcmVzL3VzZVVJU3RvcmUnXHJcblxyXG5leHBvcnQgZGVmYXVsdCBmdW5jdGlvbiBTaWRlYmFyKCkge1xyXG4gIGNvbnN0IHsgY3VycmVudFByb2plY3QgfSA9IHVzZVByb2plY3RTdG9yZSgpXHJcbiAgY29uc3QgeyBvcGVuVGFiIH0gPSB1c2VFZGl0b3JTdG9yZSgpXHJcbiAgY29uc3QgeyBzaWRlYmFyQ29sbGFwc2VkIH0gPSB1c2VVSVN0b3JlKClcclxuXHJcbiAgaWYgKHNpZGViYXJDb2xsYXBzZWQpIHtcclxuICAgIHJldHVybiAoXHJcbiAgICAgIDxkaXYgY2xhc3NOYW1lPVwidy0xMiBiZy1iZy1zZWNvbmRhcnkgYm9yZGVyLXIgYm9yZGVyLWJvcmRlci1zdWJ0bGUgZmxleCBmbGV4LWNvbCBpdGVtcy1jZW50ZXIgcHktNFwiPlxyXG4gICAgICAgIDxkaXYgY2xhc3NOYW1lPVwidGV4dC14cyB0ZXh0LXRleHQtc2Vjb25kYXJ5XCI+RmlsZXM8L2Rpdj5cclxuICAgICAgPC9kaXY+XHJcbiAgICApXHJcbiAgfVxyXG5cclxuICBjb25zdCBoYW5kbGVGaWxlQ2xpY2sgPSAoZmlsZUlkOiBzdHJpbmcsIGZpbGVOYW1lOiBzdHJpbmcpID0+IHtcclxuICAgIG9wZW5UYWIoe1xyXG4gICAgICBpZDogYHRhYi0ke2ZpbGVJZH1gLFxyXG4gICAgICBmaWxlSWQsXHJcbiAgICAgIG5hbWU6IGZpbGVOYW1lLFxyXG4gICAgICBpc0RpcnR5OiBmYWxzZSxcclxuICAgIH0pXHJcbiAgfVxyXG5cclxuICByZXR1cm4gKFxyXG4gICAgPGRpdiBjbGFzc05hbWU9XCJ3LTY0IGJnLWJnLXNlY29uZGFyeSBib3JkZXItciBib3JkZXItYm9yZGVyLXN1YnRsZSBmbGV4IGZsZXgtY29sIG92ZXJmbG93LWhpZGRlblwiPlxyXG4gICAgICA8ZGl2IGNsYXNzTmFtZT1cImgtMTIgYm9yZGVyLWIgYm9yZGVyLWJvcmRlci1zdWJ0bGUgZmxleCBpdGVtcy1jZW50ZXIgcHgtNFwiPlxyXG4gICAgICAgIDxoMiBjbGFzc05hbWU9XCJ0ZXh0LXNtIGZvbnQtc2VtaWJvbGQgdGV4dC10ZXh0LXByaW1hcnlcIj5cclxuICAgICAgICAgIHtjdXJyZW50UHJvamVjdD8ubmFtZSA/ICdQcm9qZWN0IEZpbGVzJyA6ICdObyBQcm9qZWN0J31cclxuICAgICAgICA8L2gyPlxyXG4gICAgICAgIHtjdXJyZW50UHJvamVjdD8uZmlsZXMgJiYgY3VycmVudFByb2plY3QuZmlsZXMubGVuZ3RoID4gMCAmJiAoXHJcbiAgICAgICAgICA8c3BhbiBjbGFzc05hbWU9XCJtbC1hdXRvIHRleHQteHMgYmctYmctdGVydGlhcnkgdGV4dC10ZXh0LXNlY29uZGFyeSBweC0yIHB5LTEgcm91bmRlZFwiPlxyXG4gICAgICAgICAgICB7Y3VycmVudFByb2plY3QuZmlsZXMubGVuZ3RofVxyXG4gICAgICAgICAgPC9zcGFuPlxyXG4gICAgICAgICl9XHJcbiAgICAgIDwvZGl2PlxyXG4gICAgICA8ZGl2IGNsYXNzTmFtZT1cImZsZXgtMSBvdmVyZmxvdy15LWF1dG9cIj5cclxuICAgICAgICB7Y3VycmVudFByb2plY3Q/LmZpbGVzICYmIGN1cnJlbnRQcm9qZWN0LmZpbGVzLmxlbmd0aCA+IDAgPyAoXHJcbiAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cInAtMiBzcGFjZS15LTFcIj5cclxuICAgICAgICAgICAge2N1cnJlbnRQcm9qZWN0LmZpbGVzLm1hcCgoZmlsZSkgPT4gKFxyXG4gICAgICAgICAgICAgIDxkaXZcclxuICAgICAgICAgICAgICAgIGtleT17ZmlsZS5pZH1cclxuICAgICAgICAgICAgICAgIGRhdGEtdGVzdGlkPXtgZmlsZS0ke2ZpbGUubmFtZX1gfVxyXG4gICAgICAgICAgICAgICAgb25DbGljaz17KCkgPT4gaGFuZGxlRmlsZUNsaWNrKGZpbGUuaWQsIGZpbGUubmFtZSl9XHJcbiAgICAgICAgICAgICAgICBjbGFzc05hbWU9XCJweC0zIHB5LTIgdGV4dC14cyB0ZXh0LXRleHQtc2Vjb25kYXJ5IGhvdmVyOmJnLWJnLXRlcnRpYXJ5IGhvdmVyOnRleHQtdGV4dC1wcmltYXJ5IGJnLWJnLXRlcnRpYXJ5IHJvdW5kZWQgY3Vyc29yLXBvaW50ZXIgdHJ1bmNhdGUgdHJhbnNpdGlvbi1jb2xvcnMgZ3JvdXAgZmxleCBpdGVtcy1jZW50ZXIganVzdGlmeS1iZXR3ZWVuXCJcclxuICAgICAgICAgICAgICAgIHRpdGxlPXtmaWxlLnBhdGh9XHJcbiAgICAgICAgICAgICAgPlxyXG4gICAgICAgICAgICAgICAgPHNwYW4gY2xhc3NOYW1lPVwidHJ1bmNhdGUgZmxleC0xXCI+XHJcbiAgICAgICAgICAgICAgICAgIHtmaWxlLm5hbWV9XHJcbiAgICAgICAgICAgICAgICAgIHtmaWxlLmlzRGlydHkgJiYgPHNwYW4gY2xhc3NOYW1lPVwibWwtMSB0ZXh0LXN0YXRlLXdhcm5pbmdcIj7il488L3NwYW4+fVxyXG4gICAgICAgICAgICAgICAgPC9zcGFuPlxyXG4gICAgICAgICAgICAgICAgPHNwYW4gY2xhc3NOYW1lPVwibWwtMSB0ZXh0LXRleHQtc2Vjb25kYXJ5IHRleHQteHMgb3BhY2l0eS0wIGdyb3VwLWhvdmVyOm9wYWNpdHktMTAwXCI+XHJcbiAgICAgICAgICAgICAgICAgIHtmaWxlLnR5cGV9XHJcbiAgICAgICAgICAgICAgICA8L3NwYW4+XHJcbiAgICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICAgICkpfVxyXG4gICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgKSA6IChcclxuICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwicC00IHRleHQteHMgdGV4dC10ZXh0LXNlY29uZGFyeSB0ZXh0LWNlbnRlclwiPlxyXG4gICAgICAgICAgICB7Y3VycmVudFByb2plY3RcclxuICAgICAgICAgICAgICA/ICdObyBmaWxlcyBpbiBwcm9qZWN0XFxuVXNlIEZpbGUg4oaSIEFkZCBGaWxlIHRvIGFkZCBtb2RzJ1xyXG4gICAgICAgICAgICAgIDogJ05vIHByb2plY3QgbG9hZGVkXFxuVXNlIEZpbGUg4oaSIE5ldyBQcm9qZWN0IHRvIHN0YXJ0J31cclxuICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICl9XHJcbiAgICAgIDwvZGl2PlxyXG4gICAgPC9kaXY+XHJcbiAgKVxyXG59XHJcbiJdLCJuYW1lcyI6WyJ1c2VQcm9qZWN0U3RvcmUiLCJ1c2VFZGl0b3JTdG9yZSIsInVzZVVJU3RvcmUiLCJTaWRlYmFyIiwiY3VycmVudFByb2plY3QiLCJvcGVuVGFiIiwic2lkZWJhckNvbGxhcHNlZCIsImRpdiIsImNsYXNzTmFtZSIsImhhbmRsZUZpbGVDbGljayIsImZpbGVJZCIsImZpbGVOYW1lIiwiaWQiLCJuYW1lIiwiaXNEaXJ0eSIsImgyIiwiZmlsZXMiLCJsZW5ndGgiLCJzcGFuIiwibWFwIiwiZmlsZSIsImRhdGEtdGVzdGlkIiwib25DbGljayIsInRpdGxlIiwicGF0aCIsInR5cGUiXSwibWFwcGluZ3MiOiI7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7OztBQUFBLFNBQVNBLGVBQWUsUUFBUSwyQkFBMEI7QUFDMUQsU0FBU0MsY0FBYyxRQUFRLDBCQUF5QjtBQUN4RCxTQUFTQyxVQUFVLFFBQVEsc0JBQXFCO0FBRWhELGVBQWUsU0FBU0M7O0lBQ3RCLE1BQU0sRUFBRUMsY0FBYyxFQUFFLEdBQUdKO0lBQzNCLE1BQU0sRUFBRUssT0FBTyxFQUFFLEdBQUdKO0lBQ3BCLE1BQU0sRUFBRUssZ0JBQWdCLEVBQUUsR0FBR0o7SUFFN0IsSUFBSUksa0JBQWtCO1FBQ3BCLHFCQUNFLFFBQUNDO1lBQUlDLFdBQVU7c0JBQ2IsY0FBQSxRQUFDRDtnQkFBSUMsV0FBVTswQkFBOEI7Ozs7Ozs7Ozs7O0lBR25EO0lBRUEsTUFBTUMsa0JBQWtCLENBQUNDLFFBQWdCQztRQUN2Q04sUUFBUTtZQUNOTyxJQUFJLENBQUMsSUFBSSxFQUFFRixRQUFRO1lBQ25CQTtZQUNBRyxNQUFNRjtZQUNORyxTQUFTO1FBQ1g7SUFDRjtJQUVBLHFCQUNFLFFBQUNQO1FBQUlDLFdBQVU7OzBCQUNiLFFBQUNEO2dCQUFJQyxXQUFVOztrQ0FDYixRQUFDTzt3QkFBR1AsV0FBVTtrQ0FDWEosZ0JBQWdCUyxPQUFPLGtCQUFrQjs7Ozs7O29CQUUzQ1QsZ0JBQWdCWSxTQUFTWixlQUFlWSxLQUFLLENBQUNDLE1BQU0sR0FBRyxtQkFDdEQsUUFBQ0M7d0JBQUtWLFdBQVU7a0NBQ2JKLGVBQWVZLEtBQUssQ0FBQ0MsTUFBTTs7Ozs7Ozs7Ozs7OzBCQUlsQyxRQUFDVjtnQkFBSUMsV0FBVTswQkFDWkosZ0JBQWdCWSxTQUFTWixlQUFlWSxLQUFLLENBQUNDLE1BQU0sR0FBRyxrQkFDdEQsUUFBQ1Y7b0JBQUlDLFdBQVU7OEJBQ1pKLGVBQWVZLEtBQUssQ0FBQ0csR0FBRyxDQUFDLENBQUNDLHFCQUN6QixRQUFDYjs0QkFFQ2MsZUFBYSxDQUFDLEtBQUssRUFBRUQsS0FBS1AsSUFBSSxFQUFFOzRCQUNoQ1MsU0FBUyxJQUFNYixnQkFBZ0JXLEtBQUtSLEVBQUUsRUFBRVEsS0FBS1AsSUFBSTs0QkFDakRMLFdBQVU7NEJBQ1ZlLE9BQU9ILEtBQUtJLElBQUk7OzhDQUVoQixRQUFDTjtvQ0FBS1YsV0FBVTs7d0NBQ2JZLEtBQUtQLElBQUk7d0NBQ1RPLEtBQUtOLE9BQU8sa0JBQUksUUFBQ0k7NENBQUtWLFdBQVU7c0RBQTBCOzs7Ozs7Ozs7Ozs7OENBRTdELFFBQUNVO29DQUFLVixXQUFVOzhDQUNiWSxLQUFLSyxJQUFJOzs7Ozs7OzJCQVhQTCxLQUFLUixFQUFFOzs7Ozs7Ozs7eUNBaUJsQixRQUFDTDtvQkFBSUMsV0FBVTs4QkFDWkosaUJBQ0cseURBQ0E7Ozs7Ozs7Ozs7Ozs7Ozs7O0FBTWhCO0dBakV3QkQ7O1FBQ0tIO1FBQ1BDO1FBQ1NDOzs7S0FIUEMifQ==

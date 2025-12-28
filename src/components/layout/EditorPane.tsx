@@ -1,17 +1,21 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import MonacoEditor from '@/components/editor/MonacoEditor'
 import { useEditorStore } from '@/stores/useEditorStore'
 import { useProjectStore } from '@/stores/useProjectStore'
 import { useDiagnosticStore } from '@/stores/useDiagnosticStore'
 import { useFileLoader } from '@/hooks/useFileLoader'
 import { useRealTimeValidation } from '@/hooks/useRealTimeValidation'
+import { FileService } from '@/services/FileService'
+import { useActivityStore } from '@/stores/useActivityStore'
 
 export default function EditorPane() {
-  const { tabs, activeTabId, setActiveTab, closeTab, editorContent, updateTabContent } =
+  const { tabs, activeTabId, setActiveTab, closeTab, editorContent, updateTabContent, markTabClean } =
     useEditorStore()
-  const { getFile, updateFile } = useProjectStore()
+  const { getFile, updateFile, currentProject } = useProjectStore()
   const { getDiagnosticsForFile } = useDiagnosticStore()
+  const { addActivity } = useActivityStore()
   const [editMode, setEditMode] = useState(true)
+  const [saveMessage, setSaveMessage] = useState<string | null>(null)
 
   const activeTab = tabs.find((t) => t.id === activeTabId)
   const activeFile = activeTab ? getFile(activeTab.fileId) : null
@@ -28,6 +32,46 @@ export default function EditorPane() {
   const errorCount = fileDiagnostics.filter((d) => d.severity === 'error').length
   const warningCount = fileDiagnostics.filter((d) => d.severity === 'warning').length
 
+  // Handle file save
+  const handleSaveFile = async () => {
+    if (!activeFile || !activeTab) return
+
+    try {
+      const result = await FileService.writeFile(activeFile.path, fileContent)
+
+      if (result.success) {
+        // Mark tab as clean
+        markTabClean(activeTab.id)
+
+        // Update file metadata
+        updateFile(activeFile.id, {
+          isDirty: false,
+          size: fileContent.length,
+        })
+
+        // Log activity
+        if (currentProject) {
+          addActivity({
+            type: 'modified',
+            fileName: activeFile.name,
+            projectName: currentProject.name,
+            projectId: currentProject.id,
+          })
+        }
+
+        // Show save message
+        setSaveMessage('File saved')
+        setTimeout(() => setSaveMessage(null), 2000)
+      } else {
+        setSaveMessage(`Save failed: ${result.error}`)
+        setTimeout(() => setSaveMessage(null), 3000)
+      }
+    } catch (error) {
+      setSaveMessage(`Error saving file: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      setTimeout(() => setSaveMessage(null), 3000)
+    }
+  }
+
   const handleContentChange = (newContent: string) => {
     if (activeTab) {
       updateTabContent(activeTab.id, newContent)
@@ -39,6 +83,19 @@ export default function EditorPane() {
       }
     }
   }
+
+  // Handle keyboard shortcuts (Ctrl+S to save)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault()
+        handleSaveFile()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [activeFile, activeTab, fileContent])
 
   return (
     <div data-testid="editor-pane" className="flex-1 flex flex-col bg-bg-primary overflow-hidden">
@@ -95,12 +152,27 @@ export default function EditorPane() {
                 <span className="ml-4">Type: {activeFile.type.toUpperCase()}</span>
                 <span className="ml-4">{activeFile.size} bytes</span>
               </div>
-              {(errorCount > 0 || warningCount > 0) && (
-                <div className="text-xs flex gap-4">
-                  {errorCount > 0 && <span className="text-state-error">Errors: {errorCount}</span>}
-                  {warningCount > 0 && <span className="text-state-warning">Warnings: {warningCount}</span>}
-                </div>
-              )}
+              <div className="flex items-center gap-4">
+                {(errorCount > 0 || warningCount > 0) && (
+                  <div className="text-xs flex gap-4">
+                    {errorCount > 0 && <span className="text-state-error">Errors: {errorCount}</span>}
+                    {warningCount > 0 && <span className="text-state-warning">Warnings: {warningCount}</span>}
+                  </div>
+                )}
+                {saveMessage && (
+                  <span className={`text-xs ${saveMessage.includes('saved') ? 'text-state-success' : 'text-state-error'}`}>
+                    {saveMessage}
+                  </span>
+                )}
+                {activeTab?.isDirty && (
+                  <button
+                    onClick={handleSaveFile}
+                    className="px-2 py-1 bg-accent-primary hover:bg-accent-focus text-text-primary rounded text-xs transition-colors"
+                  >
+                    Save
+                  </button>
+                )}
+              </div>
             </div>
 
             {/* Monaco Editor with syntax highlighting and validation */}

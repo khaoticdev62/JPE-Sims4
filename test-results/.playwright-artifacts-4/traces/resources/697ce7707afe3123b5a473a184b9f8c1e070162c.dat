@@ -1,0 +1,61 @@
+/**
+ * Format a Unix timestamp to human-readable relative time
+ * Examples: "2m ago", "1h ago", "3d ago", "12/27/2025"
+ */ export function formatTimeAgo(timestamp) {
+    const now = Date.now();
+    const diffMs = now - timestamp;
+    const diffSec = Math.floor(diffMs / 1000);
+    const diffMin = Math.floor(diffSec / 60);
+    const diffHour = Math.floor(diffMin / 60);
+    const diffDay = Math.floor(diffHour / 24);
+    // Less than a minute
+    if (diffSec < 60) {
+        return diffSec === 0 ? 'just now' : `${diffSec}s ago`;
+    }
+    // Less than an hour
+    if (diffMin < 60) {
+        return `${diffMin}m ago`;
+    }
+    // Less than a day
+    if (diffHour < 24) {
+        return `${diffHour}h ago`;
+    }
+    // Less than a week
+    if (diffDay < 7) {
+        return `${diffDay}d ago`;
+    }
+    // Format as date
+    return new Date(timestamp).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric'
+    });
+}
+/**
+ * Format a Unix timestamp to short date format
+ * Example: "Dec 27, 2025"
+ */ export function formatDate(timestamp) {
+    return new Date(timestamp).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric'
+    });
+}
+/**
+ * Format a Unix timestamp to time format
+ * Example: "3:45 PM"
+ */ export function formatTime(timestamp) {
+    return new Date(timestamp).toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
+    });
+}
+/**
+ * Format a Unix timestamp to full date and time
+ * Example: "Dec 27, 2025 3:45 PM"
+ */ export function formatDateTime(timestamp) {
+    return `${formatDate(timestamp)} ${formatTime(timestamp)}`;
+}
+
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbInRpbWVVdGlscy50cyJdLCJzb3VyY2VzQ29udGVudCI6WyIvKipcclxuICogRm9ybWF0IGEgVW5peCB0aW1lc3RhbXAgdG8gaHVtYW4tcmVhZGFibGUgcmVsYXRpdmUgdGltZVxyXG4gKiBFeGFtcGxlczogXCIybSBhZ29cIiwgXCIxaCBhZ29cIiwgXCIzZCBhZ29cIiwgXCIxMi8yNy8yMDI1XCJcclxuICovXHJcbmV4cG9ydCBmdW5jdGlvbiBmb3JtYXRUaW1lQWdvKHRpbWVzdGFtcDogbnVtYmVyKTogc3RyaW5nIHtcclxuICBjb25zdCBub3cgPSBEYXRlLm5vdygpXHJcbiAgY29uc3QgZGlmZk1zID0gbm93IC0gdGltZXN0YW1wXHJcbiAgY29uc3QgZGlmZlNlYyA9IE1hdGguZmxvb3IoZGlmZk1zIC8gMTAwMClcclxuICBjb25zdCBkaWZmTWluID0gTWF0aC5mbG9vcihkaWZmU2VjIC8gNjApXHJcbiAgY29uc3QgZGlmZkhvdXIgPSBNYXRoLmZsb29yKGRpZmZNaW4gLyA2MClcclxuICBjb25zdCBkaWZmRGF5ID0gTWF0aC5mbG9vcihkaWZmSG91ciAvIDI0KVxyXG5cclxuICAvLyBMZXNzIHRoYW4gYSBtaW51dGVcclxuICBpZiAoZGlmZlNlYyA8IDYwKSB7XHJcbiAgICByZXR1cm4gZGlmZlNlYyA9PT0gMCA/ICdqdXN0IG5vdycgOiBgJHtkaWZmU2VjfXMgYWdvYFxyXG4gIH1cclxuXHJcbiAgLy8gTGVzcyB0aGFuIGFuIGhvdXJcclxuICBpZiAoZGlmZk1pbiA8IDYwKSB7XHJcbiAgICByZXR1cm4gYCR7ZGlmZk1pbn1tIGFnb2BcclxuICB9XHJcblxyXG4gIC8vIExlc3MgdGhhbiBhIGRheVxyXG4gIGlmIChkaWZmSG91ciA8IDI0KSB7XHJcbiAgICByZXR1cm4gYCR7ZGlmZkhvdXJ9aCBhZ29gXHJcbiAgfVxyXG5cclxuICAvLyBMZXNzIHRoYW4gYSB3ZWVrXHJcbiAgaWYgKGRpZmZEYXkgPCA3KSB7XHJcbiAgICByZXR1cm4gYCR7ZGlmZkRheX1kIGFnb2BcclxuICB9XHJcblxyXG4gIC8vIEZvcm1hdCBhcyBkYXRlXHJcbiAgcmV0dXJuIG5ldyBEYXRlKHRpbWVzdGFtcCkudG9Mb2NhbGVEYXRlU3RyaW5nKCdlbi1VUycsIHtcclxuICAgIG1vbnRoOiAnc2hvcnQnLFxyXG4gICAgZGF5OiAnbnVtZXJpYycsXHJcbiAgICB5ZWFyOiAnbnVtZXJpYycsXHJcbiAgfSlcclxufVxyXG5cclxuLyoqXHJcbiAqIEZvcm1hdCBhIFVuaXggdGltZXN0YW1wIHRvIHNob3J0IGRhdGUgZm9ybWF0XHJcbiAqIEV4YW1wbGU6IFwiRGVjIDI3LCAyMDI1XCJcclxuICovXHJcbmV4cG9ydCBmdW5jdGlvbiBmb3JtYXREYXRlKHRpbWVzdGFtcDogbnVtYmVyKTogc3RyaW5nIHtcclxuICByZXR1cm4gbmV3IERhdGUodGltZXN0YW1wKS50b0xvY2FsZURhdGVTdHJpbmcoJ2VuLVVTJywge1xyXG4gICAgbW9udGg6ICdzaG9ydCcsXHJcbiAgICBkYXk6ICdudW1lcmljJyxcclxuICAgIHllYXI6ICdudW1lcmljJyxcclxuICB9KVxyXG59XHJcblxyXG4vKipcclxuICogRm9ybWF0IGEgVW5peCB0aW1lc3RhbXAgdG8gdGltZSBmb3JtYXRcclxuICogRXhhbXBsZTogXCIzOjQ1IFBNXCJcclxuICovXHJcbmV4cG9ydCBmdW5jdGlvbiBmb3JtYXRUaW1lKHRpbWVzdGFtcDogbnVtYmVyKTogc3RyaW5nIHtcclxuICByZXR1cm4gbmV3IERhdGUodGltZXN0YW1wKS50b0xvY2FsZVRpbWVTdHJpbmcoJ2VuLVVTJywge1xyXG4gICAgaG91cjogJ251bWVyaWMnLFxyXG4gICAgbWludXRlOiAnMi1kaWdpdCcsXHJcbiAgICBob3VyMTI6IHRydWUsXHJcbiAgfSlcclxufVxyXG5cclxuLyoqXHJcbiAqIEZvcm1hdCBhIFVuaXggdGltZXN0YW1wIHRvIGZ1bGwgZGF0ZSBhbmQgdGltZVxyXG4gKiBFeGFtcGxlOiBcIkRlYyAyNywgMjAyNSAzOjQ1IFBNXCJcclxuICovXHJcbmV4cG9ydCBmdW5jdGlvbiBmb3JtYXREYXRlVGltZSh0aW1lc3RhbXA6IG51bWJlcik6IHN0cmluZyB7XHJcbiAgcmV0dXJuIGAke2Zvcm1hdERhdGUodGltZXN0YW1wKX0gJHtmb3JtYXRUaW1lKHRpbWVzdGFtcCl9YFxyXG59XHJcbiJdLCJuYW1lcyI6WyJmb3JtYXRUaW1lQWdvIiwidGltZXN0YW1wIiwibm93IiwiRGF0ZSIsImRpZmZNcyIsImRpZmZTZWMiLCJNYXRoIiwiZmxvb3IiLCJkaWZmTWluIiwiZGlmZkhvdXIiLCJkaWZmRGF5IiwidG9Mb2NhbGVEYXRlU3RyaW5nIiwibW9udGgiLCJkYXkiLCJ5ZWFyIiwiZm9ybWF0RGF0ZSIsImZvcm1hdFRpbWUiLCJ0b0xvY2FsZVRpbWVTdHJpbmciLCJob3VyIiwibWludXRlIiwiaG91cjEyIiwiZm9ybWF0RGF0ZVRpbWUiXSwibWFwcGluZ3MiOiJBQUFBOzs7Q0FHQyxHQUNELE9BQU8sU0FBU0EsY0FBY0MsU0FBaUI7SUFDN0MsTUFBTUMsTUFBTUMsS0FBS0QsR0FBRztJQUNwQixNQUFNRSxTQUFTRixNQUFNRDtJQUNyQixNQUFNSSxVQUFVQyxLQUFLQyxLQUFLLENBQUNILFNBQVM7SUFDcEMsTUFBTUksVUFBVUYsS0FBS0MsS0FBSyxDQUFDRixVQUFVO0lBQ3JDLE1BQU1JLFdBQVdILEtBQUtDLEtBQUssQ0FBQ0MsVUFBVTtJQUN0QyxNQUFNRSxVQUFVSixLQUFLQyxLQUFLLENBQUNFLFdBQVc7SUFFdEMscUJBQXFCO0lBQ3JCLElBQUlKLFVBQVUsSUFBSTtRQUNoQixPQUFPQSxZQUFZLElBQUksYUFBYSxHQUFHQSxRQUFRLEtBQUssQ0FBQztJQUN2RDtJQUVBLG9CQUFvQjtJQUNwQixJQUFJRyxVQUFVLElBQUk7UUFDaEIsT0FBTyxHQUFHQSxRQUFRLEtBQUssQ0FBQztJQUMxQjtJQUVBLGtCQUFrQjtJQUNsQixJQUFJQyxXQUFXLElBQUk7UUFDakIsT0FBTyxHQUFHQSxTQUFTLEtBQUssQ0FBQztJQUMzQjtJQUVBLG1CQUFtQjtJQUNuQixJQUFJQyxVQUFVLEdBQUc7UUFDZixPQUFPLEdBQUdBLFFBQVEsS0FBSyxDQUFDO0lBQzFCO0lBRUEsaUJBQWlCO0lBQ2pCLE9BQU8sSUFBSVAsS0FBS0YsV0FBV1Usa0JBQWtCLENBQUMsU0FBUztRQUNyREMsT0FBTztRQUNQQyxLQUFLO1FBQ0xDLE1BQU07SUFDUjtBQUNGO0FBRUE7OztDQUdDLEdBQ0QsT0FBTyxTQUFTQyxXQUFXZCxTQUFpQjtJQUMxQyxPQUFPLElBQUlFLEtBQUtGLFdBQVdVLGtCQUFrQixDQUFDLFNBQVM7UUFDckRDLE9BQU87UUFDUEMsS0FBSztRQUNMQyxNQUFNO0lBQ1I7QUFDRjtBQUVBOzs7Q0FHQyxHQUNELE9BQU8sU0FBU0UsV0FBV2YsU0FBaUI7SUFDMUMsT0FBTyxJQUFJRSxLQUFLRixXQUFXZ0Isa0JBQWtCLENBQUMsU0FBUztRQUNyREMsTUFBTTtRQUNOQyxRQUFRO1FBQ1JDLFFBQVE7SUFDVjtBQUNGO0FBRUE7OztDQUdDLEdBQ0QsT0FBTyxTQUFTQyxlQUFlcEIsU0FBaUI7SUFDOUMsT0FBTyxHQUFHYyxXQUFXZCxXQUFXLENBQUMsRUFBRWUsV0FBV2YsWUFBWTtBQUM1RCJ9

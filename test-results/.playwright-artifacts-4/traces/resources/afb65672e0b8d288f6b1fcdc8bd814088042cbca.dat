@@ -1,0 +1,282 @@
+import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/components/modals/AddFileDialog.tsx");import * as RefreshRuntime from "/@react-refresh";
+const inWebWorker = typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope;
+
+let prevRefreshReg;
+let prevRefreshSig;
+
+if (import.meta.hot && !inWebWorker) {
+  if (!window.$RefreshReg$) {
+    throw new Error(
+      "@vitejs/plugin-react-swc can't detect preamble. Something is wrong."
+    );
+  }
+
+  prevRefreshReg = window.$RefreshReg$;
+  prevRefreshSig = window.$RefreshSig$;
+  window.$RefreshReg$ = RefreshRuntime.getRefreshReg("C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/modals/AddFileDialog.tsx");
+  window.$RefreshSig$ = RefreshRuntime.createSignatureFunctionForTransform;
+}
+
+import __vite__cjsImport2_react_jsxDevRuntime from "/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=818be9b9"; const _jsxDEV = __vite__cjsImport2_react_jsxDevRuntime["jsxDEV"];
+var _s = $RefreshSig$();
+import __vite__cjsImport3_react from "/node_modules/.vite/deps/react.js?v=818be9b9"; const useState = __vite__cjsImport3_react["useState"];
+import { useProjectStore } from "/src/stores/useProjectStore.ts";
+import { useEditorStore } from "/src/stores/useEditorStore.ts";
+import { FileService } from "/src/services/FileService.ts";
+import Modal from "/src/components/common/Modal.tsx";
+import Button from "/src/components/common/Button.tsx";
+export default function AddFileDialog({ isOpen, onClose }) {
+    _s();
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState('');
+    const { currentProject, addFile, setError: setStoreError } = useProjectStore();
+    const { openTab, updateTabContent } = useEditorStore();
+    if (!currentProject) {
+        return /*#__PURE__*/ _jsxDEV(Modal, {
+            isOpen: isOpen,
+            title: "Add File",
+            onClose: onClose,
+            children: /*#__PURE__*/ _jsxDEV("div", {
+                className: "text-center py-4",
+                children: [
+                    /*#__PURE__*/ _jsxDEV("p", {
+                        className: "text-sm text-slate-400",
+                        children: "No project loaded"
+                    }, void 0, false, {
+                        fileName: "C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/modals/AddFileDialog.tsx",
+                        lineNumber: 24,
+                        columnNumber: 11
+                    }, this),
+                    /*#__PURE__*/ _jsxDEV("p", {
+                        className: "text-xs text-slate-500 mt-2",
+                        children: "Create or open a project first"
+                    }, void 0, false, {
+                        fileName: "C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/modals/AddFileDialog.tsx",
+                        lineNumber: 25,
+                        columnNumber: 11
+                    }, this)
+                ]
+            }, void 0, true, {
+                fileName: "C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/modals/AddFileDialog.tsx",
+                lineNumber: 23,
+                columnNumber: 9
+            }, this)
+        }, void 0, false, {
+            fileName: "C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/modals/AddFileDialog.tsx",
+            lineNumber: 22,
+            columnNumber: 7
+        }, this);
+    }
+    const handleAddFiles = async ()=>{
+        setIsLoading(true);
+        setError('');
+        try {
+            const filePaths = await FileService.openFile();
+            if (!filePaths || filePaths.length === 0) {
+                setIsLoading(false);
+                return;
+            }
+            // Create file objects and add to project
+            for (const filePath of filePaths){
+                const fileName = filePath.split('\\').pop() || filePath;
+                const fileType = fileName.split('.').pop() || 'txt';
+                // Read file content
+                const fileContent = await FileService.readFile(filePath);
+                const newFile = {
+                    id: `file-${Date.now()}-${Math.random()}`,
+                    projectId: currentProject.id,
+                    name: fileName,
+                    path: filePath,
+                    type: fileType,
+                    content: fileContent.success ? fileContent.content || '' : '',
+                    isDirty: false,
+                    size: fileContent.size || 0,
+                    lastModified: Date.now()
+                };
+                addFile(newFile);
+                // Open file in editor
+                const tabId = `tab-${newFile.id}`;
+                openTab({
+                    id: tabId,
+                    fileId: newFile.id,
+                    name: newFile.name,
+                    isDirty: false
+                });
+                // Load content into editor
+                if (fileContent.success && fileContent.content) {
+                    updateTabContent(tabId, fileContent.content);
+                }
+            }
+            onClose();
+        } catch (err) {
+            const errorMsg = err instanceof Error ? err.message : 'Failed to add files';
+            setError(errorMsg);
+            setStoreError(errorMsg);
+        } finally{
+            setIsLoading(false);
+        }
+    };
+    return /*#__PURE__*/ _jsxDEV(Modal, {
+        isOpen: isOpen,
+        title: "Add File to Project",
+        onClose: onClose,
+        children: /*#__PURE__*/ _jsxDEV("div", {
+            className: "space-y-4",
+            children: [
+                /*#__PURE__*/ _jsxDEV("div", {
+                    className: "bg-slate-800 rounded p-4 text-center",
+                    children: [
+                        /*#__PURE__*/ _jsxDEV("p", {
+                            className: "text-sm text-slate-100 mb-2",
+                            children: [
+                                "📁 ",
+                                currentProject.name
+                            ]
+                        }, void 0, true, {
+                            fileName: "C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/modals/AddFileDialog.tsx",
+                            lineNumber: 95,
+                            columnNumber: 11
+                        }, this),
+                        /*#__PURE__*/ _jsxDEV("p", {
+                            className: "text-xs text-slate-400",
+                            children: "Select mod files to add to your project"
+                        }, void 0, false, {
+                            fileName: "C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/modals/AddFileDialog.tsx",
+                            lineNumber: 98,
+                            columnNumber: 11
+                        }, this)
+                    ]
+                }, void 0, true, {
+                    fileName: "C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/modals/AddFileDialog.tsx",
+                    lineNumber: 94,
+                    columnNumber: 9
+                }, this),
+                /*#__PURE__*/ _jsxDEV("div", {
+                    className: "bg-slate-800 border-2 border-dashed border-slate-600 rounded p-6 text-center",
+                    children: [
+                        /*#__PURE__*/ _jsxDEV("p", {
+                            className: "text-sm text-slate-300 mb-4",
+                            children: "Supported formats:"
+                        }, void 0, false, {
+                            fileName: "C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/modals/AddFileDialog.tsx",
+                            lineNumber: 104,
+                            columnNumber: 11
+                        }, this),
+                        /*#__PURE__*/ _jsxDEV("div", {
+                            className: "flex flex-wrap gap-2 justify-center",
+                            children: [
+                                'XML',
+                                'STBL',
+                                'TS4Script',
+                                'Package',
+                                'Python',
+                                'JSON',
+                                'CFG'
+                            ].map((format)=>/*#__PURE__*/ _jsxDEV("span", {
+                                    className: "px-2 py-1 bg-slate-700 text-xs text-slate-300 rounded",
+                                    children: format
+                                }, format, false, {
+                                    fileName: "C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/modals/AddFileDialog.tsx",
+                                    lineNumber: 110,
+                                    columnNumber: 17
+                                }, this))
+                        }, void 0, false, {
+                            fileName: "C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/modals/AddFileDialog.tsx",
+                            lineNumber: 107,
+                            columnNumber: 11
+                        }, this)
+                    ]
+                }, void 0, true, {
+                    fileName: "C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/modals/AddFileDialog.tsx",
+                    lineNumber: 103,
+                    columnNumber: 9
+                }, this),
+                error && /*#__PURE__*/ _jsxDEV("div", {
+                    className: "bg-red-950 border border-red-500 rounded p-3",
+                    children: /*#__PURE__*/ _jsxDEV("p", {
+                        className: "text-sm text-red-200",
+                        children: error
+                    }, void 0, false, {
+                        fileName: "C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/modals/AddFileDialog.tsx",
+                        lineNumber: 123,
+                        columnNumber: 13
+                    }, this)
+                }, void 0, false, {
+                    fileName: "C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/modals/AddFileDialog.tsx",
+                    lineNumber: 122,
+                    columnNumber: 11
+                }, this),
+                /*#__PURE__*/ _jsxDEV("div", {
+                    className: "flex gap-3 pt-4 border-t border-slate-800",
+                    children: [
+                        /*#__PURE__*/ _jsxDEV(Button, {
+                            type: "button",
+                            variant: "secondary",
+                            onClick: onClose,
+                            disabled: isLoading,
+                            className: "flex-1",
+                            children: "Cancel"
+                        }, void 0, false, {
+                            fileName: "C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/modals/AddFileDialog.tsx",
+                            lineNumber: 128,
+                            columnNumber: 11
+                        }, this),
+                        /*#__PURE__*/ _jsxDEV(Button, {
+                            type: "button",
+                            variant: "primary",
+                            isLoading: isLoading,
+                            onClick: handleAddFiles,
+                            className: "flex-1",
+                            children: "Select Files"
+                        }, void 0, false, {
+                            fileName: "C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/modals/AddFileDialog.tsx",
+                            lineNumber: 137,
+                            columnNumber: 11
+                        }, this)
+                    ]
+                }, void 0, true, {
+                    fileName: "C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/modals/AddFileDialog.tsx",
+                    lineNumber: 127,
+                    columnNumber: 9
+                }, this)
+            ]
+        }, void 0, true, {
+            fileName: "C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/modals/AddFileDialog.tsx",
+            lineNumber: 93,
+            columnNumber: 7
+        }, this)
+    }, void 0, false, {
+        fileName: "C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/modals/AddFileDialog.tsx",
+        lineNumber: 92,
+        columnNumber: 5
+    }, this);
+}
+_s(AddFileDialog, "SaE4w0JdwJO9xQNLlzDUEFx9GTQ=", false, function() {
+    return [
+        useProjectStore,
+        useEditorStore
+    ];
+});
+_c = AddFileDialog;
+var _c;
+$RefreshReg$(_c, "AddFileDialog");
+
+
+if (import.meta.hot && !inWebWorker) {
+  window.$RefreshReg$ = prevRefreshReg;
+  window.$RefreshSig$ = prevRefreshSig;
+}
+
+
+if (import.meta.hot && !inWebWorker) {
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh("C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/modals/AddFileDialog.tsx", currentExports);
+    import.meta.hot.accept((nextExports) => {
+      if (!nextExports) return;
+      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate("C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/modals/AddFileDialog.tsx", currentExports, nextExports);
+      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+    });
+  });
+}
+
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIkFkZEZpbGVEaWFsb2cudHN4Il0sInNvdXJjZXNDb250ZW50IjpbImltcG9ydCB7IHVzZVN0YXRlIH0gZnJvbSAncmVhY3QnXHJcbmltcG9ydCB7IHVzZVByb2plY3RTdG9yZSB9IGZyb20gJ0Avc3RvcmVzL3VzZVByb2plY3RTdG9yZSdcclxuaW1wb3J0IHsgdXNlRWRpdG9yU3RvcmUgfSBmcm9tICdAL3N0b3Jlcy91c2VFZGl0b3JTdG9yZSdcclxuaW1wb3J0IHsgRmlsZVNlcnZpY2UgfSBmcm9tICdAL3NlcnZpY2VzL0ZpbGVTZXJ2aWNlJ1xyXG5pbXBvcnQgTW9kYWwgZnJvbSAnQC9jb21wb25lbnRzL2NvbW1vbi9Nb2RhbCdcclxuaW1wb3J0IEJ1dHRvbiBmcm9tICdAL2NvbXBvbmVudHMvY29tbW9uL0J1dHRvbidcclxuXHJcbmludGVyZmFjZSBBZGRGaWxlRGlhbG9nUHJvcHMge1xyXG4gIGlzT3BlbjogYm9vbGVhblxyXG4gIG9uQ2xvc2U6ICgpID0+IHZvaWRcclxufVxyXG5cclxuZXhwb3J0IGRlZmF1bHQgZnVuY3Rpb24gQWRkRmlsZURpYWxvZyh7IGlzT3Blbiwgb25DbG9zZSB9OiBBZGRGaWxlRGlhbG9nUHJvcHMpIHtcclxuICBjb25zdCBbaXNMb2FkaW5nLCBzZXRJc0xvYWRpbmddID0gdXNlU3RhdGUoZmFsc2UpXHJcbiAgY29uc3QgW2Vycm9yLCBzZXRFcnJvcl0gPSB1c2VTdGF0ZSgnJylcclxuXHJcbiAgY29uc3QgeyBjdXJyZW50UHJvamVjdCwgYWRkRmlsZSwgc2V0RXJyb3I6IHNldFN0b3JlRXJyb3IgfSA9IHVzZVByb2plY3RTdG9yZSgpXHJcbiAgY29uc3QgeyBvcGVuVGFiLCB1cGRhdGVUYWJDb250ZW50IH0gPSB1c2VFZGl0b3JTdG9yZSgpXHJcblxyXG4gIGlmICghY3VycmVudFByb2plY3QpIHtcclxuICAgIHJldHVybiAoXHJcbiAgICAgIDxNb2RhbCBpc09wZW49e2lzT3Blbn0gdGl0bGU9XCJBZGQgRmlsZVwiIG9uQ2xvc2U9e29uQ2xvc2V9PlxyXG4gICAgICAgIDxkaXYgY2xhc3NOYW1lPVwidGV4dC1jZW50ZXIgcHktNFwiPlxyXG4gICAgICAgICAgPHAgY2xhc3NOYW1lPVwidGV4dC1zbSB0ZXh0LXNsYXRlLTQwMFwiPk5vIHByb2plY3QgbG9hZGVkPC9wPlxyXG4gICAgICAgICAgPHAgY2xhc3NOYW1lPVwidGV4dC14cyB0ZXh0LXNsYXRlLTUwMCBtdC0yXCI+XHJcbiAgICAgICAgICAgIENyZWF0ZSBvciBvcGVuIGEgcHJvamVjdCBmaXJzdFxyXG4gICAgICAgICAgPC9wPlxyXG4gICAgICAgIDwvZGl2PlxyXG4gICAgICA8L01vZGFsPlxyXG4gICAgKVxyXG4gIH1cclxuXHJcbiAgY29uc3QgaGFuZGxlQWRkRmlsZXMgPSBhc3luYyAoKSA9PiB7XHJcbiAgICBzZXRJc0xvYWRpbmcodHJ1ZSlcclxuICAgIHNldEVycm9yKCcnKVxyXG5cclxuICAgIHRyeSB7XHJcbiAgICAgIGNvbnN0IGZpbGVQYXRocyA9IGF3YWl0IEZpbGVTZXJ2aWNlLm9wZW5GaWxlKClcclxuICAgICAgaWYgKCFmaWxlUGF0aHMgfHwgZmlsZVBhdGhzLmxlbmd0aCA9PT0gMCkge1xyXG4gICAgICAgIHNldElzTG9hZGluZyhmYWxzZSlcclxuICAgICAgICByZXR1cm5cclxuICAgICAgfVxyXG5cclxuICAgICAgLy8gQ3JlYXRlIGZpbGUgb2JqZWN0cyBhbmQgYWRkIHRvIHByb2plY3RcclxuICAgICAgZm9yIChjb25zdCBmaWxlUGF0aCBvZiBmaWxlUGF0aHMpIHtcclxuICAgICAgICBjb25zdCBmaWxlTmFtZSA9IGZpbGVQYXRoLnNwbGl0KCdcXFxcJykucG9wKCkgfHwgZmlsZVBhdGhcclxuICAgICAgICBjb25zdCBmaWxlVHlwZSA9IGZpbGVOYW1lLnNwbGl0KCcuJykucG9wKCkgfHwgJ3R4dCdcclxuXHJcbiAgICAgICAgLy8gUmVhZCBmaWxlIGNvbnRlbnRcclxuICAgICAgICBjb25zdCBmaWxlQ29udGVudCA9IGF3YWl0IEZpbGVTZXJ2aWNlLnJlYWRGaWxlKGZpbGVQYXRoKVxyXG5cclxuICAgICAgICBjb25zdCBuZXdGaWxlID0ge1xyXG4gICAgICAgICAgaWQ6IGBmaWxlLSR7RGF0ZS5ub3coKX0tJHtNYXRoLnJhbmRvbSgpfWAsXHJcbiAgICAgICAgICBwcm9qZWN0SWQ6IGN1cnJlbnRQcm9qZWN0LmlkLFxyXG4gICAgICAgICAgbmFtZTogZmlsZU5hbWUsXHJcbiAgICAgICAgICBwYXRoOiBmaWxlUGF0aCxcclxuICAgICAgICAgIHR5cGU6IGZpbGVUeXBlIGFzIGFueSxcclxuICAgICAgICAgIGNvbnRlbnQ6IGZpbGVDb250ZW50LnN1Y2Nlc3MgPyBmaWxlQ29udGVudC5jb250ZW50IHx8ICcnIDogJycsXHJcbiAgICAgICAgICBpc0RpcnR5OiBmYWxzZSxcclxuICAgICAgICAgIHNpemU6IGZpbGVDb250ZW50LnNpemUgfHwgMCxcclxuICAgICAgICAgIGxhc3RNb2RpZmllZDogRGF0ZS5ub3coKSxcclxuICAgICAgICB9XHJcblxyXG4gICAgICAgIGFkZEZpbGUobmV3RmlsZSlcclxuXHJcbiAgICAgICAgLy8gT3BlbiBmaWxlIGluIGVkaXRvclxyXG4gICAgICAgIGNvbnN0IHRhYklkID0gYHRhYi0ke25ld0ZpbGUuaWR9YFxyXG4gICAgICAgIG9wZW5UYWIoe1xyXG4gICAgICAgICAgaWQ6IHRhYklkLFxyXG4gICAgICAgICAgZmlsZUlkOiBuZXdGaWxlLmlkLFxyXG4gICAgICAgICAgbmFtZTogbmV3RmlsZS5uYW1lLFxyXG4gICAgICAgICAgaXNEaXJ0eTogZmFsc2UsXHJcbiAgICAgICAgfSlcclxuXHJcbiAgICAgICAgLy8gTG9hZCBjb250ZW50IGludG8gZWRpdG9yXHJcbiAgICAgICAgaWYgKGZpbGVDb250ZW50LnN1Y2Nlc3MgJiYgZmlsZUNvbnRlbnQuY29udGVudCkge1xyXG4gICAgICAgICAgdXBkYXRlVGFiQ29udGVudCh0YWJJZCwgZmlsZUNvbnRlbnQuY29udGVudClcclxuICAgICAgICB9XHJcbiAgICAgIH1cclxuXHJcbiAgICAgIG9uQ2xvc2UoKVxyXG4gICAgfSBjYXRjaCAoZXJyKSB7XHJcbiAgICAgIGNvbnN0IGVycm9yTXNnID0gZXJyIGluc3RhbmNlb2YgRXJyb3IgPyBlcnIubWVzc2FnZSA6ICdGYWlsZWQgdG8gYWRkIGZpbGVzJ1xyXG4gICAgICBzZXRFcnJvcihlcnJvck1zZylcclxuICAgICAgc2V0U3RvcmVFcnJvcihlcnJvck1zZylcclxuICAgIH0gZmluYWxseSB7XHJcbiAgICAgIHNldElzTG9hZGluZyhmYWxzZSlcclxuICAgIH1cclxuICB9XHJcblxyXG4gIHJldHVybiAoXHJcbiAgICA8TW9kYWwgaXNPcGVuPXtpc09wZW59IHRpdGxlPVwiQWRkIEZpbGUgdG8gUHJvamVjdFwiIG9uQ2xvc2U9e29uQ2xvc2V9PlxyXG4gICAgICA8ZGl2IGNsYXNzTmFtZT1cInNwYWNlLXktNFwiPlxyXG4gICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiYmctc2xhdGUtODAwIHJvdW5kZWQgcC00IHRleHQtY2VudGVyXCI+XHJcbiAgICAgICAgICA8cCBjbGFzc05hbWU9XCJ0ZXh0LXNtIHRleHQtc2xhdGUtMTAwIG1iLTJcIj5cclxuICAgICAgICAgICAg8J+TgSB7Y3VycmVudFByb2plY3QubmFtZX1cclxuICAgICAgICAgIDwvcD5cclxuICAgICAgICAgIDxwIGNsYXNzTmFtZT1cInRleHQteHMgdGV4dC1zbGF0ZS00MDBcIj5cclxuICAgICAgICAgICAgU2VsZWN0IG1vZCBmaWxlcyB0byBhZGQgdG8geW91ciBwcm9qZWN0XHJcbiAgICAgICAgICA8L3A+XHJcbiAgICAgICAgPC9kaXY+XHJcblxyXG4gICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiYmctc2xhdGUtODAwIGJvcmRlci0yIGJvcmRlci1kYXNoZWQgYm9yZGVyLXNsYXRlLTYwMCByb3VuZGVkIHAtNiB0ZXh0LWNlbnRlclwiPlxyXG4gICAgICAgICAgPHAgY2xhc3NOYW1lPVwidGV4dC1zbSB0ZXh0LXNsYXRlLTMwMCBtYi00XCI+XHJcbiAgICAgICAgICAgIFN1cHBvcnRlZCBmb3JtYXRzOlxyXG4gICAgICAgICAgPC9wPlxyXG4gICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4IGZsZXgtd3JhcCBnYXAtMiBqdXN0aWZ5LWNlbnRlclwiPlxyXG4gICAgICAgICAgICB7WydYTUwnLCAnU1RCTCcsICdUUzRTY3JpcHQnLCAnUGFja2FnZScsICdQeXRob24nLCAnSlNPTicsICdDRkcnXS5tYXAoXHJcbiAgICAgICAgICAgICAgKGZvcm1hdCkgPT4gKFxyXG4gICAgICAgICAgICAgICAgPHNwYW5cclxuICAgICAgICAgICAgICAgICAga2V5PXtmb3JtYXR9XHJcbiAgICAgICAgICAgICAgICAgIGNsYXNzTmFtZT1cInB4LTIgcHktMSBiZy1zbGF0ZS03MDAgdGV4dC14cyB0ZXh0LXNsYXRlLTMwMCByb3VuZGVkXCJcclxuICAgICAgICAgICAgICAgID5cclxuICAgICAgICAgICAgICAgICAge2Zvcm1hdH1cclxuICAgICAgICAgICAgICAgIDwvc3Bhbj5cclxuICAgICAgICAgICAgICApXHJcbiAgICAgICAgICAgICl9XHJcbiAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICA8L2Rpdj5cclxuXHJcbiAgICAgICAge2Vycm9yICYmIChcclxuICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiYmctcmVkLTk1MCBib3JkZXIgYm9yZGVyLXJlZC01MDAgcm91bmRlZCBwLTNcIj5cclxuICAgICAgICAgICAgPHAgY2xhc3NOYW1lPVwidGV4dC1zbSB0ZXh0LXJlZC0yMDBcIj57ZXJyb3J9PC9wPlxyXG4gICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgKX1cclxuXHJcbiAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4IGdhcC0zIHB0LTQgYm9yZGVyLXQgYm9yZGVyLXNsYXRlLTgwMFwiPlxyXG4gICAgICAgICAgPEJ1dHRvblxyXG4gICAgICAgICAgICB0eXBlPVwiYnV0dG9uXCJcclxuICAgICAgICAgICAgdmFyaWFudD1cInNlY29uZGFyeVwiXHJcbiAgICAgICAgICAgIG9uQ2xpY2s9e29uQ2xvc2V9XHJcbiAgICAgICAgICAgIGRpc2FibGVkPXtpc0xvYWRpbmd9XHJcbiAgICAgICAgICAgIGNsYXNzTmFtZT1cImZsZXgtMVwiXHJcbiAgICAgICAgICA+XHJcbiAgICAgICAgICAgIENhbmNlbFxyXG4gICAgICAgICAgPC9CdXR0b24+XHJcbiAgICAgICAgICA8QnV0dG9uXHJcbiAgICAgICAgICAgIHR5cGU9XCJidXR0b25cIlxyXG4gICAgICAgICAgICB2YXJpYW50PVwicHJpbWFyeVwiXHJcbiAgICAgICAgICAgIGlzTG9hZGluZz17aXNMb2FkaW5nfVxyXG4gICAgICAgICAgICBvbkNsaWNrPXtoYW5kbGVBZGRGaWxlc31cclxuICAgICAgICAgICAgY2xhc3NOYW1lPVwiZmxleC0xXCJcclxuICAgICAgICAgID5cclxuICAgICAgICAgICAgU2VsZWN0IEZpbGVzXHJcbiAgICAgICAgICA8L0J1dHRvbj5cclxuICAgICAgICA8L2Rpdj5cclxuICAgICAgPC9kaXY+XHJcbiAgICA8L01vZGFsPlxyXG4gIClcclxufVxyXG4iXSwibmFtZXMiOlsidXNlU3RhdGUiLCJ1c2VQcm9qZWN0U3RvcmUiLCJ1c2VFZGl0b3JTdG9yZSIsIkZpbGVTZXJ2aWNlIiwiTW9kYWwiLCJCdXR0b24iLCJBZGRGaWxlRGlhbG9nIiwiaXNPcGVuIiwib25DbG9zZSIsImlzTG9hZGluZyIsInNldElzTG9hZGluZyIsImVycm9yIiwic2V0RXJyb3IiLCJjdXJyZW50UHJvamVjdCIsImFkZEZpbGUiLCJzZXRTdG9yZUVycm9yIiwib3BlblRhYiIsInVwZGF0ZVRhYkNvbnRlbnQiLCJ0aXRsZSIsImRpdiIsImNsYXNzTmFtZSIsInAiLCJoYW5kbGVBZGRGaWxlcyIsImZpbGVQYXRocyIsIm9wZW5GaWxlIiwibGVuZ3RoIiwiZmlsZVBhdGgiLCJmaWxlTmFtZSIsInNwbGl0IiwicG9wIiwiZmlsZVR5cGUiLCJmaWxlQ29udGVudCIsInJlYWRGaWxlIiwibmV3RmlsZSIsImlkIiwiRGF0ZSIsIm5vdyIsIk1hdGgiLCJyYW5kb20iLCJwcm9qZWN0SWQiLCJuYW1lIiwicGF0aCIsInR5cGUiLCJjb250ZW50Iiwic3VjY2VzcyIsImlzRGlydHkiLCJzaXplIiwibGFzdE1vZGlmaWVkIiwidGFiSWQiLCJmaWxlSWQiLCJlcnIiLCJlcnJvck1zZyIsIkVycm9yIiwibWVzc2FnZSIsIm1hcCIsImZvcm1hdCIsInNwYW4iLCJ2YXJpYW50Iiwib25DbGljayIsImRpc2FibGVkIl0sIm1hcHBpbmdzIjoiOzs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7QUFBQSxTQUFTQSxRQUFRLFFBQVEsUUFBTztBQUNoQyxTQUFTQyxlQUFlLFFBQVEsMkJBQTBCO0FBQzFELFNBQVNDLGNBQWMsUUFBUSwwQkFBeUI7QUFDeEQsU0FBU0MsV0FBVyxRQUFRLHlCQUF3QjtBQUNwRCxPQUFPQyxXQUFXLDRCQUEyQjtBQUM3QyxPQUFPQyxZQUFZLDZCQUE0QjtBQU8vQyxlQUFlLFNBQVNDLGNBQWMsRUFBRUMsTUFBTSxFQUFFQyxPQUFPLEVBQXNCOztJQUMzRSxNQUFNLENBQUNDLFdBQVdDLGFBQWEsR0FBR1YsU0FBUztJQUMzQyxNQUFNLENBQUNXLE9BQU9DLFNBQVMsR0FBR1osU0FBUztJQUVuQyxNQUFNLEVBQUVhLGNBQWMsRUFBRUMsT0FBTyxFQUFFRixVQUFVRyxhQUFhLEVBQUUsR0FBR2Q7SUFDN0QsTUFBTSxFQUFFZSxPQUFPLEVBQUVDLGdCQUFnQixFQUFFLEdBQUdmO0lBRXRDLElBQUksQ0FBQ1csZ0JBQWdCO1FBQ25CLHFCQUNFLFFBQUNUO1lBQU1HLFFBQVFBO1lBQVFXLE9BQU07WUFBV1YsU0FBU0E7c0JBQy9DLGNBQUEsUUFBQ1c7Z0JBQUlDLFdBQVU7O2tDQUNiLFFBQUNDO3dCQUFFRCxXQUFVO2tDQUF5Qjs7Ozs7O2tDQUN0QyxRQUFDQzt3QkFBRUQsV0FBVTtrQ0FBOEI7Ozs7Ozs7Ozs7Ozs7Ozs7O0lBTW5EO0lBRUEsTUFBTUUsaUJBQWlCO1FBQ3JCWixhQUFhO1FBQ2JF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

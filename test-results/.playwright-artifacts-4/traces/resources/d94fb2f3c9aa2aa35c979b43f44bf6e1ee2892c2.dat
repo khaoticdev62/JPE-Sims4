@@ -1,0 +1,382 @@
+import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/components/layout/EditorPane.tsx");import * as RefreshRuntime from "/@react-refresh";
+const inWebWorker = typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope;
+
+let prevRefreshReg;
+let prevRefreshSig;
+
+if (import.meta.hot && !inWebWorker) {
+  if (!window.$RefreshReg$) {
+    throw new Error(
+      "@vitejs/plugin-react-swc can't detect preamble. Something is wrong."
+    );
+  }
+
+  prevRefreshReg = window.$RefreshReg$;
+  prevRefreshSig = window.$RefreshSig$;
+  window.$RefreshReg$ = RefreshRuntime.getRefreshReg("C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/layout/EditorPane.tsx");
+  window.$RefreshSig$ = RefreshRuntime.createSignatureFunctionForTransform;
+}
+
+import __vite__cjsImport2_react_jsxDevRuntime from "/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=818be9b9"; const _jsxDEV = __vite__cjsImport2_react_jsxDevRuntime["jsxDEV"];
+var _s = $RefreshSig$();
+import __vite__cjsImport3_react from "/node_modules/.vite/deps/react.js?v=818be9b9"; const useState = __vite__cjsImport3_react["useState"];
+import MonacoEditor from "/src/components/editor/MonacoEditor.tsx";
+import { useEditorStore } from "/src/stores/useEditorStore.ts";
+import { useProjectStore } from "/src/stores/useProjectStore.ts";
+import { useDiagnosticStore } from "/src/stores/useDiagnosticStore.ts";
+import { useFileLoader } from "/src/hooks/useFileLoader.ts";
+import { useRealTimeValidation } from "/src/hooks/useRealTimeValidation.ts";
+export default function EditorPane() {
+    _s();
+    const { tabs, activeTabId, setActiveTab, closeTab, editorContent, updateTabContent } = useEditorStore();
+    const { getFile, updateFile } = useProjectStore();
+    const { getDiagnosticsForFile } = useDiagnosticStore();
+    const [editMode, setEditMode] = useState(true);
+    const activeTab = tabs.find((t)=>t.id === activeTabId);
+    const activeFile = activeTab ? getFile(activeTab.fileId) : null;
+    const fileContent = activeFile ? editorContent.get(activeTab.id) || '' : '';
+    // Load file content when tab changes
+    useFileLoader(activeTab?.id ?? null, activeFile?.id ?? null);
+    // Enable real-time validation
+    useRealTimeValidation(activeFile?.id ?? null, fileContent || null);
+    // Get diagnostics for current file
+    const fileDiagnostics = activeFile ? getDiagnosticsForFile(activeFile.id) : [];
+    const errorCount = fileDiagnostics.filter((d)=>d.severity === 'error').length;
+    const warningCount = fileDiagnostics.filter((d)=>d.severity === 'warning').length;
+    const handleContentChange = (newContent)=>{
+        if (activeTab) {
+            updateTabContent(activeTab.id, newContent);
+            if (activeFile) {
+                updateFile(activeFile.id, {
+                    content: newContent,
+                    isDirty: true
+                });
+            }
+        }
+    };
+    return /*#__PURE__*/ _jsxDEV("div", {
+        "data-testid": "editor-pane",
+        className: "flex-1 flex flex-col bg-bg-primary overflow-hidden",
+        children: [
+            /*#__PURE__*/ _jsxDEV("div", {
+                className: "h-10 bg-bg-secondary border-b border-border-subtle flex items-center overflow-x-auto",
+                children: tabs.length > 0 ? /*#__PURE__*/ _jsxDEV("div", {
+                    className: "flex",
+                    children: tabs.map((tab)=>{
+                        const tabFile = getFile(tab.fileId);
+                        const tabDiagnostics = getDiagnosticsForFile(tab.fileId);
+                        const tabErrorCount = tabDiagnostics.filter((d)=>d.severity === 'error').length;
+                        return /*#__PURE__*/ _jsxDEV("button", {
+                            onClick: ()=>setActiveTab(tab.id),
+                            className: `px-3 py-2 text-xs border-r border-border-subtle whitespace-nowrap flex items-center gap-2 transition-colors ${tab.id === activeTabId ? 'bg-bg-tertiary text-text-primary' : 'bg-bg-secondary text-text-secondary hover:bg-bg-tertiary'}`,
+                            title: tabFile?.path,
+                            children: [
+                                /*#__PURE__*/ _jsxDEV("span", {
+                                    children: tab.name
+                                }, void 0, false, {
+                                    fileName: "C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/layout/EditorPane.tsx",
+                                    lineNumber: 64,
+                                    columnNumber: 19
+                                }, this),
+                                tabErrorCount > 0 && /*#__PURE__*/ _jsxDEV("span", {
+                                    className: "text-state-error text-xs font-bold",
+                                    children: tabErrorCount
+                                }, void 0, false, {
+                                    fileName: "C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/layout/EditorPane.tsx",
+                                    lineNumber: 66,
+                                    columnNumber: 21
+                                }, this),
+                                tab.isDirty && /*#__PURE__*/ _jsxDEV("span", {
+                                    className: "text-state-warning",
+                                    children: "●"
+                                }, void 0, false, {
+                                    fileName: "C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/layout/EditorPane.tsx",
+                                    lineNumber: 68,
+                                    columnNumber: 35
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV("button", {
+                                    onClick: (e)=>{
+                                        e.stopPropagation();
+                                        closeTab(tab.id);
+                                    },
+                                    className: "ml-1 text-text-secondary hover:text-text-primary",
+                                    children: "✕"
+                                }, void 0, false, {
+                                    fileName: "C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/layout/EditorPane.tsx",
+                                    lineNumber: 69,
+                                    columnNumber: 19
+                                }, this)
+                            ]
+                        }, tab.id, true, {
+                            fileName: "C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/layout/EditorPane.tsx",
+                            lineNumber: 54,
+                            columnNumber: 17
+                        }, this);
+                    })
+                }, void 0, false, {
+                    fileName: "C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/layout/EditorPane.tsx",
+                    lineNumber: 48,
+                    columnNumber: 11
+                }, this) : /*#__PURE__*/ _jsxDEV("div", {
+                    className: "text-xs text-text-secondary px-4",
+                    children: "No files open"
+                }, void 0, false, {
+                    fileName: "C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/layout/EditorPane.tsx",
+                    lineNumber: 83,
+                    columnNumber: 11
+                }, this)
+            }, void 0, false, {
+                fileName: "C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/layout/EditorPane.tsx",
+                lineNumber: 46,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ _jsxDEV("div", {
+                className: "flex-1 bg-bg-primary flex flex-col overflow-hidden",
+                children: activeFile ? /*#__PURE__*/ _jsxDEV("div", {
+                    className: "flex-1 flex flex-col overflow-hidden",
+                    children: [
+                        /*#__PURE__*/ _jsxDEV("div", {
+                            className: "px-4 py-2 bg-bg-secondary border-b border-border-subtle text-xs text-text-secondary flex justify-between items-center",
+                            children: [
+                                /*#__PURE__*/ _jsxDEV("div", {
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV("span", {
+                                            children: activeFile.path
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/layout/EditorPane.tsx",
+                                            lineNumber: 94,
+                                            columnNumber: 17
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV("span", {
+                                            className: "ml-4",
+                                            children: [
+                                                "Type: ",
+                                                activeFile.type.toUpperCase()
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/layout/EditorPane.tsx",
+                                            lineNumber: 95,
+                                            columnNumber: 17
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV("span", {
+                                            className: "ml-4",
+                                            children: [
+                                                activeFile.size,
+                                                " bytes"
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/layout/EditorPane.tsx",
+                                            lineNumber: 96,
+                                            columnNumber: 17
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/layout/EditorPane.tsx",
+                                    lineNumber: 93,
+                                    columnNumber: 15
+                                }, this),
+                                (errorCount > 0 || warningCount > 0) && /*#__PURE__*/ _jsxDEV("div", {
+                                    className: "text-xs flex gap-4",
+                                    children: [
+                                        errorCount > 0 && /*#__PURE__*/ _jsxDEV("span", {
+                                            className: "text-state-error",
+                                            children: [
+                                                "Errors: ",
+                                                errorCount
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/layout/EditorPane.tsx",
+                                            lineNumber: 100,
+                                            columnNumber: 38
+                                        }, this),
+                                        warningCount > 0 && /*#__PURE__*/ _jsxDEV("span", {
+                                            className: "text-state-warning",
+                                            children: [
+                                                "Warnings: ",
+                                                warningCount
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/layout/EditorPane.tsx",
+                                            lineNumber: 101,
+                                            columnNumber: 40
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/layout/EditorPane.tsx",
+                                    lineNumber: 99,
+                                    columnNumber: 17
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/layout/EditorPane.tsx",
+                            lineNumber: 92,
+                            columnNumber: 13
+                        }, this),
+                        /*#__PURE__*/ _jsxDEV("div", {
+                            "data-testid": "monaco-editor",
+                            className: "flex-1 overflow-hidden bg-bg-primary",
+                            children: /*#__PURE__*/ _jsxDEV(MonacoEditor, {
+                                value: fileContent,
+                                onChange: handleContentChange,
+                                language: activeFile.type === 'jpe' ? 'jpe' : 'xml',
+                                theme: "dark",
+                                readOnly: false,
+                                markers: fileDiagnostics.map((d)=>({
+                                        line: d.line || 1,
+                                        column: 1,
+                                        severity: d.severity,
+                                        message: d.message
+                                    }))
+                            }, void 0, false, {
+                                fileName: "C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/layout/EditorPane.tsx",
+                                lineNumber: 108,
+                                columnNumber: 15
+                            }, this)
+                        }, void 0, false, {
+                            fileName: "C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/layout/EditorPane.tsx",
+                            lineNumber: 107,
+                            columnNumber: 13
+                        }, this),
+                        /*#__PURE__*/ _jsxDEV("div", {
+                            className: "h-6 bg-bg-secondary border-t border-border-subtle px-4 flex items-center justify-between text-xs text-text-secondary",
+                            children: [
+                                /*#__PURE__*/ _jsxDEV("span", {
+                                    children: [
+                                        errorCount > 0 && /*#__PURE__*/ _jsxDEV("span", {
+                                            className: "text-state-error",
+                                            children: [
+                                                errorCount,
+                                                " error",
+                                                errorCount > 1 ? 's' : ''
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/layout/EditorPane.tsx",
+                                            lineNumber: 126,
+                                            columnNumber: 36
+                                        }, this),
+                                        errorCount > 0 && warningCount > 0 && /*#__PURE__*/ _jsxDEV("span", {
+                                            className: "mx-2",
+                                            children: "•"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/layout/EditorPane.tsx",
+                                            lineNumber: 127,
+                                            columnNumber: 56
+                                        }, this),
+                                        warningCount > 0 && /*#__PURE__*/ _jsxDEV("span", {
+                                            className: "text-state-warning",
+                                            children: [
+                                                warningCount,
+                                                " warning",
+                                                warningCount > 1 ? 's' : ''
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/layout/EditorPane.tsx",
+                                            lineNumber: 128,
+                                            columnNumber: 38
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/layout/EditorPane.tsx",
+                                    lineNumber: 125,
+                                    columnNumber: 15
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV("span", {
+                                    children: [
+                                        fileContent.split('\n').length,
+                                        " lines • ",
+                                        fileContent.length,
+                                        " characters"
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/layout/EditorPane.tsx",
+                                    lineNumber: 130,
+                                    columnNumber: 15
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/layout/EditorPane.tsx",
+                            lineNumber: 124,
+                            columnNumber: 13
+                        }, this)
+                    ]
+                }, void 0, true, {
+                    fileName: "C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/layout/EditorPane.tsx",
+                    lineNumber: 90,
+                    columnNumber: 11
+                }, this) : /*#__PURE__*/ _jsxDEV("div", {
+                    className: "flex-1 flex flex-col items-center justify-center text-text-secondary",
+                    children: [
+                        /*#__PURE__*/ _jsxDEV("div", {
+                            className: "text-4xl mb-4",
+                            children: "📄"
+                        }, void 0, false, {
+                            fileName: "C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/layout/EditorPane.tsx",
+                            lineNumber: 137,
+                            columnNumber: 13
+                        }, this),
+                        /*#__PURE__*/ _jsxDEV("div", {
+                            className: "text-sm mb-2",
+                            children: "No file selected"
+                        }, void 0, false, {
+                            fileName: "C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/layout/EditorPane.tsx",
+                            lineNumber: 138,
+                            columnNumber: 13
+                        }, this),
+                        /*#__PURE__*/ _jsxDEV("div", {
+                            className: "text-xs",
+                            children: "Click a file in the project tree to open it"
+                        }, void 0, false, {
+                            fileName: "C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/layout/EditorPane.tsx",
+                            lineNumber: 139,
+                            columnNumber: 13
+                        }, this)
+                    ]
+                }, void 0, true, {
+                    fileName: "C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/layout/EditorPane.tsx",
+                    lineNumber: 136,
+                    columnNumber: 11
+                }, this)
+            }, void 0, false, {
+                fileName: "C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/layout/EditorPane.tsx",
+                lineNumber: 88,
+                columnNumber: 7
+            }, this)
+        ]
+    }, void 0, true, {
+        fileName: "C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/layout/EditorPane.tsx",
+        lineNumber: 44,
+        columnNumber: 5
+    }, this);
+}
+_s(EditorPane, "67H81H5210Qbt6EUBzOFWzJeV+w=", false, function() {
+    return [
+        useEditorStore,
+        useProjectStore,
+        useDiagnosticStore,
+        useFileLoader,
+        useRealTimeValidation
+    ];
+});
+_c = EditorPane;
+var _c;
+$RefreshReg$(_c, "EditorPane");
+
+
+if (import.meta.hot && !inWebWorker) {
+  window.$RefreshReg$ = prevRefreshReg;
+  window.$RefreshSig$ = prevRefreshSig;
+}
+
+
+if (import.meta.hot && !inWebWorker) {
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh("C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/layout/EditorPane.tsx", currentExports);
+    import.meta.hot.accept((nextExports) => {
+      if (!nextExports) return;
+      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate("C:/Users/thecr/Desktop/JPE_Mod_Translator_2.0/src/components/layout/EditorPane.tsx", currentExports, nextExports);
+      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+    });
+  });
+}
+
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIkVkaXRvclBhbmUudHN4Il0sInNvdXJjZXNDb250ZW50IjpbImltcG9ydCB7IHVzZVN0YXRlIH0gZnJvbSAncmVhY3QnXHJcbmltcG9ydCBNb25hY29FZGl0b3IgZnJvbSAnQC9jb21wb25lbnRzL2VkaXRvci9Nb25hY29FZGl0b3InXHJcbmltcG9ydCB7IHVzZUVkaXRvclN0b3JlIH0gZnJvbSAnQC9zdG9yZXMvdXNlRWRpdG9yU3RvcmUnXHJcbmltcG9ydCB7IHVzZVByb2plY3RTdG9yZSB9IGZyb20gJ0Avc3RvcmVzL3VzZVByb2plY3RTdG9yZSdcclxuaW1wb3J0IHsgdXNlRGlhZ25vc3RpY1N0b3JlIH0gZnJvbSAnQC9zdG9yZXMvdXNlRGlhZ25vc3RpY1N0b3JlJ1xyXG5pbXBvcnQgeyB1c2VGaWxlTG9hZGVyIH0gZnJvbSAnQC9ob29rcy91c2VGaWxlTG9hZGVyJ1xyXG5pbXBvcnQgeyB1c2VSZWFsVGltZVZhbGlkYXRpb24gfSBmcm9tICdAL2hvb2tzL3VzZVJlYWxUaW1lVmFsaWRhdGlvbidcclxuXHJcbmV4cG9ydCBkZWZhdWx0IGZ1bmN0aW9uIEVkaXRvclBhbmUoKSB7XHJcbiAgY29uc3QgeyB0YWJzLCBhY3RpdmVUYWJJZCwgc2V0QWN0aXZlVGFiLCBjbG9zZVRhYiwgZWRpdG9yQ29udGVudCwgdXBkYXRlVGFiQ29udGVudCB9ID1cclxuICAgIHVzZUVkaXRvclN0b3JlKClcclxuICBjb25zdCB7IGdldEZpbGUsIHVwZGF0ZUZpbGUgfSA9IHVzZVByb2plY3RTdG9yZSgpXHJcbiAgY29uc3QgeyBnZXREaWFnbm9zdGljc0ZvckZpbGUgfSA9IHVzZURpYWdub3N0aWNTdG9yZSgpXHJcbiAgY29uc3QgW2VkaXRNb2RlLCBzZXRFZGl0TW9kZV0gPSB1c2VTdGF0ZSh0cnVlKVxyXG5cclxuICBjb25zdCBhY3RpdmVUYWIgPSB0YWJzLmZpbmQoKHQpID0+IHQuaWQgPT09IGFjdGl2ZVRhYklkKVxyXG4gIGNvbnN0IGFjdGl2ZUZpbGUgPSBhY3RpdmVUYWIgPyBnZXRGaWxlKGFjdGl2ZVRhYi5maWxlSWQpIDogbnVsbFxyXG4gIGNvbnN0IGZpbGVDb250ZW50ID0gYWN0aXZlRmlsZSA/IGVkaXRvckNvbnRlbnQuZ2V0KGFjdGl2ZVRhYiEuaWQpIHx8ICcnIDogJydcclxuXHJcbiAgLy8gTG9hZCBmaWxlIGNvbnRlbnQgd2hlbiB0YWIgY2hhbmdlc1xyXG4gIHVzZUZpbGVMb2FkZXIoYWN0aXZlVGFiPy5pZCA/PyBudWxsLCBhY3RpdmVGaWxlPy5pZCA/PyBudWxsKVxyXG5cclxuICAvLyBFbmFibGUgcmVhbC10aW1lIHZhbGlkYXRpb25cclxuICB1c2VSZWFsVGltZVZhbGlkYXRpb24oYWN0aXZlRmlsZT8uaWQgPz8gbnVsbCwgZmlsZUNvbnRlbnQgfHwgbnVsbClcclxuXHJcbiAgLy8gR2V0IGRpYWdub3N0aWNzIGZvciBjdXJyZW50IGZpbGVcclxuICBjb25zdCBmaWxlRGlhZ25vc3RpY3MgPSBhY3RpdmVGaWxlID8gZ2V0RGlhZ25vc3RpY3NGb3JGaWxlKGFjdGl2ZUZpbGUuaWQpIDogW11cclxuICBjb25zdCBlcnJvckNvdW50ID0gZmlsZURpYWdub3N0aWNzLmZpbHRlcigoZCkgPT4gZC5zZXZlcml0eSA9PT0gJ2Vycm9yJykubGVuZ3RoXHJcbiAgY29uc3Qgd2FybmluZ0NvdW50ID0gZmlsZURpYWdub3N0aWNzLmZpbHRlcigoZCkgPT4gZC5zZXZlcml0eSA9PT0gJ3dhcm5pbmcnKS5sZW5ndGhcclxuXHJcbiAgY29uc3QgaGFuZGxlQ29udGVudENoYW5nZSA9IChuZXdDb250ZW50OiBzdHJpbmcpID0+IHtcclxuICAgIGlmIChhY3RpdmVUYWIpIHtcclxuICAgICAgdXBkYXRlVGFiQ29udGVudChhY3RpdmVUYWIuaWQsIG5ld0NvbnRlbnQpXHJcbiAgICAgIGlmIChhY3RpdmVGaWxlKSB7XHJcbiAgICAgICAgdXBkYXRlRmlsZShhY3RpdmVGaWxlLmlkLCB7XHJcbiAgICAgICAgICBjb250ZW50OiBuZXdDb250ZW50LFxyXG4gICAgICAgICAgaXNEaXJ0eTogdHJ1ZSxcclxuICAgICAgICB9KVxyXG4gICAgICB9XHJcbiAgICB9XHJcbiAgfVxyXG5cclxuICByZXR1cm4gKFxyXG4gICAgPGRpdiBkYXRhLXRlc3RpZD1cImVkaXRvci1wYW5lXCIgY2xhc3NOYW1lPVwiZmxleC0xIGZsZXggZmxleC1jb2wgYmctYmctcHJpbWFyeSBvdmVyZmxvdy1oaWRkZW5cIj5cclxuICAgICAgey8qIEVkaXRvciBUYWJzICovfVxyXG4gICAgICA8ZGl2IGNsYXNzTmFtZT1cImgtMTAgYmctYmctc2Vjb25kYXJ5IGJvcmRlci1iIGJvcmRlci1ib3JkZXItc3VidGxlIGZsZXggaXRlbXMtY2VudGVyIG92ZXJmbG93LXgtYXV0b1wiPlxyXG4gICAgICAgIHt0YWJzLmxlbmd0aCA+IDAgPyAoXHJcbiAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImZsZXhcIj5cclxuICAgICAgICAgICAge3RhYnMubWFwKCh0YWIpID0+IHtcclxuICAgICAgICAgICAgICBjb25zdCB0YWJGaWxlID0gZ2V0RmlsZSh0YWIuZmlsZUlkKVxyXG4gICAgICAgICAgICAgIGNvbnN0IHRhYkRpYWdub3N0aWNzID0gZ2V0RGlhZ25vc3RpY3NGb3JGaWxlKHRhYi5maWxlSWQpXHJcbiAgICAgICAgICAgICAgY29uc3QgdGFiRXJyb3JDb3VudCA9IHRhYkRpYWdub3N0aWNzLmZpbHRlcigoZCkgPT4gZC5zZXZlcml0eSA9PT0gJ2Vycm9yJykubGVuZ3RoXHJcbiAgICAgICAgICAgICAgcmV0dXJuIChcclxuICAgICAgICAgICAgICAgIDxidXR0b25cclxuICAgICAgICAgICAgICAgICAga2V5PXt0YWIuaWR9XHJcbiAgICAgICAgICAgICAgICAgIG9uQ2xpY2s9eygpID0+IHNldEFjdGl2ZVRhYih0YWIuaWQpfVxyXG4gICAgICAgICAgICAgICAgICBjbGFzc05hbWU9e2BweC0zIHB5LTIgdGV4dC14cyBib3JkZXItciBib3JkZXItYm9yZGVyLXN1YnRsZSB3aGl0ZXNwYWNlLW5vd3JhcCBmbGV4IGl0ZW1zLWNlbnRlciBnYXAtMiB0cmFuc2l0aW9uLWNvbG9ycyAke1xyXG4gICAgICAgICAgICAgICAgICAgIHRhYi5pZCA9PT0gYWN0aXZlVGFiSWRcclxuICAgICAgICAgICAgICAgICAgICAgID8gJ2JnLWJnLXRlcnRpYXJ5IHRleHQtdGV4dC1wcmltYXJ5J1xyXG4gICAgICAgICAgICAgICAgICAgICAgOiAnYmctYmctc2Vjb25kYXJ5IHRleHQtdGV4dC1zZWNvbmRhcnkgaG92ZXI6YmctYmctdGVydGlhcnknXHJcbiAgICAgICAgICAgICAgICAgIH1gfVxyXG4gICAgICAgICAgICAgICAgICB0aXRsZT17dGFiRmlsZT8ucGF0aH1cclxuICAgICAgICAgICAgICAgID5cclxuICAgICAgICAgICAgICAgICAgPHNwYW4+e3RhYi5uYW1lfTwvc3Bhbj5cclxuICAgICAgICAgICAgICAgICAge3RhYkVycm9yQ291bnQgPiAwICYmIChcclxuICAgICAgICAgICAgICAgICAgICA8c3BhbiBjbGFzc05hbWU9XCJ0ZXh0LXN0YXRlLWVycm9yIHRleHQteHMgZm9udC1ib2xkXCI+e3RhYkVycm9yQ291bnR9PC9zcGFuPlxyXG4gICAgICAgICAgICAgICAgICApfVxyXG4gICAgICAgICAgICAgICAgICB7dGFiLmlzRGlydHkgJiYgPHNwYW4gY2xhc3NOYW1lPVwidGV4dC1zdGF0ZS13YXJuaW5nXCI+4pePPC9zcGFuPn1cclxuICAgICAgICAgICAgICAgICAgPGJ1dHRvblxyXG4gICAgICAgICAgICAgICAgICAgIG9uQ2xpY2s9eyhlKSA9PiB7XHJcbiAgICAgICAgICAgICAgICAgICAgICBlLnN0b3BQcm9wYWdhdGlvbigpXHJcbiAgICAgICAgICAgICAgICAgICAgICBjbG9zZVRhYih0YWIuaWQpXHJcbiAgICAgICAgICAgICAgICAgICAgfX1cclxuICAgICAgICAgICAgICAgICAgICBjbGFzc05hbWU9XCJtbC0xIHRleHQtdGV4dC1zZWNvbmRhcnkgaG92ZXI6dGV4dC10ZXh0LXByaW1hcnlcIlxyXG4gICAgICAgICAgICAgICAgICA+XHJcbiAgICAgICAgICAgICAgICAgICAg4pyVXHJcbiAgICAgICAgICAgICAgICAgIDwvYnV0dG9uPlxyXG4gICAgICAgICAgICAgICAgPC9idXR0b24+XHJcbiAgICAgICAgICAgICAgKVxyXG4gICAgICAgICAgICB9KX1cclxuICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICkgOiAoXHJcbiAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cInRleHQteHMgdGV4dC10ZXh0LXNlY29uZGFyeSBweC00XCI+Tm8gZmlsZXMgb3BlbjwvZGl2PlxyXG4gICAgICAgICl9XHJcbiAgICAgIDwvZGl2PlxyXG5cclxuICAgICAgey8qIEVkaXRvciBBcmVhICovfVxyXG4gICAgICA8ZGl2IGNsYXNzTmFtZT1cImZsZXgtMSBiZy1iZy1wcmltYXJ5IGZsZXggZmxleC1jb2wgb3ZlcmZsb3ctaGlkZGVuXCI+XHJcbiAgICAgICAge2FjdGl2ZUZpbGUgPyAoXHJcbiAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImZsZXgtMSBmbGV4IGZsZXgtY29sIG92ZXJmbG93LWhpZGRlblwiPlxyXG4gICAgICAgICAgICB7LyogRmlsZSBoZWFkZXIgKi99XHJcbiAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwicHgtNCBweS0yIGJnLWJnLXNlY29uZGFyeSBib3JkZXItYiBib3JkZXItYm9yZGVyLXN1YnRsZSB0ZXh0LXhzIHRleHQtdGV4dC1zZWNvbmRhcnkgZmxleCBqdXN0aWZ5LWJldHdlZW4gaXRlbXMtY2VudGVyXCI+XHJcbiAgICAgICAgICAgICAgPGRpdj5cclxuICAgICAgICAgICAgICAgIDxzcGFuPnthY3RpdmVGaWxlLnBhdGh9PC9zcGFuPlxyXG4gICAgICAgICAgICAgICAgPHNwYW4gY2xhc3NOYW1lPVwibWwtNFwiPlR5cGU6IHthY3RpdmVGaWxlLnR5cGUudG9VcHBlckNhc2UoKX08L3NwYW4+XHJcbiAgICAgICAgICAgICAgICA8c3BhbiBjbGFzc05hbWU9XCJtbC00XCI+e2FjdGl2ZUZpbGUuc2l6ZX0gYnl0ZXM8L3NwYW4+XHJcbiAgICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICAgICAgeyhlcnJvckNvdW50ID4gMCB8fCB3YXJuaW5nQ291bnQgPiAwKSAmJiAoXHJcbiAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cInRleHQteHMgZmxleCBnYXAtNFwiPlxyXG4gICAgICAgICAgICAgICAgICB7ZXJyb3JDb3VudCA+IDAgJiYgPHNwYW4gY2xhc3NOYW1lPVwidGV4dC1zdGF0ZS1lcnJvclwiPkVycm9yczoge2Vycm9yQ291bnR9PC9zcGFuPn1cclxuICAgICAgICAgICAgICAgICAge3dhcm5pbmdDb3VudCA+IDAgJiYgPHNwYW4gY2xhc3NOYW1lPVwidGV4dC1zdGF0ZS13YXJuaW5nXCI+V2FybmluZ3M6IHt3YXJuaW5nQ291bnR9PC9zcGFuPn1cclxuICAgICAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgICAgICl9XHJcbiAgICAgICAgICAgIDwvZGl2PlxyXG5cclxuICAgICAgICAgICAgey8qIE1vbmFjbyBFZGl0b3Igd2l0aCBzeW50YXggaGlnaGxpZ2h0aW5nIGFuZCB2YWxpZGF0aW9uICovfVxyXG4gICAgICAgICAgICA8ZGl2IGRhdGEtdGVzdGlkPVwibW9uYWNvLWVkaXRvclwiIGNsYXNzTmFtZT1cImZsZXgtMSBvdmVyZmxvdy1oaWRkZW4gYmctYmctcHJpbWFyeVwiPlxyXG4gICAgICAgICAgICAgIDxNb25hY29FZGl0b3JcclxuICAgICAgICAgICAgICAgIHZhbHVlPXtmaWxlQ29udGVudH1cclxuICAgICAgICAgICAgICAgIG9uQ2hhbmdlPXtoYW5kbGVDb250ZW50Q2hhbmdlfVxyXG4gICAgICAgICAgICAgICAgbGFuZ3VhZ2U9e2FjdGl2ZUZpbGUudHlwZSA9PT0gJ2pwZScgPyAnanBlJyA6ICd4bWwnfVxyXG4gICAgICAgICAgICAgICAgdGhlbWU9XCJkYXJrXCJcclxuICAgICAgICAgICAgICAgIHJlYWRPbmx5PXtmYWxzZX1cclxuICAgICAgICAgICAgICAgIG1hcmtlcnM9e2ZpbGVEaWFnbm9zdGljcy5tYXAoKGQpID0+ICh7XHJcbiAgICAgICAgICAgICAgICAgIGxpbmU6IGQubGluZSB8fCAxLFxyXG4gICAgICAgICAgICAgICAgICBjb2x1bW46IDEsXHJcbiAgICAgICAgICAgICAgICAgIHNldmVyaXR5OiBkLnNldmVyaXR5IGFzICdlcnJvcicgfCAnd2FybmluZycgfCAnaW5mbycsXHJcbiAgICAgICAgICAgICAgICAgIG1lc3NhZ2U6IGQubWVzc2FnZSxcclxuICAgICAgICAgICAgICAgIH0pKX1cclxuICAgICAgICAgICAgICAvPlxyXG4gICAgICAgICAgICA8L2Rpdj5cclxuXHJcbiAgICAgICAgICAgIHsvKiBTdGF0dXMgYmFyICovfVxyXG4gICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImgtNiBiZy1iZy1zZWNvbmRhcnkgYm9yZGVyLXQgYm9yZGVyLWJvcmRlci1zdWJ0bGUgcHgtNCBmbGV4IGl0ZW1zLWNlbnRlciBqdXN0aWZ5LWJldHdlZW4gdGV4dC14cyB0ZXh0LXRleHQtc2Vjb25kYXJ5XCI+XHJcbiAgICAgICAgICAgICAgPHNwYW4+XHJcbiAgICAgICAgICAgICAgICB7ZXJyb3JDb3VudCA+IDAgJiYgPHNwYW4gY2xhc3NOYW1lPVwidGV4dC1zdGF0ZS1lcnJvclwiPntlcnJvckNvdW50fSBlcnJvcntlcnJvckNvdW50ID4gMSA/ICdzJyA6ICcnfTwvc3Bhbj59XHJcbiAgICAgICAgICAgICAgICB7ZXJyb3JDb3VudCA+IDAgJiYgd2FybmluZ0NvdW50ID4gMCAmJiA8c3BhbiBjbGFzc05hbWU9XCJteC0yXCI+4oCiPC9zcGFuPn1cclxuICAgICAgICAgICAgICAgIHt3YXJuaW5nQ291bnQgPiAwICYmIDxzcGFuIGNsYXNzTmFtZT1cInRleHQtc3RhdGUtd2FybmluZ1wiPnt3YXJuaW5nQ291bnR9IHdhcm5pbmd7d2FybmluZ0NvdW50ID4gMSA/ICdzJyA6ICcnfTwvc3Bhbj59XHJcbiAgICAgICAgICAgICAgPC9zcGFuPlxyXG4gICAgICAgICAgICAgIDxzcGFuPlxyXG4gICAgICAgICAgICAgICAge2ZpbGVDb250ZW50LnNwbGl0KCdcXG4nKS5sZW5ndGh9IGxpbmVzIOKAoiB7ZmlsZUNvbnRlbnQubGVuZ3RofSBjaGFyYWN0ZXJzXHJcbiAgICAgICAgICAgICAgPC9zcGFuPlxyXG4gICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICkgOiAoXHJcbiAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImZsZXgtMSBmbGV4IGZsZXgtY29sIGl0ZW1zLWNlbnRlciBqdXN0aWZ5LWNlbnRlciB0ZXh0LXRleHQtc2Vjb25kYXJ5XCI+XHJcbiAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwidGV4dC00eGwgbWItNFwiPvCfk4Q8L2Rpdj5cclxuICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJ0ZXh0LXNtIG1iLTJcIj5ObyBmaWxlIHNlbGVjdGVkPC9kaXY+XHJcbiAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwidGV4dC14c1wiPkNsaWNrIGEgZmlsZSBpbiB0aGUgcHJvamVjdCB0cmVlIHRvIG9wZW4gaXQ8L2Rpdj5cclxuICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICl9XHJcbiAgICAgIDwvZGl2PlxyXG4gICAgPC9kaXY+XHJcbiAgKVxyXG59XHJcbiJdLCJuYW1lcyI6WyJ1c2VTdGF0ZSIsIk1vbmFjb0VkaXRvciIsInVzZUVkaXRvclN0b3JlIiwidXNlUHJvamVjdFN0b3JlIiwidXNlRGlhZ25vc3RpY1N0b3JlIiwidXNlRmlsZUxvYWRlciIsInVzZVJlYWxUaW1lVmFsaWRhdGlvbiIsIkVkaXRvclBhbmUiLCJ0YWJzIiwiYWN0aXZlVGFiSWQiLCJzZXRBY3RpdmVUYWIiLCJjbG9zZVRhYiIsImVkaXRvckNvbnRlbnQiLCJ1cGRhdGVUYWJDb250ZW50IiwiZ2V0RmlsZSIsInVwZGF0ZUZpbGUiLCJnZXREaWFnbm9zdGljc0ZvckZpbGUiLCJlZGl0TW9kZSIsInNldEVkaXRNb2RlIiwiYWN0aXZlVGFiIiwiZmluZCIsInQiLCJpZCIsImFjdGl2ZUZpbGUiLCJmaWxlSWQiLCJmaWxlQ29udGVudCIsImdldCIsImZpbGVEaWFnbm9zdGljcyIsImVycm9yQ291bnQiLCJmaWx0ZXIiLCJkIiwic2V2ZXJpdHkiLCJsZW5ndGgiLCJ3YXJuaW5nQ291bnQiLCJoYW5kbGVDb250ZW50Q2hhbmdlIiwibmV3Q29udGVudCIsImNvbnRlbnQiLCJpc0RpcnR5IiwiZGl2IiwiZGF0YS10ZXN0aWQiLCJjbGFzc05hbWUiLCJtYXAiLCJ0YWIiLCJ0YWJGaWxlIiwidGFiRGlhZ25vc3RpY3MiLCJ0YWJFcnJvckNvdW50IiwiYnV0dG9uIiwib25DbGljayIsInRpdGxlIiwicGF0aCIsInNwYW4iLCJuYW1lIiwiZSIsInN0b3BQcm9wYWdhdGlvbiIsInR5cGUiLCJ0b1VwcGVyQ2FzZSIsInNpemUiLCJ2YWx1ZSIsIm9uQ2hhbmdlIiwibGFuZ3VhZ2UiLCJ0aGVtZSIsInJlYWRPbmx5IiwibWFya2VycyIsImxpbmUiLCJjb2x1bW4iLCJtZXNzYWdlIiwic3BsaXQiXSwibWFwcGluZ3MiOiI7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7OztBQUFBLFNBQVNBLFFBQVEsUUFBUSxRQUFPO0FBQ2hDLE9BQU9DLGtCQUFrQixtQ0FBa0M7QUFDM0QsU0FBU0MsY0FBYyxRQUFRLDBCQUF5QjtBQUN4RCxTQUFTQyxlQUFlLFFBQVEsMkJBQTBCO0FBQzFELFNBQVNDLGtCQUFrQixRQUFRLDhCQUE2QjtBQUNoRSxTQUFTQyxhQUFhLFFBQVEsd0JBQXVCO0FBQ3JELFNBQVNDLHFCQUFxQixRQUFRLGdDQUErQjtBQUVyRSxlQUFlLFNBQVNDOztJQUN0QixNQUFNLEVBQUVDLElBQUksRUFBRUMsV0FBVyxFQUFFQyxZQUFZLEVBQUVDLFFBQVEsRUFBRUMsYUFBYSxFQUFFQyxnQkFBZ0IsRUFBRSxHQUNsRlg7SUFDRixNQUFNLEVBQUVZLE9BQU8sRUFBRUMsVUFBVSxFQUFFLEdBQUda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

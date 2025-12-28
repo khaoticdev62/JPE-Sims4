@@ -5,6 +5,7 @@ interface UIState {
   theme: 'dark' | 'light'
   sidebarCollapsed: boolean
   rightPanelCollapsed: boolean
+  showDiagnostics: boolean
   fontSize: number
   showLineNumbers: boolean
 
@@ -12,6 +13,7 @@ interface UIState {
   setTheme: (theme: 'dark' | 'light') => void
   toggleSidebar: () => void
   toggleRightPanel: () => void
+  toggleDiagnostics: () => void
   setFontSize: (size: number) => void
   setShowLineNumbers: (show: boolean) => void
 }
@@ -23,6 +25,7 @@ export const useUIStore = create<UIState>()(
         theme: 'dark',
         sidebarCollapsed: false,
         rightPanelCollapsed: false,
+        showDiagnostics: true,
         fontSize: 13,
         showLineNumbers: true,
 
@@ -38,6 +41,12 @@ export const useUIStore = create<UIState>()(
         toggleRightPanel: () => {
           set((state) => ({
             rightPanelCollapsed: !state.rightPanelCollapsed,
+          }))
+        },
+
+        toggleDiagnostics: () => {
+          set((state) => ({
+            showDiagnostics: !state.showDiagnostics,
           }))
         },
 

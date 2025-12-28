@@ -14,7 +14,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import tokens from '@/design-system/tokens.json'
-import type { Editor, IMarker } from 'monaco-editor'
+import type { Editor, IMarker, IDisposable } from 'monaco-editor'
 
 interface MonacoEditorProps {
   value: string
@@ -131,6 +131,8 @@ export default function MonacoEditor({
 }: MonacoEditorProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const editorRef = useRef<Editor | null>(null)
+  const disposablesRef = useRef<IDisposable[]>([])
+  const instanceIdRef = useRef<string>(Math.random().toString(36).slice(2))
   const [isReady, setIsReady] = useState(false)
 
   // Initialize Monaco Editor
@@ -168,14 +170,15 @@ export default function MonacoEditor({
 
           editorRef.current = editor
 
-          // Handle content changes
-          editor.onDidChangeModelContent(() => {
+          // Handle content changes with proper disposal
+          const changeDisposable = editor.onDidChangeModelContent(() => {
             const newValue = editor.getValue()
             onChange(newValue)
           })
+          disposablesRef.current.push(changeDisposable)
 
-          // Store instance for reference
-          editorInstances.set(containerRef.current?.id || 'default', editor)
+          // Store instance for reference using unique ID
+          editorInstances.set(instanceIdRef.current, editor)
         }
 
         setIsReady(true)
@@ -187,11 +190,28 @@ export default function MonacoEditor({
     setupEditor()
 
     return () => {
-      // Cleanup on unmount
+      // Cleanup all event listeners
+      disposablesRef.current.forEach((disposable) => {
+        try {
+          disposable.dispose()
+        } catch (e) {
+          console.error('Error disposing event listener:', e)
+        }
+      })
+      disposablesRef.current = []
+
+      // Cleanup editor instance
       if (editorRef.current) {
-        editorRef.current.dispose()
+        try {
+          editorRef.current.dispose()
+        } catch (e) {
+          console.error('Error disposing editor:', e)
+        }
         editorRef.current = null
       }
+
+      // Remove from instances map
+      editorInstances.delete(instanceIdRef.current)
     }
   }, [])
 

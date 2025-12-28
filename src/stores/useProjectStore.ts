@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { devtools, persist } from 'zustand/middleware'
 import type { Project, ModFile } from '@/types/index'
+import { useActivityStore } from './useActivityStore'
 
 interface ProjectState {
   currentProject: Project | null
@@ -72,6 +73,16 @@ export const useProjectStore = create<ProjectState>()(
               },
             }
             get().setCurrentProject(newProject)
+
+            // Log activity
+            const { addActivity } = useActivityStore.getState()
+            addActivity({
+              type: 'created',
+              fileName: 'New project created',
+              projectName: name,
+              projectId: newProject.id,
+            })
+
             set({ isLoading: false })
           } catch (error) {
             set({
@@ -87,6 +98,19 @@ export const useProjectStore = create<ProjectState>()(
             // This will be implemented with file system access
             // For now, just simulate loading
             await new Promise((resolve) => setTimeout(resolve, 500))
+
+            // Log activity once project opens
+            const currentProject = get().currentProject
+            if (currentProject) {
+              const { addActivity } = useActivityStore.getState()
+              addActivity({
+                type: 'opened',
+                fileName: 'Project opened',
+                projectName: currentProject.name,
+                projectId: currentProject.id,
+              })
+            }
+
             set({ isLoading: false })
           } catch (error) {
             set({
@@ -122,6 +146,15 @@ export const useProjectStore = create<ProjectState>()(
 
           const updated = { ...project, files: [...project.files, file] }
           get().setCurrentProject(updated)
+
+          // Log activity
+          const { addActivity } = useActivityStore.getState()
+          addActivity({
+            type: 'added',
+            fileName: file.name,
+            projectName: project.name,
+            projectId: project.id,
+          })
         },
 
         removeFile: (fileId) => {
@@ -139,6 +172,9 @@ export const useProjectStore = create<ProjectState>()(
           const project = get().currentProject
           if (!project) return
 
+          const fileBeingUpdated = project.files.find((f) => f.id === fileId)
+          if (!fileBeingUpdated) return
+
           const updated = {
             ...project,
             files: project.files.map((f) =>
@@ -146,6 +182,18 @@ export const useProjectStore = create<ProjectState>()(
             ),
           }
           get().setCurrentProject(updated)
+
+          // Log activity for file modifications (with debounce to avoid spam)
+          // Only log if content or significant metadata changed
+          if (updates.content !== undefined || updates.isDirty === true) {
+            const { addActivity } = useActivityStore.getState()
+            addActivity({
+              type: 'modified',
+              fileName: fileBeingUpdated.name,
+              projectName: project.name,
+              projectId: project.id,
+            })
+          }
         },
 
         getFile: (fileId) => {

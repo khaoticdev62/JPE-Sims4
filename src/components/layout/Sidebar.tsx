@@ -42,6 +42,7 @@ export default function Sidebar() {
             {currentProject.files.map((file) => (
               <div
                 key={file.id}
+                data-testid={`file-${file.name}`}
                 onClick={() => handleFileClick(file.id, file.name)}
                 className="px-3 py-2 text-xs text-text-secondary hover:bg-bg-tertiary hover:text-text-primary bg-bg-tertiary rounded cursor-pointer truncate transition-colors group flex items-center justify-between"
                 title={file.path}

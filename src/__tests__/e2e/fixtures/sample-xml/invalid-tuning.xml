@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Root schemaVersion="0">
+  <Tuning name="Broken_Trait" class="Trait" instance="0xABCD1234">
+    <Instance name="Test" class="Trait" type="object">
+      <Enum name="trait_category" value="TRAIT_CATEGORY_TEST"
+      <!-- Missing closing tag above -->
+      <Boolean name="is_exclusive" value="False" />
+    </Instance>
+  <Missing closing Root tag>

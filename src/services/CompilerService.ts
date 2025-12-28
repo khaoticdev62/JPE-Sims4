@@ -7,6 +7,8 @@ import { XMLParser, type JPEModule } from '@/engine/parsers/XMLParser'
 import { XMLCompiler } from '@/engine/compilers/XMLCompiler'
 import { ValidationEngine } from '@/engine/validators/ValidationEngine'
 import type { ModFile, ValidationResult, Diagnostic } from '@/types/index'
+import { useActivityStore } from '@/stores/useActivityStore'
+import { useProjectStore } from '@/stores/useProjectStore'
 
 export class CompilerService {
   /**
@@ -163,6 +165,18 @@ export class CompilerService {
 
       // Parse and translate
       const jpe = await this.translateToJPE(file)
+
+      // Log compilation activity on success
+      const currentProject = useProjectStore.getState().currentProject
+      if (currentProject) {
+        const { addActivity } = useActivityStore.getState()
+        addActivity({
+          type: 'completed',
+          fileName: file.name,
+          projectName: currentProject.name,
+          projectId: currentProject.id,
+        })
+      }
 
       return {
         success: true,

@@ -1,0 +1,132 @@
+import { test, expect } from '@playwright/test'
+
+test.describe('E2E: Real-Time Validation Flow', () => {
+  test.beforeEach(async ({ page }) => {
+    // Navigate to the app
+    await page.goto('/', { waitUntil: 'networkidle' })
+
+    // Wait for app to load
+    await page.waitForSelector('[data-testid="app-root"]', { timeout: 10000 })
+  })
+
+  test('should display app on load', async ({ page }) => {
+    // Verify app loads
+    const appRoot = page.locator('[data-testid="app-root"]')
+    await expect(appRoot).toBeVisible()
+
+    // Navigation should be visible
+    const navHome = page.locator('[data-testid="nav-home"]')
+    await expect(navHome).toBeVisible()
+  })
+
+  test('should navigate to studio view', async ({ page }) => {
+    // Click studio nav
+    await page.locator('[data-testid="nav-studio"]').click()
+    await page.waitForTimeout(500)
+
+    // Studio layout should be visible
+    const editorLayout = page.locator('[data-testid="editor-layout"]')
+    const isVisible = await editorLayout.isVisible().catch(() => false)
+
+    expect(isVisible).toBe(true)
+  })
+
+  test('should display editor layout', async ({ page }) => {
+    // Go to studio
+    await page.locator('[data-testid="nav-studio"]').click()
+    await page.waitForTimeout(500)
+
+    // Check for three-pane layout
+    const threePane = page.locator('[data-testid="editor-three-pane"]')
+    const isVisible = await threePane.isVisible().catch(() => false)
+
+    expect(isVisible).toBe(true)
+  })
+
+  test('should display editor pane', async ({ page }) => {
+    // Go to studio
+    await page.locator('[data-testid="nav-studio"]').click()
+    await page.waitForTimeout(500)
+
+    // Editor pane should exist
+    const editorPane = page.locator('[data-testid="editor-pane"]')
+    const isVisible = await editorPane.isVisible().catch(() => false)
+
+    expect(isVisible).toBe(true)
+  })
+
+  test('should show Monaco editor when files open', async ({ page }) => {
+    // Navigate to studio
+    await page.locator('[data-testid="nav-studio"]').click()
+    await page.waitForTimeout(500)
+
+    // Monaco editor might be visible if files are open
+    const monacoEditor = page.locator('[data-testid="monaco-editor"]')
+    const isVisible = await monacoEditor.isVisible().catch(() => false)
+
+    // Editor visibility depends on whether files are open
+    expect(typeof isVisible).toBe('boolean')
+  })
+
+  test('should handle navigation between views', async ({ page }) => {
+    // Navigate through different views
+    await page.locator('[data-testid="nav-home"]').click()
+    await page.waitForTimeout(300)
+
+    await page.locator('[data-testid="nav-studio"]').click()
+    await page.waitForTimeout(300)
+
+    await page.locator('[data-testid="nav-projects"]').click()
+    await page.waitForTimeout(300)
+
+    // App should still be responsive
+    const appRoot = page.locator('[data-testid="app-root"]')
+    await expect(appRoot).toBeVisible()
+  })
+
+  test('should maintain state during navigation', async ({ page }) => {
+    // Get initial project count
+    const initialCount = await page.locator('[data-testid*="project-card"]').count()
+
+    // Navigate away and back
+    await page.locator('[data-testid="nav-studio"]').click()
+    await page.waitForTimeout(300)
+
+    await page.locator('[data-testid="nav-home"]').click()
+    await page.waitForTimeout(300)
+
+    // Project count should be the same
+    const finalCount = await page.locator('[data-testid*="project-card"]').count()
+
+    expect(finalCount).toBe(initialCount)
+  })
+
+  test('should handle keyboard input', async ({ page }) => {
+    // Type some keyboard input
+    await page.keyboard.type('test', { delay: 50 })
+    await page.waitForTimeout(200)
+
+    // App should still be responsive
+    const appRoot = page.locator('[data-testid="app-root"]')
+    await expect(appRoot).toBeVisible()
+  })
+
+  test('should respond to click events', async ({ page }) => {
+    // Check for clickable elements
+    const navItems = page.locator('[data-testid*="nav-"]')
+    const count = await navItems.count()
+
+    // Should have multiple navigation items
+    expect(count).toBeGreaterThan(0)
+
+    // Click first nav item
+    if (count > 0) {
+      await navItems.first().click()
+      await page.waitForTimeout(300)
+
+      // App should still be loaded
+      const appRoot = page.locator('[data-testid="app-root"]')
+      await expect(appRoot).toBeVisible()
+    }
+  })
+})

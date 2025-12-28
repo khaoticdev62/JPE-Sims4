@@ -37,7 +37,7 @@ export default function EditorLayout({ onNavigate }: EditorLayoutProps = {}) {
   }
 
   return (
-    <div className="h-screen w-screen flex bg-bg-primary overflow-hidden">
+    <div data-testid="editor-layout" className="h-screen w-screen flex bg-bg-primary overflow-hidden">
       {/* Left Navigation */}
       <AppNavigation activeItem={activeNav} onNavigate={handleNavigate} />
 
@@ -47,7 +47,7 @@ export default function EditorLayout({ onNavigate }: EditorLayoutProps = {}) {
         <TitleBar />
 
         {/* Main Content Area: Three-Pane Layout */}
-        <div className="flex-1 flex overflow-hidden">
+        <div data-testid="editor-three-pane" className="flex-1 flex overflow-hidden">
           {/* Left Sidebar: Project Explorer */}
           <Sidebar />
 

@@ -41,7 +41,7 @@ export default function EditorPane() {
   }
 
   return (
-    <div className="flex-1 flex flex-col bg-bg-primary overflow-hidden">
+    <div data-testid="editor-pane" className="flex-1 flex flex-col bg-bg-primary overflow-hidden">
       {/* Editor Tabs */}
       <div className="h-10 bg-bg-secondary border-b border-border-subtle flex items-center overflow-x-auto">
         {tabs.length > 0 ? (
@@ -104,7 +104,7 @@ export default function EditorPane() {
             </div>
 
             {/* Monaco Editor with syntax highlighting and validation */}
-            <div className="flex-1 overflow-hidden bg-bg-primary">
+            <div data-testid="monaco-editor" className="flex-1 overflow-hidden bg-bg-primary">
               <MonacoEditor
                 value={fileContent}
                 onChange={handleContentChange}

@@ -7,11 +7,13 @@ interface NavItemProps {
   label: string;
   active?: boolean;
   onClick?: () => void;
+  testId?: string;
 }
 
-function NavItem({ icon, label, active = false, onClick }: NavItemProps) {
+function NavItem({ icon, label, active = false, onClick, testId }: NavItemProps) {
   return (
     <button
+      data-testid={testId}
       onClick={onClick}
       className={cn(
         "group relative w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 outline-none",
@@ -77,6 +79,7 @@ export function AppNavigation({ activeItem = "home", onNavigate, className }: Ap
             label={item.label}
             active={activeItem === item.id}
             onClick={() => onNavigate?.(item.id)}
+            testId={`nav-${item.id}`}
           />
         ))}
       </div>

@@ -16,6 +16,9 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { Button } from "./ui/button";
+import { useProjectStore } from "@/stores/useProjectStore";
+import { useActivityStore } from "@/stores/useActivityStore";
+import { formatTimeAgo } from "@/utils/timeUtils";
 
 interface Project {
   id: string;
@@ -46,86 +49,64 @@ export function StudioHomeDashboard({ onNavigate }: StudioHomeDashboardProps = {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
-  const [focusedProjectId, setFocusedProjectId] = useState<string | null>("1");
+  const [focusedProjectId, setFocusedProjectId] = useState<string | null>(null);
 
-  // Mock data - Active Projects (Atomic Assembly)
-  const projects: Project[] = [
-    {
-      id: "1",
-      name: "The Sims 4: Better Exceptions",
-      icon: "🎮",
-      completion: 85,
-      lastModified: "2 hours ago",
-      fileCount: 127,
-      status: "active",
-    },
-    {
-      id: "2",
-      name: "Medieval Mod Pack",
-      icon: "⚔️",
-      completion: 12,
-      lastModified: "1 day ago",
-      fileCount: 43,
-      status: "active",
-    },
-    {
-      id: "3",
-      name: "Translation Helper",
-      icon: "📖",
-      completion: 100,
-      lastModified: "3 days ago",
-      fileCount: 89,
-      status: "completed",
-    },
-    {
-      id: "4",
-      name: "Puzzle Game Localization",
-      icon: "🧩",
-      completion: 45,
-      lastModified: "5 hours ago",
-      fileCount: 64,
-      status: "active",
-    },
-  ];
+  // Get real data from Zustand stores
+  const { recentProjects } = useProjectStore();
+  const { getRecentActivities } = useActivityStore();
 
-  // Mock data - Recent Activity (Atomic Assembly)
-  const recentActivity: Activity[] = [
-    {
-      id: "1",
-      type: "translated",
-      fileName: "strings.xml",
-      projectName: "The Sims 4: Better Exceptions",
-      timeAgo: "2m ago",
-    },
-    {
-      id: "2",
-      type: "added",
-      fileName: "New project created",
-      projectName: "Medieval Mod Pack",
-      timeAgo: "1h ago",
-    },
-    {
-      id: "3",
-      type: "completed",
-      fileName: "Compilation successful",
-      projectName: "Translation Helper",
-      timeAgo: "3h ago",
-    },
-    {
-      id: "4",
-      type: "modified",
-      fileName: "ui_strings.xml",
-      projectName: "The Sims 4: Better Exceptions",
-      timeAgo: "5h ago",
-    },
-    {
-      id: "5",
-      type: "translated",
-      fileName: "item_descriptions.json",
-      projectName: "Medieval Mod Pack",
-      timeAgo: "1d ago",
-    },
-  ];
+  // Helper function to compute project metadata from store data
+  const computeProjectMetadata = (proj: typeof recentProjects[0]): Project => {
+    const fileCount = proj.files.length;
+    const lastModified = formatTimeAgo(proj.metadata.updatedAt);
+
+    // Compute completion based on some heuristic (e.g., files with compiledAt)
+    // For now, use a simple metric based on file count or timestamp proximity
+    const completion = fileCount > 0 ? Math.min(100, fileCount * 20) : 0;
+
+    // Determine status
+    const status: "active" | "completed" | "paused" =
+      completion === 100 ? "completed" : "active";
+
+    return {
+      id: proj.id,
+      name: proj.name,
+      icon: "🎮", // Default icon (can be enhanced later)
+      completion,
+      lastModified,
+      fileCount,
+      status,
+    };
+  };
+
+  // Transform real projects to display format
+  const projects: Project[] = recentProjects.slice(0, 4).map(computeProjectMetadata);
+
+  // Transform real activities to display format
+  const rawActivities = getRecentActivities(5);
+  const recentActivity: Activity[] = rawActivities.map((activity) => ({
+    id: activity.id,
+    type: activity.type,
+    fileName: activity.fileName,
+    projectName: activity.projectName,
+    timeAgo: formatTimeAgo(activity.timestamp),
+  }));
+
+  // Handle project card click - navigate to studio
+  const handleProjectClick = (projectId: string) => {
+    const selectedProject = recentProjects.find((p) => p.id === projectId);
+    if (selectedProject) {
+      const { setCurrentProject } = useProjectStore.getState();
+      setCurrentProject(selectedProject);
+      setFocusedProjectId(projectId);
+      handleNavigate("studio");
+    }
+  };
+
+  // Handle "New Project" card click
+  const handleNewProjectClick = () => {
+    handleNavigate("projects");
+  };
 
   // Set greeting based on time of day
   useEffect(() => {
@@ -235,38 +216,45 @@ export function StudioHomeDashboard({ onNavigate }: StudioHomeDashboardProps = {
 
           {/* Active Projects Section */}
           <section className="space-y-6">
+            {/* Section Header */}
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-text-primary mb-1">Active Projects</h2>
+                <h2 className="text-text-primary mb-1">
+                  {projects.length === 0 ? "No Projects Yet" : "Active Projects"}
+                </h2>
                 <p className="text-text-secondary text-sm">
-                  Continue where you left off
+                  {projects.length === 0
+                    ? "Get started by creating your first translation project"
+                    : "Continue where you left off"}
                 </p>
               </div>
-              
-              {/* Scroll Controls */}
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => scroll("left")}
-                  disabled={!canScrollLeft}
-                  className="transition-opacity"
-                >
-                  <ChevronLeft className="w-5 h-5" />
-                </Button>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => scroll("right")}
-                  disabled={!canScrollRight}
-                  className="transition-opacity"
-                >
-                  <ChevronRight className="w-5 h-5" />
-                </Button>
-              </div>
+
+              {/* Scroll Controls - Only show when there are projects */}
+              {projects.length > 0 && (
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => scroll("left")}
+                    disabled={!canScrollLeft}
+                    className="transition-opacity"
+                  >
+                    <ChevronLeft className="w-5 h-5" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => scroll("right")}
+                    disabled={!canScrollRight}
+                    className="transition-opacity"
+                  >
+                    <ChevronRight className="w-5 h-5" />
+                  </Button>
+                </div>
+              )}
             </div>
 
-            {/* Horizontal Scrolling Project Cards */}
+            {/* Horizontal Scrolling Project Cards - Always Present */}
             <div className="relative">
               <div
                 ref={scrollContainerRef}
@@ -276,10 +264,12 @@ export function StudioHomeDashboard({ onNavigate }: StudioHomeDashboardProps = {
                   msOverflowStyle: "none",
                 }}
               >
+                {/* Show project cards if they exist */}
                 {projects.map((project, index) => (
                   <Card
                     key={project.id}
                     focusable
+                    data-testid={`project-card-${project.id}`}
                     className={cn(
                       "min-w-[320px] max-w-[320px] snap-start",
                       "transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)]"
@@ -287,10 +277,10 @@ export function StudioHomeDashboard({ onNavigate }: StudioHomeDashboardProps = {
                     tabIndex={0}
                     onKeyDown={(e) => {
                       if (e.key === "Enter") {
-                        console.log(`Opening project: ${project.name}`);
+                        handleProjectClick(project.id);
                       }
                     }}
-                    onClick={() => setFocusedProjectId(project.id)}
+                    onClick={() => handleProjectClick(project.id)}
                     style={{
                       outline: focusedProjectId === project.id ? "2px solid #4CAF50" : "none",
                     }}
@@ -344,22 +334,60 @@ export function StudioHomeDashboard({ onNavigate }: StudioHomeDashboardProps = {
                   </Card>
                 ))}
 
-                {/* Add New Project Card */}
-                <Card
-                  focusable
-                  className="min-w-[320px] max-w-[320px] snap-start border-dashed border-2 hover:border-accent-primary/50 cursor-pointer"
-                  tabIndex={0}
-                >
-                  <CardContent className="flex flex-col items-center justify-center min-h-[280px] text-center">
-                    <div className="w-16 h-16 rounded-full bg-background-tertiary flex items-center justify-center mb-4 transition-all duration-200 group-hover:bg-accent-primary/10">
-                      <Plus className="w-8 h-8 text-accent-primary" />
-                    </div>
-                    <h3 className="text-text-primary mb-2">New Project</h3>
-                    <p className="text-text-secondary text-sm">
-                      Start a new translation
-                    </p>
-                  </CardContent>
-                </Card>
+                {/* Show empty state or new project card */}
+                {projects.length === 0 ? (
+                  /* Empty state card when no projects */
+                  <Card
+                    focusable
+                    data-testid="new-project-card"
+                    className="min-w-full bg-gradient-to-br from-background-secondary to-background-tertiary border-dashed cursor-pointer"
+                    tabIndex={0}
+                    onClick={handleNewProjectClick}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        handleNewProjectClick();
+                      }
+                    }}
+                  >
+                    <CardContent className="flex flex-col items-center justify-center min-h-[300px] text-center">
+                      <div className="w-16 h-16 rounded-full bg-background-tertiary flex items-center justify-center mb-4">
+                        <FolderOpen className="w-8 h-8 text-text-secondary opacity-50" />
+                      </div>
+                      <h3 className="text-text-primary mb-2">Start Your First Project</h3>
+                      <p className="text-text-secondary text-sm mb-6 max-w-xs">
+                        Create a new project to begin translating your Sims 4 mods
+                      </p>
+                      <Button onClick={handleNewProjectClick} className="gap-2">
+                        <Plus className="w-4 h-4" />
+                        New Project
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  /* New Project Card - visible when projects exist */
+                  <Card
+                    focusable
+                    data-testid="new-project-card"
+                    className="min-w-[320px] max-w-[320px] snap-start border-dashed border-2 hover:border-accent-primary/50 cursor-pointer"
+                    tabIndex={0}
+                    onClick={handleNewProjectClick}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        handleNewProjectClick();
+                      }
+                    }}
+                  >
+                    <CardContent className="flex flex-col items-center justify-center min-h-[280px] text-center">
+                      <div className="w-16 h-16 rounded-full bg-background-tertiary flex items-center justify-center mb-4 transition-all duration-200 group-hover:bg-accent-primary/10">
+                        <Plus className="w-8 h-8 text-accent-primary" />
+                      </div>
+                      <h3 className="text-text-primary mb-2">New Project</h3>
+                      <p className="text-text-secondary text-sm">
+                        Start a new translation
+                      </p>
+                    </CardContent>
+                  </Card>
+                )}
               </div>
 
               {/* Fade Gradients for Scroll Indication */}
@@ -439,6 +467,7 @@ export function StudioHomeDashboard({ onNavigate }: StudioHomeDashboardProps = {
                   {recentActivity.map((activity, index) => (
                     <button
                       key={activity.id}
+                      data-testid={`activity-item-${activity.id}`}
                       className={cn(
                         "w-full flex items-center gap-4 p-4 transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)]",
                         "hover:bg-background-tertiary/50",

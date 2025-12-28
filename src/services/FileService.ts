@@ -34,6 +34,12 @@ export interface FileExistsResult {
   error?: string
 }
 
+export interface FileOperationResult {
+  success: boolean
+  path?: string
+  error?: string
+}
+
 export class FileService {
   /**
    * Open a folder dialog and return the selected path
@@ -115,14 +121,25 @@ export class FileService {
   /**
    * Delete a file
    */
-  static async deleteFile(_path: string): Promise<boolean> {
+  static async deleteFile(path: string): Promise<boolean> {
     try {
-      // This will be implemented with Electron fs access
-      // For now, return false as deletion is a destructive operation
-      console.warn('File deletion not yet implemented')
-      return false
+      const result = (await window.electron.file.deleteFile(path)) as FileOperationResult
+      return result.success
     } catch (error) {
       console.error('Failed to delete file', error)
+      return false
+    }
+  }
+
+  /**
+   * Create a directory
+   */
+  static async createDirectory(path: string): Promise<boolean> {
+    try {
+      const result = (await window.electron.file.createDirectory(path)) as FileOperationResult
+      return result.success
+    } catch (error) {
+      console.error('Failed to create directory', error)
       return false
     }
   }

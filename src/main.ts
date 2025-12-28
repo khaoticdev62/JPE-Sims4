@@ -148,3 +148,35 @@ ipcMain.handle('file:exists', async (_event, filePath: string) => {
     }
   }
 })
+
+// IPC Handler to create directory
+ipcMain.handle('file:createDirectory', async (_event, dirPath: string) => {
+  try {
+    fs.mkdirSync(dirPath, { recursive: true })
+    return {
+      success: true,
+      path: dirPath,
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    }
+  }
+})
+
+// IPC Handler to delete file
+ipcMain.handle('file:deleteFile', async (_event, filePath: string) => {
+  try {
+    fs.unlinkSync(filePath)
+    return {
+      success: true,
+      path: filePath,
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    }
+  }
+})

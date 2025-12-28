@@ -13,6 +13,8 @@ const electronAPI = {
       ipcRenderer.invoke('file:writeFile', filePath, content),
     listDirectory: (dirPath: string) => ipcRenderer.invoke('file:listDirectory', dirPath),
     exists: (filePath: string) => ipcRenderer.invoke('file:exists', filePath),
+    createDirectory: (dirPath: string) => ipcRenderer.invoke('file:createDirectory', dirPath),
+    deleteFile: (filePath: string) => ipcRenderer.invoke('file:deleteFile', filePath),
   },
   on: (channel: string, callback: (event: any, data: any) => void) => {
     ipcRenderer.on(channel, callback)

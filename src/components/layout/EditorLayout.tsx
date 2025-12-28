@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import TitleBar from './TitleBar'
 import Sidebar from './Sidebar'
 import EditorPane from './EditorPane'
@@ -7,6 +7,8 @@ import DiagnosticsPanel from '@/components/editor/DiagnosticsPanel'
 import { AppNavigation } from '@/components/AppNavigation'
 import { useUIStore } from '@/stores/useUIStore'
 import { useDiagnosticStore } from '@/stores/useDiagnosticStore'
+import { useProjectStore } from '@/stores/useProjectStore'
+import { useEditorStore } from '@/stores/useEditorStore'
 
 /**
  * EditorLayout - Main three-pane editor layout with navigation
@@ -30,11 +32,21 @@ export default function EditorLayout({ onNavigate }: EditorLayoutProps = {}) {
   const [activeNav, setActiveNav] = useState('studio')
   const { showDiagnostics } = useUIStore()
   const { diagnostics } = useDiagnosticStore()
+  const { currentProject } = useProjectStore()
+  const { closeAllTabs } = useEditorStore()
+  const { clearDiagnostics } = useDiagnosticStore()
 
   const handleNavigate = (item: string) => {
     setActiveNav(item)
     onNavigate?.(item)
   }
+
+  // Sync state when project changes
+  // Close all editor tabs and clear diagnostics when switching projects
+  useEffect(() => {
+    closeAllTabs()
+    clearDiagnostics()
+  }, [currentProject?.id, closeAllTabs, clearDiagnostics])
 
   return (
     <div data-testid="editor-layout" className="h-screen w-screen flex bg-bg-primary overflow-hidden">

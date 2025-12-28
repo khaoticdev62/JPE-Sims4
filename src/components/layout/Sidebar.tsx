@@ -1,7 +1,7 @@
 import { useProjectStore } from '@/stores/useProjectStore'
 import { useEditorStore } from '@/stores/useEditorStore'
 import { useUIStore } from '@/stores/useUIStore'
-import { memo } from 'react'
+import { memo, useCallback } from 'react'
 
 function SidebarComponent() {
   const { currentProject } = useProjectStore()
@@ -16,14 +16,14 @@ function SidebarComponent() {
     )
   }
 
-  const handleFileClick = (fileId: string, fileName: string) => {
+  const handleFileClick = useCallback((fileId: string, fileName: string) => {
     openTab({
       id: `tab-${fileId}`,
       fileId,
       name: fileName,
       isDirty: false,
     })
-  }
+  }, [openTab])
 
   return (
     <div className="w-64 bg-bg-secondary border-r border-border-subtle flex flex-col overflow-hidden">

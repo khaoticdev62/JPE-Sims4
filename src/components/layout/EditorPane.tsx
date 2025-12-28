@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import MonacoEditor from '@/components/editor/MonacoEditor'
 import { useEditorStore } from '@/stores/useEditorStore'
 import { useProjectStore } from '@/stores/useProjectStore'
@@ -34,7 +34,7 @@ function EditorPaneComponent() {
   const warningCount = fileDiagnostics.filter((d) => d.severity === 'warning').length
 
   // Handle file save
-  const handleSaveFile = async () => {
+  const handleSaveFile = useCallback(async () => {
     if (!activeFile || !activeTab) return
 
     try {
@@ -71,9 +71,9 @@ function EditorPaneComponent() {
       setSaveMessage(`Error saving file: ${error instanceof Error ? error.message : 'Unknown error'}`)
       setTimeout(() => setSaveMessage(null), 3000)
     }
-  }
+  }, [activeFile, activeTab, fileContent, currentProject, markTabClean, updateFile, addActivity])
 
-  const handleContentChange = (newContent: string) => {
+  const handleContentChange = useCallback((newContent: string) => {
     if (activeTab) {
       updateTabContent(activeTab.id, newContent)
       if (activeFile) {
@@ -83,7 +83,15 @@ function EditorPaneComponent() {
         })
       }
     }
-  }
+  }, [activeTab, activeFile, updateTabContent, updateFile])
+
+  const handleTabClick = useCallback((tabId: string) => {
+    setActiveTab(tabId)
+  }, [setActiveTab])
+
+  const handleCloseTab = useCallback((tabId: string) => {
+    closeTab(tabId)
+  }, [closeTab])
 
   // Handle keyboard shortcuts (Ctrl+S to save)
   useEffect(() => {
@@ -111,7 +119,7 @@ function EditorPaneComponent() {
               return (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
+                  onClick={() => handleTabClick(tab.id)}
                   className={`px-3 py-2 text-xs border-r border-border-subtle whitespace-nowrap flex items-center gap-2 transition-colors ${
                     tab.id === activeTabId
                       ? 'bg-bg-tertiary text-text-primary'
@@ -127,7 +135,7 @@ function EditorPaneComponent() {
                   <button
                     onClick={(e) => {
                       e.stopPropagation()
-                      closeTab(tab.id)
+                      handleCloseTab(tab.id)
                     }}
                     className="ml-1 text-text-secondary hover:text-text-primary"
                   >

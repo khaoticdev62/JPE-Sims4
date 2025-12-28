@@ -1,12 +1,17 @@
 import { create } from 'zustand'
-import { devtools } from 'zustand/middleware'
+import { devtools, persist } from 'zustand/middleware'
 import type { EditorTab } from '@/types/index'
+
+interface CursorPosition {
+  line: number
+  column: number
+}
 
 interface EditorState {
   tabs: EditorTab[]
   activeTabId: string | null
-  editorContent: Map<string, string>
-  cursorPosition: Map<string, { line: number; column: number }>
+  editorContent: Record<string, string>
+  cursorPosition: Record<string, CursorPosition>
 
   // Actions
   openTab: (tab: EditorTab) => void
@@ -15,16 +20,18 @@ interface EditorState {
   updateTabContent: (tabId: string, content: string) => void
   markTabClean: (tabId: string) => void
   setCursorPosition: (tabId: string, line: number, column: number) => void
-  getCursorPosition: (tabId: string) => { line: number; column: number }
+  getCursorPosition: (tabId: string) => CursorPosition
   closeAllTabs: () => void
 }
 
 export const useEditorStore = create<EditorState>()(
-  devtools((set, get) => ({
-    tabs: [],
-    activeTabId: null,
-    editorContent: new Map(),
-    cursorPosition: new Map(),
+  devtools(
+    persist(
+      (set, get) => ({
+        tabs: [],
+        activeTabId: null,
+        editorContent: {},
+        cursorPosition: {},
 
     openTab: (tab) => {
       set((state) => {
@@ -46,10 +53,8 @@ export const useEditorStore = create<EditorState>()(
           state.activeTabId === tabId ? filtered[0]?.id ?? null : state.activeTabId
 
         // Cleanup
-        const content = new Map(state.editorContent)
-        content.delete(tabId)
-        const position = new Map(state.cursorPosition)
-        position.delete(tabId)
+        const { [tabId]: _contentDeleted, ...content } = state.editorContent
+        const { [tabId]: _positionDeleted, ...position } = state.cursorPosition
 
         return {
           tabs: filtered,
@@ -65,11 +70,12 @@ export const useEditorStore = create<EditorState>()(
     },
 
     updateTabContent: (tabId, content) => {
-      set((state) => {
-        const updated = new Map(state.editorContent)
-        updated.set(tabId, content)
-        return { editorContent: updated }
-      })
+      set((state) => ({
+        editorContent: {
+          ...state.editorContent,
+          [tabId]: content,
+        },
+      }))
     },
 
     markTabClean: (tabId) => {
@@ -81,15 +87,16 @@ export const useEditorStore = create<EditorState>()(
     },
 
     setCursorPosition: (tabId, line, column) => {
-      set((state) => {
-        const updated = new Map(state.cursorPosition)
-        updated.set(tabId, { line, column })
-        return { cursorPosition: updated }
-      })
+      set((state) => ({
+        cursorPosition: {
+          ...state.cursorPosition,
+          [tabId]: { line, column },
+        },
+      }))
     },
 
     getCursorPosition: (tabId) => {
-      const position = get().cursorPosition.get(tabId)
+      const position = get().cursorPosition[tabId]
       return position ?? { line: 0, column: 0 }
     },
 
@@ -97,9 +104,14 @@ export const useEditorStore = create<EditorState>()(
       set({
         tabs: [],
         activeTabId: null,
-        editorContent: new Map(),
-        cursorPosition: new Map(),
+        editorContent: {},
+        cursorPosition: {},
       })
     },
-  }))
+  }),
+      {
+        name: 'editor-store',
+      }
+    )
+  )
 )

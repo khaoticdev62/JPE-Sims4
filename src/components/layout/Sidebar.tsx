@@ -1,8 +1,9 @@
 import { useProjectStore } from '@/stores/useProjectStore'
 import { useEditorStore } from '@/stores/useEditorStore'
 import { useUIStore } from '@/stores/useUIStore'
+import { memo } from 'react'
 
-export default function Sidebar() {
+function SidebarComponent() {
   const { currentProject } = useProjectStore()
   const { openTab } = useEditorStore()
   const { sidebarCollapsed } = useUIStore()
@@ -68,3 +69,5 @@ export default function Sidebar() {
     </div>
   )
 }
+
+export default memo(SidebarComponent)

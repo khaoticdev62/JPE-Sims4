@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import MonacoEditor from '@/components/editor/MonacoEditor'
 import { useEditorStore } from '@/stores/useEditorStore'
 import { useProjectStore } from '@/stores/useProjectStore'
@@ -7,8 +7,9 @@ import { useFileLoader } from '@/hooks/useFileLoader'
 import { useRealTimeValidation } from '@/hooks/useRealTimeValidation'
 import { FileService } from '@/services/FileService'
 import { useActivityStore } from '@/stores/useActivityStore'
+import { memo } from 'react'
 
-export default function EditorPane() {
+function EditorPaneComponent() {
   const { tabs, activeTabId, setActiveTab, closeTab, editorContent, updateTabContent, markTabClean } =
     useEditorStore()
   const { getFile, updateFile, currentProject } = useProjectStore()
@@ -215,3 +216,5 @@ export default function EditorPane() {
     </div>
   )
 }
+
+export default memo(EditorPaneComponent)

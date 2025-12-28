@@ -1,7 +1,8 @@
 import { useDiagnosticStore } from '@/stores/useDiagnosticStore'
 import { useUIStore } from '@/stores/useUIStore'
+import { memo, useMemo } from 'react'
 
-export default function RightPanel() {
+function RightPanelComponent() {
   const { getFilteredDiagnostics } = useDiagnosticStore()
   const { rightPanelCollapsed } = useUIStore()
 
@@ -57,3 +58,5 @@ export default function RightPanel() {
     </div>
   )
 }
+
+export default memo(RightPanelComponent)

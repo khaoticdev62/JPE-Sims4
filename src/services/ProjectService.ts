@@ -4,6 +4,7 @@
  */
 
 import { useProjectStore } from '@/stores/useProjectStore'
+import { useActivityStore } from '@/stores/useActivityStore'
 import { FileService } from './FileService'
 import type { Project, ModFile } from '@/types/index'
 
@@ -14,8 +15,22 @@ export class ProjectService {
   static async createProject(name: string, rootPath: string): Promise<Project | null> {
     try {
       const { createProject } = useProjectStore.getState()
+      const { addActivity } = useActivityStore.getState()
+
       await createProject(name, rootPath)
-      return useProjectStore.getState().currentProject
+      const project = useProjectStore.getState().currentProject
+
+      // Log activity
+      if (project) {
+        addActivity({
+          type: 'created',
+          fileName: name,
+          projectName: name,
+          projectId: project.id,
+        })
+      }
+
+      return project
     } catch (error) {
       console.error('Failed to create project', error)
       return null

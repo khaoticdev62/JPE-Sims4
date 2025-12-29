@@ -1,0 +1,339 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version'
+        required: true
+        default: '1.0.0'
+
+jobs:
+  build-matrix:
+    name: Build ${{ matrix.target }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Windows builds
+          - os: windows-latest
+            target: windows_exe
+            artifact_name: JPE-Studio-${{ github.ref_name }}.exe
+
+          - os: windows-latest
+            target: windows_portable
+            artifact_name: JPE-Sims4-Portable-${{ github.ref_name }}.zip
+
+          - os: windows-latest
+            target: windows_installer
+            artifact_name: JPE-Sims4-${{ github.ref_name }}-installer.exe
+
+          # macOS builds
+          - os: macos-latest
+            target: macos_app
+            artifact_name: JPE-Studio-${{ github.ref_name }}.app
+
+          - os: macos-latest
+            target: macos_installer
+            artifact_name: JPE-Sims4-${{ github.ref_name }}.dmg
+
+          # Linux builds
+          - os: ubuntu-latest
+            target: linux_deb
+            artifact_name: jpe-sims4_${{ github.ref_name }}_all.deb
+
+          - os: ubuntu-latest
+            target: linux_appimage
+            artifact_name: JPE-Studio-${{ github.ref_name }}-x86_64.AppImage
+
+          # Source distribution (only on linux)
+          - os: ubuntu-latest
+            target: source_dist
+            artifact_name: jpe-sims4-${{ github.ref_name }}.tar.gz
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          pip install -r requirements.txt
+          pip install PyInstaller py2app
+
+      - name: Install macOS dependencies
+        if: runner.os == 'macOS'
+        run: |
+          brew install python-tk
+
+      - name: Install Linux dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            python3-tk \
+            python3-dev \
+            build-essential \
+            appimage-builder
+
+      - name: Install Windows dependencies
+        if: runner.os == 'Windows'
+        run: |
+          choco install nsis -y
+
+      - name: Extract version from tag
+        id: version
+        run: |
+          if [ "${{ github.ref }}" == "refs/heads/main" ] || [ "${{ github.ref }}" == "refs/heads/master" ]; then
+            VERSION="dev-${{ github.run_number }}"
+          else
+            VERSION="${{ github.ref_name }}"
+          fi
+          echo "version=${VERSION#v}" >> $GITHUB_OUTPUT
+
+      - name: Run tests
+        run: |
+          python -m pytest tests/ -v --tb=short || true
+
+      - name: Build distribution
+        run: |
+          python build/build_system.py \
+            --target ${{ matrix.target }} \
+            --version "${{ steps.version.outputs.version }}" \
+            --output ./dist
+
+      - name: Create artifact archive
+        shell: bash
+        run: |
+          if [ "${{ runner.os }}" == "Windows" ]; then
+            cd dist
+            if [ -f "JPE-Sims4-Portable" ]; then
+              7z a "${{ matrix.artifact_name }}" "JPE-Sims4-Portable"
+            fi
+          fi
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.target }}-${{ runner.os }}
+          path: dist/
+          retention-days: 7
+
+  test:
+    name: Test Suite
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-cov
+
+      - name: Run unit tests
+        run: |
+          python -m pytest tests/unit/ -v --tb=short
+
+      - name: Run integration tests
+        run: |
+          python -m pytest tests/integration/ -v --tb=short
+
+      - name: Generate coverage report
+        run: |
+          python -m pytest tests/ --cov=jpe_sims4 --cov-report=xml
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./coverage.xml
+          flags: unittests
+          fail_ci_if_error: false
+
+  lint:
+    name: Code Quality
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install flake8 pylint mypy black isort
+
+      - name: Run flake8
+        run: flake8 jpe_sims4 --max-line-length=120 --count
+
+      - name: Run pylint
+        run: pylint jpe_sims4 --max-line-length=120 || true
+
+      - name: Check type hints with mypy
+        run: mypy jpe_sims4 --ignore-missing-imports || true
+
+      - name: Check code formatting
+        run: black --check jpe_sims4 || true
+
+      - name: Check import sorting
+        run: isort --check-only jpe_sims4 || true
+
+  documentation:
+    name: Build Documentation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          pip install sphinx sphinx-rtd-theme sphinx-autodoc-typehints
+
+      - name: Build documentation
+        run: |
+          cd docs
+          make html
+
+      - name: Upload documentation
+        uses: actions/upload-artifact@v3
+        with:
+          name: documentation
+          path: docs/_build/html
+
+  create-release:
+    name: Create Release
+    needs: [build-matrix, test, lint]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: artifacts/
+
+      - name: Create Release Notes
+        id: release_notes
+        run: |
+          VERSION="${{ github.ref_name }}"
+          RELEASE_NOTES="# $VERSION Release Notes\n\n"
+          RELEASE_NOTES+="## Downloads\n\n"
+          RELEASE_NOTES+="### Windows\n"
+          RELEASE_NOTES+="- [Executable](windows_exe)\n"
+          RELEASE_NOTES+="- [Portable Version](windows_portable)\n"
+          RELEASE_NOTES+="- [Installer](windows_installer)\n\n"
+          RELEASE_NOTES+="### macOS\n"
+          RELEASE_NOTES+="- [Application Bundle](macos_app)\n"
+          RELEASE_NOTES+="- [DMG Installer](macos_installer)\n\n"
+          RELEASE_NOTES+="### Linux\n"
+          RELEASE_NOTES+="- [Debian Package](linux_deb)\n"
+          RELEASE_NOTES+="- [AppImage](linux_appimage)\n\n"
+          RELEASE_NOTES+="### Source Code\n"
+          RELEASE_NOTES+="- [Source Distribution](source_dist)\n"
+          echo "RELEASE_NOTES<<EOF" >> $GITHUB_ENV
+          echo -e "$RELEASE_NOTES" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          body: ${{ env.RELEASE_NOTES }}
+          draft: false
+          prerelease: false
+          files: artifacts/**/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish to PyPI
+        run: |
+          python -m pip install twine build
+          python -m build
+          twine upload dist/* --skip-existing
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
+
+  notify:
+    name: Notify
+    needs: [build-matrix, test, lint]
+    runs-on: ubuntu-latest
+    if: always()
+
+    steps:
+      - name: Determine build status
+        id: status
+        run: |
+          if [ "${{ needs.build-matrix.result }}" == "success" ] && \
+             [ "${{ needs.test.result }}" == "success" ] && \
+             [ "${{ needs.lint.result }}" == "success" ]; then
+            echo "status=✅ Success" >> $GITHUB_OUTPUT
+            echo "color=00FF00" >> $GITHUB_OUTPUT
+          else
+            echo "status=❌ Failed" >> $GITHUB_OUTPUT
+            echo "color=FF0000" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Send Slack notification
+        if: false  # Disable for now, enable with Slack webhook
+        uses: slackapi/slack-github-action@v1
+        with:
+          webhook-url: ${{ secrets.SLACK_WEBHOOK }}
+          payload: |
+            {
+              "text": "JPE Sims 4 Build ${{ steps.status.outputs.status }}",
+              "attachments": [
+                {
+                  "color": "${{ steps.status.outputs.color }}",
+                  "fields": [
+                    {
+                      "title": "Repository",
+                      "value": "${{ github.repository }}"
+                    },
+                    {
+                      "title": "Commit",
+                      "value": "${{ github.sha }}"
+                    },
+                    {
+                      "title": "Build",
+                      "value": "${{ github.run_id }}"
+                    }
+                  ]
+                }
+              ]
+            }

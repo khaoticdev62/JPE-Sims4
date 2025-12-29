@@ -1,0 +1,26 @@
+# Study Group Template
+# Multiple Sims learning together and supporting each other
+
+Study Group Session
+  description: "Study together with friends to learn faster"
+  type: social
+  duration: 90
+  tests:
+    - actor is student or works in intellectual field
+    - actor is in focus mood
+    - location has study materials
+    - actor knows at least 1 study partner
+  effects:
+    - increase mental skill by 3
+    - increase mood by 10
+    - increase friendship +15
+    - add motivated feeling
+
+---
+
+Motivated Feeling
+  description: "Feeling motivated and focused on learning"
+  mood_type: positive
+  intensity: 2
+  duration: 300
+  mood_gain: 15

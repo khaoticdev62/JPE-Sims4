@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>JPE Translation Suite - Projects</title>
+<!-- Google Fonts & Icons -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Theme Config -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#9d5cff",
+                        "background-light": "#f7f5f8",
+                        "background-dark": "#170f23", // Deep charcoal/purple tint
+                        "surface-dark": "#231b2e",    // Slightly lighter for cards
+                        "status-error": "#ff5c5c",
+                        "status-warning": "#ffbd5c",
+                        "status-ok": "#5cffbd",
+                        "status-sync": "#888888",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"],
+                        "body": ["Inter", "sans-serif"],
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.125rem", 
+                        "lg": "0.25rem", 
+                        "xl": "0.5rem", 
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        /* Custom scrollbar hiding for horizontal scroll areas */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-display bg-background-light dark:bg-background-dark text-slate-900 dark:text-white antialiased selection:bg-primary selection:text-white pb-24">
+<!-- Top App Bar -->
+<header class="sticky top-0 z-10 bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-md border-b border-black/5 dark:border-white/5">
+<div class="flex items-center p-4 pb-2 justify-between">
+<div class="flex items-center gap-3">
+<div class="flex items-center justify-center size-8 rounded bg-primary/20 text-primary">
+<span class="material-symbols-outlined text-[20px]">terminal</span>
+</div>
+<h2 class="text-xl font-bold leading-tight tracking-tight">Projects</h2>
+</div>
+<div class="flex items-center justify-end gap-2">
+<button class="flex items-center justify-center rounded-full size-10 hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0, 'wght' 400;">notifications</span>
+</button>
+</div>
+</div>
+<!-- Search Bar -->
+<div class="px-4 py-2">
+<label class="relative flex flex-col w-full group">
+<div class="flex w-full items-center rounded-lg h-10 bg-white dark:bg-surface-dark border border-black/10 dark:border-white/10 focus-within:border-primary/50 transition-colors overflow-hidden">
+<div class="flex items-center justify-center pl-3 text-slate-400 dark:text-slate-500">
+<span class="material-symbols-outlined text-[20px]">search</span>
+</div>
+<input class="w-full bg-transparent border-none focus:ring-0 text-sm placeholder:text-slate-400 dark:placeholder:text-slate-500 text-slate-900 dark:text-white h-full px-3" placeholder="Search projects..."/>
+</div>
+</label>
+</div>
+<!-- Filter Chips -->
+<div class="flex gap-2 p-4 pt-2 overflow-x-auto no-scrollbar">
+<button class="flex h-8 shrink-0 items-center justify-center px-4 rounded-full bg-primary text-white text-xs font-medium transition-transform active:scale-95">
+                All
+            </button>
+<button class="flex h-8 shrink-0 items-center justify-center gap-1.5 px-4 rounded-full bg-white dark:bg-surface-dark border border-black/10 dark:border-white/10 text-slate-700 dark:text-slate-300 text-xs font-medium transition-transform active:scale-95 hover:bg-black/5 dark:hover:bg-white/5">
+<span class="size-2 rounded-full bg-status-error"></span>
+                Errors (3)
+            </button>
+<button class="flex h-8 shrink-0 items-center justify-center gap-1.5 px-4 rounded-full bg-white dark:bg-surface-dark border border-black/10 dark:border-white/10 text-slate-700 dark:text-slate-300 text-xs font-medium transition-transform active:scale-95 hover:bg-black/5 dark:hover:bg-white/5">
+<span class="size-2 rounded-full bg-status-ok"></span>
+                Clean
+            </button>
+<button class="flex h-8 shrink-0 items-center justify-center px-4 rounded-full bg-white dark:bg-surface-dark border border-black/10 dark:border-white/10 text-slate-700 dark:text-slate-300 text-xs font-medium transition-transform active:scale-95 hover:bg-black/5 dark:hover:bg-white/5">
+                Recent
+            </button>
+</div>
+</header>
+<!-- Main Content List -->
+<main class="flex flex-col gap-1 px-4 py-2">
+<!-- List Item 1: Warning -->
+<div class="group relative flex flex-col gap-3 p-4 rounded-lg bg-white dark:bg-surface-dark border border-transparent dark:border-white/5 hover:border-primary/30 active:scale-[0.99] transition-all shadow-sm">
+<div class="flex justify-between items-start">
+<div class="flex gap-3 items-start overflow-hidden">
+<div class="flex items-center justify-center rounded bg-background-light dark:bg-background-dark/50 shrink-0 size-10 text-slate-400 dark:text-slate-500 border border-black/5 dark:border-white/5">
+<span class="material-symbols-outlined text-[20px]">folder_zip</span>
+</div>
+<div class="flex flex-col min-w-0">
+<h3 class="text-sm font-semibold truncate text-slate-900 dark:text-white pr-2">WickedWhims_Translation_FR</h3>
+<div class="flex items-center gap-2 mt-0.5">
+<span class="text-[10px] font-mono text-slate-500 dark:text-slate-400 bg-black/5 dark:bg-white/5 px-1.5 py-0.5 rounded">v1.2.4</span>
+<span class="text-[11px] text-slate-500 dark:text-slate-400">Modified 2h ago</span>
+</div>
+<div class="flex items-center gap-1 mt-2 text-status-warning">
+<span class="material-symbols-outlined text-[14px]">warning</span>
+<span class="text-xs font-medium">3 Warnings</span>
+</div>
+</div>
+</div>
+<button class="text-slate-400 hover:text-white p-1 rounded hover:bg-white/10 -mr-2 -mt-2">
+<span class="material-symbols-outlined text-[20px]">more_vert</span>
+</button>
+</div>
+<!-- Progress -->
+<div class="flex items-center gap-3">
+<div class="flex-1 h-1.5 bg-background-light dark:bg-background-dark rounded-full overflow-hidden">
+<div class="h-full bg-primary rounded-full" style="width: 85%;"></div>
+</div>
+<span class="text-xs font-mono font-medium text-slate-600 dark:text-slate-300 w-8 text-right">85%</span>
+</div>
+</div>
+<!-- List Item 2: Error -->
+<div class="group relative flex flex-col gap-3 p-4 rounded-lg bg-white dark:bg-surface-dark border border-transparent dark:border-white/5 hover:border-status-error/30 active:scale-[0.99] transition-all shadow-sm mt-2">
+<div class="flex justify-between items-start">
+<div class="flex gap-3 items-start overflow-hidden">
+<div class="flex items-center justify-center rounded bg-background-light dark:bg-background-dark/50 shrink-0 size-10 text-slate-400 dark:text-slate-500 border border-black/5 dark:border-white/5">
+<span class="material-symbols-outlined text-[20px]">code_blocks</span>
+</div>
+<div class="flex flex-col min-w-0">
+<h3 class="text-sm font-semibold truncate text-slate-900 dark:text-white pr-2">Basemental_Drugs_ES</h3>
+<div class="flex items-center gap-2 mt-0.5">
+<span class="text-[10px] font-mono text-slate-500 dark:text-slate-400 bg-black/5 dark:bg-white/5 px-1.5 py-0.5 rounded">v2.0.1</span>
+<span class="text-[11px] text-slate-500 dark:text-slate-400">Modified 5m ago</span>
+</div>
+<div class="flex items-center gap-1 mt-2 text-status-error">
+<span class="material-symbols-outlined text-[14px]">error</span>
+<span class="text-xs font-medium">12 Errors</span>
+</div>
+</div>
+</div>
+<button class="text-slate-400 hover:text-white p-1 rounded hover:bg-white/10 -mr-2 -mt-2">
+<span class="material-symbols-outlined text-[20px]">more_vert</span>
+</button>
+</div>
+<!-- Progress -->
+<div class="flex items-center gap-3">
+<div class="flex-1 h-1.5 bg-background-light dark:bg-background-dark rounded-full overflow-hidden">
+<div class="h-full bg-status-error rounded-full" style="width: 45%;"></div>
+</div>
+<span class="text-xs font-mono font-medium text-slate-600 dark:text-slate-300 w-8 text-right">45%</span>
+</div>
+</div>
+<!-- List Item 3: Clean -->
+<div class="group relative flex flex-col gap-3 p-4 rounded-lg bg-white dark:bg-surface-dark border border-transparent dark:border-white/5 hover:border-status-ok/30 active:scale-[0.99] transition-all shadow-sm mt-2">
+<div class="flex justify-between items-start">
+<div class="flex gap-3 items-start overflow-hidden">
+<div class="flex items-center justify-center rounded bg-background-light dark:bg-background-dark/50 shrink-0 size-10 text-slate-400 dark:text-slate-500 border border-black/5 dark:border-white/5">
+<span class="material-symbols-outlined text-[20px]">check_circle</span>
+</div>
+<div class="flex flex-col min-w-0">
+<h3 class="text-sm font-semibold truncate text-slate-900 dark:text-white pr-2">MCCC_German_Localization</h3>
+<div class="flex items-center gap-2 mt-0.5">
+<span class="text-[10px] font-mono text-slate-500 dark:text-slate-400 bg-black/5 dark:bg-white/5 px-1.5 py-0.5 rounded">v8.1.0</span>
+<span class="text-[11px] text-slate-500 dark:text-slate-400">Modified 1d ago</span>
+</div>
+<div class="flex items-center gap-1 mt-2 text-status-ok">
+<span class="material-symbols-outlined text-[14px]">verified</span>
+<span class="text-xs font-medium">Ready for Release</span>
+</div>
+</div>
+</div>
+<button class="text-slate-400 hover:text-white p-1 rounded hover:bg-white/10 -mr-2 -mt-2">
+<span class="material-symbols-outlined text-[20px]">more_vert</span>
+</button>
+</div>
+<!-- Progress -->
+<div class="flex items-center gap-3">
+<div class="flex-1 h-1.5 bg-background-light dark:bg-background-dark rounded-full overflow-hidden">
+<div class="h-full bg-status-ok rounded-full" style="width: 100%;"></div>
+</div>
+<span class="text-xs font-mono font-medium text-slate-600 dark:text-slate-300 w-8 text-right">100%</span>
+</div>
+</div>
+<!-- List Item 4: Sync Issue -->
+<div class="group relative flex flex-col gap-3 p-4 rounded-lg bg-white dark:bg-surface-dark border border-transparent dark:border-white/5 hover:border-primary/30 active:scale-[0.99] transition-all shadow-sm mt-2 opacity-75">
+<div class="flex justify-between items-start">
+<div class="flex gap-3 items-start overflow-hidden">
+<div class="flex items-center justify-center rounded bg-background-light dark:bg-background-dark/50 shrink-0 size-10 text-slate-400 dark:text-slate-500 border border-black/5 dark:border-white/5">
+<span class="material-symbols-outlined text-[20px]">cloud_off</span>
+</div>
+<div class="flex flex-col min-w-0">
+<h3 class="text-sm font-semibold truncate text-slate-900 dark:text-white pr-2">LittleMsSam_BugFixes</h3>
+<div class="flex items-center gap-2 mt-0.5">
+<span class="text-[10px] font-mono text-slate-500 dark:text-slate-400 bg-black/5 dark:bg-white/5 px-1.5 py-0.5 rounded">v-.-.-</span>
+<span class="text-[11px] text-slate-500 dark:text-slate-400">Unknown state</span>
+</div>
+<div class="flex items-center gap-1 mt-2 text-status-sync">
+<span class="material-symbols-outlined text-[14px]">sync_problem</span>
+<span class="text-xs font-medium">Out of Sync</span>
+</div>
+</div>
+</div>
+<button class="text-slate-400 hover:text-white p-1 rounded hover:bg-white/10 -mr-2 -mt-2">
+<span class="material-symbols-outlined text-[20px]">more_vert</span>
+</button>
+</div>
+<!-- Progress -->
+<div class="flex items-center gap-3">
+<div class="flex-1 h-1.5 bg-background-light dark:bg-background-dark rounded-full overflow-hidden">
+<div class="h-full bg-slate-600 rounded-full" style="width: 10%;"></div>
+</div>
+<span class="text-xs font-mono font-medium text-slate-600 dark:text-slate-300 w-8 text-right">--</span>
+</div>
+</div>
+<!-- Bottom Spacer for Scrolling -->
+<div class="h-24"></div>
+</main>
+<!-- Floating Action Button -->
+<div class="fixed bottom-[88px] right-4 z-20">
+<button class="flex items-center justify-center size-14 rounded-xl bg-primary shadow-lg shadow-primary/30 text-white hover:scale-105 active:scale-95 transition-all">
+<span class="material-symbols-outlined text-[28px]">add</span>
+</button>
+</div>
+<!-- Bottom Navigation -->
+<nav class="fixed bottom-0 left-0 w-full z-20 bg-background-light dark:bg-background-dark border-t border-black/5 dark:border-white/5 px-6 py-2 pb-6">
+<div class="flex justify-between items-center">
+<!-- Item 1: Projects (Active) -->
+<button class="flex flex-col items-center gap-1 min-w-16 group">
+<div class="flex items-center justify-center h-8 w-16 rounded-full bg-primary/20 text-primary">
+<span class="material-symbols-outlined fill-current" style="font-variation-settings: 'FILL' 1;">folder</span>
+</div>
+<span class="text-[10px] font-medium text-primary">Projects</span>
+</button>
+<!-- Item 2: Dictionary -->
+<button class="flex flex-col items-center gap-1 min-w-16 group">
+<div class="flex items-center justify-center h-8 w-16 rounded-full text-slate-500 dark:text-slate-400 group-hover:bg-black/5 dark:group-hover:bg-white/5 transition-colors">
+<span class="material-symbols-outlined">translate</span>
+</div>
+<span class="text-[10px] font-medium text-slate-500 dark:text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-200">Dictionary</span>
+</button>
+<!-- Item 3: Sync -->
+<button class="flex flex-col items-center gap-1 min-w-16 group">
+<div class="flex items-center justify-center h-8 w-16 rounded-full text-slate-500 dark:text-slate-400 group-hover:bg-black/5 dark:group-hover:bg-white/5 transition-colors">
+<span class="material-symbols-outlined">sync</span>
+</div>
+<span class="text-[10px] font-medium text-slate-500 dark:text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-200">Sync</span>
+</button>
+<!-- Item 4: Settings -->
+<button class="flex flex-col items-center gap-1 min-w-16 group">
+<div class="flex items-center justify-center h-8 w-16 rounded-full text-slate-500 dark:text-slate-400 group-hover:bg-black/5 dark:group-hover:bg-white/5 transition-colors">
+<span class="material-symbols-outlined">settings</span>
+</div>
+<span class="text-[10px] font-medium text-slate-500 dark:text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-200">Settings</span>
+</button>
+</div>
+</nav>
+</body></html>

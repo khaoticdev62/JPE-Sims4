@@ -1,0 +1,49 @@
+# Bartender Service Template
+# Service interactions at a bar or lounge
+
+Serve Drink
+  description: "Serve a refreshing drink to a customer"
+  type: social
+  duration: 10
+  tests:
+    - actor is bartender
+    - target is customer
+    - bar is open
+  effects:
+    - increase mood by 10
+    - increase income by 5
+    - increase friendship +3
+    - add satisfied feeling
+
+---
+
+Mix Cocktail
+  description: "Create a special cocktail with flair"
+  type: object
+  duration: 20
+  tests:
+    - actor is bartender
+    - actor has cocktail skill
+    - bar has ingredients
+  effects:
+    - increase mixology skill by 1
+    - increase mood by 15
+    - add creative feeling
+
+---
+
+Satisfied Feeling
+  description: "Satisfied with service"
+  mood_type: positive
+  intensity: 1
+  duration: 120
+  mood_gain: 10
+
+---
+
+Creative Feeling
+  description: "Feeling creative"
+  mood_type: positive
+  intensity: 2
+  duration: 180
+  mood_gain: 15

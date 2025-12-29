@@ -1,0 +1,615 @@
+{
+  "version": "m2",
+  "created_at": "2025-12-17T04:37:11.266727+00:00",
+  "source_path": ".",
+  "name": null,
+  "files": [
+    {
+      "path": ".gitignore",
+      "kind": "unknown"
+    },
+    {
+      "path": "AGENTS.md",
+      "kind": "unknown"
+    },
+    {
+      "path": "cli.py",
+      "kind": "unknown"
+    },
+    {
+      "path": "jpe_branding_prd_v1.pdf",
+      "kind": "unknown"
+    },
+    {
+      "path": "jpe_branding_style_guide_and_production_sop_v1.pdf",
+      "kind": "unknown"
+    },
+    {
+      "path": "jpe_icon_system_prd_v1.pdf",
+      "kind": "unknown"
+    },
+    {
+      "path": "JPE_Predictive_Scripting_and_Coding_Module_PRD.pdf",
+      "kind": "unknown"
+    },
+    {
+      "path": "jpe_sims4_core_skeleton.zip",
+      "kind": "unknown"
+    },
+    {
+      "path": "jpe_sims4_ui_ux_prd_v2.pdf",
+      "kind": "unknown"
+    },
+    {
+      "path": "JPE_Sims4_Windows_Installer_PRD_TechDesign_v1.pdf",
+      "kind": "unknown"
+    },
+    {
+      "path": "jpe_steam_deck_prd_filesystem_fulltext.pdf",
+      "kind": "unknown"
+    },
+    {
+      "path": "JPE_UI_UX_Free_Stack_Spec.pdf",
+      "kind": "unknown"
+    },
+    {
+      "path": "JPE_XML_Fork_Language_PRD_v1.0.pdf",
+      "kind": "unknown"
+    },
+    {
+      "path": "noname.svg",
+      "kind": "unknown"
+    },
+    {
+      "path": "prd01_core_translator_engine.pdf",
+      "kind": "unknown"
+    },
+    {
+      "path": "prd02_jpe_language_and_jpe_xml.pdf",
+      "kind": "unknown"
+    },
+    {
+      "path": "prd03_desktop_jpe_studio.pdf",
+      "kind": "unknown"
+    },
+    {
+      "path": "prd04_iphone_app.pdf",
+      "kind": "unknown"
+    },
+    {
+      "path": "prd05_cloud_sync_api.pdf",
+      "kind": "unknown"
+    },
+    {
+      "path": "prd06_plugin_and_extensibility.pdf",
+      "kind": "unknown"
+    },
+    {
+      "path": "prd07_ux_onboarding_docs.pdf",
+      "kind": "unknown"
+    },
+    {
+      "path": "prd08_diagnostics_and_exception_translation.pdf",
+      "kind": "unknown"
+    },
+    {
+      "path": "prd_mod_sentinel_better_exceptions_plus.pdf",
+      "kind": "unknown"
+    },
+    {
+      "path": "pyproject.toml",
+      "kind": "unknown"
+    },
+    {
+      "path": "pytest.ini",
+      "kind": "ini"
+    },
+    {
+      "path": "README.md",
+      "kind": "unknown"
+    },
+    {
+      "path": "READY_FOR_GITHUB.txt",
+      "kind": "unknown"
+    },
+    {
+      "path": "sop_jpe_sims4_translation_suite.pdf",
+      "kind": "unknown"
+    },
+    {
+      "path": "STEAMDECK_SUMMARY.txt",
+      "kind": "unknown"
+    },
+    {
+      "path": "studio.py",
+      "kind": "unknown"
+    },
+    {
+      "path": "ui_ux_requirements.txt",
+      "kind": "unknown"
+    },
+    {
+      "path": "jpe_sims4/diagnostics.py",
+      "kind": "unknown"
+    },
+    {
+      "path": "jpe_sims4/extractors.py",
+      "kind": "unknown"
+    },
+    {
+      "path": "jpe_sims4/project.py",
+      "kind": "unknown"
+    },
+    {
+      "path": "jpe_sims4/scanner.py",
+      "kind": "unknown"
+    },
+    {
+      "path": "jpe_sims4/segments.py",
+      "kind": "unknown"
+    },
+    {
+      "path": "jpe_sims4/storage.py",
+      "kind": "unknown"
+    },
+    {
+      "path": "jpe_sims4/tm.py",
+      "kind": "unknown"
+    },
+    {
+      "path": "jpe_sims4/validation.py",
+      "kind": "unknown"
+    },
+    {
+      "path": "jpe_sims4/workflow.py",
+      "kind": "unknown"
+    },
+    {
+      "path": "jpe_sims4/__init__.py",
+      "kind": "unknown"
+    },
+    {
+      "path": "tests/conftest.py",
+      "kind": "unknown"
+    },
+    {
+      "path": "tests/test_extractors.py",
+      "kind": "unknown"
+    },
+    {
+      "path": "tests/test_scanner.py",
+      "kind": "unknown"
+    },
+    {
+      "path": "tests/test_storage_tm.py",
+      "kind": "unknown"
+    },
+    {
+      "path": "tests/test_validation.py",
+      "kind": "unknown"
+    }
+  ],
+  "diagnostics": [
+    {
+      "severity": "INFO",
+      "code": "I_UNKNOWN_FILE_TYPE",
+      "message": "Unknown file type found during scan.",
+      "file_path": ".gitignore",
+      "category": null,
+      "location": null,
+      "segment_id": null
+    },
+    {
+      "severity": "INFO",
+      "code": "I_UNKNOWN_FILE_TYPE",
+      "message": "Unknown file type found during scan.",
+      "file_path": "AGENTS.md",
+      "category": null,
+      "location": null,
+      "segment_id": null
+    },
+    {
+      "severity": "INFO",
+      "code": "I_UNKNOWN_FILE_TYPE",
+      "message": "Unknown file type found during scan.",
+      "file_path": "cli.py",
+      "category": null,
+      "location": null,
+      "segment_id": null
+    },
+    {
+      "severity": "INFO",
+      "code": "I_UNKNOWN_FILE_TYPE",
+      "message": "Unknown file type found during scan.",
+      "file_path": "jpe_branding_prd_v1.pdf",
+      "category": null,
+      "location": null,
+      "segment_id": null
+    },
+    {
+      "severity": "INFO",
+      "code": "I_UNKNOWN_FILE_TYPE",
+      "message": "Unknown file type found during scan.",
+      "file_path": "jpe_branding_style_guide_and_production_sop_v1.pdf",
+      "category": null,
+      "location": null,
+      "segment_id": null
+    },
+    {
+      "severity": "INFO",
+      "code": "I_UNKNOWN_FILE_TYPE",
+      "message": "Unknown file type found during scan.",
+      "file_path": "jpe_icon_system_prd_v1.pdf",
+      "category": null,
+      "location": null,
+      "segment_id": null
+    },
+    {
+      "severity": "INFO",
+      "code": "I_UNKNOWN_FILE_TYPE",
+      "message": "Unknown file type found during scan.",
+      "file_path": "JPE_Predictive_Scripting_and_Coding_Module_PRD.pdf",
+      "category": null,
+      "location": null,
+      "segment_id": null
+    },
+    {
+      "severity": "INFO",
+      "code": "I_UNKNOWN_FILE_TYPE",
+      "message": "Unknown file type found during scan.",
+      "file_path": "jpe_sims4_core_skeleton.zip",
+      "category": null,
+      "location": null,
+      "segment_id": null
+    },
+    {
+      "severity": "INFO",
+      "code": "I_UNKNOWN_FILE_TYPE",
+      "message": "Unknown file type found during scan.",
+      "file_path": "jpe_sims4_ui_ux_prd_v2.pdf",
+      "category": null,
+      "location": null,
+      "segment_id": null
+    },
+    {
+      "severity": "INFO",
+      "code": "I_UNKNOWN_FILE_TYPE",
+      "message": "Unknown file type found during scan.",
+      "file_path": "JPE_Sims4_Windows_Installer_PRD_TechDesign_v1.pdf",
+      "category": null,
+      "location": null,
+      "segment_id": null
+    },
+    {
+      "severity": "INFO",
+      "code": "I_UNKNOWN_FILE_TYPE",
+      "message": "Unknown file type found during scan.",
+      "file_path": "jpe_steam_deck_prd_filesystem_fulltext.pdf",
+      "category": null,
+      "location": null,
+      "segment_id": null
+    },
+    {
+      "severity": "INFO",
+      "code": "I_UNKNOWN_FILE_TYPE",
+      "message": "Unknown file type found during scan.",
+      "file_path": "JPE_UI_UX_Free_Stack_Spec.pdf",
+      "category": null,
+      "location": null,
+      "segment_id": null
+    },
+    {
+      "severity": "INFO",
+      "code": "I_UNKNOWN_FILE_TYPE",
+      "message": "Unknown file type found during scan.",
+      "file_path": "JPE_XML_Fork_Language_PRD_v1.0.pdf",
+      "category": null,
+      "location": null,
+      "segment_id": null
+    },
+    {
+      "severity": "INFO",
+      "code": "I_UNKNOWN_FILE_TYPE",
+      "message": "Unknown file type found during scan.",
+      "file_path": "noname.svg",
+      "category": null,
+      "location": null,
+      "segment_id": null
+    },
+    {
+      "severity": "INFO",
+      "code": "I_UNKNOWN_FILE_TYPE",
+      "message": "Unknown file type found during scan.",
+      "file_path": "prd01_core_translator_engine.pdf",
+      "category": null,
+      "location": null,
+      "segment_id": null
+    },
+    {
+      "severity": "INFO",
+      "code": "I_UNKNOWN_FILE_TYPE",
+      "message": "Unknown file type found during scan.",
+      "file_path": "prd02_jpe_language_and_jpe_xml.pdf",
+      "category": null,
+      "location": null,
+      "segment_id": null
+    },
+    {
+      "severity": "INFO",
+      "code": "I_UNKNOWN_FILE_TYPE",
+      "message": "Unknown file type found during scan.",
+      "file_path": "prd03_desktop_jpe_studio.pdf",
+      "category": null,
+      "location": null,
+      "segment_id": null
+    },
+    {
+      "severity": "INFO",
+      "code": "I_UNKNOWN_FILE_TYPE",
+      "message": "Unknown file type found during scan.",
+      "file_path": "prd04_iphone_app.pdf",
+      "category": null,
+      "location": null,
+      "segment_id": null
+    },
+    {
+      "severity": "INFO",
+      "code": "I_UNKNOWN_FILE_TYPE",
+      "message": "Unknown file type found during scan.",
+      "file_path": "prd05_cloud_sync_api.pdf",
+      "category": null,
+      "location": null,
+      "segment_id": null
+    },
+    {
+      "severity": "INFO",
+      "code": "I_UNKNOWN_FILE_TYPE",
+      "message": "Unknown file type found during scan.",
+      "file_path": "prd06_plugin_and_extensibility.pdf",
+      "category": null,
+      "location": null,
+      "segment_id": null
+    },
+    {
+      "severity": "INFO",
+      "code": "I_UNKNOWN_FILE_TYPE",
+      "message": "Unknown file type found during scan.",
+      "file_path": "prd07_ux_onboarding_docs.pdf",
+      "category": null,
+      "location": null,
+      "segment_id": null
+    },
+    {
+      "severity": "INFO",
+      "code": "I_UNKNOWN_FILE_TYPE",
+      "message": "Unknown file type found during scan.",
+      "file_path": "prd08_diagnostics_and_exception_translation.pdf",
+      "category": null,
+      "location": null,
+      "segment_id": null
+    },
+    {
+      "severity": "INFO",
+      "code": "I_UNKNOWN_FILE_TYPE",
+      "message": "Unknown file type found during scan.",
+      "file_path": "prd_mod_sentinel_better_exceptions_plus.pdf",
+      "category": null,
+      "location": null,
+      "segment_id": null
+    },
+    {
+      "severity": "INFO",
+      "code": "I_UNKNOWN_FILE_TYPE",
+      "message": "Unknown file type found during scan.",
+      "file_path": "pyproject.toml",
+      "category": null,
+      "location": null,
+      "segment_id": null
+    },
+    {
+      "severity": "INFO",
+      "code": "I_UNKNOWN_FILE_TYPE",
+      "message": "Unknown file type found during scan.",
+      "file_path": "README.md",
+      "category": null,
+      "location": null,
+      "segment_id": null
+    },
+    {
+      "severity": "INFO",
+      "code": "I_UNKNOWN_FILE_TYPE",
+      "message": "Unknown file type found during scan.",
+      "file_path": "READY_FOR_GITHUB.txt",
+      "category": null,
+      "location": null,
+      "segment_id": null
+    },
+    {
+      "severity": "INFO",
+      "code": "I_UNKNOWN_FILE_TYPE",
+      "message": "Unknown file type found during scan.",
+      "file_path": "sop_jpe_sims4_translation_suite.pdf",
+      "category": null,
+      "location": null,
+      "segment_id": null
+    },
+    {
+      "severity": "INFO",
+      "code": "I_UNKNOWN_FILE_TYPE",
+      "message": "Unknown file type found during scan.",
+      "file_path": "STEAMDECK_SUMMARY.txt",
+      "category": null,
+      "location": null,
+      "segment_id": null
+    },
+    {
+      "severity": "INFO",
+      "code": "I_UNKNOWN_FILE_TYPE",
+      "message": "Unknown file type found during scan.",
+      "file_path": "studio.py",
+      "category": null,
+      "location": null,
+      "segment_id": null
+    },
+    {
+      "severity": "INFO",
+      "code": "I_UNKNOWN_FILE_TYPE",
+      "message": "Unknown file type found during scan.",
+      "file_path": "ui_ux_requirements.txt",
+      "category": null,
+      "location": null,
+      "segment_id": null
+    },
+    {
+      "severity": "INFO",
+      "code": "I_UNKNOWN_FILE_TYPE",
+      "message": "Unknown file type found during scan.",
+      "file_path": "jpe_sims4/diagnostics.py",
+      "category": null,
+      "location": null,
+      "segment_id": null
+    },
+    {
+      "severity": "INFO",
+      "code": "I_UNKNOWN_FILE_TYPE",
+      "message": "Unknown file type found during scan.",
+      "file_path": "jpe_sims4/extractors.py",
+      "category": null,
+      "location": null,
+      "segment_id": null
+    },
+    {
+      "severity": "INFO",
+      "code": "I_UNKNOWN_FILE_TYPE",
+      "message": "Unknown file type found during scan.",
+      "file_path": "jpe_sims4/project.py",
+      "category": null,
+      "location": null,
+      "segment_id": null
+    },
+    {
+      "severity": "INFO",
+      "code": "I_UNKNOWN_FILE_TYPE",
+      "message": "Unknown file type found during scan.",
+      "file_path": "jpe_sims4/scanner.py",
+      "category": null,
+      "location": null,
+      "segment_id": null
+    },
+    {
+      "severity": "INFO",
+      "code": "I_UNKNOWN_FILE_TYPE",
+      "message": "Unknown file type found during scan.",
+      "file_path": "jpe_sims4/segments.py",
+      "category": null,
+      "location": null,
+      "segment_id": null
+    },
+    {
+      "severity": "INFO",
+      "code": "I_UNKNOWN_FILE_TYPE",
+      "message": "Unknown file type found during scan.",
+      "file_path": "jpe_sims4/storage.py",
+      "category": null,
+      "location": null,
+      "segment_id": null
+    },
+    {
+      "severity": "INFO",
+      "code": "I_UNKNOWN_FILE_TYPE",
+      "message": "Unknown file type found during scan.",
+      "file_path": "jpe_sims4/tm.py",
+      "category": null,
+      "location": null,
+      "segment_id": null
+    },
+    {
+      "severity": "INFO",
+      "code": "I_UNKNOWN_FILE_TYPE",
+      "message": "Unknown file type found during scan.",
+      "file_path": "jpe_sims4/validation.py",
+      "category": null,
+      "location": null,
+      "segment_id": null
+    },
+    {
+      "severity": "INFO",
+      "code": "I_UNKNOWN_FILE_TYPE",
+      "message": "Unknown file type found during scan.",
+      "file_path": "jpe_sims4/workflow.py",
+      "category": null,
+      "location": null,
+      "segment_id": null
+    },
+    {
+      "severity": "INFO",
+      "code": "I_UNKNOWN_FILE_TYPE",
+      "message": "Unknown file type found during scan.",
+      "file_path": "jpe_sims4/__init__.py",
+      "category": null,
+      "location": null,
+      "segment_id": null
+    },
+    {
+      "severity": "INFO",
+      "code": "I_UNKNOWN_FILE_TYPE",
+      "message": "Unknown file type found during scan.",
+      "file_path": "tests/conftest.py",
+      "category": null,
+      "location": null,
+      "segment_id": null
+    },
+    {
+      "severity": "INFO",
+      "code": "I_UNKNOWN_FILE_TYPE",
+      "message": "Unknown file type found during scan.",
+      "file_path": "tests/test_extractors.py",
+      "category": null,
+      "location": null,
+      "segment_id": null
+    },
+    {
+      "severity": "INFO",
+      "code": "I_UNKNOWN_FILE_TYPE",
+      "message": "Unknown file type found during scan.",
+      "file_path": "tests/test_scanner.py",
+      "category": null,
+      "location": null,
+      "segment_id": null
+    },
+    {
+      "severity": "INFO",
+      "code": "I_UNKNOWN_FILE_TYPE",
+      "message": "Unknown file type found during scan.",
+      "file_path": "tests/test_storage_tm.py",
+      "category": null,
+      "location": null,
+      "segment_id": null
+    },
+    {
+      "severity": "INFO",
+      "code": "I_UNKNOWN_FILE_TYPE",
+      "message": "Unknown file type found during scan.",
+      "file_path": "tests/test_validation.py",
+      "category": null,
+      "location": null,
+      "segment_id": null
+    }
+  ],
+  "segments": [
+    {
+      "id": "f5fccd29b954",
+      "file_path": "pytest.ini",
+      "location": "line:2:testpaths",
+      "source": "tests",
+      "target": ""
+    },
+    {
+      "id": "0a05153dcc6f",
+      "file_path": "pytest.ini",
+      "location": "line:3:addopts",
+      "source": "--basetemp=.tmp/pytest -p no:cacheprovider",
+      "target": ""
+    }
+  ]
+}

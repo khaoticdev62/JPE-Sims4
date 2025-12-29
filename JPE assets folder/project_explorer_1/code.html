@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Project Explorer</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Noto+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#7825f4",
+                        "background-light": "#f7f5f8",
+                        "background-dark": "#171022",
+                        "surface-dark": "#231b2e", // Slightly lighter for cards/headers
+                        "surface-highlight": "#322249", // Purple-ish surface
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"],
+                        "mono": ["ui-monospace", "SFMono-Regular", "Menlo", "Monaco", "Consolas", "Liberation Mono", "Courier New", "monospace"],
+                    },
+                    borderRadius: { "DEFAULT": "0.125rem", "sm": "0.25rem", "lg": "0.5rem", "xl": "1rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+<style>
+        /* Custom scrollbar for developer vibe */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #171022; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #322249; 
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #7825f4; 
+        }
+        /* Remove summary marker */
+        details > summary {
+            list-style: none;
+        }
+        details > summary::-webkit-details-marker {
+            display: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-dark text-white font-display antialiased overflow-hidden h-screen flex flex-col">
+<!-- Top App Bar -->
+<header class="shrink-0 z-20 bg-background-dark border-b border-white/5">
+<div class="flex items-center p-4 pb-2 justify-between">
+<button class="text-white flex size-10 shrink-0 items-center justify-center rounded hover:bg-white/10 transition-colors">
+<span class="material-symbols-outlined text-2xl">arrow_back</span>
+</button>
+<h2 class="text-white text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center truncate px-2">
+                JPE Project: MyMod_v1
+            </h2>
+<div class="flex items-center justify-end gap-2">
+<button class="flex size-10 shrink-0 items-center justify-center rounded hover:bg-white/10 transition-colors">
+<span class="material-symbols-outlined text-2xl">settings</span>
+</button>
+</div>
+</div>
+</header>
+<!-- Search & Filter Toolbar -->
+<div class="shrink-0 bg-background-dark z-10 shadow-lg">
+<!-- Search -->
+<div class="px-4 py-3">
+<label class="flex flex-col h-10 w-full group">
+<div class="flex w-full flex-1 items-stretch rounded-sm h-full ring-1 ring-white/10 group-focus-within:ring-primary/70 transition-all bg-surface-dark">
+<div class="text-[#a890cb] flex items-center justify-center pl-3 pr-2">
+<span class="material-symbols-outlined text-[20px]">search</span>
+</div>
+<input class="flex w-full min-w-0 flex-1 bg-transparent text-white border-none focus:ring-0 placeholder:text-[#a890cb]/70 px-0 text-sm font-medium" placeholder="Search files..." value=""/>
+</div>
+</label>
+</div>
+<!-- Chips -->
+<div class="flex gap-2 px-4 pb-3 overflow-x-auto no-scrollbar">
+<button class="flex h-7 shrink-0 items-center justify-center gap-x-1.5 rounded-sm bg-surface-highlight pl-3 pr-3 border border-white/5 active:bg-primary/20 transition-colors">
+<span class="material-symbols-outlined text-[16px]">filter_list</span>
+<p class="text-white text-xs font-medium leading-normal">Filter: All</p>
+</button>
+<button class="flex h-7 shrink-0 items-center justify-center gap-x-1.5 rounded-sm bg-surface-highlight pl-3 pr-3 border border-white/5 active:bg-primary/20 transition-colors">
+<span class="material-symbols-outlined text-[16px]">unfold_more</span>
+<p class="text-white text-xs font-medium leading-normal">Expand All</p>
+</button>
+<button class="flex h-7 shrink-0 items-center justify-center gap-x-1.5 rounded-sm bg-surface-highlight pl-3 pr-3 border border-white/5 active:bg-primary/20 transition-colors">
+<span class="material-symbols-outlined text-[16px]">sort_by_alpha</span>
+<p class="text-white text-xs font-medium leading-normal">Name</p>
+</button>
+</div>
+</div>
+<!-- Main Content: File Tree -->
+<main class="flex-1 overflow-y-auto px-4 pb-24 pt-2">
+<div class="flex flex-col gap-3">
+<!-- Project Root Folder -->
+<details class="group flex flex-col rounded-sm bg-surface-dark border border-white/5 overflow-hidden" open="">
+<summary class="flex cursor-pointer items-center justify-between gap-4 px-3 py-2.5 bg-surface-highlight/50 hover:bg-surface-highlight transition-colors select-none sticky top-0 z-0">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[#a890cb] group-open:rotate-90 transition-transform text-[20px]">arrow_right</span>
+<span class="material-symbols-outlined text-[#a890cb] text-[20px]">folder_open</span>
+<p class="text-white text-sm font-semibold leading-normal">Project Root</p>
+</div>
+<span class="text-xs text-[#a890cb] font-mono">3 items</span>
+</summary>
+<!-- File Item: Root Config -->
+<div class="flex flex-col pl-4">
+<div class="flex items-center gap-3 px-3 py-3 hover:bg-white/5 border-l-2 border-transparent hover:border-primary transition-all cursor-pointer group/item">
+<span class="material-symbols-outlined text-[#a890cb] text-[20px]">settings_suggest</span>
+<div class="flex flex-col flex-1 min-w-0">
+<p class="text-white text-sm font-medium leading-tight truncate">project_config.json</p>
+<p class="text-[#a890cb] text-xs leading-tight mt-0.5">Config • 2KB</p>
+</div>
+<span class="material-symbols-outlined text-white/50 hover:text-white text-[20px] cursor-pointer">more_vert</span>
+</div>
+<div class="flex items-center gap-3 px-3 py-3 hover:bg-white/5 border-l-2 border-transparent hover:border-primary transition-all cursor-pointer group/item">
+<span class="material-symbols-outlined text-[#a890cb] text-[20px]">description</span>
+<div class="flex flex-col flex-1 min-w-0">
+<p class="text-white text-sm font-medium leading-tight truncate">readme.md</p>
+<p class="text-[#a890cb] text-xs leading-tight mt-0.5">Markdown • 1KB</p>
+</div>
+<span class="material-symbols-outlined text-white/50 hover:text-white text-[20px] cursor-pointer">more_vert</span>
+</div>
+</div>
+</details>
+<!-- Mods Folder -->
+<details class="group flex flex-col rounded-sm bg-surface-dark border border-white/5 overflow-hidden" open="">
+<summary class="flex cursor-pointer items-center justify-between gap-4 px-3 py-2.5 bg-surface-highlight/50 hover:bg-surface-highlight transition-colors select-none">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[#a890cb] group-open:rotate-90 transition-transform text-[20px]">arrow_right</span>
+<span class="material-symbols-outlined text-[#a890cb] text-[20px]">folder</span>
+<p class="text-white text-sm font-semibold leading-normal">Mods</p>
+</div>
+<span class="text-xs text-[#a890cb] font-mono">2 files</span>
+</summary>
+<div class="flex flex-col pl-4">
+<!-- File: Original -->
+<div class="flex items-center gap-3 px-3 py-3 bg-primary/10 border-l-2 border-primary cursor-pointer group/item">
+<span class="material-symbols-outlined text-primary text-[20px]">code</span>
+<div class="flex flex-col flex-1 min-w-0">
+<p class="text-white text-sm font-medium leading-tight truncate">buff_Sim_Happy.xml</p>
+<div class="flex items-center gap-2 mt-1">
+<span class="px-1.5 py-0.5 rounded-[2px] bg-white/10 text-[10px] font-bold text-white/80 uppercase tracking-wide">Original</span>
+<span class="text-[#a890cb] text-xs">XML</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-white/50 hover:text-white text-[20px] cursor-pointer">more_vert</span>
+</div>
+<!-- File: Original -->
+<div class="flex items-center gap-3 px-3 py-3 hover:bg-white/5 border-l-2 border-transparent hover:border-primary transition-all cursor-pointer group/item">
+<span class="material-symbols-outlined text-[#a890cb] text-[20px]">code</span>
+<div class="flex flex-col flex-1 min-w-0">
+<p class="text-white text-sm font-medium leading-tight truncate">interaction_Social_Hug.xml</p>
+<div class="flex items-center gap-2 mt-1">
+<span class="px-1.5 py-0.5 rounded-[2px] bg-white/10 text-[10px] font-bold text-white/80 uppercase tracking-wide">Original</span>
+<span class="text-[#a890cb] text-xs">XML</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-white/50 hover:text-white text-[20px] cursor-pointer">more_vert</span>
+</div>
+</div>
+</details>
+<!-- Tuning Files Folder -->
+<details class="group flex flex-col rounded-sm bg-surface-dark border border-white/5 overflow-hidden">
+<summary class="flex cursor-pointer items-center justify-between gap-4 px-3 py-2.5 bg-surface-highlight/50 hover:bg-surface-highlight transition-colors select-none">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[#a890cb] group-open:rotate-90 transition-transform text-[20px]">arrow_right</span>
+<span class="material-symbols-outlined text-[#a890cb] text-[20px]">tune</span>
+<p class="text-white text-sm font-semibold leading-normal">Tuning Files</p>
+</div>
+</summary>
+<div class="flex flex-col pl-4">
+<div class="flex items-center gap-3 px-3 py-3 hover:bg-white/5 border-l-2 border-transparent hover:border-primary transition-all cursor-pointer group/item">
+<span class="material-symbols-outlined text-[#a890cb] text-[20px]">settings_applications</span>
+<div class="flex flex-col flex-1 min-w-0">
+<p class="text-white text-sm font-medium leading-tight truncate">object_stat_maintenance.tuning</p>
+<p class="text-[#a890cb] text-xs leading-tight mt-0.5">Tuning Resource</p>
+</div>
+<span class="material-symbols-outlined text-white/50 hover:text-white text-[20px] cursor-pointer">more_vert</span>
+</div>
+</div>
+</details>
+<!-- Generated Outputs Folder -->
+<details class="group flex flex-col rounded-sm bg-surface-dark border border-white/5 overflow-hidden" open="">
+<summary class="flex cursor-pointer items-center justify-between gap-4 px-3 py-2.5 bg-surface-highlight/50 hover:bg-surface-highlight transition-colors select-none">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[#a890cb] group-open:rotate-90 transition-transform text-[20px]">arrow_right</span>
+<span class="material-symbols-outlined text-[#a890cb] text-[20px]">inventory_2</span>
+<p class="text-white text-sm font-semibold leading-normal">Generated Outputs</p>
+</div>
+<span class="text-xs text-[#a890cb] font-mono">1 new</span>
+</summary>
+<div class="flex flex-col pl-4">
+<div class="flex items-center gap-3 px-3 py-3 hover:bg-white/5 border-l-2 border-transparent hover:border-primary transition-all cursor-pointer group/item">
+<span class="material-symbols-outlined text-primary text-[20px]">deployed_code</span>
+<div class="flex flex-col flex-1 min-w-0">
+<p class="text-white text-sm font-medium leading-tight truncate">MyMod_Translated.package</p>
+<div class="flex items-center gap-2 mt-1">
+<span class="px-1.5 py-0.5 rounded-[2px] bg-primary text-[10px] font-bold text-white uppercase tracking-wide">Generated</span>
+<span class="text-[#a890cb] text-xs">Package • 1.2MB</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-white/50 hover:text-white text-[20px] cursor-pointer">more_vert</span>
+</div>
+</div>
+</details>
+<!-- Logs Folder -->
+<details class="group flex flex-col rounded-sm bg-surface-dark border border-white/5 overflow-hidden">
+<summary class="flex cursor-pointer items-center justify-between gap-4 px-3 py-2.5 bg-surface-highlight/50 hover:bg-surface-highlight transition-colors select-none">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[#a890cb] group-open:rotate-90 transition-transform text-[20px]">arrow_right</span>
+<span class="material-symbols-outlined text-[#a890cb] text-[20px]">history</span>
+<p class="text-white text-sm font-semibold leading-normal">Logs</p>
+</div>
+</summary>
+<div class="flex flex-col pl-4">
+<div class="flex items-center gap-3 px-3 py-3 hover:bg-white/5 border-l-2 border-transparent hover:border-primary transition-all cursor-pointer group/item">
+<span class="material-symbols-outlined text-red-400 text-[20px]">error</span>
+<div class="flex flex-col flex-1 min-w-0">
+<p class="text-white text-sm font-medium leading-tight truncate">error_log_2023.txt</p>
+<div class="flex items-center gap-2 mt-1">
+<span class="px-1.5 py-0.5 rounded-[2px] bg-red-500/20 text-red-300 text-[10px] font-bold uppercase tracking-wide">Error</span>
+<span class="text-[#a890cb] text-xs">Yesterday</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-white/50 hover:text-white text-[20px] cursor-pointer">more_vert</span>
+</div>
+<div class="flex items-center gap-3 px-3 py-3 hover:bg-white/5 border-l-2 border-transparent hover:border-primary transition-all cursor-pointer group/item">
+<span class="material-symbols-outlined text-green-400 text-[20px]">check_circle</span>
+<div class="flex flex-col flex-1 min-w-0">
+<p class="text-white text-sm font-medium leading-tight truncate">build_log.txt</p>
+<p class="text-[#a890cb] text-xs leading-tight mt-0.5">Success • 10:45 AM</p>
+</div>
+<span class="material-symbols-outlined text-white/50 hover:text-white text-[20px] cursor-pointer">more_vert</span>
+</div>
+</div>
+</details>
+</div>
+</main>
+<!-- Bottom Action Bar -->
+<footer class="fixed bottom-0 left-0 w-full z-20 bg-background-dark border-t border-white/5 p-4 shadow-[0_-5px_15px_rgba(0,0,0,0.3)]">
+<div class="flex gap-3">
+<button class="flex-1 flex items-center justify-center gap-2 h-12 bg-primary hover:bg-primary/90 rounded-sm text-white font-bold tracking-wide shadow-lg shadow-primary/20 transition-all">
+<span class="material-symbols-outlined">build</span>
+                Build Project
+            </button>
+<button class="flex items-center justify-center size-12 bg-surface-highlight border border-white/10 rounded-sm text-white hover:bg-white/10 transition-all">
+<span class="material-symbols-outlined">refresh</span>
+</button>
+</div>
+</footer>
+</body></html>

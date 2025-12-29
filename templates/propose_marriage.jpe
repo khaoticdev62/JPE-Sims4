@@ -1,0 +1,35 @@
+# Propose Marriage Template
+# A special interaction for proposing marriage to a loved one
+
+Propose Marriage
+  description: "Get down on one knee and ask for their hand in marriage"
+  type: social
+  duration: 30
+  tests:
+    - actor is in love with target
+    - relationship is very high
+    - both are adults
+    - target is in excellent mood
+  effects:
+    - increase romance +100
+    - increase mood by 50
+    - add engaged feeling
+    - add joyful feeling
+
+---
+
+Engaged Feeling
+  description: "Just got engaged! Feeling on top of the world"
+  mood_type: positive
+  intensity: 4
+  duration: 600
+  mood_gain: 50
+
+---
+
+Joyful Feeling
+  description: "Experiencing pure joy and happiness"
+  mood_type: positive
+  intensity: 3
+  duration: 480
+  mood_gain: 40

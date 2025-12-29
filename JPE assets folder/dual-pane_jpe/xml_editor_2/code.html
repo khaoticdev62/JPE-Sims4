@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Dual-Pane JPE/XML Editor</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "primary": "#8638fa",
+              "primary-hover": "#702cd6",
+              "background-light": "#f7f5f8",
+              "background-dark": "#170f23",
+              "surface-dark": "#181023",
+              "surface-lighter": "#31214a",
+              "border-color": "#472f6a",
+              "text-secondary": "#a78ecc",
+              "editor-bg": "#0d0914",
+            },
+            fontFamily: {
+              "display": ["Inter", "sans-serif"],
+              "mono": ["JetBrains Mono", "monospace"],
+            },
+            borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+          },
+        },
+      }
+    </script>
+<style>
+        ::-webkit-scrollbar {
+            width: 12px;
+            height: 12px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #181023; 
+        }
+        ::-webkit-scrollbar-corner {
+            background: #181023;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #472f6a; 
+            border: 3px solid #181023;
+            border-radius: 6px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #8638fa; 
+        }
+        .code-line {
+            counter-increment: line;
+        }
+        body {
+            height: 100vh;}
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-dark text-white font-display h-screen flex flex-col overflow-hidden selection:bg-primary/30">
+<header class="flex-none bg-surface-dark border-b border-border-color z-30 h-16 flex items-center justify-between px-6 shadow-lg shadow-black/20">
+<div class="flex items-center gap-5">
+<div class="flex items-center justify-center size-10 bg-gradient-to-br from-primary to-[#5b20b0] rounded-lg text-white font-bold shadow-lg shadow-primary/20 border border-white/10 shrink-0">
+<span class="material-symbols-outlined text-[24px]">terminal</span>
+</div>
+<div class="hidden md:flex flex-col justify-center gap-0.5">
+<div class="flex items-center gap-2 text-sm text-text-secondary font-mono opacity-80">
+<span>mods</span>
+<span class="material-symbols-outlined text-[12px]">chevron_right</span>
+<span>traits</span>
+<span class="material-symbols-outlined text-[12px]">chevron_right</span>
+<span>buffs</span>
+</div>
+<h1 class="text-white font-bold text-lg tracking-tight leading-tight flex items-center gap-2">
+                Buff_Trait_Happy.xml
+                <span class="text-[10px] uppercase font-bold px-1.5 py-0.5 rounded bg-white/10 text-text-secondary tracking-wider">ReadOnly</span>
+</h1>
+</div>
+</div>
+<div class="hidden xl:flex items-center gap-1 bg-[#130d1c] p-1.5 rounded-lg border border-border-color/50 shadow-inner shadow-black/20">
+<button class="flex items-center gap-2 px-4 py-1.5 rounded bg-surface-lighter text-white shadow-sm border border-border-color/50">
+<span class="material-symbols-outlined text-[18px] text-primary">edit_document</span>
+<span class="text-sm font-semibold">Editor</span>
+</button>
+<button class="flex items-center gap-2 px-4 py-1.5 rounded hover:bg-white/5 text-text-secondary transition-colors">
+<span class="material-symbols-outlined text-[18px]">difference</span>
+<span class="text-sm font-medium">Diff</span>
+</button>
+<button class="flex items-center gap-2 px-4 py-1.5 rounded hover:bg-white/5 text-text-secondary transition-colors">
+<span class="material-symbols-outlined text-[18px]">history</span>
+<span class="text-sm font-medium">History</span>
+</button>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center bg-[#130d1c] rounded-md border border-border-color/50 p-1">
+<button class="p-2 hover:bg-white/10 rounded text-text-secondary hover:text-white transition-colors" title="Toggle Sidebar">
+<span class="material-symbols-outlined text-[20px]">view_sidebar</span>
+</button>
+<button class="p-2 bg-surface-lighter rounded text-white shadow-sm border border-white/5" title="Split Vertical">
+<span class="material-symbols-outlined text-[20px] rotate-90">splitscreen</span>
+</button>
+</div>
+<div class="h-8 w-px bg-border-color mx-1"></div>
+<button class="flex items-center gap-2 px-5 h-10 rounded bg-primary hover:bg-primary-hover text-white text-sm font-bold shadow-lg shadow-primary/20 transition-all active:scale-95 border border-white/10">
+<span class="material-symbols-outlined text-[20px]">save</span>
+<span>Save Changes</span>
+</button>
+</div>
+</header>
+<div class="flex-1 flex overflow-hidden">
+<aside class="w-80 bg-surface-dark border-r border-border-color flex flex-col flex-none z-20 shadow-[4px_0_24px_-12px_rgba(0,0,0,0.5)]">
+<div class="p-4 border-b border-border-color">
+<div class="relative group">
+<span class="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-text-secondary text-[18px] group-focus-within:text-primary transition-colors">search</span>
+<input class="w-full bg-[#130d1c] border border-border-color rounded-md py-2 pl-10 pr-3 text-sm text-white placeholder-text-secondary/50 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" placeholder="Search files (Ctrl+P)..." type="text"/>
+</div>
+</div>
+<div class="flex-1 overflow-y-auto font-mono text-sm select-none custom-scrollbar">
+<div class="py-3">
+<div class="px-4 py-1.5 text-xs font-bold text-text-secondary uppercase tracking-wider flex justify-between group">
+                    OPEN EDITORS
+                    <span class="hidden group-hover:block material-symbols-outlined text-[14px] cursor-pointer hover:text-white">close</span>
+</div>
+<div class="flex items-center gap-3 px-4 py-2 bg-surface-lighter/50 border-l-[3px] border-primary text-white cursor-pointer relative">
+<span class="material-symbols-outlined text-[18px] text-primary">code</span>
+<span>Buff_Trait_Happy.xml</span>
+<span class="ml-auto text-[10px] bg-white/10 px-1.5 py-0.5 rounded text-text-secondary">M</span>
+</div>
+<div class="flex items-center gap-3 px-4 py-2 text-text-secondary hover:text-white hover:bg-white/5 cursor-pointer border-l-[3px] border-transparent transition-colors">
+<span class="material-symbols-outlined text-[18px]">code</span>
+<span>loot_buff_gain.xml</span>
+</div>
+</div>
+<div class="h-px bg-border-color mx-4 my-1 opacity-50"></div>
+<div class="py-3">
+<div class="px-4 py-1.5 text-xs font-bold text-text-secondary uppercase tracking-wider flex justify-between group">
+                    PROJECT EXPLORER
+                    <span class="hidden group-hover:block material-symbols-outlined text-[14px] cursor-pointer hover:text-white">more_horiz</span>
+</div>
+<div class="group mt-1">
+<div class="flex items-center gap-1.5 px-3 py-1.5 text-white cursor-pointer hover:bg-white/5 transition-colors">
+<span class="material-symbols-outlined text-[20px] text-text-secondary">expand_more</span>
+<span class="material-symbols-outlined text-[20px] text-yellow-500 fill-1">folder</span>
+<span>mods</span>
+</div>
+<div class="pl-4 border-l border-border-color ml-[1.1rem]">
+<div class="flex items-center gap-1.5 px-3 py-1.5 text-white cursor-pointer hover:bg-white/5 transition-colors">
+<span class="material-symbols-outlined text-[20px] text-text-secondary">expand_more</span>
+<span class="material-symbols-outlined text-[20px] text-yellow-500 fill-1">folder</span>
+<span>traits</span>
+</div>
+<div class="pl-4 border-l border-border-color ml-[1.1rem]">
+<div class="flex items-center gap-1.5 px-3 py-1.5 text-white cursor-pointer hover:bg-white/5 transition-colors">
+<span class="material-symbols-outlined text-[20px] text-text-secondary">expand_more</span>
+<span class="material-symbols-outlined text-[20px] text-primary fill-1">folder_open</span>
+<span>buffs</span>
+</div>
+<div class="pl-4 border-l border-border-color ml-[1.1rem]">
+<div class="flex items-center gap-2.5 px-3 py-1.5 bg-primary/10 text-white rounded-r-sm cursor-pointer border-l-[3px] border-primary -ml-[1px]">
+<span class="material-symbols-outlined text-[18px] text-primary">description</span>
+<span>Buff_Trait_Happy.xml</span>
+</div>
+<div class="flex items-center gap-2.5 px-3 py-1.5 text-text-secondary hover:text-white cursor-pointer hover:bg-white/5 rounded-r-sm transition-colors">
+<span class="material-symbols-outlined text-[18px]">description</span>
+<span>Buff_Trait_Sad.xml</span>
+</div>
+<div class="flex items-center gap-2.5 px-3 py-1.5 text-text-secondary hover:text-white cursor-pointer hover:bg-white/5 rounded-r-sm transition-colors">
+<span class="material-symbols-outlined text-[18px]">description</span>
+<span>Buff_Trait_Angry.xml</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</aside>
+<main class="flex-1 flex flex-row min-w-0 bg-editor-bg relative">
+<div class="flex-1 flex flex-col min-w-0 relative h-full">
+<div class="h-11 bg-surface-dark border-b border-border-color flex items-center justify-between px-4 select-none shadow-sm">
+<div class="flex items-center gap-3">
+<span class="px-2 py-0.5 rounded bg-primary/20 text-primary text-[11px] font-bold border border-primary/30 shadow-[0_0_10px_rgba(134,56,250,0.2)]">JPE SOURCE</span>
+<span class="text-sm text-white font-medium opacity-80">Primary Editor</span>
+</div>
+<div class="flex items-center gap-1">
+<button class="p-1.5 rounded hover:bg-white/10 text-text-secondary hover:text-white transition-colors" title="Format"><span class="material-symbols-outlined text-[18px]">format_align_left</span></button>
+<button class="p-1.5 rounded hover:bg-white/10 text-text-secondary hover:text-white transition-colors" title="Search"><span class="material-symbols-outlined text-[18px]">search</span></button>
+<button class="p-1.5 rounded hover:bg-white/10 text-text-secondary hover:text-white transition-colors" title="Settings"><span class="material-symbols-outlined text-[18px]">settings</span></button>
+</div>
+</div>
+<div class="flex-1 overflow-auto p-2 font-mono text-sm leading-7 bg-editor-bg relative">
+<div class="flex gap-4 hover:bg-white/5 px-2 rounded-sm">
+<div class="w-10 text-right text-gray-600 select-none text-xs pt-1 font-mono opacity-60">1</div>
+<div class="flex-1 text-gray-300"><span class="text-blue-400">&lt;?xml</span> <span class="text-text-secondary">version="1.0"</span> <span class="text-text-secondary">encoding="utf-8"</span><span class="text-blue-400">?&gt;</span></div>
+</div>
+<div class="flex gap-4 hover:bg-white/5 px-2 rounded-sm">
+<div class="w-10 text-right text-gray-600 select-none text-xs pt-1 font-mono opacity-60">2</div>
+<div class="flex-1 text-yellow-400">&lt;tuning_root&gt;</div>
+</div>
+<div class="flex gap-4 hover:bg-white/5 px-2 rounded-sm">
+<div class="w-10 text-right text-gray-600 select-none text-xs pt-1 font-mono opacity-60">3</div>
+<div class="flex-1 pl-4 text-blue-400">&lt;I <span class="text-text-secondary">c=</span><span class="text-green-400">"Buff"</span> <span class="text-text-secondary">i=</span><span class="text-green-400">"buff"</span> <span class="text-text-secondary">m=</span><span class="text-green-400">"buffs.buff"</span> <span class="text-text-secondary">n=</span><span class="text-green-400">"Buff_Trait_Happy"</span> <span class="text-text-secondary">s=</span><span class="text-green-400">"12345"</span>&gt;</div>
+</div>
+<div class="flex gap-4 hover:bg-white/5 bg-primary/10 relative group px-2 rounded-sm ring-1 ring-primary/20 my-0.5">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-primary rounded-l-sm"></div>
+<div class="w-10 text-right text-white font-bold select-none text-xs pt-1 font-mono">4</div>
+<div class="flex-1 pl-8 text-white relative">
+                        &lt;audio_sting_on_add&gt;
+                        <span class="ml-4 inline-flex items-center gap-1.5 bg-yellow-500/10 px-2 py-0.5 rounded text-[11px] text-yellow-400 font-bold font-display border border-yellow-500/30">
+<span class="material-symbols-outlined text-[14px]">warning</span> Deprecated
+                        </span>
+</div>
+</div>
+<div class="flex gap-4 hover:bg-white/5 px-2 rounded-sm">
+<div class="w-10 text-right text-gray-600 select-none text-xs pt-1 font-mono opacity-60">5</div>
+<div class="flex-1 pl-12 text-white">
+                        &lt;audio <span class="text-text-secondary">p=</span><span class="text-green-400">"InGame\Audio\Stings\sting_buff_gain.propx"</span>&gt;
+                    </div>
+</div>
+<div class="flex gap-4 hover:bg-white/5 px-2 rounded-sm">
+<div class="w-10 text-right text-gray-600 select-none text-xs pt-1 font-mono opacity-60">6</div>
+<div class="flex-1 pl-12 text-white">
+                        &lt;effects&gt;
+                    </div>
+</div>
+<div class="flex gap-4 hover:bg-white/5 px-2 rounded-sm">
+<div class="w-10 text-right text-gray-600 select-none text-xs pt-1 font-mono opacity-60">7</div>
+<div class="flex-1 pl-16 text-pink-400 cursor-pointer underline decoration-dotted decoration-pink-400/50 hover:bg-pink-500/10 rounded px-1 -ml-1 w-max transition-colors">
+                        &lt;effect_name&gt;happy_sim_vfx&lt;/effect_name&gt;
+                    </div>
+</div>
+<div class="flex gap-4 hover:bg-white/5 px-2 rounded-sm">
+<div class="w-10 text-right text-gray-600 select-none text-xs pt-1 font-mono opacity-60">8</div>
+<div class="flex-1 pl-12 text-white">
+                        &lt;/effects&gt;
+                    </div>
+</div>
+<div class="flex gap-4 hover:bg-white/5 px-2 rounded-sm">
+<div class="w-10 text-right text-gray-600 select-none text-xs pt-1 font-mono opacity-60">9</div>
+<div class="flex-1 pl-8 text-white">
+                        &lt;/audio&gt;
+                    </div>
+</div>
+<div class="flex gap-4 hover:bg-white/5 px-2 rounded-sm">
+<div class="w-10 text-right text-gray-600 select-none text-xs pt-1 font-mono opacity-60">10</div>
+<div class="flex-1 pl-4 text-white">&lt;/audio_sting_on_add&gt;</div>
+</div>
+<div class="flex gap-4 hover:bg-white/5 px-2 rounded-sm">
+<div class="w-10 text-right text-gray-600 select-none text-xs pt-1 font-mono opacity-60">11</div>
+<div class="flex-1 pl-4 text-white">&lt;buff_description&gt;</div>
+</div>
+<div class="flex gap-4 hover:bg-white/5 px-2 rounded-sm">
+<div class="w-10 text-right text-gray-600 select-none text-xs pt-1 font-mono opacity-60">12</div>
+<div class="flex-1 pl-8 text-green-400">0x8B9430F8&lt;!--String: "Feeling happy!"--&gt;</div>
+</div>
+</div>
+</div>
+<div class="w-2 bg-surface-dark border-x border-black/30 hover:bg-primary cursor-col-resize z-20 flex flex-col justify-center items-center group transition-colors shadow-xl">
+<div class="h-8 w-1 bg-text-secondary/30 group-hover:bg-white rounded-full"></div>
+</div>
+<div class="flex-1 flex flex-col min-w-0 bg-surface-dark h-full">
+<div class="h-11 border-b border-border-color flex items-end px-2 gap-1 bg-surface-dark select-none">
+<button class="relative px-5 py-2.5 text-text-secondary hover:text-white text-sm font-bold rounded-t-lg hover:bg-white/5 transition-colors">
+                    JPE-XML
+                </button>
+<button class="relative px-5 py-2.5 text-white bg-editor-bg text-sm font-bold rounded-t-lg border-t border-x border-border-color shadow-sm z-10">
+                    Raw XML
+                    <span class="absolute top-0 left-0 right-0 h-0.5 bg-primary rounded-t-lg shadow-[0_0_8px_rgba(134,56,250,0.6)]"></span>
+</button>
+<button class="relative px-5 py-2.5 text-text-secondary hover:text-white text-sm font-bold rounded-t-lg hover:bg-white/5 transition-colors">
+                    Tuning
+                </button>
+<div class="flex-1 border-b border-border-color h-full"></div>
+<div class="pb-2.5 px-3 flex gap-3 h-full items-end border-b border-border-color">
+<button class="text-text-secondary hover:text-white transition-colors" title="Download"><span class="material-symbols-outlined text-[20px]">download</span></button>
+<button class="text-text-secondary hover:text-white transition-colors" title="Copy"><span class="material-symbols-outlined text-[20px]">content_copy</span></button>
+</div>
+</div>
+<div class="flex-1 overflow-auto bg-editor-bg p-4 relative">
+<div class="absolute right-6 top-4 opacity-50 pointer-events-none">
+<span class="text-[100px] font-bold text-white/5 rotate-12 select-none material-symbols-outlined">html</span>
+</div>
+<div class="grid grid-cols-[48px_1fr] gap-x-2 font-mono text-sm leading-7">
+<div class="col-span-2 grid grid-cols-subgrid hover:bg-white/5 group px-2 rounded-sm">
+<p class="text-gray-600 text-right pr-3 select-none pt-1">1</p>
+<p class="text-gray-400">&lt;?xml version="1.0" ?&gt;</p>
+</div>
+<div class="col-span-2 grid grid-cols-subgrid hover:bg-white/5 group px-2 rounded-sm">
+<p class="text-gray-600 text-right pr-3 select-none pt-1">2</p>
+<p class="text-yellow-600">&lt;I c="Buff" i="buff" m="buffs.buff" n="Buff_Trait_Happy" s="12345"&gt;</p>
+</div>
+<div class="col-span-2 grid grid-cols-subgrid hover:bg-white/5 group bg-primary/5 px-2 rounded-sm border-l-2 border-primary/50 my-1">
+<p class="text-gray-600 text-right pr-3 select-none pt-1">3</p>
+<div class="pl-4 text-text-secondary italic">
+                             &lt;!-- Generated from JPE Source --&gt;
+                         </div>
+</div>
+<div class="col-span-2 grid grid-cols-subgrid hover:bg-white/5 group px-2 rounded-sm">
+<p class="text-gray-600 text-right pr-3 select-none pt-1">4</p>
+<p class="text-blue-300 pl-4">&lt;V n="audio_sting_on_add" t="enabled"&gt;</p>
+</div>
+<div class="col-span-2 grid grid-cols-subgrid hover:bg-white/5 group px-2 rounded-sm">
+<p class="text-gray-600 text-right pr-3 select-none pt-1">5</p>
+<p class="text-blue-300 pl-8">&lt;U n="enabled"&gt;</p>
+</div>
+<div class="col-span-2 grid grid-cols-subgrid hover:bg-white/5 group px-2 rounded-sm">
+<p class="text-gray-600 text-right pr-3 select-none pt-1">6</p>
+<p class="text-white pl-12 break-all">&lt;T n="audio" p="InGame\Audio\Stings\sting_buff_gain.propx"&gt;39b2aa4a:00000000:8af8b916cf64c646&lt;/T&gt;</p>
+</div>
+<div class="col-span-2 grid grid-cols-subgrid hover:bg-white/5 group px-2 rounded-sm">
+<p class="text-gray-600 text-right pr-3 select-none pt-1">7</p>
+<p class="text-blue-300 pl-8">&lt;/U&gt;</p>
+</div>
+<div class="col-span-2 grid grid-cols-subgrid hover:bg-white/5 group px-2 rounded-sm">
+<p class="text-gray-600 text-right pr-3 select-none pt-1">8</p>
+<p class="text-blue-300 pl-4">&lt;/V&gt;</p>
+</div>
+<div class="col-span-2 grid grid-cols-subgrid hover:bg-white/5 group px-2 rounded-sm">
+<p class="text-gray-600 text-right pr-3 select-none pt-1">9</p>
+<p class="text-blue-300 pl-4 opacity-50">&lt;!-- ... clipped for demo ... --&gt;</p>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+<footer class="flex-none h-10 bg-[#130d1c] text-xs font-mono text-text-secondary flex items-center justify-between px-4 border-t border-border-color z-30 select-none shadow-[0_-4px_20px_rgba(0,0,0,0.3)]">
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-2 hover:text-white cursor-pointer px-2 py-1 rounded hover:bg-white/5 transition-colors">
+<span class="material-symbols-outlined text-[14px] text-primary rotate-90">call_split</span>
+<span class="font-bold">main*</span>
+</div>
+<div class="flex items-center gap-2 hover:text-white cursor-pointer px-2 py-1 rounded hover:bg-white/5 transition-colors">
+<span class="material-symbols-outlined text-[14px]">sync</span>
+<span>0</span>
+<span class="material-symbols-outlined text-[14px] rotate-180">arrow_right_alt</span>
+<span>1</span>
+</div>
+<div class="h-4 w-px bg-white/10"></div>
+<div class="flex items-center gap-3 hover:text-white cursor-pointer px-2 py-1 rounded hover:bg-white/5 transition-colors">
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px] text-red-500">error</span>
+<span>0</span>
+</div>
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px] text-yellow-500">warning</span>
+<span>1</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-0">
+<div class="flex items-center gap-2 px-3 h-full border-r border-white/10 hover:bg-white/5 cursor-pointer transition-colors">
+<span class="text-white">Ln 4, Col 24</span>
+</div>
+<div class="flex items-center gap-2 px-3 h-full border-r border-white/10 hover:text-white hover:bg-white/5 cursor-pointer transition-colors">
+<span>Spaces: 4</span>
+</div>
+<div class="flex items-center gap-2 px-3 h-full border-r border-white/10 hover:text-white hover:bg-white/5 cursor-pointer transition-colors">
+<span>UTF-8</span>
+</div>
+<div class="flex items-center gap-2 px-3 h-full hover:text-white hover:bg-white/5 cursor-pointer transition-colors">
+<span class="material-symbols-outlined text-[16px] text-primary">code</span>
+<span class="font-semibold">JPE (Sims 4)</span>
+</div>
+<div class="ml-2 hover:bg-white/10 p-1.5 rounded cursor-pointer text-primary transition-colors relative">
+<span class="material-symbols-outlined text-[16px]">notifications</span>
+<span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full border border-[#130d1c]"></span>
+</div>
+</div>
+</footer>
+
+</body></html>

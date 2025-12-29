@@ -1,0 +1,35 @@
+# Share Meal Template
+# A romantic dinner interaction for couples
+
+Share Romantic Meal
+  description: "Share a romantic meal together by candlelight"
+  type: social
+  duration: 90
+  tests:
+    - actor is in love with target
+    - both are adults
+    - both are not tired
+    - location is home lot
+  effects:
+    - increase romance +50
+    - increase mood by 40
+    - add intimate feeling
+    - add satisfied feeling
+
+---
+
+Intimate Feeling
+  description: "Feeling intimate and close to your partner"
+  mood_type: positive
+  intensity: 3
+  duration: 300
+  mood_gain: 35
+
+---
+
+Satisfied Feeling
+  description: "Satisfied and content after a wonderful meal"
+  mood_type: positive
+  intensity: 2
+  duration: 180
+  mood_gain: 20

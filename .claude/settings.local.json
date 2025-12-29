@@ -43,7 +43,8 @@
       "Bash(npx tsc:*)",
       "mcp__plugin_playwright_playwright__browser_console_messages",
       "Bash(git tag:*)",
-      "Bash(timeout 15 bash:*)"
+      "Bash(timeout 15 bash:*)",
+      "Bash(node -e:*)"
     ]
   }
 }

@@ -1,16 +1,46 @@
 /**
  * CompilerService handles all compilation and parsing operations
- * Integrates with the translation engine
+ * Integrates with the complete translation and validation pipeline
  */
 
 import { XMLParser, type JPEModule } from '@/engine/parsers/XMLParser'
 import { XMLCompiler } from '@/engine/compilers/XMLCompiler'
 import { ValidationEngine } from '@/engine/validators/ValidationEngine'
+import { SemanticValidator } from '@/engine/validators/SemanticValidator'
+import { DiagnosticFormatter } from '@/engine/diagnostics/DiagnosticFormatter'
+import { STBLParser } from '@/engine/parsers/STBLParser'
+import { PackageParser } from '@/engine/parsers/PackageParser'
+import { ConfigParser } from '@/engine/parsers/ConfigParser'
+import { createParserCache } from '@/engine/cache/ParserCache'
+import { xmlToJpe, jpeToXml } from '@/engine/translators'
 import type { ModFile, ValidationResult, Diagnostic } from '@/types/index'
+import type { AST } from '@/engine/parsers/types/parser'
 import { useActivityStore } from '@/stores/useActivityStore'
 import { useProjectStore } from '@/stores/useProjectStore'
 
 export class CompilerService {
+  // Static cache for parsed ASTs
+  private static parserCache = createParserCache<AST>({
+    maxEntries: 500,
+    ttlMs: 1000 * 60 * 60, // 1 hour
+    trackStats: true,
+  })
+
+  // Semantic validator for cross-file validation
+  private static semanticValidator = new SemanticValidator({
+    checkTuningReferences: true,
+    checkSTBLKeys: true,
+    checkEnumValues: true,
+    reportWarnings: true,
+    maxErrors: 100,
+  })
+
+  // Diagnostic formatter
+  private static diagnosticFormatter = new DiagnosticFormatter({
+    includeDocs: true,
+    maxDiagnostics: 100,
+  })
+
   /**
    * Parse a file based on its type
    */
@@ -29,6 +59,167 @@ export class CompilerService {
       console.error('Failed to parse file', error)
       return null
     }
+  }
+
+  /**
+   * Convert XML to JPE format using translator
+   */
+  static convertToJPE(xmlContent: string): string | null {
+    try {
+      const jpeContent = xmlToJpe(xmlContent)
+      return jpeContent
+    } catch (error) {
+      console.error('Failed to convert XML to JPE', error)
+      return null
+    }
+  }
+
+  /**
+   * Convert JPE to XML format using translator
+   */
+  static convertToXML(jpeContent: string): string | null {
+    try {
+      const xmlContent = jpeToXml(jpeContent)
+      return xmlContent
+    } catch (error) {
+      console.error('Failed to convert JPE to XML', error)
+      return null
+    }
+  }
+
+  /**
+   * Parse STBL (string table) binary file
+   */
+  static parseSTBL(buffer: ArrayBuffer): { success: boolean; data?: any; error?: string } {
+    try {
+      const result = STBLParser.parse(buffer)
+      return { success: true, data: result }
+    } catch (error) {
+      console.error('Failed to parse STBL file', error)
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown STBL parsing error',
+      }
+    }
+  }
+
+  /**
+   * Parse package (.package) DBPF format
+   */
+  static parsePackage(buffer: ArrayBuffer): { success: boolean; data?: any; error?: string } {
+    try {
+      const result = PackageParser.parse(buffer)
+      return { success: true, data: result }
+    } catch (error) {
+      console.error('Failed to parse package file', error)
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown package parsing error',
+      }
+    }
+  }
+
+  /**
+   * Parse configuration file (JSON/YAML)
+   */
+  static parseConfig(
+    content: string,
+    format: 'json' | 'yaml' = 'json'
+  ): { success: boolean; data?: any; error?: string } {
+    try {
+      const result = ConfigParser.parse(content, format)
+      return { success: true, data: result }
+    } catch (error) {
+      console.error('Failed to parse config file', error)
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown config parsing error',
+      }
+    }
+  }
+
+  /**
+   * Validate with semantic rules (cross-file references, enum values, etc.)
+   */
+  static validateProjectSemantic(files: Map<string, string>) {
+    try {
+      const result = this.semanticValidator.validateProject(files)
+      return {
+        success: result.valid,
+        errors: result.errors,
+        warnings: result.warnings,
+        stats: result.stats,
+      }
+    } catch (error) {
+      console.error('Failed semantic validation', error)
+      return {
+        success: false,
+        errors: [],
+        warnings: [error instanceof Error ? error.message : 'Unknown validation error'],
+        stats: {
+          filesValidated: 0,
+          referencesChecked: 0,
+          enumsValidated: 0,
+          stblKeysChecked: 0,
+        },
+      }
+    }
+  }
+
+  /**
+   * Register tuning ID for cross-file validation
+   */
+  static registerTuningId(id: string, file: string, line: number, name?: string, type?: string) {
+    this.semanticValidator.registerTuningId(id, file, line, name, type)
+  }
+
+  /**
+   * Register STBL key for validation
+   */
+  static registerSTBLKey(key: string, value: string, file: string) {
+    this.semanticValidator.registerSTBLKey(key, value, file)
+  }
+
+  /**
+   * Register enum for validation
+   */
+  static registerEnum(enumName: string, values: string[]) {
+    this.semanticValidator.registerEnum(enumName, values)
+  }
+
+  /**
+   * Format diagnostic input into formatted diagnostics with suggestions
+   */
+  static formatDiagnostics(inputs: any[]) {
+    return this.diagnosticFormatter.formatDiagnostics(inputs)
+  }
+
+  /**
+   * Create diagnostic report for a file
+   */
+  static createDiagnosticReport(file: string, inputs: any[]) {
+    return this.diagnosticFormatter.createReport(file, inputs)
+  }
+
+  /**
+   * Get parser cache statistics
+   */
+  static getCacheStats() {
+    return this.parserCache.getStats()
+  }
+
+  /**
+   * Clear parser cache
+   */
+  static clearCache() {
+    this.parserCache.clear()
+  }
+
+  /**
+   * Get cache metrics
+   */
+  static getCacheMetrics() {
+    return this.parserCache.getMetrics()
   }
 
   /**
@@ -120,12 +311,36 @@ export class CompilerService {
   }
 
   /**
-   * Validate a file for errors
+   * Validate a file for errors (syntax + semantic validation)
    */
   static async validateFile(file: ModFile): Promise<ValidationResult> {
     try {
       if (file.type === 'xml') {
-        return XMLParser.validate(file.content)
+        // Perform syntax validation
+        const syntaxResult = XMLParser.validate(file.content)
+
+        // Perform semantic validation
+        const semanticErrors = this.semanticValidator.validateTuningReferences(file.name, file.content)
+        const stblErrors = this.semanticValidator.validateSTBLKeys(file.name, file.content)
+        const enumErrors = this.semanticValidator.validateEnumValues(file.name, file.content)
+
+        // Combine results
+        const allErrors = [...semanticErrors, ...stblErrors, ...enumErrors]
+        const formattedDiagnostics = this.diagnosticFormatter.formatDiagnostics(allErrors)
+
+        return {
+          valid: syntaxResult.valid && allErrors.length === 0,
+          diagnostics: formattedDiagnostics.map((d) => ({
+            id: d.code,
+            fileId: file.id,
+            line: d.location.line,
+            column: d.location.column,
+            severity: d.severity,
+            message: d.message,
+            code: d.code,
+          })),
+          warnings: allErrors.filter((e) => e.severity === 'warning').map((e) => e.message),
+        }
       }
 
       // Default validation

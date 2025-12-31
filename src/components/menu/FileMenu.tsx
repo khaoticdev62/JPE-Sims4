@@ -1,17 +1,53 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
 import { useProjectStore } from '@/stores/useProjectStore'
-import { ProjectService } from '@/services/ProjectService'
+import { useEditorStore } from '@/stores/useEditorStore'
+import { FileService } from '@/services/FileService'
 import NewProjectDialog from '@/components/modals/NewProjectDialog'
 import OpenProjectDialog from '@/components/modals/OpenProjectDialog'
+import { toast } from 'sonner'
 
 function FileMenu() {
-  const { currentProject, projects } = useProjectStore()
+  const { currentProject, recentProjects, openProject, addFile, saveFile, saveProject, setCurrentProject } = useProjectStore()
+  const { tabs, activeTabId } = useEditorStore()
   const [isNewProjectOpen, setIsNewProjectOpen] = useState(false)
   const [isOpenProjectOpen, setIsOpenProjectOpen] = useState(false)
 
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
+  const handleAddFile = useCallback(async () => {
+    if (!currentProject) return
+    const paths = await FileService.openFile()
+    if (paths && paths.length > 0) {
+      for (const path of paths) {
+        await addFile(path)
+      }
+      toast.success(`Added ${paths.length} file(s)`)
+    }
+  }, [currentProject, addFile])
+
+  const handleSave = useCallback(async () => {
+    const activeTab = tabs.find(t => t.id === activeTabId)
+    if (activeTab) {
+      await saveFile(activeTab.fileId)
+      toast.success(`Saved ${activeTab.name}`)
+    }
+  }, [tabs, activeTabId, saveFile])
+
+  const handleSaveAll = useCallback(async () => {
+    if (currentProject) {
+      await saveProject()
+      toast.success('Project saved')
+    }
+  }, [currentProject, saveProject])
+
+  const handleCloseProject = useCallback(() => {
+    if (currentProject) {
+      setCurrentProject(null)
+      toast.info('Project closed')
+    }
+  }, [currentProject, setCurrentProject])
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
       // Ctrl+N for new project
       if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
         e.preventDefault()
@@ -22,19 +58,21 @@ function FileMenu() {
         e.preventDefault()
         setIsOpenProjectOpen(true)
       }
-    },
-    []
-  )
+      // Ctrl+S for save
+      if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key === 's') {
+        e.preventDefault()
+        handleSave()
+      }
+      // Ctrl+Shift+S for save all
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 's') {
+        e.preventDefault()
+        handleSaveAll()
+      }
+    }
 
-  // Add keyboard listeners
-  if (typeof window !== 'undefined') {
-    window.addEventListener('keydown', handleKeyDown as any)
-  }
-
-  const handleCloseProject = useCallback(() => {
-    // Clear current project - implementation depends on ProjectService
-    console.log('Close project action')
-  }, [])
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [handleSave, handleSaveAll])
 
   const handleExit = useCallback(() => {
     if (window.electron && window.electron.app) {
@@ -43,7 +81,7 @@ function FileMenu() {
   }, [])
 
   // Get recent projects (last 5)
-  const recentProjects = projects.slice(0, 5)
+  const recentList = recentProjects.slice(0, 5)
 
   return (
     <>
@@ -81,13 +119,25 @@ function FileMenu() {
               </button>
             </DropdownMenu.Item>
 
+            {/* Add File */}
+            <DropdownMenu.Item asChild>
+              <button
+                onClick={handleAddFile}
+                disabled={!currentProject}
+                className="w-full text-left px-4 py-2 text-sm text-text-primary hover:bg-background-secondary hover:text-accent-primary focus:outline-none focus:bg-background-secondary focus:text-accent-primary transition-colors flex justify-between items-center disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <span>Add File</span>
+              </button>
+            </DropdownMenu.Item>
+
             {/* Separator */}
             <DropdownMenu.Separator className="my-1 h-px bg-border-subtle" />
 
             {/* Save */}
             <DropdownMenu.Item asChild>
               <button
-                disabled={!currentProject}
+                onClick={handleSave}
+                disabled={!currentProject || !activeTabId}
                 className="w-full text-left px-4 py-2 text-sm text-text-primary hover:bg-background-secondary hover:text-accent-primary focus:outline-none focus:bg-background-secondary focus:text-accent-primary transition-colors flex justify-between items-center disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-text-primary"
               >
                 <span>Save</span>
@@ -98,6 +148,7 @@ function FileMenu() {
             {/* Save All */}
             <DropdownMenu.Item asChild>
               <button
+                onClick={handleSaveAll}
                 disabled={!currentProject}
                 className="w-full text-left px-4 py-2 text-sm text-text-primary hover:bg-background-secondary hover:text-accent-primary focus:outline-none focus:bg-background-secondary focus:text-accent-primary transition-colors flex justify-between items-center disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-text-primary"
               >
@@ -121,7 +172,7 @@ function FileMenu() {
             </DropdownMenu.Item>
 
             {/* Recent Projects Submenu */}
-            {recentProjects.length > 0 && (
+            {recentList.length > 0 && (
               <>
                 <DropdownMenu.Separator className="my-1 h-px bg-border-subtle" />
 
@@ -138,12 +189,12 @@ function FileMenu() {
                       className="min-w-48 bg-background-tertiary border border-border-subtle rounded-lg shadow-lg z-50"
                       sideOffset={8}
                     >
-                      {recentProjects.map((project) => (
+                      {recentList.map((project) => (
                         <DropdownMenu.Item key={project.id} asChild>
                           <button
                             onClick={async () => {
                               try {
-                                await ProjectService.openProject(project.rootPath)
+                                await openProject(project.rootPath)
                               } catch (error) {
                                 console.error('Failed to open project:', error)
                               }

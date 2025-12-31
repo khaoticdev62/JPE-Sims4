@@ -15,12 +15,17 @@ interface ProjectState {
   createProject: (name: string, rootPath: string) => Promise<void>
   openProject: (projectPath: string) => Promise<void>
   saveProject: () => Promise<void>
-  addFile: (file: ModFile) => void
-  removeFile: (fileId: string) => void
+  saveFile: (fileId: string) => Promise<void>
+  addFile: (sourcePath: string) => Promise<void>
+  removeFile: (fileId: string) => Promise<void>
+  renameFile: (fileId: string, newName: string) => Promise<void>
   updateFile: (fileId: string, updates: Partial<ModFile>) => void
+  loadContent: (fileId: string) => Promise<void>
   getFile: (fileId: string) => ModFile | undefined
   setError: (error: string | null) => void
 }
+
+import { ProjectService } from '@/services/ProjectService'
 
 export const useProjectStore = create<ProjectState>()(
   devtools(
@@ -61,17 +66,12 @@ export const useProjectStore = create<ProjectState>()(
         createProject: async (name, rootPath) => {
           set({ isLoading: true, error: null })
           try {
-            const newProject: Project = {
-              id: `project-${Date.now()}`,
-              name,
-              rootPath,
-              files: [],
-              metadata: {
-                createdAt: Date.now(),
-                updatedAt: Date.now(),
-                version: '1.0.0',
-              },
+            const newProject = await ProjectService.createProject(name, rootPath)
+            
+            if (!newProject) {
+              throw new Error('Failed to create project')
             }
+            
             get().setCurrentProject(newProject)
 
             // Log activity
@@ -95,21 +95,22 @@ export const useProjectStore = create<ProjectState>()(
         openProject: async (projectPath) => {
           set({ isLoading: true, error: null })
           try {
-            // This will be implemented with file system access
-            // For now, just simulate loading
-            await new Promise((resolve) => setTimeout(resolve, 500))
+            const project = await ProjectService.openProject(projectPath)
+            
+            if (!project) {
+              throw new Error('Failed to open project')
+            }
+
+            get().setCurrentProject(project)
 
             // Log activity once project opens
-            const currentProject = get().currentProject
-            if (currentProject) {
-              const { addActivity } = useActivityStore.getState()
-              addActivity({
-                type: 'opened',
-                fileName: 'Project opened',
-                projectName: currentProject.name,
-                projectId: currentProject.id,
-              })
-            }
+            const { addActivity } = useActivityStore.getState()
+            addActivity({
+              type: 'opened',
+              fileName: 'Project opened',
+              projectName: project.name,
+              projectId: project.id,
+            })
 
             set({ isLoading: false })
           } catch (error) {
@@ -128,9 +129,17 @@ export const useProjectStore = create<ProjectState>()(
           }
           set({ isLoading: true, error: null })
           try {
-            // This will be implemented with file system access
-            project.metadata.updatedAt = Date.now()
-            get().setCurrentProject(project)
+            const result = await ProjectService.saveProject(project)
+            
+            if (result.success) {
+              get().setCurrentProject(result.project)
+              // Mark all tabs as clean
+              const { tabs, markTabClean } = (await import('./useEditorStore')).useEditorStore.getState()
+              tabs.forEach(tab => markTabClean(tab.id))
+            } else {
+              set({ error: 'Failed to save project' })
+            }
+            
             set({ isLoading: false })
           } catch (error) {
             set({
@@ -140,32 +149,115 @@ export const useProjectStore = create<ProjectState>()(
           }
         },
 
-        addFile: (file) => {
+        saveFile: async (fileId) => {
           const project = get().currentProject
           if (!project) return
 
-          const updated = { ...project, files: [...project.files, file] }
-          get().setCurrentProject(updated)
+          const file = project.files.find((f) => f.id === fileId)
+          if (!file) return
 
-          // Log activity
-          const { addActivity } = useActivityStore.getState()
-          addActivity({
-            type: 'added',
-            fileName: file.name,
-            projectName: project.name,
-            projectId: project.id,
-          })
+          set({ isLoading: true, error: null })
+          try {
+            const success = await ProjectService.saveFile(file)
+            if (success) {
+              // Update file in store
+              get().updateFile(fileId, { isDirty: false })
+              
+              // Mark tab as clean if open
+              const { tabs, markTabClean } = (await import('./useEditorStore')).useEditorStore.getState()
+              const tab = tabs.find(t => t.fileId === fileId)
+              if (tab) {
+                markTabClean(tab.id)
+              }
+            } else {
+              set({ error: 'Failed to save file' })
+            }
+          } catch (error) {
+            console.error('Failed to save file', error)
+            set({ error: 'Failed to save file' })
+          } finally {
+            set({ isLoading: false })
+          }
         },
 
-        removeFile: (fileId) => {
+        addFile: async (sourcePath) => {
           const project = get().currentProject
           if (!project) return
 
-          const updated = {
-            ...project,
-            files: project.files.filter((f) => f.id !== fileId),
+          set({ isLoading: true })
+          try {
+            const newFile = await ProjectService.addFileToProject(project, sourcePath)
+            if (newFile) {
+              const updated = { ...project, files: [...project.files, newFile] }
+              get().setCurrentProject(updated)
+
+              // Log activity
+              const { addActivity } = useActivityStore.getState()
+              addActivity({
+                type: 'added',
+                fileName: newFile.name,
+                projectName: project.name,
+                projectId: project.id,
+              })
+            }
+          } catch (error) {
+            console.error('Failed to add file', error)
+            set({ error: 'Failed to add file' })
+          } finally {
+            set({ isLoading: false })
           }
-          get().setCurrentProject(updated)
+        },
+
+        removeFile: async (fileId) => {
+          const project = get().currentProject
+          if (!project) return
+
+          const file = project.files.find((f) => f.id === fileId)
+          if (!file) return
+
+          set({ isLoading: true })
+          try {
+            const success = await ProjectService.deleteFileFromProject(file)
+            if (success) {
+              const updated = {
+                ...project,
+                files: project.files.filter((f) => f.id !== fileId),
+              }
+              get().setCurrentProject(updated)
+            }
+          } catch (error) {
+            console.error('Failed to remove file', error)
+            set({ error: 'Failed to remove file' })
+          } finally {
+            set({ isLoading: false })
+          }
+        },
+
+        renameFile: async (fileId, newName) => {
+          const project = get().currentProject
+          if (!project) return
+
+          const file = project.files.find((f) => f.id === fileId)
+          if (!file) return
+
+          set({ isLoading: true })
+          try {
+            const newPath = await ProjectService.renameFileInProject(file, newName)
+            if (newPath) {
+              const updated = {
+                ...project,
+                files: project.files.map((f) =>
+                  f.id === fileId ? { ...f, name: newName, path: newPath } : f
+                ),
+              }
+              get().setCurrentProject(updated)
+            }
+          } catch (error) {
+            console.error('Failed to rename file', error)
+            set({ error: 'Failed to rename file' })
+          } finally {
+            set({ isLoading: false })
+          }
         },
 
         updateFile: (fileId, updates) => {
@@ -193,6 +285,30 @@ export const useProjectStore = create<ProjectState>()(
               projectName: project.name,
               projectId: project.id,
             })
+          }
+        },
+
+        loadContent: async (fileId) => {
+          const project = get().currentProject
+          if (!project) return
+
+          const file = project.files.find((f) => f.id === fileId)
+          if (!file) return
+
+          // If content is already loaded (and not empty), skip
+          if (file.content && file.content.length > 0) return
+
+          set({ isLoading: true })
+          try {
+            const content = await ProjectService.loadFileContent(file)
+            if (content !== null) {
+              get().updateFile(fileId, { content })
+            }
+          } catch (e) {
+            console.error('Failed to load content', e)
+            set({ error: 'Failed to load file content' })
+          } finally {
+            set({ isLoading: false })
           }
         },
 

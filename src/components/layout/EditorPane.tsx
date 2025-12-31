@@ -6,19 +6,17 @@ import { useProjectStore } from '@/stores/useProjectStore'
 import { useDiagnosticStore } from '@/stores/useDiagnosticStore'
 import { useFileLoader } from '@/hooks/useFileLoader'
 import { useRealTimeValidation } from '@/hooks/useRealTimeValidation'
-import { FileService } from '@/services/FileService'
 import { CompilerService } from '@/services/CompilerService'
 import { useActivityStore } from '@/stores/useActivityStore'
 import { memo } from 'react'
 
 function EditorPaneComponent() {
-  const { tabs, activeTabId, setActiveTab, closeTab, editorContent, updateTabContent, markTabClean } =
+  const { tabs, activeTabId, setActiveTab, closeTab, editorContent, updateTabContent } =
     useEditorStore()
-  const { getFile, updateFile, currentProject } = useProjectStore()
+  const { getFile, updateFile, currentProject, saveFile } = useProjectStore()
   const { getDiagnosticsForFile } = useDiagnosticStore()
   const { addActivity } = useActivityStore()
   const [isCompiling, setIsCompiling] = useState(false)
-  const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
   const activeTab = tabs.find((t) => t.id === activeTabId)
   const activeFile = activeTab ? getFile(activeTab.fileId) : null
@@ -37,43 +35,9 @@ function EditorPaneComponent() {
 
   // Handle file save
   const handleSaveFile = useCallback(async () => {
-    if (!activeFile || !activeTab) return
-
-    try {
-      const result = await FileService.writeFile(activeFile.path, fileContent)
-
-      if (result.success) {
-        // Mark tab as clean
-        markTabClean(activeTab.id)
-
-        // Update file metadata
-        updateFile(activeFile.id, {
-          isDirty: false,
-          size: fileContent.length,
-        })
-
-        // Log activity
-        if (currentProject) {
-          addActivity({
-            type: 'modified',
-            fileName: activeFile.name,
-            projectName: currentProject.name,
-            projectId: currentProject.id,
-          })
-        }
-
-        // Show save message
-        setSaveMessage({ type: 'success', text: 'File saved' })
-        setTimeout(() => setSaveMessage(null), 2000)
-      } else {
-        setSaveMessage({ type: 'error', text: `Save failed: ${result.error}` })
-        setTimeout(() => setSaveMessage(null), 3000)
-      }
-    } catch (error) {
-      setSaveMessage({ type: 'error', text: `Error saving file: ${error instanceof Error ? error.message : 'Unknown error'}` })
-      setTimeout(() => setSaveMessage(null), 3000)
-    }
-  }, [activeFile, activeTab, fileContent, currentProject, markTabClean, updateFile, addActivity])
+    if (!activeFile) return
+    await saveFile(activeFile.id)
+  }, [activeFile, saveFile])
 
   // Handle compilation
   const handleCompile = useCallback(async () => {
@@ -211,11 +175,6 @@ function EditorPaneComponent() {
               </div>
               <div className="flex items-center gap-4">
                 <span>Type: {activeFile.type.toUpperCase()}</span>
-                {saveMessage && (
-                  <span className={`font-medium ${saveMessage.type === 'success' ? 'text-state-success' : 'text-state-error'}`}>
-                    {saveMessage.text}
-                  </span>
-                )}
               </div>
             </div>
 

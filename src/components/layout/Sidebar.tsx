@@ -8,18 +8,12 @@ import { memo, useCallback } from 'react'
 import type { ModFile } from '@/types/index'
 
 function SidebarComponent() {
-  const { currentProject } = useProjectStore()
+  const { currentProject, removeFile, renameFile } = useProjectStore()
   const { openTab } = useEditorStore()
-  const { sidebarCollapsed } = useUIStore()
+  const { sidebarCollapsed, focusedPane, setFocusedPane } = useUIStore()
   const { setDiagnosticsForFile } = useDiagnosticStore()
 
-  if (sidebarCollapsed) {
-    return (
-      <div className="w-12 bg-background-secondary border-r border-border-subtle flex flex-col items-center py-4">
-        <div className="text-xs text-text-secondary">Files</div>
-      </div>
-    )
-  }
+  const isFocused = focusedPane === 'sidebar'
 
   const handleOpenFile = useCallback(
     (file: ModFile) => {
@@ -49,26 +43,46 @@ function SidebarComponent() {
     async (file: ModFile) => {
       if (confirm(`Delete file "${file.name}"?`)) {
         try {
-          await CompilerService.removeFileFromProject(currentProject?.id || '', file.id)
-          console.log('File deleted:', file.name)
+          await removeFile(file.id)
         } catch (error) {
           console.error('Failed to delete file:', error)
         }
       }
     },
-    [currentProject]
+    [removeFile]
   )
 
-  const handleRenameFile = useCallback((file: ModFile) => {
+  const handleRenameFile = useCallback(async (file: ModFile) => {
     const newName = prompt(`Rename file to:`, file.name)
     if (newName && newName !== file.name) {
-      console.log('Rename file:', file.name, '→', newName)
-      // Will integrate with ProjectService when rename is implemented
+      try {
+        await renameFile(file.id, newName)
+      } catch (error) {
+        console.error('Failed to rename file:', error)
+      }
     }
-  }, [])
+  }, [renameFile])
+
+  if (sidebarCollapsed) {
+    return (
+      <div
+        className={`w-12 bg-background-secondary border-r border-border-subtle flex flex-col items-center py-4 transition-all duration-200 ${
+          isFocused ? 'ring-1 ring-accent-primary ring-inset' : ''
+        }`}
+        onClick={() => setFocusedPane('sidebar')}
+      >
+        <div className="text-xs text-text-secondary">Files</div>
+      </div>
+    )
+  }
 
   return (
-    <div className="w-64 bg-background-secondary border-r border-border-subtle flex flex-col overflow-hidden">
+    <div
+      className={`w-64 bg-background-secondary border-r border-border-subtle flex flex-col overflow-hidden transition-all duration-200 ${
+        isFocused ? 'ring-1 ring-accent-primary ring-inset' : ''
+      }`}
+      onClick={() => setFocusedPane('sidebar')}
+    >
       <div className="h-12 border-b border-border-subtle flex items-center px-4">
         <h2 className="text-sm font-semibold text-text-primary">
           {currentProject?.name ? 'Project Files' : 'No Project'}

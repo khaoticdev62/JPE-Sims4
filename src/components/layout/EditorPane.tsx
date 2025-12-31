@@ -1,11 +1,13 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import MonacoEditor from '@/components/editor/MonacoEditor'
+import EditorToolbar from '@/components/editor/EditorToolbar'
 import { useEditorStore } from '@/stores/useEditorStore'
 import { useProjectStore } from '@/stores/useProjectStore'
 import { useDiagnosticStore } from '@/stores/useDiagnosticStore'
 import { useFileLoader } from '@/hooks/useFileLoader'
 import { useRealTimeValidation } from '@/hooks/useRealTimeValidation'
 import { FileService } from '@/services/FileService'
+import { CompilerService } from '@/services/CompilerService'
 import { useActivityStore } from '@/stores/useActivityStore'
 import { memo } from 'react'
 
@@ -15,12 +17,12 @@ function EditorPaneComponent() {
   const { getFile, updateFile, currentProject } = useProjectStore()
   const { getDiagnosticsForFile } = useDiagnosticStore()
   const { addActivity } = useActivityStore()
-  const [editMode, setEditMode] = useState(true)
-  const [saveMessage, setSaveMessage] = useState<string | null>(null)
+  const [isCompiling, setIsCompiling] = useState(false)
+  const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
   const activeTab = tabs.find((t) => t.id === activeTabId)
   const activeFile = activeTab ? getFile(activeTab.fileId) : null
-  const fileContent = activeFile ? editorContent.get(activeTab!.id) || '' : ''
+  const fileContent = activeFile && activeTab ? editorContent[activeTab.id] || '' : ''
 
   // Load file content when tab changes
   useFileLoader(activeTab?.id ?? null, activeFile?.id ?? null)
@@ -61,24 +63,62 @@ function EditorPaneComponent() {
         }
 
         // Show save message
-        setSaveMessage('File saved')
+        setSaveMessage({ type: 'success', text: 'File saved' })
         setTimeout(() => setSaveMessage(null), 2000)
       } else {
-        setSaveMessage(`Save failed: ${result.error}`)
+        setSaveMessage({ type: 'error', text: `Save failed: ${result.error}` })
         setTimeout(() => setSaveMessage(null), 3000)
       }
     } catch (error) {
-      setSaveMessage(`Error saving file: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      setSaveMessage({ type: 'error', text: `Error saving file: ${error instanceof Error ? error.message : 'Unknown error'}` })
       setTimeout(() => setSaveMessage(null), 3000)
     }
   }, [activeFile, activeTab, fileContent, currentProject, markTabClean, updateFile, addActivity])
+
+  // Handle compilation
+  const handleCompile = useCallback(async () => {
+    if (!activeFile) return
+
+    setIsCompiling(true)
+    try {
+      // For now, let's assume we compile XML to JPE or JPE to XML based on type
+      let result
+      if (activeFile.type === 'xml') {
+        const output = CompilerService.convertToJPE(fileContent)
+        result = { success: !!output, output, error: output ? undefined : 'Translation failed' }
+      } else {
+        const output = CompilerService.convertToXML(fileContent)
+        result = { success: !!output, output, error: output ? undefined : 'Compilation failed' }
+      }
+
+      if (result.success) {
+        setSaveMessage({ type: 'success', text: 'Compiled successfully' })
+        
+        // Log activity
+        if (currentProject) {
+          addActivity({
+            type: 'translated',
+            fileName: activeFile.name,
+            projectName: currentProject.name,
+            projectId: currentProject.id,
+          })
+        }
+      } else {
+        setSaveMessage({ type: 'error', text: `Compilation failed: ${result.error}` })
+      }
+    } catch (error) {
+      setSaveMessage({ type: 'error', text: `Compilation error: ${error instanceof Error ? error.message : 'Unknown error'}` })
+    } finally {
+      setIsCompiling(false)
+      setTimeout(() => setSaveMessage(null), 3000)
+    }
+  }, [activeFile, fileContent, currentProject, addActivity])
 
   const handleContentChange = useCallback((newContent: string) => {
     if (activeTab) {
       updateTabContent(activeTab.id, newContent)
       if (activeFile) {
         updateFile(activeFile.id, {
-          content: newContent,
           isDirty: true,
         })
       }
@@ -154,32 +194,27 @@ function EditorPaneComponent() {
       <div className="flex-1 bg-bg-primary flex flex-col overflow-hidden">
         {activeFile ? (
           <div className="flex-1 flex flex-col overflow-hidden">
-            {/* File header */}
-            <div className="px-4 py-2 bg-bg-secondary border-b border-border-subtle text-xs text-text-secondary flex justify-between items-center">
-              <div>
+            {/* Toolbar Area */}
+            <EditorToolbar
+              onSave={handleSaveFile}
+              onCompile={handleCompile}
+              isSaving={false} // Would come from store if async
+              isCompiling={isCompiling}
+              isDirty={activeTab?.isDirty}
+              className="border-b border-border-subtle"
+            />
+
+            {/* File info bar */}
+            <div className="px-4 py-1 bg-bg-secondary border-b border-border-subtle text-[10px] text-text-secondary flex justify-between items-center">
+              <div className="truncate max-w-[70%]">
                 <span>{activeFile.path}</span>
-                <span className="ml-4">Type: {activeFile.type.toUpperCase()}</span>
-                <span className="ml-4">{activeFile.size} bytes</span>
               </div>
               <div className="flex items-center gap-4">
-                {(errorCount > 0 || warningCount > 0) && (
-                  <div className="text-xs flex gap-4">
-                    {errorCount > 0 && <span className="text-state-error">Errors: {errorCount}</span>}
-                    {warningCount > 0 && <span className="text-state-warning">Warnings: {warningCount}</span>}
-                  </div>
-                )}
+                <span>Type: {activeFile.type.toUpperCase()}</span>
                 {saveMessage && (
-                  <span className={`text-xs ${saveMessage.includes('saved') ? 'text-state-success' : 'text-state-error'}`}>
-                    {saveMessage}
+                  <span className={`font-medium ${saveMessage.type === 'success' ? 'text-state-success' : 'text-state-error'}`}>
+                    {saveMessage.text}
                   </span>
-                )}
-                {activeTab?.isDirty && (
-                  <button
-                    onClick={handleSaveFile}
-                    className="px-2 py-1 bg-accent-primary hover:bg-accent-focus text-text-primary rounded text-xs transition-colors"
-                  >
-                    Save
-                  </button>
                 )}
               </div>
             </div>

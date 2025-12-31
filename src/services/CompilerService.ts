@@ -13,10 +13,9 @@ import { PackageParser } from '@/engine/parsers/PackageParser'
 import { ConfigParser } from '@/engine/parsers/ConfigParser'
 import { createParserCache } from '@/engine/cache/ParserCache'
 import { xmlToJpe, jpeToXml } from '@/engine/translators'
+import { tokenize, parse } from '@/engine/jpe'
 import type { ModFile, ValidationResult, Diagnostic } from '@/types/index'
 import type { AST } from '@/engine/parsers/types/parser'
-import { useActivityStore } from '@/stores/useActivityStore'
-import { useProjectStore } from '@/stores/useProjectStore'
 
 export class CompilerService {
   // Static cache for parsed ASTs
@@ -66,7 +65,10 @@ export class CompilerService {
    */
   static convertToJPE(xmlContent: string): string | null {
     try {
-      const jpeContent = xmlToJpe(xmlContent)
+      const xmlElement = XMLParser.parseXML(xmlContent)
+      if (!xmlElement) return null
+      
+      const jpeContent = xmlToJpe(xmlElement)
       return jpeContent
     } catch (error) {
       console.error('Failed to convert XML to JPE', error)
@@ -79,8 +81,18 @@ export class CompilerService {
    */
   static convertToXML(jpeContent: string): string | null {
     try {
-      const xmlContent = jpeToXml(jpeContent)
-      return xmlContent
+      // 1. Tokenize JPE string
+      const tokens = tokenize(jpeContent)
+      
+      // 2. Parse tokens to AST
+      const ast = parse(tokens)
+      
+      // 3. Translate JPE AST to XML AST
+      const xmlElement = jpeToXml(ast)
+      if (!xmlElement) return null
+      
+      // 4. Compile XML AST to XML string
+      return XMLCompiler.elementToXMLString(xmlElement, true, 0)
     } catch (error) {
       console.error('Failed to convert JPE to XML', error)
       return null
@@ -380,18 +392,6 @@ export class CompilerService {
 
       // Parse and translate
       const jpe = await this.translateToJPE(file)
-
-      // Log compilation activity on success
-      const currentProject = useProjectStore.getState().currentProject
-      if (currentProject) {
-        const { addActivity } = useActivityStore.getState()
-        addActivity({
-          type: 'completed',
-          fileName: file.name,
-          projectName: currentProject.name,
-          projectId: currentProject.id,
-        })
-      }
 
       return {
         success: true,

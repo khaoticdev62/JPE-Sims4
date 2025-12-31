@@ -31,7 +31,7 @@ export const useRealTimeValidation = (fileId: string | null, content: string | n
 
     if (file.type === 'xml') {
       // Use specialized XML validation
-      validationResult = ValidationEngine.validate(content)
+      validationResult = ValidationEngine.validate(content, 'xml')
 
       // Also check XML parsing
       const parseResult = XMLParser.validate(content)
@@ -39,9 +39,12 @@ export const useRealTimeValidation = (fileId: string | null, content: string | n
         validationResult.diagnostics.push(...parseResult.diagnostics)
         validationResult.warnings.push(...parseResult.warnings)
       }
+    } else if (file.type === 'jpe') {
+      // JPE-specific validation
+      validationResult = ValidationEngine.validate(content, 'jpe')
     } else {
-      // Generic validation
-      validationResult = ValidationEngine.validate(content)
+      // Generic validation (default to XML rules if unsure)
+      validationResult = ValidationEngine.validate(content, 'xml')
     }
 
     // Update diagnostics for this file

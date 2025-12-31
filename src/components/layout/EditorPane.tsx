@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import MonacoEditor from '@/components/editor/MonacoEditor'
 import EditorToolbar from '@/components/editor/EditorToolbar'
 import { useEditorStore } from '@/stores/useEditorStore'
@@ -144,7 +144,7 @@ function EditorPaneComponent() {
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [activeFile, activeTab, fileContent])
+  }, [handleSaveFile])
 
   return (
     <div data-testid="editor-pane" className="flex-1 flex flex-col bg-bg-primary overflow-hidden">

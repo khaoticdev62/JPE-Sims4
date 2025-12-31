@@ -11,7 +11,7 @@ const VALIDATION_DEBOUNCE_MS = 500
  * Validates as user types with debouncing
  */
 export const useRealTimeValidation = (fileId: string | null, content: string | null) => {
-  const { setDiagnostics, getDiagnosticsForFile } = useDiagnosticStore()
+  const { setDiagnostics } = useDiagnosticStore()
   const { getFile } = useProjectStore()
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null)
 
@@ -83,7 +83,7 @@ export const useRealTimeValidation = (fileId: string | null, content: string | n
 
   return {
     validate,
-    setDebounce: (ms: number) => {
+    setDebounce: (_ms: number) => {
       // Could be extended to allow dynamic debounce setting
     },
   }

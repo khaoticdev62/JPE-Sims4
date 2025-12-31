@@ -5,12 +5,10 @@ export const ModuleDeclarationRule: ValidationRule = {
   name: 'Module Declaration',
   severity: 'error',
   check: (content: string) => {
-    const trimmed = content.trim()
     // JPE should start with MODULE: <name>
     // Allow comments or empty lines before it
     const lines = content.split('\n')
     let foundModule = false
-    let lineIndex = 0
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i].trim()

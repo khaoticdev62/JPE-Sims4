@@ -5,7 +5,6 @@
 
 import { XMLParser, type JPEModule } from '@/engine/parsers/XMLParser'
 import { XMLCompiler } from '@/engine/compilers/XMLCompiler'
-import { ValidationEngine } from '@/engine/validators/ValidationEngine'
 import { SemanticValidator } from '@/engine/validators/SemanticValidator'
 import { DiagnosticFormatter } from '@/engine/diagnostics/DiagnosticFormatter'
 import { STBLParser } from '@/engine/parsers/STBLParser'

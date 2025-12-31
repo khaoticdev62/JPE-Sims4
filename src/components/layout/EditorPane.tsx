@@ -6,6 +6,7 @@ import { useProjectStore } from '@/stores/useProjectStore'
 import { useDiagnosticStore } from '@/stores/useDiagnosticStore'
 import { useFileLoader } from '@/hooks/useFileLoader'
 import { useRealTimeValidation } from '@/hooks/useRealTimeValidation'
+import { useEditorActions } from '@/hooks/useEditorActions'
 import { CompilerService } from '@/services/CompilerService'
 import { useActivityStore } from '@/stores/useActivityStore'
 import { memo } from 'react'
@@ -16,6 +17,7 @@ function EditorPaneComponent() {
   const { getFile, updateFile, currentProject, saveFile } = useProjectStore()
   const { getDiagnosticsForFile } = useDiagnosticStore()
   const { addActivity } = useActivityStore()
+  const { undo, redo, format, find, replace } = useEditorActions()
   const [isCompiling, setIsCompiling] = useState(false)
 
   const activeTab = tabs.find((t) => t.id === activeTabId)
@@ -45,18 +47,13 @@ function EditorPaneComponent() {
 
     setIsCompiling(true)
     try {
-      // For now, let's assume we compile XML to JPE or JPE to XML based on type
-      let result
-      if (activeFile.type === 'xml') {
-        const output = CompilerService.convertToJPE(fileContent)
-        result = { success: !!output, output, error: output ? undefined : 'Translation failed' }
-      } else {
-        const output = CompilerService.convertToXML(fileContent)
-        result = { success: !!output, output, error: output ? undefined : 'Compilation failed' }
-      }
+      const result = await CompilerService.compileFile({
+        ...activeFile,
+        content: fileContent
+      })
 
       if (result.success) {
-        setSaveMessage({ type: 'success', text: 'Compiled successfully' })
+        toast.success('Compiled successfully')
         
         // Log activity
         if (currentProject) {
@@ -68,13 +65,13 @@ function EditorPaneComponent() {
           })
         }
       } else {
-        setSaveMessage({ type: 'error', text: `Compilation failed: ${result.error}` })
+        const errorMsg = result.errors?.[0]?.message || 'Compilation failed'
+        toast.error(`Compilation failed: ${errorMsg}`)
       }
     } catch (error) {
-      setSaveMessage({ type: 'error', text: `Compilation error: ${error instanceof Error ? error.message : 'Unknown error'}` })
+      toast.error(`Compilation error: ${error instanceof Error ? error.message : 'Unknown error'}`)
     } finally {
       setIsCompiling(false)
-      setTimeout(() => setSaveMessage(null), 3000)
     }
   }, [activeFile, fileContent, currentProject, addActivity])
 
@@ -100,15 +97,24 @@ function EditorPaneComponent() {
   // Handle keyboard shortcuts (Ctrl+S to save)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+      const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0
+      const cmdOrCtrl = isMac ? e.metaKey : e.ctrlKey
+
+      if (cmdOrCtrl && e.key === 's') {
         e.preventDefault()
         handleSaveFile()
+      } else if (cmdOrCtrl && e.key === 'f') {
+        e.preventDefault()
+        find()
+      } else if (cmdOrCtrl && e.key === 'h') {
+        e.preventDefault()
+        replace()
       }
     }
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [handleSaveFile])
+  }, [handleSaveFile, find, replace])
 
   return (
     <div data-testid="editor-pane" className="flex-1 flex flex-col bg-bg-primary overflow-hidden">
@@ -162,6 +168,11 @@ function EditorPaneComponent() {
             <EditorToolbar
               onSave={handleSaveFile}
               onCompile={handleCompile}
+              onUndo={undo}
+              onRedo={redo}
+              onFormat={format}
+              canUndo={true} // Monaco keeps track internally
+              canRedo={true}
               isSaving={false} // Would come from store if async
               isCompiling={isCompiling}
               isDirty={activeTab?.isDirty}

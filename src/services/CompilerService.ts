@@ -3,7 +3,7 @@
  * Integrates with the complete translation and validation pipeline
  */
 
-import { XMLParser, type JPEModule } from '@/engine/parsers/XMLParser'
+import { XMLParser } from '@/engine/parsers/XMLParser'
 import { XMLCompiler } from '@/engine/compilers/XMLCompiler'
 import { SemanticValidator } from '@/engine/validators/SemanticValidator'
 import { DiagnosticFormatter } from '@/engine/diagnostics/DiagnosticFormatter'
@@ -250,7 +250,7 @@ export class CompilerService {
    * Compile JPE back to original XML format
    */
   static async compileFromJPE(
-    jpeModule: JPEModule | string,
+    jpeContent: string,
     targetFormat: string = 'xml'
   ): Promise<{
     success: boolean
@@ -275,33 +275,39 @@ export class CompilerService {
         }
       }
 
-      // Parse JPE module if it's a string
-      let module: JPEModule
-      if (typeof jpeModule === 'string') {
-        try {
-          module = JSON.parse(jpeModule)
-        } catch {
-          return {
-            success: false,
-            errors: [
-              {
-                id: 'compile-002',
-                fileId: '',
-                line: 0,
-                column: 0,
-                severity: 'error',
-                message: 'Invalid JPE module format',
-                code: 'COMPILE002',
-              },
-            ],
-          }
+      // 1. Tokenize
+      const tokens = tokenize(jpeContent)
+      
+      // 2. Parse
+      const ast = parse(tokens)
+      
+      // 3. Translate to XML AST
+      const xmlElement = jpeToXml(ast)
+      if (!xmlElement) {
+        return {
+          success: false,
+          errors: [
+            {
+              id: 'compile-002',
+              fileId: '',
+              line: 0,
+              column: 0,
+              severity: 'error',
+              message: 'Failed to translate JPE to XML',
+              code: 'COMPILE002',
+            },
+          ],
         }
-      } else {
-        module = jpeModule
       }
 
-      // Compile to XML
-      return XMLCompiler.compileToXML(module, true)
+      // 4. Compile XML AST to string
+      const output = XMLCompiler.elementToXMLString(xmlElement, true, 0)
+
+      return {
+        success: true,
+        output,
+        errors: [],
+      }
     } catch (error) {
       console.error('Failed to compile from JPE', error)
       return {
@@ -379,23 +385,31 @@ export class CompilerService {
     errors: Diagnostic[]
   }> {
     try {
-      const validation = await this.validateFile(file)
-
-      if (!validation.valid) {
+      if (file.type === 'xml') {
+        const jpe = await this.translateToJPE(file)
         return {
-          success: false,
-          output: null,
-          errors: validation.diagnostics,
+          success: !!jpe,
+          output: jpe,
+          errors: [],
         }
+      } else if (file.type === 'jpe') {
+        return await this.compileFromJPE(file.content, 'xml')
       }
 
-      // Parse and translate
-      const jpe = await this.translateToJPE(file)
-
       return {
-        success: true,
-        output: jpe,
-        errors: [],
+        success: false,
+        output: null,
+        errors: [
+          {
+            id: 'compile-unk',
+            fileId: file.id,
+            line: 0,
+            column: 0,
+            severity: 'error',
+            message: `Unsupported file type for compilation: ${file.type}`,
+            code: 'COMPILE_UNK',
+          },
+        ],
       }
     } catch (error) {
       console.error('Failed to compile file', error)

@@ -9,6 +9,7 @@ import { useUIStore } from '@/stores/useUIStore'
 import { useDiagnosticStore } from '@/stores/useDiagnosticStore'
 import { useProjectStore } from '@/stores/useProjectStore'
 import { useEditorStore } from '@/stores/useEditorStore'
+import { useAutoSave } from '@/hooks/useAutoSave'
 
 /**
  * EditorLayout - Main three-pane editor layout with navigation
@@ -28,17 +29,37 @@ interface EditorLayoutProps {
   onNavigate?: (view: string) => void
 }
 
+import { VirtualKeyboard } from '@/components/input/VirtualKeyboard'
+import { InputMethodSelector } from '@/components/input/InputMethodSelector'
+import { TextInputHandler } from '@/services/input/TextInputHandler'
+
 export default function EditorLayout({ onNavigate }: EditorLayoutProps = {}) {
   const [activeNav, setActiveNav] = useState('studio')
+  const [inputMethod, setInputMethod] = useState<'physical' | 'virtual'>('physical')
+  const [showKeyboard, setShowKeyboard] = useState(false)
   const { showDiagnostics } = useUIStore()
   const { diagnostics } = useDiagnosticStore()
   const { currentProject } = useProjectStore()
   const { closeAllTabs } = useEditorStore()
   const { clearDiagnostics } = useDiagnosticStore()
 
+  // Initialize auto-save logic
+  useAutoSave()
+
+  const textInputHandler = TextInputHandler.getInstance()
+
   const handleNavigate = (item: string) => {
     setActiveNav(item)
     onNavigate?.(item)
+  }
+
+  const handleVirtualInput = (text: string) => {
+    if (text === '\b') {
+      // Handle backspace via trigger
+      // Note: We'd need to expose this more cleanly
+    } else {
+      textInputHandler.insertText(text)
+    }
   }
 
   // Sync state when project changes
@@ -54,17 +75,44 @@ export default function EditorLayout({ onNavigate }: EditorLayoutProps = {}) {
       <AppNavigation activeItem={activeNav} onNavigate={handleNavigate} />
 
       {/* Main Editor Area */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden relative">
         {/* Title Bar */}
-        <TitleBar />
+        <div className="flex justify-between items-center bg-bg-secondary pr-4">
+          <TitleBar />
+          <div className="flex items-center gap-4">
+            <InputMethodSelector 
+              currentMethod={inputMethod} 
+              onMethodChange={(method) => {
+                setInputMethod(method)
+                if (method === 'virtual') setShowKeyboard(true)
+                else setShowKeyboard(false)
+              }}
+            />
+            {inputMethod === 'virtual' && (
+              <button 
+                onClick={() => setShowKeyboard(!showKeyboard)}
+                className={`text-xs px-2 py-1 rounded transition-colors ${
+                  showKeyboard ? 'bg-accent-primary text-text-primary' : 'bg-bg-tertiary text-text-secondary'
+                }`}
+              >
+                Keyboard
+              </button>
+            )}
+          </div>
+        </div>
+
+import { PredictionOverlay } from '@/components/editor/PredictionOverlay'
 
         {/* Main Content Area: Three-Pane Layout */}
-        <div data-testid="editor-three-pane" className="flex-1 flex overflow-hidden">
+        <div data-testid="editor-three-pane" className="flex-1 flex overflow-hidden relative">
           {/* Left Sidebar: Project Explorer */}
           <Sidebar />
 
           {/* Center: Editor Pane */}
-          <EditorPane />
+          <div className="flex-1 relative overflow-hidden">
+            <EditorPane />
+            <PredictionOverlay />
+          </div>
 
           {/* Right Panel: Diagnostics/Preview */}
           <RightPanel />
@@ -85,6 +133,13 @@ export default function EditorLayout({ onNavigate }: EditorLayoutProps = {}) {
             />
           </div>
         )}
+
+        {/* Virtual Keyboard Overlay */}
+        <VirtualKeyboard 
+          visible={showKeyboard && inputMethod === 'virtual'}
+          onInput={handleVirtualInput}
+          onClose={() => setShowKeyboard(false)}
+        />
       </div>
     </div>
   )

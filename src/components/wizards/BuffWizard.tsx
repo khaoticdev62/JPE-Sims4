@@ -3,6 +3,7 @@ import { Dialog } from '@radix-ui/react-dialog'
 import WizardStep from './WizardStep'
 import WizardNavigation from './WizardNavigation'
 import { ProjectService } from '@/services/ProjectService'
+import { useProjectStore } from '@/stores/useProjectStore'
 
 export interface BuffFormData {
   name: string
@@ -43,11 +44,17 @@ export default function BuffWizard({
   const handleFinish = async () => {
     try {
       setIsLoading(true)
+
+      const { addFile, currentProject } = useProjectStore.getState()
+      if (!currentProject) throw new Error('No active project')
+
       const xml = generateBuffXML(formData)
-      const file = await ProjectService.addFileToProject(
-        `buff_${formData.name}.xml`,
-        xml
-      )
+      const fileName = `buff_${formData.name}.xml`
+      const filePath = `${currentProject.rootPath}/${fileName}`
+
+      const file = ProjectService.createFile(filePath, xml, currentProject.id)
+      
+      addFile(file)
       onComplete?.(file)
       onClose()
     } catch (error) {

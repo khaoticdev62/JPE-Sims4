@@ -78,21 +78,29 @@ class CollaborationServer:
     def __init__(self, host: str = "localhost", port: int = 8765):
         self.host = host
         self.port = port
-        self.connected_clients: Set[websockets.WebSocketServerProtocol] = set()
+        # Map websocket connection to its current project and user
+        self.client_info: Dict[websockets.WebSocketServerProtocol, Dict[str, str]] = {}
+        # Map project_id to set of websocket connections
+        self.project_clients: Dict[str, Set[websockets.WebSocketServerProtocol]] = {}
         self.shared_projects: Dict[str, SharedProject] = {}
         self.document_locks: Dict[str, asyncio.Lock] = {}
         self.sentinel_logger = SentinelExceptionLogger()
     
     async def register_client(self, websocket: websockets.WebSocketServerProtocol):
         """Register a new client WebSocket connection."""
-        self.connected_clients.add(websocket)
+        self.client_info[websocket] = {}
         try:
             async for message in websocket:
                 await self.handle_message(websocket, message)
         except websockets.exceptions.ConnectionClosed:
             pass
         finally:
-            self.connected_clients.remove(websocket)
+            # Clean up on disconnect
+            if websocket in self.client_info:
+                info = self.client_info.pop(websocket)
+                project_id = info.get("project_id")
+                if project_id and project_id in self.project_clients:
+                    self.project_clients[project_id].discard(websocket)
     
     async def handle_message(self, websocket: websockets.WebSocketServerProtocol, message: str):
         """Handle incoming messages from clients."""
@@ -121,7 +129,7 @@ class CollaborationServer:
         except Exception as e:
             self.sentinel_logger.log_exception(
                 e,
-                context_info={"message": message}
+                context={"message": message}
             )
             await self.send_error(websocket, f"Server error: {str(e)}")
     
@@ -143,13 +151,20 @@ class CollaborationServer:
             
             project = self.shared_projects[project_id]
             
+            # Register client mapping
+            self.client_info[websocket] = {"project_id": project_id, "user_id": user_id}
+            if project_id not in self.project_clients:
+                self.project_clients[project_id] = set()
+            self.project_clients[project_id].add(websocket)
+            
             # Add collaborator
             collaborator = Collaborator(
                 user_id=user_id,
                 username=username,
                 role=role,
                 join_time=datetime.now(),
-                last_activity=datetime.now()
+                last_activity=datetime.now(),
+                cursor_positions={}
             )
             project.collaborators[user_id] = collaborator
             
@@ -161,7 +176,8 @@ class CollaborationServer:
                     "user_id": user_id,
                     "username": username,
                     "role": role.value
-                }
+                },
+                exclude_websocket=websocket
             )
             
             # Send current project state to the new client
@@ -182,9 +198,30 @@ class CollaborationServer:
         except Exception as e:
             self.sentinel_logger.log_exception(
                 e,
-                context_info={"data": data}
+                context={"data": data}
             )
             await self.send_error(websocket, f"Error joining project: {str(e)}")
+
+    async def handle_leave_project(self, websocket: websockets.WebSocketServerProtocol, data: Dict[str, Any]):
+        """Handle a client leaving a project."""
+        try:
+            project_id = data.get("project_id")
+            user_id = data.get("user_id")
+            
+            if project_id and project_id in self.project_clients:
+                self.project_clients[project_id].discard(websocket)
+                if websocket in self.client_info:
+                    self.client_info[websocket] = {}
+                    
+                await self.broadcast_to_project(
+                    project_id,
+                    {
+                        "type": "collaborator_left",
+                        "user_id": user_id
+                    }
+                )
+        except Exception as e:
+            self.sentinel_logger.log_exception(e)
     
     async def handle_document_change(self, websocket: websockets.WebSocketServerProtocol, data: Dict[str, Any]):
         """Handle document change operations."""
@@ -241,13 +278,14 @@ class CollaborationServer:
                         "content": content,
                         "length": length
                     }
-                }
+                },
+                exclude_websocket=websocket
             )
         
         except Exception as e:
             self.sentinel_logger.log_exception(
                 e,
-                context_info={"data": data}
+                context={"data": data}
             )
             await self.send_error(websocket, f"Error processing document change: {str(e)}")
     
@@ -274,32 +312,32 @@ class CollaborationServer:
                             "file_path": file_path,
                             "position": position
                         },
-                        exclude_user_id=user_id
+                        exclude_websocket=websocket
                     )
         
         except Exception as e:
             self.sentinel_logger.log_exception(
                 e,
-                context_info={"data": data}
+                context={"data": data}
             )
     
     async def broadcast_to_project(self, project_id: str, message: Dict[str, Any], 
-                                  exclude_user_id: Optional[str] = None):
+                                  exclude_websocket: Optional[websockets.WebSocketServerProtocol] = None):
         """Broadcast a message to all clients in a project."""
-        # This is a simplified version - in a real implementation, we'd need to 
-        # map client connections to projects
+        if project_id not in self.project_clients:
+            return
+            
         message_json = json.dumps(message)
-        for client in self.connected_clients:
+        clients = list(self.project_clients[project_id])
+        for client in clients:
+            if client == exclude_websocket:
+                continue
             try:
                 await client.send(message_json)
             except Exception as e:
-                # Remove disconnected clients
-                if client in self.connected_clients:
-                    self.connected_clients.remove(client)
-                self.sentinel_logger.log_exception(
-                    e,
-                    context_info={"client_host": client.remote_address}
-                )
+                self.project_clients[project_id].discard(client)
+                self.client_info.pop(client, None)
+                self.sentinel_logger.log_exception(e)
     
     async def send_error(self, websocket: websockets.WebSocketServerProtocol, error_message: str):
         """Send an error message to a client."""
@@ -322,7 +360,7 @@ class CollaborationServer:
         except Exception as e:
             self.sentinel_logger.log_exception(
                 e,
-                context_info={"host": self.host, "port": self.port}
+                context={"host": self.host, "port": self.port}
             )
             raise
 
@@ -354,7 +392,7 @@ class CollaborationClient:
         except Exception as e:
             self.sentinel_logger.log_exception(
                 e,
-                context_info={"server_url": self.server_url}
+                context={"server_url": self.server_url}
             )
             return False
     
@@ -374,14 +412,18 @@ class CollaborationClient:
         except Exception as e:
             self.sentinel_logger.log_exception(
                 e,
-                context_info={"connection": str(self.websocket)}
+                context={"connection": str(self.websocket)}
             )
     
     async def handle_server_message(self, data: Dict[str, Any]):
         """Handle incoming messages from the server."""
         msg_type = data.get("type")
         
-        if msg_type == "collaborator_joined":
+        if msg_type == "project_state":
+            # Update local list of collaborators from server state
+            print(f"Joined project {data.get('project_id')}")
+            # Further logic to sync UI state
+        elif msg_type == "collaborator_joined":
             if self.on_collaborator_change:
                 self.on_collaborator_change(
                     "joined", 

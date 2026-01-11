@@ -1,0 +1,10 @@
+[package]
+name = "jpe_ir"
+version = "0.1.0"
+edition = "2021"
+description = "Intermediate representation types for JPE Sims 4 Mod Translation Suite"
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+jpe_diag = { path = "../jpe_diag" }

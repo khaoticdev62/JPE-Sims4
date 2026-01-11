@@ -8,8 +8,10 @@ interface UIState {
   showDiagnostics: boolean
   fontSize: number
   showLineNumbers: boolean
+  focusedPane: 'sidebar' | 'editor' | 'right-panel' | 'diagnostics' | 'app-nav'
 
   // Actions
+  setFocusedPane: (pane: 'sidebar' | 'editor' | 'right-panel' | 'diagnostics' | 'app-nav') => void
   setTheme: (theme: 'dark' | 'light') => void
   toggleSidebar: () => void
   toggleRightPanel: () => void
@@ -28,6 +30,9 @@ export const useUIStore = create<UIState>()(
         showDiagnostics: true,
         fontSize: 13,
         showLineNumbers: true,
+        focusedPane: 'editor',
+
+        setFocusedPane: (pane) => set({ focusedPane: pane }),
 
         setTheme: (theme) => {
           set({ theme })

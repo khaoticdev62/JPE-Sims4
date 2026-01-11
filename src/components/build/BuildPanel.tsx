@@ -20,19 +20,21 @@ export default function BuildPanel() {
   } = useBuildStore()
 
   const { openTab } = useEditorStore()
-  const [buildStartTime] = useState(Date.now())
   const [elapsedTime, setElapsedTime] = useState(0)
 
   // Update elapsed time during build
   useEffect(() => {
     if (buildStatus !== 'running') return
 
+    const startTime = Date.now()
+    // Initial reset handled by unmount or state init
+
     const interval = setInterval(() => {
-      setElapsedTime(Date.now() - buildStartTime)
+      setElapsedTime(Date.now() - startTime)
     }, 100)
 
     return () => clearInterval(interval)
-  }, [buildStatus, buildStartTime])
+  }, [buildStatus])
 
   // Handle navigation to error in editor
   const handleNavigateToError = (fileId: string, line: number) => {

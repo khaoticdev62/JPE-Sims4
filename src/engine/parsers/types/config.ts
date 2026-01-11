@@ -154,7 +154,7 @@ export function parseYAML(content: string): any {
   const lines = content.split('\n')
   const result: any = {}
   let currentObj = result
-  let stack: any[] = [result]
+  const stack: any[] = [result]
   let currentIndent = 0
 
   for (let i = 0; i < lines.length; i++) {

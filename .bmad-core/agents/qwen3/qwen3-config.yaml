@@ -1,0 +1,1 @@
+model_type: Qwen3\nfine_tuning_params:\n  learning_rate: 0.0001\n  epochs: 3

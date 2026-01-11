@@ -11,10 +11,13 @@
  */
 
 import { useState, useCallback } from 'react'
-import MonacoEditor from './MonacoEditor'
+import MonacoEditor, { getEditorInstance } from './MonacoEditor'
 import EditorToolbar from './EditorToolbar'
 import SearchReplace from './SearchReplace'
 import DiagnosticsPanel from './DiagnosticsPanel'
+import { DiffPreviewModal } from '../modals/DiffPreviewModal'
+import { useCodeFix } from '@/hooks/useCodeFix'
+import { t } from '@/constants/locales'
 
 interface EditorDiagnostic {
   line: number
@@ -59,6 +62,8 @@ export default function IntegratedEditor({
   const [isSaving, setIsSaving] = useState(false)
   const [isCompiling, setIsCompiling] = useState(false)
 
+  const { isFixing, diffData, setDiffData, requestFix, applyFix } = useCodeFix()
+
   // Handle save
   const handleSave = useCallback(async () => {
     if (onSave) {
@@ -78,7 +83,7 @@ export default function IntegratedEditor({
       try {
         const result = await onCompile()
         if (!result.success) {
-          console.error('Compilation failed:', result.error)
+          console.error(t('editor.compilation_failed'), result.error)
         }
       } finally {
         setIsCompiling(false)
@@ -214,11 +219,32 @@ export default function IntegratedEditor({
             diagnostics={diagnostics}
             onSelectDiagnostic={(diag) => {
               // Navigate to line in editor
-              console.log('Navigate to diagnostic:', diag)
+              const editor = getEditorInstance('current')
+              if (editor) {
+                editor.revealLineInCenter(diag.line)
+                editor.setPosition({ lineNumber: diag.line, column: 1 })
+                editor.focus()
+              }
             }}
+            onFix={(diag) => requestFix(diag.message, diag.line)}
+            isFixing={isFixing}
             isOpen={true}
           />
         </div>
+      )}
+
+      {/* Diff Preview Modal */}
+      {diffData && (
+        <DiffPreviewModal
+          isOpen={!!diffData}
+          onClose={() => setDiffData(null)}
+          onApply={applyFix}
+          originalCode={diffData.original}
+          modifiedCode={diffData.modified}
+          title={t('editor.ai_suggested_fix')}
+          description={diffData.explanation}
+          fileName={diffData.fileName}
+        />
       )}
     </div>
   )

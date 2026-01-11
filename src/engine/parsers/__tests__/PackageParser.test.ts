@@ -15,7 +15,7 @@ import type { PackageData, PackageResource } from '../types/package'
  */
 function createPackageBuffer(resources: Partial<PackageResource>[] = []): ArrayBuffer {
   // Estimate size: header (64 bytes) + index (24 bytes per resource) + resource data
-  let dataOffset = 64 + resources.length * 24
+  const dataOffset = 64 + resources.length * 24
 
   // Create buffer
   const totalSize = dataOffset + resources.reduce((sum, r) => sum + (r.size || 100), 0)

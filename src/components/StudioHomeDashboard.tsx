@@ -45,7 +45,12 @@ interface StudioHomeDashboardProps {
 export function StudioHomeDashboard({ onNavigate }: StudioHomeDashboardProps = {}) {
   const [activeNav, setActiveNav] = useState("home");
   const [userName] = useState("User");
-  const [greeting, setGreeting] = useState("Good Evening");
+  const [greeting] = useState(() => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good Morning";
+    if (hour < 18) return "Good Afternoon";
+    return "Good Evening";
+  });
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
@@ -107,18 +112,6 @@ export function StudioHomeDashboard({ onNavigate }: StudioHomeDashboardProps = {
   const handleNewProjectClick = () => {
     handleNavigate("projects");
   };
-
-  // Set greeting based on time of day
-  useEffect(() => {
-    const hour = new Date().getHours();
-    if (hour < 12) {
-      setGreeting("Good Morning");
-    } else if (hour < 18) {
-      setGreeting("Good Afternoon");
-    } else {
-      setGreeting("Good Evening");
-    }
-  }, []);
 
   // Handle scroll detection
   const checkScroll = () => {
@@ -207,7 +200,7 @@ export function StudioHomeDashboard({ onNavigate }: StudioHomeDashboardProps = {
           {/* Greeting Section */}
           <div className="space-y-2">
             <h1 className="text-text-primary">
-              Welcome back, {userName}
+              {greeting}, {userName}
             </h1>
             <p className="text-text-secondary">
               You have {projects.filter((p) => p.status === "active").length} active projects
@@ -265,7 +258,7 @@ export function StudioHomeDashboard({ onNavigate }: StudioHomeDashboardProps = {
                 }}
               >
                 {/* Show project cards if they exist */}
-                {projects.map((project, index) => (
+                {projects.map((project) => (
                   <Card
                     key={project.id}
                     focusable

@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CC Manager Settings",
+  "type": "object",
+  "properties": {
+    "scan_paths": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Directories to scan for CC/Mods"
+    },
+    "ignored_patterns": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "File patterns to ignore during scanning"
+    },
+    "extract_previews": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether to extract thumbnails from .package files"
+    },
+    "preview_cache_dir": {
+      "type": "string",
+      "default": ".jpe_tmp/previews",
+      "description": "Directory to cache extracted previews"
+    },
+    "auto_index": {
+      "type": "boolean",
+      "default": true,
+      "description": "Automatically index files on startup"
+    }
+  }
+}

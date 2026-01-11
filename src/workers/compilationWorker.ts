@@ -53,8 +53,8 @@ function compileContent(
       // XML to JPE conversion simulation
       const lines = content.split('\n')
       const jpeLines: string[] = []
-      let inTag = false
-      let currentTag = ''
+      const inTag = false
+      const currentTag = ''
 
       lines.forEach((line) => {
         const trimmed = line.trim()

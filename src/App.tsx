@@ -5,13 +5,33 @@ import EditorLayout from "@/components/layout/EditorLayout";
 import { ProjectsPage } from "@/components/ProjectsPage";
 import { SettingsPage } from "@/components/SettingsPage";
 
+import { ControllerManager } from '@/components/controller/ControllerManager'
+
 function AppContent({ activeView, setActiveView }: { activeView: string; setActiveView: (view: string) => void }) {
   return (
     <div data-testid="app-root">
-      {activeView === 'home' && <StudioHomeDashboard onNavigate={setActiveView} />}
-      {activeView === 'studio' && <EditorLayout onNavigate={setActiveView} />}
-      {activeView === 'projects' && <ProjectsPage onNavigate={setActiveView} />}
-      {activeView === 'settings' && <SettingsPage onNavigate={setActiveView} />}
+      <ControllerManager>
+        {activeView === 'home' && (
+          <ErrorBoundary>
+            <StudioHomeDashboard onNavigate={setActiveView} />
+          </ErrorBoundary>
+        )}
+        {activeView === 'studio' && (
+          <ErrorBoundary>
+            <EditorLayout onNavigate={setActiveView} />
+          </ErrorBoundary>
+        )}
+        {activeView === 'projects' && (
+          <ErrorBoundary>
+            <ProjectsPage onNavigate={setActiveView} />
+          </ErrorBoundary>
+        )}
+        {activeView === 'settings' && (
+          <ErrorBoundary>
+            <SettingsPage onNavigate={setActiveView} />
+          </ErrorBoundary>
+        )}
+      </ControllerManager>
     </div>
   )
 }

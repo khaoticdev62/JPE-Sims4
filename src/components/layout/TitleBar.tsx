@@ -23,10 +23,10 @@ function TitleBarComponent() {
       setCompileMessage(null)
 
       // Compile the current project
-      const result = await CompilerService.compileProject(currentProject)
+      const result = await CompilerService.compileProject(currentProject.files)
 
       if (result.success) {
-        setCompileMessage(`✓ Compiled successfully (${result.filesProcessed} files)`)
+        setCompileMessage(`✓ Compiled successfully (${result.results.length} files)`)
 
         // Log activity
         addActivity({
@@ -38,7 +38,8 @@ function TitleBarComponent() {
 
         setTimeout(() => setCompileMessage(null), 3000)
       } else {
-        setCompileMessage(`✗ Compilation failed: ${result.error}`)
+        const errorCount = result.results.filter(r => !r.success).length
+        setCompileMessage(`✗ Compilation failed: ${errorCount} files had errors`)
         setTimeout(() => setCompileMessage(null), 4000)
       }
     } catch (error) {

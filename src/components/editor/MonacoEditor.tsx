@@ -12,7 +12,7 @@
  * Perfect for a professional mod translator application
  */
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useId } from 'react'
 import tokens from '@/design-system/tokens.json'
 import type { Editor, IMarker, IDisposable } from 'monaco-editor'
 
@@ -32,7 +32,7 @@ interface MonacoEditorProps {
 }
 
 let monacoInstance: typeof import('monaco-editor') | null = null
-let editorInstances: Map<string, Editor> = new Map()
+const editorInstances: Map<string, Editor> = new Map()
 
 /**
  * Initialize Monaco Editor library
@@ -132,12 +132,13 @@ export default function MonacoEditor({
   const containerRef = useRef<HTMLDivElement>(null)
   const editorRef = useRef<Editor | null>(null)
   const disposablesRef = useRef<IDisposable[]>([])
-  const instanceIdRef = useRef<string>(Math.random().toString(36).slice(2))
+  const instanceId = useId()
   const [isReady, setIsReady] = useState(false)
 
   // Initialize Monaco Editor
   useEffect(() => {
     if (!containerRef.current) return
+    const currentInstanceId = instanceId
 
     const setupEditor = async () => {
       try {
@@ -178,7 +179,9 @@ export default function MonacoEditor({
           disposablesRef.current.push(changeDisposable)
 
           // Store instance for reference using unique ID
-          editorInstances.set(instanceIdRef.current, editor)
+          editorInstances.set(currentInstanceId, editor)
+          // Also set as current editor
+          editorInstances.set('current', editor)
         }
 
         setIsReady(true)
@@ -211,9 +214,9 @@ export default function MonacoEditor({
       }
 
       // Remove from instances map
-      editorInstances.delete(instanceIdRef.current)
+      editorInstances.delete(currentInstanceId)
     }
-  }, [])
+  }, [instanceId])
 
   // Update editor content when value changes externally
   useEffect(() => {

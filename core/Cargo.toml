@@ -1,0 +1,35 @@
+[workspace]
+members = [
+    "crates/jpe_diag",
+    "crates/jpe_ir",
+    "crates/jpe_xml",
+    "crates/jpe_lang",
+    "crates/jpe_engine",
+    "crates/jpe_cli",
+]
+resolver = "2"
+
+[workspace.package]
+edition = "2021"
+authors = ["JPE Sims 4 Mod Translation Suite"]
+license = "MIT"
+rust-version = "1.70"
+
+[workspace.dependencies]
+# External dependencies used across crates
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+thiserror = "1.0"
+anyhow = "1.0"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+quick-xml = { version = "0.31", features = ["serialize"] }
+pest = "2.0"
+pest_derive = "2.0"
+uuid = { version = "1.0", features = ["v4", "serde"] }
+clap = { version = "4.0", features = ["derive"] }
+
+[profile.release]
+lto = true
+codegen-units = 1
+panic = "abort"

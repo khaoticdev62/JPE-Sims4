@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import xml.etree.ElementTree as ET
+import lxml.etree as ET
 from pathlib import Path
 from typing import List
 
@@ -253,9 +253,14 @@ class XmlGenerator:
                     language=string.locale)
                 string_elem.text = string.text
 
-            # Write the XML to file with proper XML declaration
+            # Write the XML to file with proper XML declaration and pretty printing
             tree = ET.ElementTree(root)
-            tree.write(file_path, encoding="utf-8", xml_declaration=True)
+            tree.write(
+                str(file_path), 
+                encoding="utf-8", 
+                xml_declaration=True, 
+                pretty_print=True
+            )
 
         except Exception as e:
             errors.append(EngineError(
@@ -326,24 +331,10 @@ class XmlGenerator:
         # Create the element tree and write to file
         tree = ET.ElementTree(root)
 
-        # Custom formatting to add indentation
-        self._indent_xml(root)
-
-        # Write with UTF-8 encoding and XML declaration
-        tree.write(file_path, encoding="utf-8", xml_declaration=True)
-
-    def _indent_xml(self, elem: ET.Element, level: int = 0) -> None:
-        """Add indentation to XML elements for better readability."""
-        i = "\n" + level * "  "
-        if len(elem):
-            if not elem.text or not elem.text.strip():
-                elem.text = i + "  "
-            if not elem.tail or not elem.tail.strip():
-                elem.tail = i
-            for child in elem:
-                self._indent_xml(child, level + 1)
-            if not elem.tail or not elem.tail.strip():
-                elem.tail = i
-        else:
-            if level and (not elem.tail or not elem.tail.strip()):
-                elem.tail = i
+        # Write with UTF-8 encoding, XML declaration and pretty printing
+        tree.write(
+            str(file_path), 
+            encoding="utf-8", 
+            xml_declaration=True, 
+            pretty_print=True
+        )

@@ -3,6 +3,7 @@ import { Dialog } from '@radix-ui/react-dialog'
 import WizardStep from './WizardStep'
 import WizardNavigation from './WizardNavigation'
 import { ProjectService } from '@/services/ProjectService'
+import { useProjectStore } from '@/stores/useProjectStore'
 
 export interface TraitFormData {
   name: string
@@ -47,11 +48,16 @@ export default function TraitWizard({
   const handleFinish = async () => {
     try {
       setIsLoading(true)
+      const { addFile, currentProject } = useProjectStore.getState()
+      if (!currentProject) throw new Error('No active project')
+
       const xml = generateTraitXML(formData)
-      const file = await ProjectService.addFileToProject(
-        `trait_${formData.name}.xml`,
-        xml
-      )
+      const fileName = `trait_${formData.name}.xml`
+      const filePath = `${currentProject.rootPath}/${fileName}`
+
+      const file = ProjectService.createFile(filePath, xml, currentProject.id)
+      
+      addFile(file)
       onComplete?.(file)
       onClose()
     } catch (error) {

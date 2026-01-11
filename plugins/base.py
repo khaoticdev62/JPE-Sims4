@@ -3,8 +3,8 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Any, Optional
 
-from ..engine.ir import ProjectIR
-from ..diagnostics.errors import EngineError
+from engine.ir import ProjectIR
+from diagnostics.errors import EngineError
 
 
 class PluginContext:

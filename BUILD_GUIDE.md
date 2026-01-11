@@ -64,7 +64,7 @@ npm run dev
 ```
 
 **What this does**:
-- Starts Vite dev server on http://localhost:5173
+- Starts Vite dev server on http://localhost:3000
 - Watches for file changes
 - Rebuilds on modification
 

@@ -4,7 +4,7 @@ import { EditorHelpers } from '../helpers/editorHelpers'
 
 test.describe('E2E: Create Project Flow', () => {
   test.beforeEach(async ({ page }) => {
-    // Navigate to the app (baseURL is set to http://localhost:5173)
+    // Navigate to the app (baseURL is set to http://localhost:3000)
     await page.goto('/', { waitUntil: 'networkidle' })
 
     // Wait for app to load

@@ -1,0 +1,14 @@
+[package]
+name = "jpe_engine"
+version = "0.1.0"
+edition = "2021"
+description = "Orchestration engine for JPE Sims 4 Mod Translation Suite"
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+jpe_diag = { path = "../jpe_diag" }
+jpe_ir = { path = "../jpe_ir" }
+jpe_xml = { path = "../jpe_xml" }
+jpe_lang = { path = "../jpe_lang" }
+tracing = { workspace = true }

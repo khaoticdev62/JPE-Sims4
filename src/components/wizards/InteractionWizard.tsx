@@ -3,6 +3,7 @@ import { Dialog } from '@radix-ui/react-dialog'
 import WizardStep from './WizardStep'
 import WizardNavigation from './WizardNavigation'
 import { ProjectService } from '@/services/ProjectService'
+import { useProjectStore } from '@/stores/useProjectStore'
 
 export interface InteractionFormData {
   name: string
@@ -68,15 +69,19 @@ export default function InteractionWizard({
     try {
       setIsLoading(true)
 
+      const { addFile, currentProject } = useProjectStore.getState()
+      if (!currentProject) throw new Error('No active project')
+
       // Generate interaction XML
       const xml = generateInteractionXML(formData)
 
       // Create file
-      const file = await ProjectService.addFileToProject(
-        `interaction_${formData.name}.xml`,
-        xml
-      )
+      const fileName = `interaction_${formData.name}.xml`
+      const filePath = `${currentProject.rootPath}/${fileName}`
 
+      const file = ProjectService.createFile(filePath, xml, currentProject.id)
+      
+      addFile(file)
       onComplete?.(file)
       onClose()
     } catch (error) {

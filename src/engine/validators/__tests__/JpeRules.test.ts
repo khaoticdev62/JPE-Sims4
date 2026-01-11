@@ -48,7 +48,7 @@ describe('JPE Validation Rules', () => {
     })
 
     it('should fail for invalid JPE syntax (missing quote)', () => {
-      const content = '[Metadata]\ntype = "Trait"'
+      const content = '[Metadata]\ntype = "Trait'
       const result = JpeSyntaxRule.check(content)
       expect(result.valid).toBe(false)
     })

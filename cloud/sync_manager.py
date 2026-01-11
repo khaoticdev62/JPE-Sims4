@@ -13,9 +13,49 @@ import hashlib
 import json
 import os
 
-from cloud.api import CloudAPI, CloudProject, CloudSyncStatus, CloudFileSyncState
+from cloud.api import CloudAPI, CloudProject, CloudSyncStatus, CloudFileSyncState, cloud_api
+from cloud.queue import SyncQueue, QueuedOperation
 from diagnostics.sentinel import SentinelExceptionLogger
+from diagnostics.logging import log_info, log_error
 from engine.ir import ProjectIR
+import uuid
+from enum import Enum
+
+
+class MergeStrategy(Enum):
+    """Strategies for resolving synchronization conflicts."""
+    LOCAL_WINS = "local_wins"
+    CLOUD_WINS = "cloud_wins"
+    MANUAL = "manual"
+    NEWER_WINS = "newer_wins"
+
+
+class ConflictResolver:
+    """Resolves conflicts between local and cloud file versions."""
+    
+    def __init__(self, default_strategy: MergeStrategy = MergeStrategy.NEWER_WINS):
+        self.default_strategy = default_strategy
+    
+    def resolve(self, filename: str, local_hash: str, cloud_hash: str, 
+                local_mtime: datetime, cloud_mtime: datetime,
+                strategy: Optional[MergeStrategy] = None) -> str:
+        """
+        Determine which version should prevail.
+        Returns "local", "cloud", or "manual_required".
+        """
+        if local_hash == cloud_hash:
+            return "synced"
+            
+        strategy = strategy or self.default_strategy
+        
+        if strategy == MergeStrategy.LOCAL_WINS:
+            return "local"
+        elif strategy == MergeStrategy.CLOUD_WINS:
+            return "cloud"
+        elif strategy == MergeStrategy.NEWER_WINS:
+            return "local" if local_mtime > cloud_mtime else "cloud"
+            
+        return "manual_required"
 
 
 @dataclass
@@ -29,6 +69,7 @@ class SyncOperation:
     completed_at: Optional[datetime] = None
     succeeded: bool = False
     error: Optional[str] = None
+    conflicts: List[str] = field(default_factory=list)
 
 
 class CloudSyncManager:
@@ -36,6 +77,8 @@ class CloudSyncManager:
     
     def __init__(self, cloud_api: CloudAPI):
         self.cloud_api = cloud_api
+        self.conflict_resolver = ConflictResolver()
+        self.sync_queue = SyncQueue(Path(".jpe_tmp/sync_queue.json"))
         self.current_operation: Optional[SyncOperation] = None
         self.operation_history: List[SyncOperation] = []
         self.sentinel_logger = SentinelExceptionLogger()
@@ -59,9 +102,35 @@ class CloudSyncManager:
             except Exception as e:
                 self.sentinel_logger.log_exception(
                     e,
-                    context_info={"callback_function": str(callback)}
+                    context={"callback_function": str(callback)}
                 )
     
+    async def process_queue(self):
+        """Process pending operations in the sync queue."""
+        pending = self.sync_queue.get_pending()
+        if not pending:
+            return
+            
+        self._update_progress(0.1, f"Processing {len(pending)} queued operations...")
+        
+        for op in list(pending):
+            try:
+                if op.operation_type == "upload" and op.content:
+                    success = await self.cloud_api.provider.upload_file(op.project_id, op.file_path, op.content)
+                    if success:
+                        self.sync_queue.remove_operation(op.id)
+                elif op.operation_type == "download":
+                    # Download handling would need a target local path
+                    # For now, we mainly queue uploads/deletes from local
+                    pass
+            except Exception as e:
+                log_error(f"Failed to process queued op {op.id}", error=str(e))
+                op.retry_count += 1
+                if op.retry_count > 5:
+                    self.sync_queue.remove_operation(op.id)
+        
+        self._update_progress(1.0, "Queue processing complete.")
+
     async def sync_project(self, local_path: Path, cloud_project_id: Optional[str] = None) -> bool:
         """Synchronize a local project with the cloud."""
         if self.is_syncing:
@@ -82,6 +151,9 @@ class CloudSyncManager:
         
         try:
             self._update_progress(0.0, "Starting synchronization...")
+            
+            # Process any pending offline operations first
+            await self.process_queue()
             
             # If no cloud project ID provided, check if project exists in cloud
             if not cloud_project_id:
@@ -116,10 +188,13 @@ class CloudSyncManager:
                 raise Exception("Could not find or create cloud project")
             
             # Get list of files to sync
-            all_files = list(local_path.rglob("*.[jpe|xml|json|txt|py|md]"))
-            jpe_files = [f for f in all_files if f.suffix.lower() in ['.jpe', '.xml', '.json', '.txt', '.py', '.md']]
+            allowed_extensions = {'.jpe', '.xml', '.json', '.txt', '.py', '.md'}
+            jpe_files = [
+                f for f in local_path.rglob("*") 
+                if f.is_file() and f.suffix.lower() in allowed_extensions
+            ]
             
-            op.files = [str(f.relative_to(local_path)) for f in jpe_files]
+            op.files = [str(f.relative_to(local_path).as_posix()) for f in jpe_files]
             total_files = len(jpe_files)
             
             if total_files == 0:
@@ -147,14 +222,42 @@ class CloudSyncManager:
                 except Exception as e:
                     self.sentinel_logger.log_exception(
                         e,
-                        context_info={"file_path": str(file_path)}
+                        context={"file_path": str(file_path)}
                     )
             
             # Get cloud file hashes
-            self._update_progress(0.5, "Fetching cloud file hashes...")
-            cloud_file_hashes = {}
-            # In a real implementation, this would call the API to get file hashes
-            # For now, we'll use the API's sync_project method which already handles this
+            self._update_progress(0.5, "Fetching cloud project state...")
+            
+            # Use CloudAPI to get the current state
+            cloud_projects = await self.cloud_api.get_user_projects()
+            target_project = next((p for p in cloud_projects if p.project_id == cloud_project_id), None)
+            
+            if not target_project:
+                raise Exception(f"Cloud project {cloud_project_id} no longer exists")
+            
+            cloud_file_hashes = target_project.file_hashes
+            
+            # Detect conflicts
+            for rel_path, local_hash in local_file_hashes.items():
+                if rel_path in cloud_file_hashes:
+                    cloud_hash = cloud_file_hashes[rel_path]
+                    if local_hash != cloud_hash:
+                        # Conflict found
+                        op.conflicts.append(rel_path)
+                        
+                        # Use resolver to decide
+                        # Note: In a real app we'd need local/cloud mtimes
+                        # For now we'll assume current time for local
+                        decision = self.conflict_resolver.resolve(
+                            filename=rel_path,
+                            local_hash=local_hash,
+                            cloud_hash=cloud_hash,
+                            local_mtime=datetime.now(),
+                            cloud_mtime=target_project.modified_at
+                        )
+                        log_info(f"Conflict resolution for {rel_path}: {decision}")
+
+            # Execute the sync via API
             success = await self.cloud_api.sync_project(local_path, cloud_project_id)
             
             op.completed_at = datetime.now()
@@ -172,7 +275,7 @@ class CloudSyncManager:
         except Exception as e:
             self.sentinel_logger.log_exception(
                 e,
-                context_info={
+                context={
                     "local_path": str(local_path),
                     "cloud_project_id": cloud_project_id
                 }
@@ -208,10 +311,13 @@ class CloudSyncManager:
             self._update_progress(0.0, "Starting project upload...")
             
             # Get all project files
-            all_files = list(local_path.rglob("*.[jpe|xml|json|txt|py|md]"))
-            project_files = [f for f in all_files if f.suffix.lower() in ['.jpe', '.xml', '.json', '.txt', '.py', '.md']]
+            allowed_extensions = {'.jpe', '.xml', '.json', '.txt', '.py', '.md'}
+            project_files = [
+                f for f in local_path.rglob("*") 
+                if f.is_file() and f.suffix.lower() in allowed_extensions
+            ]
             
-            op.files = [str(f.relative_to(local_path)) for f in project_files]
+            op.files = [str(f.relative_to(local_path).as_posix()) for f in project_files]
             
             success = await self.cloud_api.upload_project(local_path, project_name)
             
@@ -225,7 +331,7 @@ class CloudSyncManager:
         except Exception as e:
             self.sentinel_logger.log_exception(
                 e,
-                context_info={"local_path": str(local_path), "project_name": project_name}
+                context={"local_path": str(local_path), "project_name": project_name}
             )
             
             op.completed_at = datetime.now()
@@ -263,8 +369,12 @@ class CloudSyncManager:
             if success:
                 # List files in downloaded project
                 if destination_path.exists():
-                    downloaded_files = list(destination_path.rglob("*.[jpe|xml|json|txt|py|md]"))
-                    op.files = [str(f.relative_to(destination_path)) for f in downloaded_files]
+                    allowed_extensions = {'.jpe', '.xml', '.json', '.txt', '.py', '.md'}
+                    downloaded_files = [
+                        f for f in destination_path.rglob("*") 
+                        if f.is_file() and f.suffix.lower() in allowed_extensions
+                    ]
+                    op.files = [str(f.relative_to(destination_path).as_posix()) for f in downloaded_files]
             
             op.completed_at = datetime.now()
             op.succeeded = success
@@ -276,7 +386,7 @@ class CloudSyncManager:
         except Exception as e:
             self.sentinel_logger.log_exception(
                 e,
-                context_info={"cloud_project_id": cloud_project_id, "destination_path": str(destination_path)}
+                context={"cloud_project_id": cloud_project_id, "destination_path": str(destination_path)}
             )
             
             op.completed_at = datetime.now()

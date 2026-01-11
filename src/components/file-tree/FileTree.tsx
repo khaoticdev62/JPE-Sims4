@@ -32,7 +32,13 @@ export default function FileTree({
 }: FileTreeProps) {
   const { currentProject } = useProjectStore()
   const { getDiagnosticsForFile } = useDiagnosticStore()
-  const { activeFileId } = useEditorStore()
+  const { tabs, activeTabId } = useEditorStore()
+
+  // Derive active file ID from active tab
+  const activeFileId = useMemo(() => {
+    const activeTab = tabs.find((t) => t.id === activeTabId)
+    return activeTab?.fileId || null
+  }, [tabs, activeTabId])
 
   // Define file groups by type
   const fileGroups = useMemo((): FileGroup[] => {

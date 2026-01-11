@@ -135,7 +135,7 @@ describe('XMLCompiler', () => {
       const pretty = XMLCompiler.prettifyXML(xml, 4)
       const lines = pretty.split('\n')
       // Check for 4-space indentation
-      expect(lines.some((line) => line.match(/^    </))
+      expect(lines.some((line) => line.match(/^ {4}</))
       ).toBe(true)
     })
 

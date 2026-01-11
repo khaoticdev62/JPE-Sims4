@@ -31,7 +31,7 @@ For development with hot reload:
 npm run dev
 ```
 
-This starts the Vite development server on `http://localhost:5173`.
+This starts the Vite development server on `http://localhost:3000`.
 
 ### 3. Run Electron in Development
 

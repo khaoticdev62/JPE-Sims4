@@ -28,7 +28,7 @@ export default defineConfig({
 
   // Browser configuration
   use: {
-    baseURL: 'http://localhost:3006', // Dev server uses dynamic port due to port conflicts
+    baseURL: 'http://localhost:3000', // Dev server port matches vite.config.ts
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
   },

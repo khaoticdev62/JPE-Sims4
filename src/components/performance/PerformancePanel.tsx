@@ -22,18 +22,23 @@ interface PerformanceWarning {
 }
 
 export default function PerformancePanel() {
-  const [metrics] = useState<PerformanceMetric[]>([
-    { timestamp: new Date(Date.now() - 10 * 60000), validationTime: 45, parseTime: 12, compileTime: 28 },
-    { timestamp: new Date(Date.now() - 9 * 60000), validationTime: 52, parseTime: 14, compileTime: 31 },
-    { timestamp: new Date(Date.now() - 8 * 60000), validationTime: 48, parseTime: 11, compileTime: 29 },
-    { timestamp: new Date(Date.now() - 7 * 60000), validationTime: 156, parseTime: 45, compileTime: 78 },
-    { timestamp: new Date(Date.now() - 6 * 60000), validationTime: 51, parseTime: 13, compileTime: 30 },
-    { timestamp: new Date(Date.now() - 5 * 60000), validationTime: 49, parseTime: 12, compileTime: 28 },
-    { timestamp: new Date(Date.now() - 4 * 60000), validationTime: 47, parseTime: 11, compileTime: 27 },
-    { timestamp: new Date(Date.now() - 3 * 60000), validationTime: 50, parseTime: 13, compileTime: 29 },
-    { timestamp: new Date(Date.now() - 2 * 60000), validationTime: 46, parseTime: 12, compileTime: 28 },
-    { timestamp: new Date(Date.now() - 60000), validationTime: 48, parseTime: 11, compileTime: 27 }
-  ])
+  const [metrics, setMetrics] = useState<PerformanceMetric[]>([])
+
+  useEffect(() => {
+    const now = Date.now()
+    setMetrics([
+      { timestamp: new Date(now - 10 * 60000), validationTime: 45, parseTime: 12, compileTime: 28 },
+      { timestamp: new Date(now - 9 * 60000), validationTime: 52, parseTime: 14, compileTime: 31 },
+      { timestamp: new Date(now - 8 * 60000), validationTime: 48, parseTime: 11, compileTime: 29 },
+      { timestamp: new Date(now - 7 * 60000), validationTime: 156, parseTime: 45, compileTime: 78 },
+      { timestamp: new Date(now - 6 * 60000), validationTime: 51, parseTime: 13, compileTime: 30 },
+      { timestamp: new Date(now - 5 * 60000), validationTime: 49, parseTime: 12, compileTime: 28 },
+      { timestamp: new Date(now - 4 * 60000), validationTime: 47, parseTime: 11, compileTime: 27 },
+      { timestamp: new Date(now - 3 * 60000), validationTime: 50, parseTime: 13, compileTime: 29 },
+      { timestamp: new Date(now - 2 * 60000), validationTime: 46, parseTime: 12, compileTime: 28 },
+      { timestamp: new Date(now - 60000), validationTime: 48, parseTime: 11, compileTime: 27 }
+    ])
+  }, [])
 
   const performanceWarnings = useMemo((): PerformanceWarning[] => {
     const warnings: PerformanceWarning[] = []

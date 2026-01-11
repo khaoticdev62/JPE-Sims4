@@ -22,6 +22,8 @@ interface Diagnostic {
 interface DiagnosticsPanelProps {
   diagnostics: Diagnostic[]
   onSelectDiagnostic?: (diagnostic: Diagnostic) => void
+  onFix?: (diagnostic: Diagnostic) => void
+  isFixing?: boolean
   className?: string
   isOpen?: boolean
 }
@@ -29,6 +31,8 @@ interface DiagnosticsPanelProps {
 export default function DiagnosticsPanel({
   diagnostics,
   onSelectDiagnostic,
+  onFix,
+  isFixing = false,
   className = '',
   isOpen = true,
 }: DiagnosticsPanelProps) {
@@ -141,9 +145,23 @@ export default function DiagnosticsPanel({
                     </div>
                   </div>
 
-                  {/* Line number */}
-                  <div className="text-xs text-text-secondary ml-7">
-                    Line {diagnostic.line}
+                  {/* Line number and Actions */}
+                  <div className="flex items-center justify-between ml-7 mt-2">
+                    <div className="text-xs text-text-secondary">
+                      Line {diagnostic.line}
+                    </div>
+                    {onFix && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onFix(diagnostic);
+                        }}
+                        disabled={isFixing}
+                        className="px-2 py-1 bg-accent-primary/20 hover:bg-accent-primary text-accent-primary hover:text-bg-primary rounded text-[10px] font-bold transition-all disabled:opacity-50"
+                      >
+                        {isFixing ? 'Generating...' : 'FIX WITH AI'}
+                      </button>
+                    )}
                   </div>
                 </div>
               )

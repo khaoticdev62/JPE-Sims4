@@ -13,6 +13,13 @@ interface CommandPaletteProps {
 export default function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
   const [search, setSearch] = useState('')
   const [selectedIndex, setSelectedIndex] = useState(0)
+  const [prevSearch, setPrevSearch] = useState('')
+  
+  if (search !== prevSearch) {
+    setPrevSearch(search)
+    setSelectedIndex(0)
+  }
+
   const inputRef = useRef<HTMLInputElement>(null)
   const { searchCommands, executeCommand, getRecentCommands } = useCommandStore()
 
@@ -37,18 +44,15 @@ export default function CommandPalette({ isOpen, onClose }: CommandPaletteProps)
   // Get flat list for keyboard navigation
   const flatResults = useMemo(() => results, [results])
 
-  // Reset selection when search changes
-  useEffect(() => {
-    setSelectedIndex(0)
-  }, [search])
-
   // Focus input when opened
   useEffect(() => {
     if (isOpen) {
       inputRef.current?.focus()
-      setSearch('')
+      if (search !== '') {
+        setSearch('')
+      }
     }
-  }, [isOpen])
+  }, [isOpen, search])
 
   // Keyboard handlers
   useEffect(() => {

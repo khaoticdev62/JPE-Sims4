@@ -1,0 +1,12 @@
+[package]
+name = "jpe_xml"
+version = "0.1.0"
+edition = "2021"
+description = "XML parsing and generation for Sims 4 tuning files"
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+quick-xml = { workspace = true }
+jpe_diag = { path = "../jpe_diag" }
+jpe_ir = { path = "../jpe_ir" }

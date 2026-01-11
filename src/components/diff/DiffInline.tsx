@@ -1,7 +1,8 @@
+import React from 'react'
+
 interface DiffChange {
   type: 'add' | 'remove' | 'equal'
   content: string
-  lineNumber?: number
 }
 
 interface DiffInlineProps {
@@ -12,60 +13,41 @@ interface DiffInlineProps {
  * Inline diff view similar to git diff output
  */
 export default function DiffInline({ changes }: DiffInlineProps) {
-  const getLinePrefix = (type: string) => {
-    switch (type) {
-      case 'add':
-        return '+ '
-      case 'remove':
-        return '- '
-      default:
-        return '  '
-    }
-  }
-
-  const getLineColor = (type: string) => {
-    switch (type) {
-      case 'add':
-        return 'text-state-success bg-state-success/10'
-      case 'remove':
-        return 'text-state-error bg-state-error/10'
-      default:
-        return 'text-text-secondary'
-    }
-  }
-
-  const getBorderColor = (type: string) => {
-    switch (type) {
-      case 'add':
-        return 'border-l-2 border-state-success'
-      case 'remove':
-        return 'border-l-2 border-state-error'
-      default:
-        return ''
-    }
-  }
-
   return (
-    <div className="p-4 overflow-auto h-full">
-      <div className="font-mono text-sm space-y-0 bg-background-tertiary rounded-lg overflow-hidden border border-border-subtle">
-        {changes.map((change, index) => (
-          <div
-            key={index}
-            className={`px-4 py-1 ${getLineColor(change.type)} ${getBorderColor(change.type)} hover:opacity-75 transition-opacity`}
-          >
-            <span className="select-none font-semibold">{getLinePrefix(change.type)}</span>
-            <code className="whitespace-pre-wrap break-words">{change.content}</code>
-          </div>
-        ))}
-      </div>
+    <div className="h-full overflow-y-auto bg-bg-primary font-mono text-xs leading-relaxed">
+      <div className="min-w-full inline-block">
+        {changes.map((change, idx) => {
+          const isAdd = change.type === 'add'
+          const isRemove = change.type === 'remove'
+          
+          const bgColor = isAdd 
+            ? 'bg-state-success/10' 
+            : isRemove 
+              ? 'bg-state-error/10' 
+              : ''
+          
+          const marker = isAdd ? '+' : isRemove ? '-' : ' '
+          const markerColor = isAdd ? 'text-state-success' : isRemove ? 'text-state-error' : 'text-text-tertiary'
 
-      {/* Legend */}
-      <div className="mt-4 px-4 py-3 bg-background-tertiary rounded-lg border border-border-subtle text-xs text-text-secondary space-y-1">
-        <div className="flex gap-2">
-          <span className="text-state-success">+ Added</span>
-          <span className="text-state-error">- Removed</span>
-          <span className="text-text-secondary">  Unchanged</span>
-        </div>
+          return (
+            <div 
+              key={idx} 
+              className={`flex hover:bg-bg-tertiary/50 transition-colors group ${bgColor}`}
+            >
+              {/* Marker Gutter */}
+              <div className={`w-8 flex-shrink-0 flex items-center justify-center select-none font-bold ${markerColor}`}>
+                {marker}
+              </div>
+              
+              {/* Content */}
+              <div className={`flex-1 px-2 py-0.5 whitespace-pre-wrap break-words ${
+                isAdd ? 'text-text-primary' : isRemove ? 'text-text-secondary line-through' : 'text-text-secondary'
+              }`}>
+                {change.content}
+              </div>
+            </div>
+          )
+        })}
       </div>
     </div>
   )

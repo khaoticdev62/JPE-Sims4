@@ -5,7 +5,6 @@
  * Supports LRU eviction, TTL expiration, and performance tracking.
  */
 
-import { createHash } from 'crypto'
 import type {
   CacheEntry,
   CacheStats,
@@ -261,9 +260,14 @@ export class ParserCache<T> {
 
   /**
    * Hash file content for change detection
+   * Uses simple djb2 hash for browser compatibility
    */
   private hashContent(content: string): FileHash {
-    return createHash('sha256').update(content).digest('hex')
+    let hash = 5381
+    for (let i = 0; i < content.length; i++) {
+      hash = (hash * 33) ^ content.charCodeAt(i)
+    }
+    return (hash >>> 0).toString(16)
   }
 
   /**

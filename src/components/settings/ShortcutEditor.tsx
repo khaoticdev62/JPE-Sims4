@@ -20,14 +20,27 @@ export default function ShortcutEditor({ shortcutId, onClose }: ShortcutEditorPr
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
 
-  if (!shortcut) return null
+  const handleSaveShortcut = useCallback((keys: string) => {
+    if (!keys) {
+      setError('Please press a key combination')
+      return
+    }
 
-  const handleStartRecording = () => {
-    setRecordedKeys([])
-    setError(null)
-    setSuccess(false)
-    setIsRecording(true)
-  }
+    const success = updateShortcut(shortcutId, keys)
+
+    if (!success) {
+      setError(`Shortcut "${keys}" is already in use`)
+      setIsRecording(false)
+      return
+    }
+
+    setSuccess(true)
+    setIsRecording(false)
+
+    setTimeout(() => {
+      onClose()
+    }, 1000)
+  }, [shortcutId, updateShortcut, onClose])
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
@@ -54,29 +67,15 @@ export default function ShortcutEditor({ shortcutId, onClose }: ShortcutEditorPr
         handleSaveShortcut(keyCombo)
       }
     },
-    [isRecording]
+    [isRecording, handleSaveShortcut]
   )
 
-  const handleSaveShortcut = (keys: string) => {
-    if (!keys) {
-      setError('Please press a key combination')
-      return
-    }
+  if (!shortcut) return null
 
-    const success = updateShortcut(shortcutId, keys)
-
-    if (!success) {
-      setError(`Shortcut "${keys}" is already in use`)
-      setIsRecording(false)
-      return
-    }
-
-    setSuccess(true)
-    setIsRecording(false)
-
-    setTimeout(() => {
-      onClose()
-    }, 1000)
+  const handleStartRecording = () => {
+    setIsRecording(true)
+    setError(null)
+    setRecordedKeys([])
   }
 
   const handleCancel = () => {

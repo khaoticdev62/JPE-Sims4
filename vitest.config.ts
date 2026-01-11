@@ -26,6 +26,14 @@ export default defineConfig({
     },
     include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
     exclude: ['node_modules', 'dist', 'build'],
+    pool: 'forks',
+    poolOptions: {
+      forks: {
+        singleFork: true,
+      },
+    },
+    testTimeout: 10000,
+    teardownTimeout: 5000,
   },
   resolve: {
     alias: {

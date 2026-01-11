@@ -17,6 +17,11 @@ This repo is already shipping beyond “M0” in several areas; use this file as
 
 **Goal:** translators can fix issues quickly and export safely.
 
+- ✅ **Phase 7: Code Diff Preview** (Implemented Dec 30, 2025)
+  - Side-by-side diff viewer for code comparison.
+  - High-fidelity preview modal for AI-suggested changes.
+  - AI-powered "Fix with AI" integration in Diagnostics Panel.
+  - One-click apply workflow with diff verification.
 - QA dashboard: view/filter diagnostics by severity; “Fix Next” navigation to the next actionable segment.
 - Validation: placeholder parity and extendable rules; blank targets don’t error.
 - Build/Export: writes to user-selected output folder/zip; never overwrites source; records `build_history[]`.

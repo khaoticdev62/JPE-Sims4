@@ -1,0 +1,21 @@
+[package]
+name = "jpe_cli"
+version = "0.1.0"
+edition = "2021"
+description = "Command-line interface for JPE Sims 4 Mod Translation Suite"
+
+[[bin]]
+name = "jpe"
+path = "src/main.rs"
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+clap = { workspace = true }
+jpe_diag = { path = "../jpe_diag" }
+jpe_ir = { path = "../jpe_ir" }
+jpe_xml = { path = "../jpe_xml" }
+jpe_lang = { path = "../jpe_lang" }
+jpe_engine = { path = "../jpe_engine" }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }

@@ -21,7 +21,7 @@ const createWindow = () => {
   })
 
   const startUrl = isDev
-    ? 'http://localhost:5173'
+    ? 'http://localhost:3000'
     : `file://${path.join(__dirname, '../dist/index.html')}`
 
   mainWindow.loadURL(startUrl)
@@ -80,8 +80,8 @@ ipcMain.handle('file:openFile', async () => {
 // IPC Handler to read file content
 ipcMain.handle('file:readFile', async (_event, filePath: string) => {
   try {
-    const content = fs.readFileSync(filePath, 'utf-8')
-    const stats = fs.statSync(filePath)
+    const content = await fs.promises.readFile(filePath, 'utf-8')
+    const stats = await fs.promises.stat(filePath)
     return {
       success: true,
       content,
@@ -99,8 +99,8 @@ ipcMain.handle('file:readFile', async (_event, filePath: string) => {
 // IPC Handler to write file content
 ipcMain.handle('file:writeFile', async (_event, filePath: string, content: string) => {
   try {
-    fs.writeFileSync(filePath, content, 'utf-8')
-    const stats = fs.statSync(filePath)
+    await fs.promises.writeFile(filePath, content, 'utf-8')
+    const stats = await fs.promises.stat(filePath)
     return {
       success: true,
       size: stats.size,
@@ -117,7 +117,7 @@ ipcMain.handle('file:writeFile', async (_event, filePath: string, content: strin
 // IPC Handler to list files in directory
 ipcMain.handle('file:listDirectory', async (_event, dirPath: string) => {
   try {
-    const files = fs.readdirSync(dirPath, { withFileTypes: true })
+    const files = await fs.promises.readdir(dirPath, { withFileTypes: true })
     return {
       success: true,
       files: files.map((file) => ({
@@ -137,14 +137,15 @@ ipcMain.handle('file:listDirectory', async (_event, dirPath: string) => {
 // IPC Handler to check file exists
 ipcMain.handle('file:exists', async (_event, filePath: string) => {
   try {
+    await fs.promises.access(filePath, fs.constants.F_OK)
     return {
       success: true,
-      exists: fs.existsSync(filePath),
+      exists: true,
     }
   } catch (error) {
     return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
+      success: true, // Method succeeded, file just doesn't exist
+      exists: false,
     }
   }
 })
@@ -152,7 +153,7 @@ ipcMain.handle('file:exists', async (_event, filePath: string) => {
 // IPC Handler to create directory
 ipcMain.handle('file:createDirectory', async (_event, dirPath: string) => {
   try {
-    fs.mkdirSync(dirPath, { recursive: true })
+    await fs.promises.mkdir(dirPath, { recursive: true })
     return {
       success: true,
       path: dirPath,
@@ -168,7 +169,7 @@ ipcMain.handle('file:createDirectory', async (_event, dirPath: string) => {
 // IPC Handler to delete file
 ipcMain.handle('file:deleteFile', async (_event, filePath: string) => {
   try {
-    fs.unlinkSync(filePath)
+    await fs.promises.unlink(filePath)
     return {
       success: true,
       path: filePath,

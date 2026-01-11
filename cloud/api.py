@@ -20,6 +20,55 @@ from enum import Enum
 from diagnostics.errors import EngineError, ErrorCategory, ErrorSeverity
 from diagnostics.sentinel import SentinelExceptionLogger
 from engine.ir import ProjectIR
+from security.validator import security_validator
+from abc import ABC, abstractmethod
+
+
+class ICloudStorageProvider(ABC):
+    """Interface for cloud storage providers (S3, Drive, Local)."""
+    
+    @abstractmethod
+    async def upload_file(self, project_id: str, file_path: str, content: str) -> bool:
+        pass
+        
+    @abstractmethod
+    async def download_file(self, project_id: str, file_path: str) -> Optional[str]:
+        pass
+        
+    @abstractmethod
+    async def get_project_state(self, project_id: str) -> Dict[str, str]:
+        pass
+
+
+class LocalStorageProvider(ICloudStorageProvider):
+    """Simulated cloud storage using local directory."""
+    
+    def __init__(self, storage_root: Path):
+        self.root = storage_root
+        self.root.mkdir(parents=True, exist_ok=True)
+        
+    async def upload_file(self, project_id: str, file_path: str, content: str) -> bool:
+        target = self.root / project_id / file_path
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(content, encoding='utf-8')
+        return True
+        
+    async def download_file(self, project_id: str, file_path: str) -> Optional[str]:
+        target = self.root / project_id / file_path
+        if target.exists():
+            return target.read_text(encoding='utf-8')
+        return None
+        
+    async def get_project_state(self, project_id: str) -> Dict[str, str]:
+        state = {}
+        project_dir = self.root / project_id
+        if project_dir.exists():
+            for f in project_dir.rglob("*"):
+                if f.is_file():
+                    rel = f.relative_to(project_dir).as_posix()
+                    content = f.read_bytes()
+                    state[rel] = hashlib.sha256(content).hexdigest()
+        return state
 
 
 class CloudSyncStatus(Enum):
@@ -112,6 +161,12 @@ class CloudSyncAPI:
     def upload_project(self, project_path: Path, username: str) -> SyncResult:
         """Upload a project directory to the cloud service."""
         errors: List[CloudSyncError] = []
+        
+        # Security: Validate project path
+        if not security_validator.validate_project_path(project_path):
+            errors.append(CloudSyncError("SECURITY_ERROR", f"Invalid or unsafe project path: {project_path}"))
+            return SyncResult(False, "Security validation failed", errors)
+
         if not project_path.exists() or not project_path.is_dir():
             errors.append(CloudSyncError("PROJECT_NOT_FOUND", f"Directory '{project_path}' does not exist."))
             return SyncResult(False, "Project directory was not found", errors)
@@ -178,6 +233,12 @@ class CloudSyncAPI:
         files: Dict[str, Dict[str, Any]] = {}
         for file_path in project_path.rglob("*"):
             if file_path.is_file():
+                # Security: Validate file path and size
+                if not security_validator.validate_file_path(file_path, base_dir=project_path):
+                    continue
+                if not security_validator.validate_file_size(file_path):
+                    continue
+                
                 relative = file_path.relative_to(project_path).as_posix()
                 content = file_path.read_bytes()
                 files[relative] = {
@@ -215,7 +276,8 @@ class CloudAPI:
     """Main class for interacting with the JPE cloud services."""
     
     def __init__(self, api_base_url: str = "https://api.jpe-sims4.com", 
-                 api_key: Optional[str] = None):
+                 api_key: Optional[str] = None,
+                 provider: Optional[ICloudStorageProvider] = None):
         self.api_base_url = api_base_url.rstrip('/')
         self.api_key = api_key or os.getenv("JPE_API_KEY")
         self.session: Optional[aiohttp.ClientSession] = None
@@ -223,6 +285,9 @@ class CloudAPI:
         self.sync_states: Dict[str, CloudFileSyncState] = {}
         self.current_sync_status = CloudSyncStatus.IDLE
         self.sync_progress_callback: Optional[Callable[[float, str], None]] = None
+        
+        # Initialize default provider if none provided
+        self.provider = provider or LocalStorageProvider(Path(".jpe_tmp/simulated_cloud"))
     
     async def __aenter__(self):
         """Async context manager entry."""
@@ -277,7 +342,7 @@ class CloudAPI:
         except Exception as e:
             self.sentinel_logger.log_exception(
                 e,
-                context_info={"username": username}
+                context={"username": username}
             )
             return None
     
@@ -309,19 +374,29 @@ class CloudAPI:
         except Exception as e:
             self.sentinel_logger.log_exception(
                 e,
-                context_info={"api_endpoint": "/projects"}
+                context={"api_endpoint": "/projects"}
             )
             return []
     
     async def upload_project(self, project_path: Path, project_name: str) -> bool:
         """Upload a project to the cloud."""
         try:
+            # Security: Validate project path
+            if not security_validator.validate_project_path(project_path):
+                raise Exception(f"Invalid or unsafe project path: {project_path}")
+
             await self.initialize_session()
             
             # Calculate file hashes for project
             files_to_upload = {}
             for file_path in project_path.rglob("*.[jpe|xml|json|txt]"):  # JPE and related files
                 if file_path.is_file():
+                    # Security: Validate file path and size
+                    if not security_validator.validate_file_path(file_path, base_dir=project_path):
+                        continue
+                    if not security_validator.validate_file_size(file_path):
+                        continue
+
                     with open(file_path, "rb") as f:
                         content = f.read()
                         file_hash = hashlib.sha256(content).hexdigest()
@@ -374,7 +449,7 @@ class CloudAPI:
         except Exception as e:
             self.sentinel_logger.log_exception(
                 e,
-                context_info={"project_path": str(project_path), "project_name": project_name}
+                context={"project_path": str(project_path), "project_name": project_name}
             )
             if self.sync_progress_callback:
                 self.sync_progress_callback(0.0, f"Upload failed: {str(e)}")
@@ -420,7 +495,7 @@ class CloudAPI:
         except Exception as e:
             self.sentinel_logger.log_exception(
                 e,
-                context_info={"project_id": project_id, "destination_path": str(destination_path)}
+                context={"project_id": project_id, "destination_path": str(destination_path)}
             )
             if self.sync_progress_callback:
                 self.sync_progress_callback(0.0, f"Download failed: {str(e)}")
@@ -433,18 +508,19 @@ class CloudAPI:
             if self.sync_progress_callback:
                 self.sync_progress_callback(0.0, "Starting project sync...")
             
-            # Get current cloud state
-            async with self.session.get(f"{self.api_base_url}/projects/{project_id}/state") as response:
-                if response.status == 200:
-                    cloud_state = await response.json()
-                    cloud_files = cloud_state.get("files", {})
-                else:
-                    raise Exception("Failed to get cloud project state")
+            # Use provider to get current cloud state
+            cloud_files = await self.provider.get_project_state(project_id)
             
             # Calculate local file hashes
             local_files = {}
             for file_path in project_path.rglob("*.[jpe|xml|json|txt]"):
                 if file_path.is_file():
+                    # Security: Validate file path and size
+                    if not security_validator.validate_file_path(file_path, base_dir=project_path):
+                        continue
+                    if not security_validator.validate_file_size(file_path):
+                        continue
+
                     with open(file_path, "rb") as f:
                         content = f.read()
                         file_hash = hashlib.sha256(content).hexdigest()
@@ -507,20 +583,9 @@ class CloudAPI:
                 
                 for i, file_path in enumerate(to_upload):
                     full_path = project_path / file_path
-                    with open(full_path, "r", encoding="utf-8") as f:
-                        content = f.read()
+                    content = full_path.read_text(encoding='utf-8')
                     
-                    file_upload_data = {
-                        "project_id": project_id,
-                        "file_path": file_path,
-                        "content": content,
-                        "hash": local_files[file_path]
-                    }
-                    
-                    await self.session.put(
-                        f"{self.api_base_url}/projects/{project_id}/files/{file_path}",
-                        json=file_upload_data
-                    )
+                    await self.provider.upload_file(project_id, file_path, content)
                     
                     # Update progress
                     if self.sync_progress_callback:
@@ -533,17 +598,11 @@ class CloudAPI:
                     self.sync_progress_callback(0.7, f"Downloading {len(to_download)} cloud files...")
                 
                 for i, file_path in enumerate(to_download):
-                    async with self.session.get(
-                        f"{self.api_base_url}/projects/{project_id}/files/{file_path}"
-                    ) as file_response:
-                        if file_response.status == 200:
-                            file_data = await file_response.json()
-                            
-                            full_path = project_path / file_path
-                            full_path.parent.mkdir(parents=True, exist_ok=True)
-                            
-                            with open(full_path, "w", encoding="utf-8") as f:
-                                f.write(file_data["content"])
+                    content = await self.provider.download_file(project_id, file_path)
+                    if content is not None:
+                        full_path = project_path / file_path
+                        full_path.parent.mkdir(parents=True, exist_ok=True)
+                        full_path.write_text(content, encoding='utf-8')
                     
                     # Update progress
                     if self.sync_progress_callback:
@@ -560,7 +619,7 @@ class CloudAPI:
         except Exception as e:
             self.sentinel_logger.log_exception(
                 e,
-                context_info={"project_path": str(project_path), "project_id": project_id}
+                context={"project_path": str(project_path), "project_id": project_id}
             )
             self.current_sync_status = CloudSyncStatus.ERROR
             if self.sync_progress_callback:

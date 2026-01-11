@@ -1,0 +1,14 @@
+[package]
+name = "jpe_lang"
+version = "0.1.0"
+edition = "2021"
+description = "JPE language parser and formatter"
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+pest = { workspace = true }
+pest_derive = { workspace = true }
+regex = "1.0"
+jpe_diag = { path = "../jpe_diag" }
+jpe_ir = { path = "../jpe_ir" }

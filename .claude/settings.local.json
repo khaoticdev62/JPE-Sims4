@@ -44,7 +44,14 @@
       "mcp__plugin_playwright_playwright__browser_console_messages",
       "Bash(git tag:*)",
       "Bash(timeout 15 bash:*)",
-      "Bash(node -e:*)"
+      "Bash(node -e:*)",
+      "Bash(powershell -Command \"New-Item -ItemType File -Path ''C:\\\\Users\\\\thecr\\\\.claude\\\\plans\\\\lexical-leaping-frog-agent-a173b43.md'' -Force | Out-Null\")",
+      "Bash(uvx:*)",
+      "Bash(pip --version:*)",
+      "Bash(python -m pip:*)",
+      "Bash(python -m serena.cli:*)",
+      "Bash(python:*)",
+      "Bash(pip show:*)"
     ]
   }
 }

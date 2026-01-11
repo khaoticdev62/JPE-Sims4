@@ -1054,7 +1054,7 @@ test/fixtures/
 ```
 npm run dev
   ↓
-Vite dev server (localhost:5173)
+Vite dev server (localhost:3000)
   + Electron dev process
   + Hot reload on file change
 

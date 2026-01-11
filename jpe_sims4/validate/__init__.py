@@ -3,11 +3,20 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 from typing import Callable
+from functools import lru_cache
 
 from jpe_sims4.diagnostics import Diagnostic
 
 
 _PLACEHOLDER_PATTERN = re.compile(r"(\{\{|\}\}|\{[^\{\}\n]{1,40}\}|%[sdfox]|\$\{[^\}\n]{1,40}\})")
+
+
+@lru_cache(maxsize=256)
+def _get_compiled_regex(pattern: str) -> re.Pattern[str] | None:
+    try:
+        return re.compile(pattern)
+    except Exception:
+        return None
 
 
 def extract_placeholders(text: str) -> list[str]:
@@ -173,9 +182,8 @@ def _apply_token_regexes(segment: dict[str, object], cfg: dict[str, object]) -> 
     source = str(segment.get("source") or "")
     diagnostics: list[Diagnostic] = []
     for token_re in _rule_list(cfg.get("token_regexes")):
-        try:
-            rx = re.compile(token_re)
-        except Exception:
+        rx = _get_compiled_regex(token_re)
+        if rx is None:
             continue
         src_toks = _tokenize(source, rx)
         if not src_toks:
@@ -273,9 +281,8 @@ def _apply_forbidden_regexes(segment: dict[str, object], cfg: dict[str, object])
     if not target.strip():
         return []
     for rex in _rule_list(cfg.get("forbidden_regexes")):
-        try:
-            rx = re.compile(rex)
-        except Exception:
+        rx = _get_compiled_regex(rex)
+        if rx is None:
             continue
         if rx.search(target):
             file_path, location, segment_id = _segment_fields(segment)

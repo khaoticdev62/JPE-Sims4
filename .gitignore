@@ -6,6 +6,7 @@ yarn.lock
 # Build outputs
 dist/
 dist-electron/
+dist-native/
 *.tsbuildinfo
 
 # IDE configurations (local only)

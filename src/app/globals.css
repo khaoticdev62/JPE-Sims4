@@ -1,0 +1,177 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Import JPE Studio cyberpunk design system */
+@import "../styles/theme.css";
+
+@layer base {
+  :root {
+    --background: 222 47% 11%;
+    --foreground: 213 31% 91%;
+    --card: 222 47% 7%;
+    --card-foreground: 213 31% 91%;
+    --popover: 222 47% 7%;
+    --popover-foreground: 213 31% 91%;
+    --primary: 239 84% 67%;
+    --primary-foreground: 222 47% 11%;
+    --secondary: 222 34% 17%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 222 47% 7%;
+    --muted-foreground: 215.4 16.3% 66.9%;
+    --accent: 239 84% 67%;
+    --accent-foreground: 222 47% 11%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 224 47% 20%;
+    --input: 224 47% 20%;
+    --ring: 239 84% 67%;
+    --radius: 0.5rem;
+    --surface: 222 47% 11%;
+    --surface-foreground: 213 31% 91%;
+
+    /* Additional design system tokens */
+    --text-primary: 213 31% 91%;
+    --text-secondary: 215 16% 67%;
+    --state-error: 0 84% 60%;
+    --state-warning: 38 92% 50%;
+    --state-success: 142 76% 36%;
+    --state-info: 217 91% 60%;
+    --accent-primary: 239 84% 67%;
+    --border-subtle: 215 16% 47%;
+
+    /* Typography Synthesis — Direct Font Mappings */
+    --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+    --font-display: 'Outfit', 'Inter', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Fira Code', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  }
+
+  /* High-Contrast Theme — WCAG AAA (7:1 minimum contrast ratio) */
+  .high-contrast {
+    --background: 0 0% 0%;
+    --foreground: 0 0% 100%;
+    --card: 0 0% 3%;
+    --card-foreground: 0 0% 100%;
+    --popover: 0 0% 3%;
+    --popover-foreground: 0 0% 100%;
+    --primary: 60 100% 50%;
+    --primary-foreground: 0 0% 0%;
+    --secondary: 0 0% 15%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 0 0% 10%;
+    --muted-foreground: 0 0% 75%;
+    --accent: 60 100% 50%;
+    --accent-foreground: 0 0% 0%;
+    --destructive: 0 85% 55%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 100%;
+    --input: 0 0% 100%;
+    --ring: 60 100% 50%;
+    --radius: 0.5rem;
+    --surface: 0 0% 3%;
+    --surface-foreground: 0 0% 100%;
+    --text-primary: 0 0% 100%;
+    --text-secondary: 0 0% 80%;
+    --state-error: 0 85% 55%;
+    --state-warning: 45 100% 50%;
+    --state-success: 120 100% 35%;
+    --state-info: 200 100% 60%;
+    --accent-primary: 60 100% 50%;
+    --border-subtle: 0 0% 75%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  /* High-contrast focus outlines — 3px solid for maximum visibility */
+  .high-contrast *:focus {
+    outline: 3px solid #FFFF00 !important;
+    outline-offset: 2px;
+  }
+
+  .high-contrast *:focus-visible {
+    outline: 3px solid #FFFF00 !important;
+    outline-offset: 2px;
+  }
+
+  .high-contrast a {
+    color: #00D4FF;
+    text-decoration: underline;
+  }
+
+  .high-contrast button {
+    border: 2px solid #FFFFFF;
+  }
+
+  ::selection {
+    background-color: rgba(99, 179, 237, 0.30);
+    color: var(--text-primary);
+  }
+
+  .high-contrast ::selection {
+    background: #FFFFFF;
+    color: #000000;
+  }
+
+  .dark {
+    --background: 222 47% 11%;
+  }
+}
+
+@layer components {
+  .skip-to-content {
+    @apply absolute left-[-9999px] top-4 z-[100] px-4 py-2 text-white focus:left-4 outline-none ring-2 ring-white ring-offset-2 ring-offset-bg rounded-md transition-all duration-300;
+    background-color: var(--cyan);
+  }
+}
+
+/* Electron window drag region */
+.title-bar-drag {
+  -webkit-app-region: drag;
+}
+
+.title-bar-drag button,
+.title-bar-drag a,
+.title-bar-drag [role="button"] {
+  -webkit-app-region: no-drag;
+}
+
+.jpe-gradient {
+  background: linear-gradient(135deg, #6366f1 0%, #ec4899 100%);
+}
+
+.glass-panel {
+  background: rgba(30, 41, 59, 0.7);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.monaco-editor-container {
+  height: 100%;
+  width: 100%;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0f172a;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #6366f1;
+}

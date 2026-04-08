@@ -1,16 +1,13 @@
-/**
- * AI Configuration Store
- * Manages Claude API configuration, usage statistics, and preferences
- */
-
 import { create } from 'zustand'
-import { ClaudeService } from '@services/ai/ClaudeService'
-import type { ApiUsageStats } from '@services/ai/types'
+import { AIServiceFactory } from '@/services/ai/AIServiceFactory'
+import { AIKeyStore } from '@/services/ai/AIKeyStore'
+import { AIProvider, ApiUsageStats } from '@/services/ai/types'
+import { safeStorage } from '@/utils/storage'
 
 export interface AIState {
   // Configuration
+  activeProvider: AIProvider
   apiKeyConfigured: boolean
-  useProxy: boolean
   initialized: boolean
 
   // Statistics
@@ -20,155 +17,97 @@ export interface AIState {
   showAPISettings: boolean
   lastError: string | null
 
+  // Context Settings
+  includeProjectContext: boolean
+  includeExternalSymbols: boolean
+
+  // Latency History (Story 6.5)
+  latencyHistory: Record<AIProvider, number[]>
+
   // Actions
+  setProvider: (provider: AIProvider) => void
   initializeAI: () => Promise<void>
-  checkApiKeyStatus: () => Promise<boolean>
-  setShowAPISettings: (show: boolean) => void
-  updateUsageStats: () => Promise<void>
+  updateUsageStats: () => void
+  setApiKey: (provider: AIProvider, key: string) => void
+  setContextSetting: (key: 'includeProjectContext' | 'includeExternalSymbols', value: boolean) => void
   clearCache: () => void
-  resetStats: () => void
-  setLastError: (error: string | null) => void
+  setShowAPISettings: (show: boolean) => void
 }
 
 export const useAIStore = create<AIState>((set, get) => ({
-  // Initial state
+  activeProvider: (safeStorage.getItem('jpe_ai_provider') as AIProvider) || AIProvider.GEMINI,
   apiKeyConfigured: false,
-  useProxy: true,
   initialized: false,
   usageStats: null,
   showAPISettings: false,
   lastError: null,
+  latencyHistory: JSON.parse(safeStorage.getItem('jpe_ai_latency_history') || '{}') as Record<AIProvider, number[]>,
+  includeProjectContext: safeStorage.getItem('jpe_ai_context_project') !== 'false',
+  includeExternalSymbols: safeStorage.getItem('jpe_ai_context_external') === 'true',
 
-  /**
-   * Initialize AI service
-   */
+  setProvider: (provider: AIProvider) => {
+    safeStorage.setItem('jpe_ai_provider', provider)
+    set({ activeProvider: provider })
+    get().initializeAI()
+  },
+
   initializeAI: async () => {
     try {
-      const service = ClaudeService.getInstance()
+      const { activeProvider } = get()
+      const service = AIServiceFactory.getService(activeProvider)
       await service.initialize()
 
-      const configured = await service.isConfigured()
-      const useProxy = service.isUsingProxy()
       const stats = service.getUsageStats()
+      const hasKey = !!(await AIKeyStore.getKey(activeProvider))
 
       set({
         initialized: true,
-        apiKeyConfigured: configured,
-        useProxy,
         usageStats: stats,
-        lastError: null,
+        apiKeyConfigured: hasKey,
+        lastError: null
       })
-
-      console.debug('[AIStore] Initialization complete', {
-        configured,
-        useProxy,
-      })
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unknown error'
-      console.error('[AIStore] Initialization failed:', message)
-
-      set({
-        initialized: true,
-        apiKeyConfigured: false,
-        useProxy: true,
-        lastError: message,
-      })
+    } catch (error: any) {
+      set({ lastError: error.message, initialized: true })
     }
   },
 
-  /**
-   * Check if API key is configured
-   */
-  checkApiKeyStatus: async () => {
-    try {
-      const service = ClaudeService.getInstance()
-      const configured = await service.isConfigured()
-
-      set({
-        apiKeyConfigured: configured,
-        useProxy: !configured,
-      })
-
-      return configured
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unknown error'
-      console.error('[AIStore] Status check failed:', message)
-      set({ lastError: message })
-      return false
+  updateUsageStats: () => {
+    const { activeProvider, latencyHistory } = get()
+    const service = AIServiceFactory.getService(activeProvider)
+    const stats = service.getUsageStats()
+    
+    // Sync latency history to store (Story 6.5)
+    if (stats.responseTimes.length > 0) {
+      const updatedHistory = { ...latencyHistory, [activeProvider]: [...stats.responseTimes] }
+      safeStorage.setItem('jpe_ai_latency_history', JSON.stringify(updatedHistory))
+      set({ usageStats: stats, latencyHistory: updatedHistory })
+    } else {
+      set({ usageStats: stats })
     }
   },
 
-  /**
-   * Toggle API settings visibility
-   */
-  setShowAPISettings: (show) => {
-    set({ showAPISettings: show })
-  },
-
-  /**
-   * Update usage statistics
-   */
-  updateUsageStats: async () => {
-    try {
-      const service = ClaudeService.getInstance()
-      const stats = service.getUsageStats()
-
-      set({
-        usageStats: stats,
-        lastError: null,
-      })
-
-      console.debug('[AIStore] Statistics updated:', stats)
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unknown error'
-      console.error('[AIStore] Failed to update stats:', message)
-      set({ lastError: message })
+  setApiKey: (provider: AIProvider, key: string) => {
+    if (key) {
+      AIKeyStore.saveKey(provider, key)
+    } else {
+      AIKeyStore.deleteKey(provider)
+    }
+    
+    if (get().activeProvider === provider) {
+      set({ apiKeyConfigured: !!key })
     }
   },
 
-  /**
-   * Clear cache
-   */
+  setContextSetting: (key, value) => {
+    const storageKey = key === 'includeProjectContext' ? 'jpe_ai_context_project' : 'jpe_ai_context_external'
+    safeStorage.setItem(storageKey, String(value))
+    set({ [key]: value } as any)
+  },
+
   clearCache: () => {
-    try {
-      const service = ClaudeService.getInstance()
-      service.clearCache()
-
-      set({ lastError: null })
-      console.debug('[AIStore] Cache cleared')
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unknown error'
-      console.error('[AIStore] Failed to clear cache:', message)
-      set({ lastError: message })
-    }
+    const { activeProvider } = get()
+    AIServiceFactory.getService(activeProvider).clearCache()
   },
 
-  /**
-   * Reset statistics
-   */
-  resetStats: () => {
-    try {
-      const service = ClaudeService.getInstance()
-      service.resetStats()
-
-      const stats = service.getUsageStats()
-      set({
-        usageStats: stats,
-        lastError: null,
-      })
-
-      console.debug('[AIStore] Statistics reset')
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unknown error'
-      console.error('[AIStore] Failed to reset stats:', message)
-      set({ lastError: message })
-    }
-  },
-
-  /**
-   * Set last error message
-   */
-  setLastError: (error) => {
-    set({ lastError: error })
-  },
+  setShowAPISettings: (show: boolean) => set({ showAPISettings: show })
 }))

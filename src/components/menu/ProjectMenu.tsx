@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from 'react'
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
 import { useProjectStore } from '@/stores/useProjectStore'
@@ -35,9 +37,9 @@ function ProjectMenu({ disabled = false }: ProjectMenuProps) {
           projectName: currentProject.name,
           projectId: currentProject.id,
         })
-        console.log('✓ Build successful')
+        console.warn('✓ Build successful')
       } else {
-        console.log('✗ Build failed')
+        console.warn('✗ Build failed')
       }
     } catch (error) {
       console.error('Build error:', error)
@@ -60,25 +62,25 @@ function ProjectMenu({ disabled = false }: ProjectMenuProps) {
       const errorCount = validationResults.filter(
         (result) => !result.valid
       ).length
-      console.log(`✓ Validation complete - ${errorCount} files with errors`)
+      console.warn(`✓ Validation complete - ${errorCount} files with errors`)
     } catch (error) {
       console.error('Validation error:', error)
     }
   }
 
   const handleCleanBuild = () => {
-    console.log('Clean build action')
+    console.warn('Clean build action')
     // Clear cache and rebuild
     CompilerService.clearCache()
   }
 
   const handleExportPackage = () => {
-    console.log('Export to package action')
+    console.warn('Export to package action')
     // Will open export dialog
   }
 
   const handleProjectSettings = () => {
-    console.log('Project settings action')
+    console.warn('Project settings action')
     // Will open project settings dialog
   }
 

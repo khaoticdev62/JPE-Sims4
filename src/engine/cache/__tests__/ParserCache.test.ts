@@ -4,7 +4,6 @@
 
 import { describe, it, expect, beforeEach } from 'vitest'
 import { ParserCache, createParserCache } from '../ParserCache'
-import type { CacheEntry } from '../types/cache'
 
 interface TestAST {
   type: string
@@ -20,8 +19,7 @@ describe('ParserCache', () => {
       maxEntries: 100,
       ttlMs: 60000, // 1 minute
       trackStats: true,
-      trackEvents: true,
-    })
+      trackEvents: true})
   })
 
   describe('Basic operations', () => {
@@ -57,7 +55,7 @@ describe('ParserCache', () => {
     it('should detect content changes', () => {
       const ast: TestAST = { type: 'root', children: [] }
       const content1 = '<root></root>'
-      const content2 = '<root><child/></root>'
+      const _content2 = '<root><child/></root>'
 
       cache.set('test.xml', ast, content1)
       // hashContent is private, so we'll use a different approach
@@ -119,8 +117,7 @@ describe('ParserCache', () => {
     it('should track evictions', () => {
       const cacheSmall = createParserCache<TestAST>({
         maxEntries: 2,
-        trackStats: true,
-      })
+        trackStats: true})
 
       const ast1: TestAST = { type: 'root', children: [] }
       const ast2: TestAST = { type: 'root', children: [] }
@@ -285,8 +282,7 @@ describe('ParserCache', () => {
     it('should create cache via helper function', () => {
       const createdCache = createParserCache<TestAST>({
         maxEntries: 50,
-        ttlMs: 30000,
-      })
+        ttlMs: 30000})
 
       expect(createdCache).toBeInstanceOf(ParserCache)
       expect(createdCache.size()).toBe(0)
@@ -294,8 +290,7 @@ describe('ParserCache', () => {
 
     it('should apply config in helper function', () => {
       const createdCache = createParserCache<TestAST>({
-        maxEntries: 5,
-      })
+        maxEntries: 5})
 
       const ast: TestAST = { type: 'root', children: [] }
       for (let i = 0; i < 10; i++) {
@@ -311,8 +306,7 @@ describe('ParserCache', () => {
     it('should evict least recently used when size limit reached', (done) => {
       const smallCache = createParserCache<TestAST>({
         maxEntries: 3,
-        trackStats: true,
-      })
+        trackStats: true})
 
       const ast: TestAST = { type: 'root', children: [] }
 
@@ -441,8 +435,7 @@ describe('ParserCache', () => {
 
     it('should apply custom max entries limit', () => {
       const limitedCache = createParserCache<TestAST>({
-        maxEntries: 2,
-      })
+        maxEntries: 2})
 
       const ast: TestAST = { type: 'root', children: [] }
       limitedCache.set('file1.xml', ast, '<root></root>')
@@ -455,8 +448,7 @@ describe('ParserCache', () => {
     it('should support TTL configuration', () => {
       const shortTTLCache = createParserCache<TestAST>({
         ttlMs: 100, // 100ms TTL
-        trackEvents: true,
-      })
+        trackEvents: true})
 
       const ast: TestAST = { type: 'root', children: [] }
       shortTTLCache.set('test.xml', ast, '<root></root>')

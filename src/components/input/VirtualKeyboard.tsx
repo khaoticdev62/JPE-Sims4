@@ -1,18 +1,20 @@
-import React, { useState, useEffect } from 'react'
+"use client";
+
+import React, { useState} from 'react'
 import { KeyboardKey } from './KeyboardKey'
 
 interface VirtualKeyboardProps {
   onInput: (text: string) => void
   onClose: () => void
   visible: boolean
-  context?: 'default' | 'xml' | 'jpe'
+  _context?: 'default' | 'xml' | 'jpe'
 }
 
 export function VirtualKeyboard({
   onInput,
   onClose,
   visible,
-  context = 'default'
+  _context = 'default'
 }: VirtualKeyboardProps) {
   const [layout, setLayout] = useState<'qwerty' | 'symbols'>('qwerty')
   const [shift, setShift] = useState(false)

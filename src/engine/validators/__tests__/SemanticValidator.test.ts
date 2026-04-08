@@ -6,7 +6,6 @@
 
 import { describe, it, expect, beforeEach } from 'vitest'
 import { SemanticValidator, createSemanticValidator } from '../SemanticValidator'
-import type { SemanticValidationResult } from '../types/semantic'
 
 describe('Semantic Validator', () => {
   let validator: SemanticValidator
@@ -128,7 +127,7 @@ describe('Semantic Validator', () => {
   <ref id="0x99999999" />
 </Instance>`
 
-      const errors = validator.validateTuningReferences('tuning/test.xml', content)
+      const _errors = validator.validateTuningReferences('tuning/test.xml', content)
 
       expect(errors.length).toBeGreaterThan(0)
       expect(errors.some(e => e.value === '0x99999999')).toBe(true)
@@ -143,7 +142,7 @@ describe('Semantic Validator', () => {
   <ref id="0x87654321" />
 </Instance>`
 
-      const errors = validator.validateTuningReferences('tuning/test.xml', content)
+      const _errors = validator.validateTuningReferences('tuning/test.xml', content)
 
       expect(errors.length).toBe(0)
     })
@@ -153,7 +152,7 @@ describe('Semantic Validator', () => {
 
       const content = 'ref:0x12345678 ref:0x99999999'
 
-      const errors = validator.validateTuningReferences('tuning/test.xml', content)
+      const _errors = validator.validateTuningReferences('tuning/test.xml', content)
 
       expect(errors.some(e => e.value === '0x99999999')).toBe(true)
     })
@@ -167,7 +166,7 @@ describe('Semantic Validator', () => {
   </line3>
 </Instance>`
 
-      const errors = validator.validateTuningReferences('tuning/test.xml', content)
+      const _errors = validator.validateTuningReferences('tuning/test.xml', content)
 
       expect(errors.length).toBeGreaterThan(0)
       expect(errors[0].line).toBeGreaterThan(1)
@@ -179,7 +178,7 @@ describe('Semantic Validator', () => {
 
       const content = 'ref:0x99999999'
 
-      const errors = val.validateTuningReferences('tuning/test.xml', content)
+      const _errors = val.validateTuningReferences('tuning/test.xml', content)
 
       expect(errors).toHaveLength(0)
     })
@@ -193,7 +192,7 @@ describe('Semantic Validator', () => {
 <String key="0x12345678" value="Hello" />
 <String key="0x99999999" value="Missing" />`
 
-      const errors = validator.validateSTBLKeys('tuning/test.xml', content)
+      const _errors = validator.validateSTBLKeys('tuning/test.xml', content)
 
       expect(errors.length).toBeGreaterThan(0)
       expect(errors.some(e => e.value === '0x99999999')).toBe(true)
@@ -207,7 +206,7 @@ describe('Semantic Validator', () => {
 <String key="0x12345678" />
 <String key="0x87654321" />`
 
-      const errors = validator.validateSTBLKeys('tuning/test.xml', content)
+      const _errors = validator.validateSTBLKeys('tuning/test.xml', content)
 
       expect(errors).toHaveLength(0)
     })
@@ -219,7 +218,7 @@ describe('Semantic Validator', () => {
       // Reference with uppercase
       const content = '0xABCDEF00'
 
-      const errors = validator.validateSTBLKeys('tuning/test.xml', content)
+      const _errors = validator.validateSTBLKeys('tuning/test.xml', content)
 
       // Should match after normalization
       expect(errors).toHaveLength(0)
@@ -231,7 +230,7 @@ describe('Semantic Validator', () => {
 
       const content = '0x99999999'
 
-      const errors = val.validateSTBLKeys('tuning/test.xml', content)
+      const _errors = val.validateSTBLKeys('tuning/test.xml', content)
 
       expect(errors).toHaveLength(0)
     })
@@ -243,7 +242,7 @@ describe('Semantic Validator', () => {
 
       const content = 'Gender.UNKNOWN'
 
-      const errors = validator.validateEnumValues('tuning/test.xml', content)
+      const _errors = validator.validateEnumValues('tuning/test.xml', content)
 
       expect(errors.length).toBeGreaterThan(0)
       expect(errors[0].message).toContain('Invalid enum value')
@@ -254,7 +253,7 @@ describe('Semantic Validator', () => {
 
       const content = 'Gender.MALE Gender.FEMALE'
 
-      const errors = validator.validateEnumValues('tuning/test.xml', content)
+      const _errors = validator.validateEnumValues('tuning/test.xml', content)
 
       expect(errors).toHaveLength(0)
     })
@@ -264,7 +263,7 @@ describe('Semantic Validator', () => {
 
       const content = 'UndefinedEnum.VALUE'
 
-      const errors = val.validateEnumValues('tuning/test.xml', content)
+      const _errors = val.validateEnumValues('tuning/test.xml', content)
 
       // No errors since enum isn't registered
       expect(errors).toHaveLength(0)
@@ -275,7 +274,7 @@ describe('Semantic Validator', () => {
 
       const content = 'Color.PURPLE'
 
-      const errors = validator.validateEnumValues('tuning/test.xml', content)
+      const _errors = validator.validateEnumValues('tuning/test.xml', content)
 
       expect(errors[0].suggestion).toContain('RED')
     })
@@ -286,7 +285,7 @@ describe('Semantic Validator', () => {
 
       const content = 'Gender.UNKNOWN'
 
-      const errors = val.validateEnumValues('tuning/test.xml', content)
+      const _errors = val.validateEnumValues('tuning/test.xml', content)
 
       expect(errors).toHaveLength(0)
     })
@@ -385,7 +384,7 @@ describe('Semantic Validator', () => {
       const val = new SemanticValidator({ checkTuningReferences: true })
       val.registerTuningId('0x12345678', 'tuning/trait.xml', 5)
 
-      let errors = val.validateTuningReferences('tuning/test.xml', 'ref:0x99999999')
+      const _errors = val.validateTuningReferences('tuning/test.xml', 'ref:0x99999999')
       expect(errors.length).toBeGreaterThan(0)
 
       // Disable validation
@@ -411,7 +410,7 @@ describe('Semantic Validator', () => {
       // Test content with missing tuning reference
       const content = 'ref:0x99999999 ref:0x12345678'
 
-      const errors = validator.validateTuningReferences('test.xml', content)
+      const _errors = validator.validateTuningReferences('test.xml', content)
 
       // Should find at least one missing reference
       expect(errors.length).toBeGreaterThan(0)
@@ -425,7 +424,7 @@ describe('Semantic Validator', () => {
 <display_name key="0x11111111" />
 <description key="0x99999999" />`
 
-      const errors = validator.validateSTBLKeys('tuning/test.xml', content)
+      const _errors = validator.validateSTBLKeys('tuning/test.xml', content)
 
       expect(errors.some(e => e.value === '0x99999999')).toBe(true)
     })
@@ -444,7 +443,7 @@ describe('Semantic Validator', () => {
   </interactions>
 </Instance>`
 
-      const errors = validator.validateTuningReferences('test.xml', content)
+      const _errors = validator.validateTuningReferences('test.xml', content)
 
       expect(errors.length).toBeGreaterThan(0)
     })
@@ -467,7 +466,7 @@ describe('Semantic Validator', () => {
       }
 
       const start = performance.now()
-      const errors = validator.validateTuningReferences('test.xml', content)
+      const _errors = validator.validateTuningReferences('test.xml', content)
       const duration = performance.now() - start
 
       expect(duration).toBeLessThan(100) // Should complete in < 100ms
@@ -529,7 +528,7 @@ describe('Semantic Validator', () => {
     it('should provide helpful error messages', () => {
       validator.registerTuningId('0x12345678', 'tuning/trait.xml', 5)
 
-      const errors = validator.validateTuningReferences('test.xml', 'ref:0x99999999')
+      const _errors = validator.validateTuningReferences('test.xml', 'ref:0x99999999')
 
       expect(errors[0].message).toContain('0x99999999')
       expect(errors[0].suggestion).toBeTruthy()
@@ -538,7 +537,7 @@ describe('Semantic Validator', () => {
     it('should suggest related files for missing references', () => {
       validator.registerTuningId('0x12345678', 'tuning/trait.xml', 5, 'TestTrait')
 
-      const errors = validator.validateTuningReferences('test.xml', 'ref:0x12345678 ref:0x99999999')
+      const _errors = validator.validateTuningReferences('test.xml', 'ref:0x12345678 ref:0x99999999')
 
       const missingError = errors.find(e => e.value === '0x99999999')
       expect(missingError?.suggestion).toContain('Make sure')

@@ -1,4 +1,4 @@
-import { Page, Browser } from '@playwright/test'
+import { Page } from '@playwright/test'
 
 /**
  * Electron App Helper (Web Version)
@@ -57,7 +57,7 @@ export class ElectronApp {
     if (this.page) {
       try {
         await this.page.close()
-      } catch (error) {
+      } catch (_error) {
         // Page might already be closed
       }
     }

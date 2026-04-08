@@ -8,7 +8,7 @@ import { ClaudeService } from '@services/ai/ClaudeService'
 import { PatternAnalyzer } from '@engine/ml/PatternAnalyzer'
 import { SmartAutocompleteService } from '@services/editor/SmartAutocompleteService'
 import { OptimizationDetector } from '@engine/ml/OptimizationDetector'
-import type { ModFile, ProjectPatterns } from '@engine/ml/types'
+import type { ModFile } from '@engine/ml/types'
 
 // Mock dependencies
 vi.mock('@services/api/CredentialManager')
@@ -119,8 +119,7 @@ describe('AI Features Integration', () => {
 
   describe('Autocomplete with learned patterns', () => {
     it('should prioritize learned patterns in suggestions', () => {
-      const patterns = PatternAnalyzer.analyzeProject(mockFiles)
-      const patternStore = patterns
+      PatternAnalyzer.analyzeProject(mockFiles)
 
       const completions = SmartAutocompleteService.getCompletions({
         fileContent: mockFiles[0].content,

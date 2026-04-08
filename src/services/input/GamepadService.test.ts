@@ -1,4 +1,5 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+// Vitest not available - using Jest
+import { describe, it, expect, beforeEach, afterEach } from '@jest/globals'
 import { GamepadService } from './GamepadService'
 
 describe('GamepadService', () => {
@@ -11,12 +12,12 @@ describe('GamepadService', () => {
     service.stop()
     
     // Mock navigator.getGamepads
-    global.navigator.getGamepads = vi.fn(() => [])
+    global.navigator.getGamepads = jest.fn(() => [])
   })
 
   afterEach(() => {
     service.stop()
-    vi.restoreAllMocks()
+    jest.restoreAllMocks()
   })
 
   it('should be a singleton', () => {
@@ -25,8 +26,8 @@ describe('GamepadService', () => {
   })
 
   it('should start and stop polling', () => {
-    const setIntervalSpy = vi.spyOn(window, 'setInterval')
-    const clearIntervalSpy = vi.spyOn(window, 'clearInterval')
+    const setIntervalSpy = jest.spyOn(window, 'setInterval')
+    const clearIntervalSpy = jest.spyOn(window, 'clearInterval')
 
     service.start()
     expect(setIntervalSpy).toHaveBeenCalled()
@@ -37,10 +38,10 @@ describe('GamepadService', () => {
   })
 
   it('should emit events on button press', () => {
-    vi.useFakeTimers()
+    jest.useFakeTimers()
     service.start()
 
-    const buttonListener = vi.fn()
+    const buttonListener = jest.fn()
     service.on('button_down_0', buttonListener)
 
     // Mock first poll: Button 0 pressed
@@ -53,10 +54,10 @@ describe('GamepadService', () => {
     (global.navigator.getGamepads as any).mockReturnValue(gamepads)
 
     // Advance timer to trigger poll
-    vi.advanceTimersByTime(16)
+    jest.advanceTimersByTime(16)
 
     expect(buttonListener).toHaveBeenCalledWith({ gamepad: 0, button: 0 })
 
-    vi.useRealTimers()
+    jest.useRealTimers()
   })
 })

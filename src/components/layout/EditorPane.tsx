@@ -1,6 +1,8 @@
-import { useState, useEffect, useCallback } from 'react'
+"use client";
+import { useState, useEffect, useCallback, useRef } from 'react'
 import MonacoEditor from '@/components/editor/MonacoEditor'
 import EditorToolbar from '@/components/editor/EditorToolbar'
+import { LogicalStatusBar } from '@/components/statusbar/LogicalStatusBar'
 import { useEditorStore } from '@/stores/useEditorStore'
 import { useProjectStore } from '@/stores/useProjectStore'
 import { useDiagnosticStore } from '@/stores/useDiagnosticStore'
@@ -8,8 +10,19 @@ import { useFileLoader } from '@/hooks/useFileLoader'
 import { useRealTimeValidation } from '@/hooks/useRealTimeValidation'
 import { useEditorActions } from '@/hooks/useEditorActions'
 import { CompilerService } from '@/services/CompilerService'
+import { STBLCompiler } from '@/engine/compilers/STBLCompiler'
+import { ConfigCompiler } from '@/engine/compilers/ConfigCompiler'
+import { FileService } from '@/services/FileService'
 import { useActivityStore } from '@/stores/useActivityStore'
+import { useUIStore } from '@/stores/useUIStore'
 import { memo } from 'react'
+import { toast } from 'sonner'
+import { AssetList } from '@/components/editor/AssetList'
+import ResourcePreviewer from '@/components/editor/ResourcePreviewer'
+import WelcomeScreen from '@/components/editor/WelcomeScreen'
+import { PackageService } from '@/services/PackageService'
+import { SensoryOverlay } from '@/components/editor/SensoryOverlay'
+import type { VirtualFile } from '@/services/PackageService'
 
 function EditorPaneComponent() {
   const { tabs, activeTabId, setActiveTab, closeTab, editorContent, updateTabContent } =
@@ -18,7 +31,10 @@ function EditorPaneComponent() {
   const { getDiagnosticsForFile } = useDiagnosticStore()
   const { addActivity } = useActivityStore()
   const { undo, redo, format, find, replace } = useEditorActions()
+  const { theme } = useUIStore()
   const [isCompiling, setIsCompiling] = useState(false)
+  const [cursorLine, setCursorLine] = useState(1)
+  const _monacoCursorHandler = useRef<any>(null)
 
   const activeTab = tabs.find((t) => t.id === activeTabId)
   const activeFile = activeTab ? getFile(activeTab.fileId) : null
@@ -35,11 +51,142 @@ function EditorPaneComponent() {
   const errorCount = fileDiagnostics.filter((d) => d.severity === 'error').length
   const warningCount = fileDiagnostics.filter((d) => d.severity === 'warning').length
 
-  // Handle file save
+  // Handle file save — compiles to native format if needed (Story 1.5/2.1.1)
   const handleSaveFile = useCallback(async () => {
     if (!activeFile) return
-    await saveFile(activeFile.id)
-  }, [activeFile, saveFile])
+
+    let contentToSave = fileContent
+    let binaryToSave: ArrayBuffer | null = null
+
+    // If this is an XML file that was translated to JPE, compile back to XML
+    if (activeFile.type === 'xml') {
+      try {
+        const compileResult = await CompilerService.compileWithPython(fileContent, activeFile.name)
+        if (compileResult.success && compileResult.xml) {
+          contentToSave = compileResult.xml
+        } else {
+          toast.error('Cannot save: JPE has compilation errors. Fix errors first.')
+          return
+        }
+      } catch (error) {
+        toast.error(`Compile failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+        return
+      }
+    }
+
+    // If this is an STBL file, compile JPE text back to binary STBL
+    if (activeFile.type === 'stbl') {
+      const compileResult = STBLCompiler.compile(fileContent)
+      if (compileResult.success && compileResult.buffer) {
+        binaryToSave = compileResult.buffer
+        toast.success(`Compiled STBL: ${compileResult.metadata.entryCount} entries in ${compileResult.metadata.compileTime.toFixed(0)}ms`)
+      } else {
+        const errorMsg = compileResult.errors[0] || 'STBL compilation failed'
+        toast.error(`Cannot save STBL: ${errorMsg}`)
+        return
+      }
+    }
+
+    // If this is a JSON file, compile JPE text back to JSON
+    if (activeFile.type === 'json') {
+      const originalContent = (activeFile as any)._originalContent
+      if (originalContent) {
+        try {
+          // Try to parse editor content as JSON and re-stringify
+          const parsed = JSON.parse(fileContent)
+          contentToSave = JSON.stringify(parsed, null, 2)
+        } catch {
+          // If editor content is not valid JSON, save as-is
+          contentToSave = fileContent
+        }
+      }
+    }
+
+    // If this is a CFG file, compile JPE text back to CFG format
+    if (activeFile.type === 'cfg') {
+      const compileResult = ConfigCompiler.compileToJpe(fileContent, 'cfg')
+      if (compileResult.success && compileResult.content) {
+        contentToSave = compileResult.content
+        toast.success(`Compiled CFG in ${compileResult.metadata.compileTime.toFixed(0)}ms`)
+      } else {
+        const errorMsg = compileResult.errors[0] || 'CFG compilation failed'
+        toast.error(`Cannot save CFG: ${errorMsg}`)
+        return
+      }
+    }
+
+    // For Python/TS4Script files, always save the original source (not edited JPE)
+    // JPE view is read-only decompilation for understanding structure
+    if (activeFile.type === 'py' || activeFile.type === 'ts4script') {
+      const originalSource = (activeFile as any)._originalSource
+      if (originalSource) {
+        // Save original Python source, not the JPE display
+        contentToSave = originalSource
+      }
+      // Fall through to normal save
+    }
+
+    // Update the file content in the project store before saving
+    updateFile(activeFile.id, { content: contentToSave })
+
+    // For STBL, save binary; for others, save text
+    if (binaryToSave && activeFile.type === 'stbl') {
+      const result = await FileService.writeFileBuffer(activeFile.path, binaryToSave)
+      if (result?.success) {
+        toast.success(`Saved: ${activeFile.name}`)
+      } else {
+        toast.error(`Failed to save: ${activeFile.name}`)
+      }
+    } else {
+      await saveFile(activeFile.id)
+      toast.success(`Saved: ${activeFile.name}`)
+    }
+  }, [activeFile, fileContent, updateFile, saveFile])
+
+  // Handle Save All (Ctrl+Shift+S) — saves all dirty files (Story 1.5)
+  const handleSaveAll = useCallback(async () => {
+    const dirtyTabs = tabs.filter((t) => t.isDirty)
+    if (dirtyTabs.length === 0) {
+      toast.info('No unsaved changes')
+      return
+    }
+
+    toast.info(`Saving ${dirtyTabs.length} file(s)...`)
+    let failCount = 0
+
+    for (const tab of dirtyTabs) {
+      const file = getFile(tab.fileId)
+      if (!file) continue
+
+      let contentToSave = editorContent[tab.id] || file.content
+
+      // Compile JPE→XML if needed
+      if (file.type === 'xml') {
+        try {
+          const compileResult = await CompilerService.compileWithPython(contentToSave, file.name)
+          if (compileResult.success && compileResult.xml) {
+            contentToSave = compileResult.xml
+          } else {
+            failCount++
+            continue
+          }
+        } catch {
+          failCount++
+          continue
+        }
+      }
+
+      updateFile(file.id, { content: contentToSave })
+      await saveFile(file.id)
+    }
+
+    const successCount = dirtyTabs.length - failCount
+    if (failCount > 0) {
+      toast.error(`${successCount} saved, ${failCount} failed`)
+    } else {
+      toast.success(`All ${successCount} file(s) saved`)
+    }
+  }, [tabs, getFile, editorContent, updateFile, saveFile])
 
   // Handle compilation
   const handleCompile = useCallback(async () => {
@@ -47,26 +194,45 @@ function EditorPaneComponent() {
 
     setIsCompiling(true)
     try {
-      const result = await CompilerService.compileFile({
-        ...activeFile,
-        content: fileContent
-      })
+      // Use Python engine for JPE→XML compilation (Story 1.2/1.4)
+      const result = await CompilerService.compileWithPython(
+        fileContent,
+        activeFile.name
+      )
 
-      if (result.success) {
-        toast.success('Compiled successfully')
-        
+      if (result.success && result.xml) {
+        toast.success(`Compiled successfully in ${result.duration}ms`)
+
+        // Set preview content
+        useEditorStore.getState().setPreviewContent(result.xml)
+        useEditorStore.getState().setPreviewOutOfDate(false)
+
         // Log activity
         if (currentProject) {
           addActivity({
             type: 'translated',
             fileName: activeFile.name,
             projectName: currentProject.name,
-            projectId: currentProject.id,
-          })
+            projectId: currentProject.id})
         }
       } else {
         const errorMsg = result.errors?.[0]?.message || 'Compilation failed'
         toast.error(`Compilation failed: ${errorMsg}`)
+
+        // Set diagnostics for errors
+        if (result.errors?.length > 0) {
+          useDiagnosticStore.getState().setDiagnosticsForFile(
+            activeFile.id,
+            result.errors.map((e: any, i: number) => ({
+              id: `compile-${i}`,
+              fileId: activeFile!.id,
+              line: e.line || 1,
+              column: e.column || 1,
+              severity: e.severity || 'error',
+              message: e.message,
+              code: e.code || 'COMPILE_ERROR'}))
+          )
+        }
       }
     } catch (error) {
       toast.error(`Compilation error: ${error instanceof Error ? error.message : 'Unknown error'}`)
@@ -80,8 +246,7 @@ function EditorPaneComponent() {
       updateTabContent(activeTab.id, newContent)
       if (activeFile) {
         updateFile(activeFile.id, {
-          isDirty: true,
-        })
+          isDirty: true})
       }
     }
   }, [activeTab, activeFile, updateTabContent, updateFile])
@@ -100,7 +265,10 @@ function EditorPaneComponent() {
       const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0
       const cmdOrCtrl = isMac ? e.metaKey : e.ctrlKey
 
-      if (cmdOrCtrl && e.key === 's') {
+      if (cmdOrCtrl && e.shiftKey && e.key === 'S') {
+        e.preventDefault()
+        handleSaveAll()
+      } else if (cmdOrCtrl && e.key === 's') {
         e.preventDefault()
         handleSaveFile()
       } else if (cmdOrCtrl && e.key === 'f') {
@@ -114,10 +282,10 @@ function EditorPaneComponent() {
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [handleSaveFile, find, replace])
+  }, [handleSaveFile, handleSaveAll, find, replace])
 
   return (
-    <div data-testid="editor-pane" className="flex-1 flex flex-col bg-bg-primary overflow-hidden">
+    <div data-testid="editor-pane" data-tutorial="editor-pane" className="flex-1 flex flex-col bg-bg-primary overflow-hidden">
       {/* Editor Tabs */}
       <div className="h-10 bg-bg-secondary border-b border-border-subtle flex items-center overflow-x-auto">
         {tabs.length > 0 ? (
@@ -147,6 +315,7 @@ function EditorPaneComponent() {
                       e.stopPropagation()
                       handleCloseTab(tab.id)
                     }}
+                    aria-label={`Close ${tab.name} tab`}
                     className="ml-1 text-text-secondary hover:text-text-primary"
                   >
                     ✕
@@ -189,41 +358,122 @@ function EditorPaneComponent() {
               </div>
             </div>
 
-            {/* Monaco Editor with syntax highlighting and validation */}
+            {/* Monaco Editor or Asset List */}
             <div data-testid="monaco-editor" className="flex-1 overflow-hidden bg-bg-primary">
-              <MonacoEditor
-                value={fileContent}
-                onChange={handleContentChange}
-                language={activeFile.type === 'jpe' ? 'jpe' : 'xml'}
-                theme="dark"
-                readOnly={false}
-                markers={fileDiagnostics.map((d) => ({
-                  line: d.line || 1,
-                  column: 1,
-                  severity: d.severity as 'error' | 'warning' | 'info',
-                  message: d.message,
-                }))}
-              />
+              {activeFile.type === 'package' ? (
+                <AssetList
+                  packagePath={activeFile.path}
+                  onOpenResource={(resource) => {
+                    const { openTab } = useEditorStore.getState()
+                    openTab({
+                      id: resource.id,
+                      fileId: resource.id,
+                      name: resource.name,
+                      isDirty: false
+                    })
+                  }}
+                  onExtractResource={async (resource: VirtualFile) => {
+                    try {
+                      const { activePackageBuffer } = useProjectStore.getState()
+                      if (!activePackageBuffer) {
+                        toast.error('Package buffer not loaded')
+                        return
+                      }
+                      const data = await PackageService.extractResourceFast(
+                        activeFile.path,
+                        resource.resource,
+                        activePackageBuffer
+                      )
+                      if (data) {
+                        toast.success(`Extracted: ${resource.name} (${(data.byteLength / 1024).toFixed(1)}KB)`)
+                      } else {
+                        toast.error(`Failed to extract: ${resource.name}`)
+                      }
+                    } catch (error) {
+                      toast.error(`Extract error: ${error instanceof Error ? error.message : 'Unknown error'}`)
+                    }
+                  }}
+                  onExtractAll={async () => {
+                    const { activePackageBuffer } = useProjectStore.getState()
+                    if (!activePackageBuffer) {
+                      toast.error('Package buffer not loaded')
+                      return
+                    }
+                    const virtualFiles = PackageService.getVirtualFiles(activeFile.path)
+                    let successCount = 0
+                    let failCount = 0
+
+                    for (const vf of virtualFiles) {
+                      try {
+                        const data = await PackageService.extractResourceFast(
+                          activeFile.path,
+                          vf.resource,
+                          activePackageBuffer
+                        )
+                        if (data) successCount++
+                        else failCount++
+                      } catch {
+                        failCount++
+                      }
+                    }
+
+                    if (failCount > 0) {
+                      toast.info(`Extracted ${successCount}/${virtualFiles.length} resources (${failCount} failed)`)
+                    } else {
+                      toast.success(`Extracted all ${successCount} resources`)
+                    }
+                  }}
+                />
+              ) : activeFile.type === 'image' ? (
+                <ResourcePreviewer
+                   id={activeFile.id}
+                   name={activeFile.name}
+                   type={activeFile.type}
+                   content={fileContent}
+                   resource={{
+                     type: parseInt(activeFile.id.split('-')[0] || '0', 16),
+                     group: parseInt(activeFile.id.split('-')[1] || '0', 16),
+                     instanceHex: activeFile.id.split('-')[2]?.toUpperCase() || '0',
+                     size: activeFile.size || 0,
+                     isCompressed: false 
+                   }}
+                />
+              ) : (
+                <MonacoEditor
+                  value={fileContent}
+                  onChange={handleContentChange}
+                  onCursorChange={setCursorLine}
+                  language={
+                    activeFile.type === 'jpe' ? 'jpe' :
+                    (activeFile.type === 'py' || activeFile.type === 'ts4script') ? 'python' :
+                    'xml'
+                  }
+                  theme={theme}
+                  readOnly={false}
+                  markers={fileDiagnostics.map((d) => ({
+                    line: d.line || 1,
+                    column: 1,
+                    severity: d.severity as 'error' | 'warning' | 'info',
+                    message: d.message}))}
+                />
+              )}
+              {/* Spectral Sensory Overlay (HUD) */}
+              <SensoryOverlay />
             </div>
 
-            {/* Status bar */}
-            <div className="h-6 bg-bg-secondary border-t border-border-subtle px-4 flex items-center justify-between text-xs text-text-secondary">
-              <span>
-                {errorCount > 0 && <span className="text-state-error">{errorCount} error{errorCount > 1 ? 's' : ''}</span>}
-                {errorCount > 0 && warningCount > 0 && <span className="mx-2">•</span>}
-                {warningCount > 0 && <span className="text-state-warning">{warningCount} warning{warningCount > 1 ? 's' : ''}</span>}
-              </span>
-              <span>
-                {fileContent.split('\n').length} lines • {fileContent.length} characters
-              </span>
-            </div>
+            {/* Logical Status Bar (JPE block context + diagnostics) */}
+            <LogicalStatusBar
+              content={fileContent}
+              cursorLine={cursorLine}
+              fileType={activeFile.type}
+              errorCount={errorCount}
+              warningCount={warningCount}
+              lineCount={fileContent.split('\n').length}
+              charCount={fileContent.length}
+            />
           </div>
         ) : (
-          <div className="flex-1 flex flex-col items-center justify-center text-text-secondary">
-            <div className="text-4xl mb-4">📄</div>
-            <div className="text-sm mb-2">No file selected</div>
-            <div className="text-xs">Click a file in the project tree to open it</div>
-          </div>
+          <WelcomeScreen hasProject={!!currentProject} />
         )}
       </div>
     </div>

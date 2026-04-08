@@ -1,3 +1,5 @@
+"use client";
+
 /**
  * Pattern Suggestions Component
  * Displays detected patterns and insights for the current project

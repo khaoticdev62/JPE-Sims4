@@ -1,0 +1,5 @@
+interaction: "Ask About Day"
+if test relationship then increase skill by 2
+else decrease skill by 1
+
+apply buff moodlet

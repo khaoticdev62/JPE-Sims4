@@ -1,3 +1,5 @@
+"use client";
+
 import { useMemo } from 'react'
 import type { Diagnostic } from '@/types/index'
 import DiagnosticItem from './DiagnosticItem'

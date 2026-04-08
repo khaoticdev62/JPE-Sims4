@@ -1,3 +1,5 @@
+"use client";
+
 import { useMemo } from 'react'
 
 interface DiffChange {
@@ -18,8 +20,8 @@ interface DiffSideBySideProps {
  * Side-by-side diff view showing XML and JPE comparison
  */
 export default function DiffSideBySide({
-  leftContent,
-  rightContent,
+  leftContent: _leftContent,
+  rightContent: _rightContent,
   leftLabel,
   rightLabel,
   changes,
@@ -27,22 +29,22 @@ export default function DiffSideBySide({
   const { leftLines, rightLines } = useMemo(() => {
     const left: string[] = []
     const right: string[] = []
-    let leftNum = 1
-    let rightNum = 1
+    let _leftNum = 1
+    let _rightNum = 1
 
     changes.forEach((change) => {
-      if (change.type === 'remove') {
-        left.push(change.content)
-        leftNum++
-      } else if (change.type === 'add') {
-        right.push(change.content)
-        rightNum++
-      } else {
-        left.push(change.content)
-        right.push(change.content)
-        leftNum++
-        rightNum++
-      }
+        if (change.type === 'remove') {
+          left.push(change.content)
+          _leftNum++
+        } else if (change.type === 'add') {
+          right.push(change.content)
+          _rightNum++
+        } else {
+          left.push(change.content)
+          right.push(change.content)
+          _leftNum++
+          _rightNum++
+        }
     })
 
     return { leftLines: left, rightLines: right }

@@ -1,23 +1,63 @@
 import { create } from 'zustand'
-import { devtools, persist } from 'zustand/middleware'
+import { devtools, persist, createJSONStorage } from 'zustand/middleware'
+import { safeStorage } from '@/utils/storage'
+import { WorkspaceMode } from '@/components/robust/jpe-theme'
 
 interface UIState {
-  theme: 'dark' | 'light'
+  theme: 'dark' | 'light' | 'high-contrast'
   sidebarCollapsed: boolean
   rightPanelCollapsed: boolean
   showDiagnostics: boolean
   fontSize: number
   showLineNumbers: boolean
+  sidebarTab: 'explorer' | 'ai' | 'dictionary' | 'health'
+  rightPanelTab: 'diagnostics' | 'preview' | 'docs' | 'copilot'
   focusedPane: 'sidebar' | 'editor' | 'right-panel' | 'diagnostics' | 'app-nav'
-
+  immersionMode: 'normal' | 'zen' | 'focus' | 'handheld'
+  workspaceMode: WorkspaceMode
+  
   // Actions
+  setWorkspaceMode: (mode: WorkspaceMode) => void
+  setImmersionMode: (mode: 'normal' | 'zen' | 'focus' | 'handheld') => void
+  setSidebarTab: (tab: 'explorer' | 'ai' | 'dictionary' | 'health') => void
   setFocusedPane: (pane: 'sidebar' | 'editor' | 'right-panel' | 'diagnostics' | 'app-nav') => void
-  setTheme: (theme: 'dark' | 'light') => void
+  setRightPanelTab: (tab: 'diagnostics' | 'preview' | 'docs' | 'copilot') => void
+  setTheme: (theme: 'dark' | 'light' | 'high-contrast') => void
   toggleSidebar: () => void
   toggleRightPanel: () => void
   toggleDiagnostics: () => void
   setFontSize: (size: number) => void
   setShowLineNumbers: (show: boolean) => void
+  
+  // Command Palette (Story 6.3)
+  isCommandPaletteOpen: boolean
+  toggleCommandPalette: () => void
+  setCommandPaletteOpen: (open: boolean) => void
+  
+  // Onboarding Tour
+  isTourOpen: boolean
+  setTourOpen: (open: boolean) => void
+  toggleTour: () => void
+  hasCompletedTour: boolean
+  setHasCompletedTour: (completed: boolean) => void
+  
+  // Interactive Tutorial (Story 5.1)
+  tutorialStep: number
+  isTutorialActive: boolean
+  setTutorialStep: (step: number) => void
+  setTutorialActive: (active: boolean) => void
+  
+  // Mod Indexing
+  modsFolderPath: string | null
+  setModsFolderPath: (path: string | null) => void
+
+  // Wizards (Story 7.1)
+  isBuffWizardOpen: boolean
+  setBuffWizardOpen: (open: boolean) => void
+  isInteractionWizardOpen: boolean
+  setInteractionWizardOpen: (open: boolean) => void
+  isTraitWizardOpen: boolean
+  setTraitWizardOpen: (open: boolean) => void
 }
 
 export const useUIStore = create<UIState>()(
@@ -30,13 +70,52 @@ export const useUIStore = create<UIState>()(
         showDiagnostics: true,
         fontSize: 13,
         showLineNumbers: true,
+        rightPanelTab: 'diagnostics',
+        sidebarTab: 'explorer',
         focusedPane: 'editor',
+        immersionMode: 'normal',
+        workspaceMode: 'dashboard',
+
+        setWorkspaceMode: (mode) => {
+          set({ workspaceMode: mode })
+          
+          // Auto-adjust layout for specific major modes
+          if (mode === 'dashboard' || mode === 'manual' || mode === 'settings') {
+            set({ sidebarCollapsed: true, rightPanelCollapsed: true })
+          } else if (mode === 'code' || mode === 'translation' || mode === 'jpe') {
+            set({ sidebarCollapsed: false, rightPanelCollapsed: false })
+          }
+        },
+
+        setSidebarTab: (tab) => set({ sidebarTab: tab }),
 
         setFocusedPane: (pane) => set({ focusedPane: pane }),
 
+        setRightPanelTab: (tab) => set({ rightPanelTab: tab }),
+
+        setImmersionMode: (mode) => {
+          set({ immersionMode: mode })
+          
+          // Auto-adjust layout based on mode
+          if (mode === 'zen') {
+            set({ sidebarCollapsed: true, rightPanelCollapsed: true, showDiagnostics: false })
+          } else if (mode === 'focus') {
+            set({ sidebarCollapsed: true, rightPanelCollapsed: false, rightPanelTab: 'diagnostics' })
+          } else if (mode === 'normal') {
+            set({ sidebarCollapsed: false, rightPanelCollapsed: false })
+          }
+        },
+
         setTheme: (theme) => {
           set({ theme })
-          document.documentElement.classList.toggle('dark', theme === 'dark')
+          const root = document.documentElement
+          root.classList.remove('dark', 'light', 'theme-high-contrast')
+          
+          if (theme === 'high-contrast') {
+            root.classList.add('theme-high-contrast')
+          } else {
+            root.classList.add(theme)
+          }
         },
 
         toggleSidebar: () => {
@@ -62,9 +141,36 @@ export const useUIStore = create<UIState>()(
         setShowLineNumbers: (show) => {
           set({ showLineNumbers: show })
         },
+
+        isCommandPaletteOpen: false,
+        toggleCommandPalette: () => set((state) => ({ isCommandPaletteOpen: !state.isCommandPaletteOpen })),
+        setCommandPaletteOpen: (open) => set({ isCommandPaletteOpen: open }),
+
+        isTourOpen: false,
+        setTourOpen: (open) => set({ isTourOpen: open }),
+        toggleTour: () => set((state) => ({ isTourOpen: !state.isTourOpen })),
+        hasCompletedTour: false,
+        setHasCompletedTour: (completed) => set({ hasCompletedTour: completed }),
+
+        tutorialStep: 0,
+        isTutorialActive: false,
+        setTutorialStep: (step) => set({ tutorialStep: step }),
+        setTutorialActive: (active) => set({ isTutorialActive: active }),
+
+        modsFolderPath: null,
+        setModsFolderPath: (path) => set({ modsFolderPath: path }),
+
+        // Wizards
+        isBuffWizardOpen: false,
+        setBuffWizardOpen: (open) => set({ isBuffWizardOpen: open }),
+        isInteractionWizardOpen: false,
+        setInteractionWizardOpen: (open) => set({ isInteractionWizardOpen: open }),
+        isTraitWizardOpen: false,
+        setTraitWizardOpen: (open) => set({ isTraitWizardOpen: open }),
       }),
       {
         name: 'jpe-ui-store',
+        storage: createJSONStorage(() => safeStorage),
       }
     )
   )

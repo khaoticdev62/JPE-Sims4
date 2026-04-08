@@ -1,4 +1,7 @@
-import { useState } from 'react'
+"use client";
+
+import { useState, useId } from 'react'
+import FileContextMenu from './FileContextMenu'
 
 interface FileGroupHeaderProps {
   name: string
@@ -7,6 +10,7 @@ interface FileGroupHeaderProps {
   errorCount: number
   warningCount: number
   children: React.ReactNode
+  onAddFile?: () => void
 }
 
 /**
@@ -20,14 +24,28 @@ export default function FileGroupHeader({
   errorCount,
   warningCount,
   children,
+  onAddFile,
 }: FileGroupHeaderProps) {
   const [isExpanded, setIsExpanded] = useState(true)
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null)
+  const groupId = useId()
+  const panelId = `${groupId}-panel`
+
+  const handleContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault()
+    setContextMenu({ x: e.clientX, y: e.clientY })
+  }
 
   return (
-    <div className="space-y-1">
+    <div className="space-y-1" role="treeitem" aria-expanded={isExpanded}>
       {/* Group Header */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
+        onContextMenu={handleContextMenu}
+        id={groupId}
+        aria-controls={panelId}
+        aria-expanded={isExpanded}
+        aria-label={`${name}, ${fileCount} files${errorCount > 0 ? `, ${errorCount} errors` : ''}${warningCount > 0 ? `, ${warningCount} warnings` : ''}`}
         className="w-full flex items-center gap-2 px-3 py-2 text-sm font-medium text-text-primary hover:bg-background-tertiary rounded transition-colors"
       >
         {/* Expand/Collapse Arrow */}
@@ -69,9 +87,22 @@ export default function FileGroupHeader({
 
       {/* Group Content */}
       {isExpanded && (
-        <div className="space-y-0.5 pl-4">
+        <div id={panelId} role="group" aria-labelledby={groupId} className="space-y-0.5 pl-4">
           {children}
         </div>
+      )}
+
+      {/* Context Menu */}
+      {contextMenu && (
+        <FileContextMenu
+          isGroupHeader
+          position={contextMenu}
+          onClose={() => setContextMenu(null)}
+          onAddFile={() => {
+            setContextMenu(null)
+            onAddFile?.()
+          }}
+        />
       )}
     </div>
   )

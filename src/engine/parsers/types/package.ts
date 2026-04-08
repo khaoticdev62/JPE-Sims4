@@ -81,6 +81,11 @@ export const DBPF_RESOURCE_TYPES = {
   GameplayData: 0x0c9c5c4f, // Gameplay Data
   Script: 0xc61e27f1, // Python Script
   CompressedResource: 0xcc09e23a, // Compressed resource header
+  PNG: 0x00b2d882, // Portable Network Graphics
+  DDS: 0x3453cf72, // DirectDraw Surface (Texture)
+  LRLE: 0x033a2f4a, // Linear Run-Length Encoded (Texture)
+  THUM: 0x3c1af1f0, // Thumbnail
+  LITE: 0x9158220c, // Light Resource
 } as const
 
 /**
@@ -121,10 +126,17 @@ export function getResourceTypeName(type: number): string {
     [DBPF_RESOURCE_TYPES.GameplayData]: 'Gameplay Data',
     [DBPF_RESOURCE_TYPES.Script]: 'Python Script',
     [DBPF_RESOURCE_TYPES.CompressedResource]: 'Compressed Resource',
+    [DBPF_RESOURCE_TYPES.PNG]: 'PNG Image',
+    [DBPF_RESOURCE_TYPES.DDS]: 'DDS Texture',
+    [DBPF_RESOURCE_TYPES.LRLE]: 'LRLE Texture',
+    [DBPF_RESOURCE_TYPES.THUM]: 'Thumbnail',
+    [DBPF_RESOURCE_TYPES.LITE]: 'Light Resource',
   }
 
-  return typeMap[type] || `Unknown (0x${type.toString(16)})`
+  return typeMap[type] || `Unknown (0x${type.toString(16).toUpperCase()})`
 }
+
+import pako from 'pako'
 
 /**
  * Decompress data using ZLIB compression
@@ -134,12 +146,18 @@ export async function decompressZLIB(
   data: ArrayBuffer,
   expectedSize: number
 ): Promise<ArrayBuffer | null> {
-  // Note: In a real implementation, this would use a ZLIB library
-  // For now, this is a placeholder
   try {
-    // This would require importing a compression library like pako or zlib.js
-    // return decompress(new Uint8Array(data));
-    return data // Return as-is for uncompressed data
+    const uint8Data = new Uint8Array(data)
+    
+    // Check if the data is actually compressed
+    // Simulations 4 uses standard ZLIB (RFC 1950)
+    const decompressed = pako.inflate(uint8Data)
+    
+    if (decompressed.length !== expectedSize) {
+      console.warn(`Decompressed size mismatch: expected ${expectedSize}, got ${decompressed.length}`)
+    }
+    
+    return decompressed.buffer as ArrayBuffer
   } catch (error) {
     console.error('Decompression failed:', error)
     return null

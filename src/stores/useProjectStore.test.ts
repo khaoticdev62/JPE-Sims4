@@ -3,7 +3,8 @@
  * Tests project and file state management
  */
 
-import { describe, it, expect, beforeEach } from 'vitest'
+// Vitest not available - using Jest
+import { describe, it, expect, beforeEach } from '@jest/globals'
 import { useProjectStore } from './useProjectStore'
 import type { Project, ModFile } from '@/types/index'
 
@@ -120,17 +121,15 @@ describe('useProjectStore', () => {
     it('should add a file to current project', () => {
       let store = useProjectStore.getState()
       const file: ModFile = {
-        id: 'file-1',
-        name: 'test.xml',
-        path: '/test.xml',
+        id: 'file-1', name: 'test.xml', projectId: 'test-project', path: '/test.xml',
         type: 'xml',
         content: 'content',
         isDirty: false,
         size: 7,
-        lastModified: new Date(),
+        lastModified: Date.now(),
       }
 
-      store.addFile(file)
+      store.addFile(file.id)
       store = useProjectStore.getState()
       expect(store.currentProject?.files).toHaveLength(1)
       expect(store.currentProject?.files[0].id).toBe('file-1')
@@ -139,17 +138,15 @@ describe('useProjectStore', () => {
     it('should get file by ID', () => {
       let store = useProjectStore.getState()
       const file: ModFile = {
-        id: 'file-1',
-        name: 'test.xml',
-        path: '/test.xml',
+        id: 'file-1', name: 'test.xml', projectId: 'test-project', path: '/test.xml',
         type: 'xml',
         content: 'content',
         isDirty: false,
         size: 7,
-        lastModified: new Date(),
+        lastModified: Date.now(),
       }
 
-      store.addFile(file)
+      store.addFile(file.id)
       store = useProjectStore.getState()
       const retrieved = store.getFile('file-1')
       expect(retrieved).toBeDefined()
@@ -165,17 +162,15 @@ describe('useProjectStore', () => {
     it('should update file content and mark as dirty', () => {
       let store = useProjectStore.getState()
       const file: ModFile = {
-        id: 'file-1',
-        name: 'test.xml',
-        path: '/test.xml',
+        id: 'file-1', name: 'test.xml', projectId: 'test-project', path: '/test.xml',
         type: 'xml',
         content: 'original',
         isDirty: false,
         size: 8,
-        lastModified: new Date(),
+        lastModified: Date.now(),
       }
 
-      store.addFile(file)
+      store.addFile(file.id)
       store = useProjectStore.getState()
       store.updateFile('file-1', { content: 'updated' })
       store = useProjectStore.getState()
@@ -188,17 +183,15 @@ describe('useProjectStore', () => {
     it('should remove file from project', () => {
       let store = useProjectStore.getState()
       const file: ModFile = {
-        id: 'file-1',
-        name: 'test.xml',
-        path: '/test.xml',
+        id: 'file-1', name: 'test.xml', projectId: 'test-project', path: '/test.xml',
         type: 'xml',
         content: 'content',
         isDirty: false,
         size: 7,
-        lastModified: new Date(),
+        lastModified: Date.now(),
       }
 
-      store.addFile(file)
+      store.addFile(file.id)
       store = useProjectStore.getState()
       expect(store.currentProject?.files).toHaveLength(1)
 
@@ -213,15 +206,16 @@ describe('useProjectStore', () => {
       for (let i = 0; i < 3; i++) {
         const file: ModFile = {
           id: `file-${i}`,
+          projectId: 'test-project',
           name: `test${i}.xml`,
           path: `/test${i}.xml`,
           type: 'xml',
           content: `content${i}`,
           isDirty: false,
           size: 7,
-          lastModified: new Date(),
+          lastModified: Date.now(),
         }
-        store.addFile(file)
+        store.addFile(file.id)
         store = useProjectStore.getState()
       }
 

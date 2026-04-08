@@ -3,17 +3,26 @@ from __future__ import annotations
 import lxml.etree as ET
 from pathlib import Path
 from typing import List
+# SECURITY FIX: Removed unsafe sys.path.insert() - use proper package imports instead
 
 from engine.ir import (
-    ProjectIR, ProjectMetadata, ResourceId, Interaction, InteractionParticipant,
-    Buff, Trait, EnumDefinition, EnumOption, TestSet, TestCondition, TestOperand,
-    LootAction, StatisticModifier, LocalizedString
+    ProjectIR,
+    ProjectMetadata,
+    ResourceId,
+    Interaction,
+    InteractionParticipant,
+    Buff,
+    Trait,
+    EnumDefinition,
+    EnumOption,
+    TestSet,
+    TestCondition,
+    TestOperand,
+    LootAction,
+    StatisticModifier,
+    LocalizedString,
 )
-import sys
-from pathlib import Path
-# Add the parent directory to the path to allow imports
-project_root = Path(__file__).parent.parent.parent
-sys.path.insert(0, str(project_root))
+# SECURITY FIX: Removed unsafe sys.path.insert() - use proper package imports instead
 
 from diagnostics.errors import EngineError, ErrorCategory, ErrorSeverity
 
@@ -21,7 +30,9 @@ from diagnostics.errors import EngineError, ErrorCategory, ErrorSeverity
 class XmlGenerator:
     """Generate Sims 4 XML tuning from intermediate representation."""
 
-    def generate_to_directory(self, ir: ProjectIR, target_directory: Path) -> List[EngineError]:
+    def generate_to_directory(
+        self, ir: ProjectIR, target_directory: Path
+    ) -> List[EngineError]:
         """Write XML tuning files to the target directory based on the IR.
 
         Returns a list of non-fatal errors or warnings that occurred during generation.
@@ -36,8 +47,12 @@ class XmlGenerator:
 
             # Generate interactions XML file if there are interactions
             if ir.interactions:
-                interactions_file = target_directory / f"interactions_{ir.metadata.project_id}.xml"
-                self._generate_interactions_xml(ir.interactions, interactions_file, errors)
+                interactions_file = (
+                    target_directory / f"interactions_{ir.metadata.project_id}.xml"
+                )
+                self._generate_interactions_xml(
+                    ir.interactions, interactions_file, errors
+                )
 
             # Generate buffs XML file if there are buffs
             if ir.buffs:
@@ -56,7 +71,9 @@ class XmlGenerator:
 
             # Generate strings XML file if there are localized strings
             if ir.localized_strings:
-                strings_file = target_directory / f"strings_{ir.metadata.project_id}.xml"
+                strings_file = (
+                    target_directory / f"strings_{ir.metadata.project_id}.xml"
+                )
                 self._generate_strings_xml(ir.localized_strings, strings_file, errors)
 
             # Generate a main project XML file that ties everything together
@@ -64,18 +81,25 @@ class XmlGenerator:
             self._generate_main_project_xml(ir, main_file, errors)
 
         except Exception as e:
-            errors.append(EngineError(
-                code="GENERATION_ERROR",
-                category=ErrorCategory.IO_FILE,
-                severity=ErrorSeverity.ERROR,
-                message_short="Error during XML generation",
-                message_long=str(e),
-                suggested_fix="Check that the target directory is writable and has sufficient space."
-            ))
+            errors.append(
+                EngineError(
+                    code="GENERATION_ERROR",
+                    category=ErrorCategory.IO_FILE,
+                    severity=ErrorSeverity.ERROR,
+                    message_short="Error during XML generation",
+                    message_long=str(e),
+                    suggested_fix="Check that the target directory is writable and has sufficient space.",
+                )
+            )
 
         return errors
 
-    def _generate_interactions_xml(self, interactions: List[Interaction], file_path: Path, errors: List[EngineError]) -> None:
+    def _generate_interactions_xml(
+        self,
+        interactions: List[Interaction],
+        file_path: Path,
+        errors: List[EngineError],
+    ) -> None:
         """Generate XML for interactions."""
         try:
             root = ET.Element("Tunings")
@@ -86,67 +110,94 @@ class XmlGenerator:
 
             # Add each interaction
             for interaction in interactions:
-                interaction_elem = ET.SubElement(root, "I",
+                interaction_elem = ET.SubElement(
+                    root,
+                    "I",
                     c="sims4.random_utils.DynamicAttributeMixin",
-                    id=interaction.id.name)
+                    id=interaction.id.name,
+                )
 
                 # Add display name
                 if interaction.display_name_key:
-                    ET.SubElement(interaction_elem, "T", n="display_name").text = interaction.display_name_key
+                    ET.SubElement(
+                        interaction_elem, "T", n="display_name"
+                    ).text = interaction.display_name_key
 
                 # Add description
                 if interaction.description_key:
-                    ET.SubElement(interaction_elem, "T", n="description").text = interaction.description_key
+                    ET.SubElement(
+                        interaction_elem, "T", n="description"
+                    ).text = interaction.description_key
 
                 # Add autonomy disabled flag
-                ET.SubElement(interaction_elem, "V", n="autonomy_disabled", t=" TunableFactory")
-                ET.SubElement(interaction_elem, "T", n="autonomy_disabled").text = str(interaction.autonomy_disabled).lower()
+                ET.SubElement(
+                    interaction_elem, "V", n="autonomy_disabled", t=" TunableFactory"
+                )
+                ET.SubElement(interaction_elem, "T", n="autonomy_disabled").text = str(
+                    interaction.autonomy_disabled
+                ).lower()
 
                 # Add participants if any
                 if interaction.participants:
-                    participants_list = ET.SubElement(interaction_elem, "L", n="participants")
+                    participants_list = ET.SubElement(
+                        interaction_elem, "L", n="participants"
+                    )
                     for i, participant in enumerate(interaction.participants):
                         participant_elem = ET.SubElement(participants_list, "U")
-                        ET.SubElement(participant_elem, "T", n="role").text = participant.role
+                        ET.SubElement(
+                            participant_elem, "T", n="role"
+                        ).text = participant.role
                         if participant.description:
-                            ET.SubElement(participant_elem, "T", n="description").text = participant.description
+                            ET.SubElement(
+                                participant_elem, "T", n="description"
+                            ).text = participant.description
 
             # Write the XML to file
             self._write_xml_file(root, file_path)
 
         except Exception as e:
-            errors.append(EngineError(
-                code="INTERACTION_GENERATION_ERROR",
-                category=ErrorCategory.IO_FILE,
-                severity=ErrorSeverity.ERROR,
-                message_short="Error generating interactions XML",
-                message_long=str(e),
-                suggested_fix="Check that the target file is writable and the directory exists.",
-                file_path=str(file_path)
-            ))
+            errors.append(
+                EngineError(
+                    code="INTERACTION_GENERATION_ERROR",
+                    category=ErrorCategory.IO_FILE,
+                    severity=ErrorSeverity.ERROR,
+                    message_short="Error generating interactions XML",
+                    message_long=str(e),
+                    suggested_fix="Check that the target file is writable and the directory exists.",
+                    file_path=str(file_path),
+                )
+            )
 
-    def _generate_buffs_xml(self, buffs: List[Buff], file_path: Path, errors: List[EngineError]) -> None:
+    def _generate_buffs_xml(
+        self, buffs: List[Buff], file_path: Path, errors: List[EngineError]
+    ) -> None:
         """Generate XML for buffs."""
         try:
             root = ET.Element("Tunings")
 
             # Add each buff
             for buff in buffs:
-                buff_elem = ET.SubElement(root, "I",
-                    c="buffs.buff.Buff",
-                    id=buff.id.name)
+                buff_elem = ET.SubElement(
+                    root, "I", c="buffs.buff.Buff", id=buff.id.name
+                )
 
                 # Add display name
                 if buff.display_name_key:
-                    ET.SubElement(buff_elem, "T", n="display_name").text = buff.display_name_key
+                    ET.SubElement(
+                        buff_elem, "T", n="display_name"
+                    ).text = buff.display_name_key
 
                 # Add description
                 if buff.description_key:
-                    ET.SubElement(buff_elem, "T", n="description").text = buff.description_key
+                    ET.SubElement(
+                        buff_elem, "T", n="description"
+                    ).text = buff.description_key
 
                 # Add duration if specified
                 if buff.duration_sim_minutes is not None:
-                    ET.SubElement(buff_elem, "T", n="duration").text = str(buff.duration_sim_minutes)
+                    ET.SubElement(buff_elem, "T", n="duration").text = str(
+                        buff.duration_sim_minutes
+                    )
 
                 # Add traits if any
                 if buff.traits:
@@ -158,65 +209,82 @@ class XmlGenerator:
             self._write_xml_file(root, file_path)
 
         except Exception as e:
-            errors.append(EngineError(
-                code="BUFF_GENERATION_ERROR",
-                category=ErrorCategory.IO_FILE,
-                severity=ErrorSeverity.ERROR,
-                message_short="Error generating buffs XML",
-                message_long=str(e),
-                suggested_fix="Check that the target file is writable and the directory exists.",
-                file_path=str(file_path)
-            ))
+            errors.append(
+                EngineError(
+                    code="BUFF_GENERATION_ERROR",
+                    category=ErrorCategory.IO_FILE,
+                    severity=ErrorSeverity.ERROR,
+                    message_short="Error generating buffs XML",
+                    message_long=str(e),
+                    suggested_fix="Check that the target file is writable and the directory exists.",
+                    file_path=str(file_path),
+                )
+            )
 
-    def _generate_traits_xml(self, traits: List[Trait], file_path: Path, errors: List[EngineError]) -> None:
+    def _generate_traits_xml(
+        self, traits: List[Trait], file_path: Path, errors: List[EngineError]
+    ) -> None:
         """Generate XML for traits."""
         try:
             root = ET.Element("Tunings")
 
             # Add each trait
             for trait in traits:
-                trait_elem = ET.SubElement(root, "I",
-                    c="traits.trait.Trait",
-                    id=trait.id.name)
+                trait_elem = ET.SubElement(
+                    root, "I", c="traits.trait.Trait", id=trait.id.name
+                )
 
                 # Add display name
                 if trait.display_name_key:
-                    ET.SubElement(trait_elem, "T", n="display_name").text = trait.display_name_key
+                    ET.SubElement(
+                        trait_elem, "T", n="display_name"
+                    ).text = trait.display_name_key
 
                 # Add description
                 if trait.description_key:
-                    ET.SubElement(trait_elem, "T", n="description").text = trait.description_key
+                    ET.SubElement(
+                        trait_elem, "T", n="description"
+                    ).text = trait.description_key
 
                 # Add buffs if any
                 if trait.buffs:
                     buffs_list = ET.SubElement(trait_elem, "L", n="buffs")
                     for buff in trait.buffs:
-                        ET.SubElement(buffs_list, "T").text = buff.name  # Using buff name as reference
+                        ET.SubElement(
+                            buffs_list, "T"
+                        ).text = buff.name  # Using buff name as reference
 
             # Write the XML to file
             self._write_xml_file(root, file_path)
 
         except Exception as e:
-            errors.append(EngineError(
-                code="TRAIT_GENERATION_ERROR",
-                category=ErrorCategory.IO_FILE,
-                severity=ErrorSeverity.ERROR,
-                message_short="Error generating traits XML",
-                message_long=str(e),
-                suggested_fix="Check that the target file is writable and the directory exists.",
-                file_path=str(file_path)
-            ))
+            errors.append(
+                EngineError(
+                    code="TRAIT_GENERATION_ERROR",
+                    category=ErrorCategory.IO_FILE,
+                    severity=ErrorSeverity.ERROR,
+                    message_short="Error generating traits XML",
+                    message_long=str(e),
+                    suggested_fix="Check that the target file is writable and the directory exists.",
+                    file_path=str(file_path),
+                )
+            )
 
-    def _generate_enums_xml(self, enums: List[EnumDefinition], file_path: Path, errors: List[EngineError]) -> None:
+    def _generate_enums_xml(
+        self, enums: List[EnumDefinition], file_path: Path, errors: List[EngineError]
+    ) -> None:
         """Generate XML for enums."""
         try:
             root = ET.Element("Tunings")
 
             # Add each enum
             for enum_def in enums:
-                enum_elem = ET.SubElement(root, "I",
+                enum_elem = ET.SubElement(
+                    root,
+                    "I",
                     c="sims4.tuning.serialization_enum.Enum",
-                    id=enum_def.id.name)
+                    id=enum_def.id.name,
+                )
 
                 # Add options as a list
                 if enum_def.options:
@@ -225,55 +293,65 @@ class XmlGenerator:
                         option_elem = ET.SubElement(options_list, "U")
                         ET.SubElement(option_elem, "T", n="name").text = option.name
                         # Convert value to string to store in XML
-                        ET.SubElement(option_elem, "T", n="value").text = str(option.value)
+                        ET.SubElement(option_elem, "T", n="value").text = str(
+                            option.value
+                        )
 
             # Write the XML to file
             self._write_xml_file(root, file_path)
 
         except Exception as e:
-            errors.append(EngineError(
-                code="ENUM_GENERATION_ERROR",
-                category=ErrorCategory.IO_FILE,
-                severity=ErrorSeverity.ERROR,
-                message_short="Error generating enums XML",
-                message_long=str(e),
-                suggested_fix="Check that the target file is writable and the directory exists.",
-                file_path=str(file_path)
-            ))
+            errors.append(
+                EngineError(
+                    code="ENUM_GENERATION_ERROR",
+                    category=ErrorCategory.IO_FILE,
+                    severity=ErrorSeverity.ERROR,
+                    message_short="Error generating enums XML",
+                    message_long=str(e),
+                    suggested_fix="Check that the target file is writable and the directory exists.",
+                    file_path=str(file_path),
+                )
+            )
 
-    def _generate_strings_xml(self, strings: List[LocalizedString], file_path: Path, errors: List[EngineError]) -> None:
+    def _generate_strings_xml(
+        self, strings: List[LocalizedString], file_path: Path, errors: List[EngineError]
+    ) -> None:
         """Generate XML for localized strings."""
         try:
             root = ET.Element("STBL")
 
             # Add each localized string
             for string in strings:
-                string_elem = ET.SubElement(root, "string",
-                    id=string.key,
-                    language=string.locale)
+                string_elem = ET.SubElement(
+                    root, "string", id=string.key, language=string.locale
+                )
                 string_elem.text = string.text
 
             # Write the XML to file with proper XML declaration and pretty printing
             tree = ET.ElementTree(root)
             tree.write(
-                str(file_path), 
-                encoding="utf-8", 
-                xml_declaration=True, 
-                pretty_print=True
+                str(file_path),
+                encoding="utf-8",
+                xml_declaration=True,
+                pretty_print=True,
             )
 
         except Exception as e:
-            errors.append(EngineError(
-                code="STRING_GENERATION_ERROR",
-                category=ErrorCategory.IO_FILE,
-                severity=ErrorSeverity.ERROR,
-                message_short="Error generating strings XML",
-                message_long=str(e),
-                suggested_fix="Check that the target file is writable and the directory exists.",
-                file_path=str(file_path)
-            ))
+            errors.append(
+                EngineError(
+                    code="STRING_GENERATION_ERROR",
+                    category=ErrorCategory.IO_FILE,
+                    severity=ErrorSeverity.ERROR,
+                    message_short="Error generating strings XML",
+                    message_long=str(e),
+                    suggested_fix="Check that the target file is writable and the directory exists.",
+                    file_path=str(file_path),
+                )
+            )
 
-    def _generate_main_project_xml(self, ir: ProjectIR, file_path: Path, errors: List[EngineError]) -> None:
+    def _generate_main_project_xml(
+        self, ir: ProjectIR, file_path: Path, errors: List[EngineError]
+    ) -> None:
         """Generate the main project XML file that references all other components."""
         try:
             root = ET.Element("I", c="Tuning")
@@ -281,7 +359,9 @@ class XmlGenerator:
             # Add project metadata
             project_info = ET.SubElement(root, "U", n="project_metadata")
             ET.SubElement(project_info, "T", n="name").text = ir.metadata.name
-            ET.SubElement(project_info, "T", n="project_id").text = ir.metadata.project_id
+            ET.SubElement(
+                project_info, "T", n="project_id"
+            ).text = ir.metadata.project_id
             ET.SubElement(project_info, "T", n="version").text = ir.metadata.version
             if ir.metadata.author:
                 ET.SubElement(project_info, "T", n="author").text = ir.metadata.author
@@ -316,15 +396,17 @@ class XmlGenerator:
             self._write_xml_file(root, file_path)
 
         except Exception as e:
-            errors.append(EngineError(
-                code="PROJECT_GENERATION_ERROR",
-                category=ErrorCategory.IO_FILE,
-                severity=ErrorSeverity.ERROR,
-                message_short="Error generating project XML",
-                message_long=str(e),
-                suggested_fix="Check that the target file is writable and the directory exists.",
-                file_path=str(file_path)
-            ))
+            errors.append(
+                EngineError(
+                    code="PROJECT_GENERATION_ERROR",
+                    category=ErrorCategory.IO_FILE,
+                    severity=ErrorSeverity.ERROR,
+                    message_short="Error generating project XML",
+                    message_long=str(e),
+                    suggested_fix="Check that the target file is writable and the directory exists.",
+                    file_path=str(file_path),
+                )
+            )
 
     def _write_xml_file(self, root: ET.Element, file_path: Path) -> None:
         """Write an XML element tree to a file with proper formatting."""
@@ -333,8 +415,5 @@ class XmlGenerator:
 
         # Write with UTF-8 encoding, XML declaration and pretty printing
         tree.write(
-            str(file_path), 
-            encoding="utf-8", 
-            xml_declaration=True, 
-            pretty_print=True
+            str(file_path), encoding="utf-8", xml_declaration=True, pretty_print=True
         )

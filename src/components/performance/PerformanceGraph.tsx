@@ -13,7 +13,7 @@ interface PerformanceGraphProps {
 export default function PerformanceGraph({
   title,
   data,
-  color = '#2EC4B6',
+  color: _color = '#2EC4B6',
   unit = 'ms'
 }: PerformanceGraphProps) {
   if (data.length === 0) {
@@ -31,7 +31,7 @@ export default function PerformanceGraph({
   const avg = Math.round(data.reduce((a, b) => a + b, 0) / data.length)
 
   // Create simple text-based bar chart
-  const chartHeight = 100 // pixels for visualization
+  const _chartHeight = 100 // pixels for visualization
 
   return (
     <div className="bg-background-secondary border border-border-subtle rounded-lg p-4">
@@ -51,7 +51,7 @@ export default function PerformanceGraph({
           {data.map((value, idx) => {
             const height = ((value - min) / range) * 100 || 5
             const isMax = value === max
-            const isMin = value === min
+            const _isMin = value === min
             const isAboveAvg = value > avg
 
             return (

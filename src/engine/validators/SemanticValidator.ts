@@ -12,7 +12,6 @@ import type {
   STBLRegistry,
   EnumRegistry,
   SemanticValidatorConfig,
-  ASTNodeWithLocation,
   TuningReference,
   EnumValidationContext,
   STBLKeyValidationContext,

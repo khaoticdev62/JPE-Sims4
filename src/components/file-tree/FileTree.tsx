@@ -1,16 +1,20 @@
+"use client";
+
 import { useMemo } from 'react'
 import { useProjectStore } from '@/stores/useProjectStore'
 import { useDiagnosticStore } from '@/stores/useDiagnosticStore'
 import { useEditorStore } from '@/stores/useEditorStore'
 import FileGroupHeader from './FileGroupHeader'
 import FileTreeNode from './FileTreeNode'
-import type { ModFile } from '@/types/index'
+import type { ModFile, FileType } from '@/types/index'
+import { PackageService } from '@/services/PackageService'
 
 interface FileTreeProps {
   onOpenFile?: (file: ModFile) => void
   onValidateFile?: (file: ModFile) => void
   onDeleteFile?: (file: ModFile) => void
   onRenameFile?: (file: ModFile) => void
+  onAddFile?: () => void
 }
 
 interface FileGroup {
@@ -29,6 +33,7 @@ export default function FileTree({
   onValidateFile,
   onDeleteFile,
   onRenameFile,
+  onAddFile,
 }: FileTreeProps) {
   const { currentProject } = useProjectStore()
   const { getDiagnosticsForFile } = useDiagnosticStore()
@@ -74,9 +79,35 @@ export default function FileTree({
   const organizedGroups = useMemo(() => {
     if (!currentProject) return []
 
+    // 1. Get physical files
+    const allFiles = [...currentProject.files]
+
+    // 2. Identify packages and fetch virtual files
+    const packages = allFiles.filter(f => f.type === 'package')
+    const virtualFiles: ModFile[] = []
+
+    packages.forEach(pkg => {
+      const vFiles = PackageService.getVirtualFiles(pkg.path)
+      vFiles.forEach(vf => {
+        virtualFiles.push({
+          id: vf.id,
+          projectId: pkg.projectId,
+          name: vf.name,
+          path: vf.path,
+          type: vf.type as FileType,
+          content: '', // Content is loaded on demand
+          isDirty: false,
+          size: vf.resource.size,
+          lastModified: pkg.lastModified // Inherit from package
+        })
+      })
+    })
+
+    const mergedFiles = [...allFiles, ...virtualFiles]
+
     const groups = fileGroups.map((group) => ({
       ...group,
-      files: currentProject.files.filter(
+      files: mergedFiles.filter(
         (file) =>
           group.pattern(file.name) &&
           !fileGroups.some(
@@ -110,7 +141,7 @@ export default function FileTree({
 
   if (!currentProject) {
     return (
-      <div className="p-4 text-center text-text-secondary text-sm">
+      <div className="p-4 text-center text-text-secondary text-sm" role="status">
         No project loaded
       </div>
     )
@@ -118,14 +149,14 @@ export default function FileTree({
 
   if (currentProject.files.length === 0) {
     return (
-      <div className="p-4 text-center text-text-secondary text-sm">
+      <div className="p-4 text-center text-text-secondary text-sm" role="status">
         No files in project
       </div>
     )
   }
 
   return (
-    <div className="space-y-2 p-2">
+    <div className="space-y-2 p-2" role="tree" aria-label="Project file tree">
       {organizedGroups.map((group) => {
         const stats = getGroupStats(group.files)
         return (
@@ -136,6 +167,7 @@ export default function FileTree({
             fileCount={group.files.length}
             errorCount={stats.errorCount}
             warningCount={stats.warningCount}
+            onAddFile={onAddFile}
           >
             {group.files.map((file) => (
               <FileTreeNode

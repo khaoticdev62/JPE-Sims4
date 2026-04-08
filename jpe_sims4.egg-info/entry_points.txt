@@ -1,4 +1,0 @@
-[console_scripts]
-jpe-sims4 = cli:main
-jpe-studio = jpe_studio.app:main
-jpe-studio-qt = jpe_studio_qt.app:main

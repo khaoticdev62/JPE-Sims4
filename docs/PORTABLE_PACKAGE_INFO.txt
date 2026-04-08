@@ -1,0 +1,12 @@
+
+Portable Package Contents:
+- jpe-sims4-cli.exe (command-line interface)
+- jpe-sims4-studio.exe (desktop application)
+- README.md
+- docs/ (documentation)
+- examples/ (example projects)
+
+To use the portable version:
+1. Extract the ZIP file to any location
+2. Run jpe-sims4-studio.exe for the GUI
+3. Run jpe-sims4-cli.exe for the command-line interface

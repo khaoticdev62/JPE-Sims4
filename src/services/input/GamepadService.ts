@@ -1,15 +1,15 @@
-import { GamepadState, GamepadEventHandler } from './types';
+import { GamepadState, GamepadEventHandler, EditorAction } from './types';
+import { sensory } from '../SensoryService';
 
 export class GamepadService {
   private static instance: GamepadService;
-  private pollIntervalId: number | null = null;
+  private animFrameId: number | null = null;
   private previousState: GamepadState = {};
   private listeners: Map<string, GamepadEventHandler[]> = new Map();
   private isPolling: boolean = false;
+  private deadzone: number = 0.15;
 
-  private constructor() {
-    // Private constructor for singleton
-  }
+  private constructor() {}
 
   static getInstance(): GamepadService {
     if (!GamepadService.instance) {
@@ -20,70 +20,107 @@ export class GamepadService {
 
   start(): void {
     if (this.isPolling) return;
-    
-    // Check if Gamepad API is supported
-    if (typeof navigator === 'undefined' || !navigator.getGamepads) {
-      console.warn('Gamepad API not supported in this environment');
-      return;
-    }
+    if (typeof window === 'undefined' || !navigator.getGamepads) return;
 
     this.isPolling = true;
-    // Poll at ~60fps
-    this.pollIntervalId = window.setInterval(() => {
-      this.pollGamepads();
-    }, 16);
+    this.poll();
     
-    console.log('GamepadService started');
+    // Industrial Handheld Link Established
+    sensory.triggerHeartbeat(0.2);
+    console.log('JPE Industrial Controller Engine: Operational');
   }
 
   stop(): void {
-    if (this.pollIntervalId !== null) {
-      window.clearInterval(this.pollIntervalId);
-      this.pollIntervalId = null;
+    if (this.animFrameId !== null) {
+      cancelAnimationFrame(this.animFrameId);
+      this.animFrameId = null;
     }
     this.isPolling = false;
     this.previousState = {};
-    console.log('GamepadService stopped');
   }
 
-  private pollGamepads(): void {
-    const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
-
+  private poll(): void {
+    const gamepads = navigator.getGamepads();
+    
     for (let i = 0; i < gamepads.length; i++) {
-      const gamepad = gamepads[i];
-      if (!gamepad) continue;
+      const gp = gamepads[i];
+      if (!gp) continue;
 
-      // Check buttons (Standard gamepad mapping has ~17 buttons)
-      gamepad.buttons.forEach((button, buttonIndex) => {
-        const key = `button_${buttonIndex}`;
-        const wasPressed = this.previousState[`gp${i}_${key}`];
+      // 1. Modifier Detection (Handheld Chords)
+      const lb = gp.buttons[4].pressed;
+      const rb = gp.buttons[5].pressed;
+
+      // 2. Button Processing
+      gp.buttons.forEach((button, idx) => {
+        const wasPressed = this.previousState[`gp${i}_btn${idx}`];
         const isPressed = button.pressed;
 
         if (isPressed && !wasPressed) {
-          this.emit(`button_down_${buttonIndex}`, { gamepad: i, button: buttonIndex });
+          this.handleButtonDown(i, idx, lb, rb);
         } else if (!isPressed && wasPressed) {
-          this.emit(`button_up_${buttonIndex}`, { gamepad: i, button: buttonIndex });
+          this.emit(`button_up_${idx}`, { gamepad: i, button: idx });
         }
 
-        this.previousState[`gp${i}_${key}`] = isPressed;
+        this.previousState[`gp${i}_btn${idx}`] = isPressed;
       });
 
-      // Check axes
-      gamepad.axes.forEach((axis, axisIndex) => {
-        // Apply deadzone
-        const deadzone = 0.1;
-        const value = Math.abs(axis) < deadzone ? 0 : axis;
-        
-        // We only emit if there's significant movement or it returns to 0
-        // Optimizing to avoid spamming events every frame if value hasn't changed much could be done here,
-        // but for now we emit every frame to ensure smooth continuous movement.
-        // A better approach for continuous axes might be letting the consumer poll the current state,
-        // but the event based approach requested in the plan is `axis_move`.
-        if (Math.abs(value) > 0) {
-             this.emit(`axis_move_${axisIndex}`, { gamepad: i, value });
+      // 3. Axis Processing (Handheld Navigation)
+      gp.axes.forEach((axis, idx) => {
+        const value = Math.abs(axis) < this.deadzone ? 0 : axis;
+        if (value !== 0) {
+          this.emit(`axis_move_${idx}`, { gamepad: i, value });
+          
+          // Audio Scrubbing for threshold crossing
+          const prevVal = this.previousState[`gp${i}_axis${idx}`];
+          const prevAbs = typeof prevVal === 'number' ? Math.abs(prevVal) : 0;
+          if (prevAbs < 0.5 && Math.abs(value) >= 0.5) {
+            sensory.triggerScrub();
+          }
         }
+        this.previousState[`gp${i}_axis${idx}`] = value;
       });
     }
+
+    if (this.isPolling) {
+      this.animFrameId = requestAnimationFrame(() => this.poll());
+    }
+  }
+
+  private handleButtonDown(gamepad: number, index: number, lb: boolean, rb: boolean): void {
+    let action: EditorAction | null = null;
+    let isChord = false;
+
+    // Industrial Chord Table (FR20)
+    if (rb) {
+      isChord = true;
+      if (index === 1) action = 'ignite';      // RB + B
+      if (index === 2) action = 'build';       // RB + X
+      if (index === 3) action = 'focus-mode';  // RB + Y
+    } else if (lb) {
+      isChord = true;
+      if (index === 14) action = 'undo';  // LB + D-Pad Left
+      if (index === 15) action = 'redo';  // LB + D-Pad Right
+      if (index === 9) action = 'show-settings'; // LB + Start
+    } else {
+      // Extended Handheld Buttons (L4/R4/L5/R5)
+      if (index === 17 || index === 19) action = 'copilot'; // R4/R5
+      if (index === 16 || index === 18) action = 'manual';  // L4/L5
+      
+      // Standard UX Actions
+      if (index === 0) action = 'accept';
+      if (index === 1) action = 'cancel';
+      if (index === 8) action = 'prev-tab';
+      if (index === 9) action = 'next-tab';
+    }
+
+    if (action) {
+      this.emit(action, { gamepad, button: index, chord: isChord });
+      this.emit('action', { gamepad, button: index, chord: isChord, action });
+      sensory.triggerScrub();
+    }
+
+    // Always emit raw button down for standard focus navigation
+    this.emit(`button_down_${index}`, { gamepad, button: index });
   }
 
   on(event: string, callback: GamepadEventHandler): void {
@@ -94,12 +131,10 @@ export class GamepadService {
   }
 
   off(event: string, callback: GamepadEventHandler): void {
-    if (!this.listeners.has(event)) return;
-    
-    const callbacks = this.listeners.get(event)!;
-    const index = callbacks.indexOf(callback);
-    if (index !== -1) {
-      callbacks.splice(index, 1);
+    const callbacks = this.listeners.get(event);
+    if (callbacks) {
+      const index = callbacks.indexOf(callback);
+      if (index !== -1) callbacks.splice(index, 1);
     }
   }
 
@@ -107,3 +142,5 @@ export class GamepadService {
     this.listeners.get(event)?.forEach(cb => cb(data));
   }
 }
+
+export const gamepad = GamepadService.getInstance();

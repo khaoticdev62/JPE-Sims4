@@ -48,24 +48,39 @@ export function useCodePrediction() {
       })
     }
 
-    // Don't predict if position hasn't changed
+    // Trigger check
+    const content = editor.getValue()
+    const offset = model.getOffsetAt(position)
+    const lineBefore = model.getLineContent(position.lineNumber).slice(0, position.column - 1)
+    
+    // Only predict on trigger characters or 3+ characters typed
+    const isTrigger = /[: ">\n]$/.test(lineBefore) || lineBefore.trim().length >= 3
+    if (!isTrigger) {
+      setVisible(false)
+      return
+    }
+
+    // Don't predict if position hasn't changed significantly
     if (lastPosition.current?.line === position.lineNumber && 
-        lastPosition.current?.column === position.column) {
+        Math.abs(lastPosition.current?.column - position.column) < 2) {
       return
     }
     lastPosition.current = { line: position.lineNumber, column: position.column }
 
-    const content = editor.getValue()
-    const offset = model.getOffsetAt(position)
-    
     // Analyze context
     const context = predictor.current.analyzeContext(content, offset, activeTab.name)
     
-    // Load patterns from store
+    // Load patterns
     const patterns = PatternStore.loadPatterns(currentProject.name)
     
-    // Get predictions
-    const results = await predictor.current.predict(context, patterns)
+    // Get predictions (Enable AI pass)
+    const results = await predictor.current.predict(
+      context, 
+      patterns, 
+      5, 
+      true, 
+      undefined // Optional: load from store in future story
+    )
     
     if (results.length > 0) {
       setPredictions(results)
@@ -75,6 +90,14 @@ export function useCodePrediction() {
       setVisible(false)
     }
   }, [activeTab, currentProject, predictionsEnabled])
+
+  // Story 6.5: Automated Debouncing
+  const debounceTimer = useRef<NodeJS.Timeout | null>(null)
+  
+  const debouncedUpdate = useCallback(() => {
+    if (debounceTimer.current) clearTimeout(debounceTimer.current)
+    debounceTimer.current = setTimeout(updatePredictions, 300)
+  }, [updatePredictions])
 
   const acceptPrediction = useCallback((index: number = selectedIndex) => {
     const prediction = predictions[index]
@@ -98,11 +121,14 @@ export function useCodePrediction() {
     if (!editor) return
 
     const disposable = editor.onDidChangeCursorPosition(() => {
-      updatePredictions()
+      debouncedUpdate()
     })
 
-    return () => disposable.dispose()
-  }, [updatePredictions])
+    return () => {
+      disposable.dispose()
+      if (debounceTimer.current) clearTimeout(debounceTimer.current)
+    }
+  }, [debouncedUpdate])
 
   return {
     predictions,

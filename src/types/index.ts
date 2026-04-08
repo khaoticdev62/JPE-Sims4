@@ -1,18 +1,4 @@
-export type FileType = 'xml' | 'stbl' | 'ts4script' | 'package' | 'json' | 'cfg' | 'py'
-
-export interface Project {
-  id: string
-  name: string
-  rootPath: string
-  files: ModFile[]
-  metadata: {
-    createdAt: number
-    updatedAt: number
-    version: string
-    author?: string
-    description?: string
-  }
-}
+export type FileType = 'xml' | 'stbl' | 'ts4script' | 'package' | 'json' | 'cfg' | 'py' | 'jpe' | 'image' | 'binary'
 
 export interface ModFile {
   id: string
@@ -28,15 +14,32 @@ export interface ModFile {
   lastModified: number
 }
 
+export interface Project {
+  id: string
+  name: string
+  rootPath: string
+  files: ModFile[]
+  metadata: {
+    createdAt: number
+    updatedAt: number
+    version: string
+    author?: string
+    description?: string
+  }
+}
+
 export interface Diagnostic {
   id: string
   fileId: string
   line: number
   column: number
-  severity: 'error' | 'warning' | 'info'
+  severity: 'error' | 'warning' | 'info' | 'hint'
   message: string
   code: string
+  source?: 'ai' | 'community' | 'syntax'
   suggestion?: string
+  endLine?: number
+  endColumn?: number
   documentationLink?: string
 }
 
@@ -51,4 +54,20 @@ export interface ValidationResult {
   valid: boolean
   diagnostics: Diagnostic[]
   warnings: string[]
+}
+
+export interface JpeSymbol {
+  id: string
+  name: string
+  sourcePackage: string
+  type: 'tuning' | 'stbl' | 'interaction'
+  metadata?: any
+}
+
+export interface MonacoCompletionItem {
+  label: string
+  kind: number
+  detail: string
+  insertText: string
+  documentation?: string
 }

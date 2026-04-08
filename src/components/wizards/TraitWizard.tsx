@@ -1,8 +1,9 @@
+"use client";
+
 import { useState } from 'react'
 import { Dialog } from '@radix-ui/react-dialog'
 import WizardStep from './WizardStep'
 import WizardNavigation from './WizardNavigation'
-import { ProjectService } from '@/services/ProjectService'
 import { useProjectStore } from '@/stores/useProjectStore'
 
 export interface TraitFormData {
@@ -31,8 +32,7 @@ const CATEGORIES = ['Personality', 'Reward', 'Hidden', 'Emotional']
 export default function TraitWizard({
   isOpen,
   onClose,
-  onComplete,
-}: TraitWizardProps) {
+  onComplete}: TraitWizardProps) {
   const [currentStep, setCurrentStep] = useState(0)
   const [isLoading, setIsLoading] = useState(false)
   const [formData, setFormData] = useState<TraitFormData>({
@@ -42,24 +42,24 @@ export default function TraitWizard({
     category: 'Personality',
     conflictingTraits: '',
     ageAllowed: ['Teen', 'Young Adult', 'Adult', 'Elder'],
-    speciesAllowed: ['Human'],
-  })
+    speciesAllowed: ['Human']})
 
   const handleFinish = async () => {
     try {
       setIsLoading(true)
-      const { addFile, currentProject } = useProjectStore.getState()
+      const { createFile, currentProject } = useProjectStore.getState()
       if (!currentProject) throw new Error('No active project')
 
       const xml = generateTraitXML(formData)
       const fileName = `trait_${formData.name}.xml`
       const filePath = `${currentProject.rootPath}/${fileName}`
 
-      const file = ProjectService.createFile(filePath, xml, currentProject.id)
-      
-      addFile(file)
-      onComplete?.(file)
-      onClose()
+      const file = await createFile(filePath, xml)
+
+      if (file) {
+        onComplete?.(file)
+        onClose()
+      }
     } catch (error) {
       console.error('Failed to create trait:', error)
     } finally {
@@ -72,8 +72,7 @@ export default function TraitWizard({
       ...prev,
       ageAllowed: prev.ageAllowed.includes(age)
         ? prev.ageAllowed.filter((a) => a !== age)
-        : [...prev.ageAllowed, age],
-    }))
+        : [...prev.ageAllowed, age]}))
   }
 
   const handleSpeciesToggle = (species: string) => {
@@ -81,8 +80,7 @@ export default function TraitWizard({
       ...prev,
       speciesAllowed: prev.speciesAllowed.includes(species)
         ? prev.speciesAllowed.filter((s) => s !== species)
-        : [...prev.speciesAllowed, species],
-    }))
+        : [...prev.speciesAllowed, species]}))
   }
 
   if (!isOpen) return null
@@ -145,8 +143,7 @@ export default function TraitWizard({
                     onChange={(e) =>
                       setFormData({
                         ...formData,
-                        category: e.target.value as any,
-                      })
+                        category: e.target.value as any})
                     }
                     className="w-full px-3 py-2 bg-background-tertiary border border-border-subtle rounded text-text-primary outline-none cursor-pointer"
                   >
@@ -238,8 +235,7 @@ export default function TraitWizard({
                     onChange={(e) =>
                       setFormData({
                         ...formData,
-                        conflictingTraits: e.target.value,
-                      })
+                        conflictingTraits: e.target.value})
                     }
                     placeholder="e.g., trait_Lazy, trait_Gloomy"
                     rows={3}

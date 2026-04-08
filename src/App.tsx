@@ -1,47 +1,42 @@
-import { useState } from 'react'
+"use client";
+import React, { useEffect } from 'react'
 import ErrorBoundary from '@/components/common/ErrorBoundary'
-import { StudioHomeDashboard } from "./components/StudioHomeDashboard";
 import EditorLayout from "@/components/layout/EditorLayout";
-import { ProjectsPage } from "@/components/ProjectsPage";
-import { SettingsPage } from "@/components/SettingsPage";
-
+import { useUIStore } from '@/stores/useUIStore'
+import { ModIndexingService } from '@/services/ModIndexingService'
 import { ControllerManager } from '@/components/controller/ControllerManager'
+import { BuildProgressOverlay } from '@/components/build/BuildProgressOverlay'
 
-function AppContent({ activeView, setActiveView }: { activeView: string; setActiveView: (view: string) => void }) {
+/**
+ * AppContent - Main entry point selector.
+ * Simplified to use EditorLayout as the primary Spectral shell.
+ */
+function AppContent() {
+  const { modsFolderPath } = useUIStore()
+
+  useEffect(() => {
+    if (modsFolderPath) {
+      ModIndexingService.indexModsFolder(modsFolderPath)
+    }
+  }, [modsFolderPath])
+
   return (
     <div data-testid="app-root">
+      <BuildProgressOverlay />
       <ControllerManager>
-        {activeView === 'home' && (
-          <ErrorBoundary>
-            <StudioHomeDashboard onNavigate={setActiveView} />
-          </ErrorBoundary>
-        )}
-        {activeView === 'studio' && (
-          <ErrorBoundary>
-            <EditorLayout onNavigate={setActiveView} />
-          </ErrorBoundary>
-        )}
-        {activeView === 'projects' && (
-          <ErrorBoundary>
-            <ProjectsPage onNavigate={setActiveView} />
-          </ErrorBoundary>
-        )}
-        {activeView === 'settings' && (
-          <ErrorBoundary>
-            <SettingsPage onNavigate={setActiveView} />
-          </ErrorBoundary>
-        )}
+        <ErrorBoundary>
+          {/* EditorLayout is now the universal Spectral container (Home, Projects, etc.) */}
+          <EditorLayout />
+        </ErrorBoundary>
       </ControllerManager>
     </div>
   )
 }
 
 export default function App() {
-  const [activeView, setActiveView] = useState('home')
-
   return (
     <ErrorBoundary>
-      <AppContent activeView={activeView} setActiveView={setActiveView} />
+      <AppContent />
     </ErrorBoundary>
   )
 }

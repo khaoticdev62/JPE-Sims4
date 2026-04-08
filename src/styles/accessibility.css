@@ -1,0 +1,52 @@
+/**
+ * JPE STUDIO ACCESSIBILITY SYSTEM (WCAG 2.1)
+ *
+ * This file defines premium, high-fidelity keyboard navigation styles.
+ */
+
+:root {
+  --focus-glow: 0 0 0 2px var(--background-primary), 0 0 0 4px var(--accent-primary);
+  --focus-glow-alt: 0 0 0 2px var(--background-primary), 0 0 0 4px var(--accent-focus);
+}
+
+/* Global Focus Override - Minimal & High Contrast */
+*:focus-visible:not(.monaco-editor, .monaco-editor *) {
+  outline: none !important;
+  box-shadow: var(--focus-glow) !important;
+  transition: box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1), transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 50;
+}
+
+/* Specific component rings */
+.focus-ring:focus-visible {
+  outline: none !important;
+  box-shadow: var(--focus-glow) !important;
+  transition: all 0.2s ease;
+}
+
+/* Skip to Content Link - Industry Best Practice */
+.skip-to-content {
+  position: absolute;
+  top: -100px;
+  left: 20px;
+  background: var(--accent-primary);
+  color: white;
+  padding: 10px 20px;
+  z-index: 1000;
+  border-radius: 8px;
+  font-weight: bold;
+  font-size: 14px;
+  text-decoration: none;
+  transition: top 0.3s ease;
+}
+
+.skip-to-content:focus {
+  top: 20px;
+}
+
+/* Vertical Text Focus Fix */
+.vertical-text:focus-visible {
+  box-shadow: none !important;
+  outline: 2px solid var(--accent-primary) !important;
+  outline-offset: 4px;
+}

@@ -6,7 +6,7 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import { PackageParser, parsePackage } from '../PackageParser'
+import { PackageParser} from '../PackageParser'
 import { formatResourceId, DBPF_RESOURCE_TYPES } from '../types/package'
 import type { PackageData, PackageResource } from '../types/package'
 
@@ -84,8 +84,7 @@ describe('Package Parser', () => {
           type: DBPF_RESOURCE_TYPES.STBL,
           group: 0x00000000,
           instance: 0n,
-          size: 100,
-        },
+          size: 100},
       ])
 
       const pkg = PackageParser.parse(buffer)
@@ -101,20 +100,17 @@ describe('Package Parser', () => {
           type: DBPF_RESOURCE_TYPES.STBL,
           group: 0x00000000,
           instance: 1n,
-          size: 100,
-        },
+          size: 100},
         {
           type: DBPF_RESOURCE_TYPES.SimData,
           group: 0x00000000,
           instance: 2n,
-          size: 200,
-        },
+          size: 200},
         {
           type: DBPF_RESOURCE_TYPES.TuningInstance,
           group: 0x00000000,
           instance: 3n,
-          size: 150,
-        },
+          size: 150},
       ])
 
       const pkg = PackageParser.parse(buffer)
@@ -175,8 +171,7 @@ describe('Package Parser', () => {
             size: 50,
             compressedSize: 0,
             flags: 0,
-            isCompressed: false,
-          },
+            isCompressed: false},
           {
             type: DBPF_RESOURCE_TYPES.SimData,
             group: 0x00000001,
@@ -185,8 +180,7 @@ describe('Package Parser', () => {
             size: 100,
             compressedSize: 0,
             flags: 0,
-            isCompressed: false,
-          },
+            isCompressed: false},
           {
             type: DBPF_RESOURCE_TYPES.TuningInstance,
             group: 0x00000000,
@@ -195,16 +189,13 @@ describe('Package Parser', () => {
             size: 75,
             compressedSize: 0,
             flags: 0,
-            isCompressed: false,
-          },
+            isCompressed: false},
         ],
         metadata: {
           resourceCount: 3,
           fileSize: 10000,
           indexOffset: 64,
-          parseTime: 1,
-        },
-      }
+          parseTime: 1}}
     })
 
     it('should find resources by type', () => {
@@ -256,8 +247,7 @@ describe('Package Parser', () => {
           type: DBPF_RESOURCE_TYPES.STBL,
           group: 0x00000000,
           instance: 1n,
-          size: 50,
-        },
+          size: 50},
       ])
 
       const result = PackageParser.parseWithResources(buffer, true)
@@ -335,8 +325,7 @@ describe('Package Parser', () => {
         type: (i % 3 === 0 ? DBPF_RESOURCE_TYPES.STBL : DBPF_RESOURCE_TYPES.SimData),
         group: 0x00000000,
         instance: BigInt(i),
-        size: 100 + (i % 100),
-      }))
+        size: 100 + (i % 100)}))
 
       const buffer = createPackageBuffer(resources)
 
@@ -351,8 +340,7 @@ describe('Package Parser', () => {
     it('should extract resources from large package quickly', () => {
       const resources = Array.from({ length: 200 }, (_, i) => ({
         type: (i % 3 === 0 ? DBPF_RESOURCE_TYPES.STBL : DBPF_RESOURCE_TYPES.SimData),
-        size: 100 + (i % 100),
-      }))
+        size: 100 + (i % 100)}))
 
       const buffer = createPackageBuffer(resources)
 
@@ -382,8 +370,7 @@ describe('Package Parser', () => {
             size: 100,
             compressedSize: 0,
             flags: 0,
-            isCompressed: false,
-          },
+            isCompressed: false},
           {
             type: DBPF_RESOURCE_TYPES.Script,
             group: 0,
@@ -392,16 +379,13 @@ describe('Package Parser', () => {
             size: 200,
             compressedSize: 0,
             flags: 0,
-            isCompressed: false,
-          },
+            isCompressed: false},
         ],
         metadata: {
           resourceCount: 2,
           fileSize: 300,
           indexOffset: 64,
-          parseTime: 0,
-        },
-      }
+          parseTime: 0}}
     })
 
     it('should identify STBL resources', () => {
@@ -423,8 +407,7 @@ describe('Package Parser', () => {
           type: DBPF_RESOURCE_TYPES.STBL,
           group: 0x00000000,
           instance: 1n,
-          size: 100,
-        },
+          size: 100},
       ])
 
       const result = PackageParser.parseWithResources(buffer, true)
@@ -445,18 +428,15 @@ describe('Package Parser', () => {
         {
           type: DBPF_RESOURCE_TYPES.STBL,
           instance: 1n,
-          size: 100,
-        },
+          size: 100},
         {
           type: DBPF_RESOURCE_TYPES.SimData,
           instance: 2n,
-          size: 200,
-        },
+          size: 200},
         {
           type: DBPF_RESOURCE_TYPES.Script,
           instance: 3n,
-          size: 150,
-        },
+          size: 150},
       ])
 
       const result = PackageParser.parseWithResources(buffer, true)

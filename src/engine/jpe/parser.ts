@@ -81,15 +81,20 @@ export class JPEParser {
     this.skipNonContent()
 
     while (!this.isAtEnd()) {
-      if (this.peek().type === TokenType.NEWLINE) {
-        this.advance()
-        this.skipNonContent()
-        continue
-      }
+      const token = this.peek()
 
-      const section = this.parseSection()
-      if (section) {
-        sections.push(section)
+      if (token.type === TokenType.SECTION_OPEN) {
+        // Parse a Full Section: [Header]
+        const section = this.parseSection()
+        if (section) {
+          sections.push(section)
+        }
+      } else {
+        // Handle standalone assignments, comments, or blank lines
+        const line = this.parseLine()
+        if (line) {
+          sections.push(line)
+        }
       }
 
       this.skipNonContent()

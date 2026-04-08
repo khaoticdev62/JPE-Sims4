@@ -45,23 +45,43 @@ export class JPEToXMLTranslator {
     ) as ASTNode | undefined
 
     const metadata = this.extractMetadata(metadataSection)
-
-    // Get root element tag and attributes
     const rootTag = metadata.type || 'Instance'
-    const rootAttributes = this.extractAttributes(metadata)
 
-    // Create root element with text content from metadata
+    // 1. Partition Metadata into True Attributes vs Flattened Children
+    const rootAttributes: Record<string, string> = {}
+    const rootChildren: XMLElement[] = []
+
+    for (const [key, value] of Object.entries(metadata)) {
+      if (key === 'type' || key === 'content') continue
+
+      if (this.isMetadataAttribute(key)) {
+        // Map common metadata names to XML attributes (class -> c, id -> i, etc.)
+        const attrKey = this.mapMetadataToAttribute(key)
+        rootAttributes[attrKey] = String(value)
+      } else {
+        // Smart Key: Flattened Sims 4 tuning <T n="key">value</T> at root
+        rootChildren.push({
+          tag: 'T',
+          attributes: { n: this.unSanitizeKey(key) },
+          children: [],
+          text: String(value)
+        })
+      }
+    }
+
+    // Create root element
     const rootElement: XMLElement = {
       tag: rootTag,
       attributes: rootAttributes,
-      children: [],
+      children: rootChildren,
       text: metadata.content ? String(metadata.content) : undefined,
     }
 
-    // Convert remaining sections to children
+    // Convert remaining content to children
     if (astNode.children) {
       for (const child of astNode.children) {
         if (child.type === 'Section' && child.name !== 'Metadata') {
+          // Standard nested sections
           const childElement = this.sectionToElement(child)
           if (childElement) {
             rootElement.children.push(childElement)
@@ -71,6 +91,26 @@ export class JPEToXMLTranslator {
     }
 
     return rootElement
+  }
+
+  /**
+   * Maps JPE Metadata keys back to Sims 4 XML attributes
+   */
+  private static mapMetadataToAttribute(key: string): string {
+    const fieldMap: Record<string, string> = {
+      class: 'c',
+      id: 'i',
+      module: 'm',
+      name: 'n',
+      instance: 's',
+      n: 'n',
+      t: 't',
+      s: 's',
+      c: 'c',
+      i: 'i',
+      m: 'm'
+    }
+    return fieldMap[key] || key
   }
 
   /**
@@ -129,9 +169,12 @@ export class JPEToXMLTranslator {
       return null
     }
 
+    // Determine Tag and initial attributes based on JPE Keywords
+    const { tag, attributes } = this.rehydrateTag(section.name)
+
     const element: XMLElement = {
-      tag: this.sectionNameToTag(section.name),
-      attributes: {},
+      tag,
+      attributes,
       children: [],
       text: undefined,
     }
@@ -142,13 +185,22 @@ export class JPEToXMLTranslator {
 
     // Process section contents
     for (const child of section.children) {
-      if (child.type === 'Assignment') {
+      if (child.type === 'Assignment' && child.key) {
+        const value = child.value !== undefined ? String(child.value) : ''
         if (child.key === 'content') {
           // Text content
-          element.text = String(child.value)
+          element.text = value
+        } else if (this.isMetadataAttribute(child.key)) {
+          // Known metadata attribute
+          element.attributes[child.key] = value
         } else {
-          // Attribute
-          element.attributes[child.key] = String(child.value)
+          // Smart Key: Flattened Sims 4 tuning <T n="key">value</T>
+          element.children.push({
+            tag: 'T',
+            attributes: { n: child.key },
+            children: [],
+            text: value
+          })
         }
       } else if (child.type === 'Section') {
         // Nested element
@@ -157,7 +209,6 @@ export class JPEToXMLTranslator {
           element.children.push(nestedElement)
         }
       } else if (child.type === 'Comment') {
-        // Skip comments in XML output
         continue
       }
     }
@@ -166,10 +217,70 @@ export class JPEToXMLTranslator {
   }
 
   /**
+   * Identifies JPE Keywords and maps them back to Sims 4 XML tags/attributes
+   */
+  private static rehydrateTag(sectionName: string): { tag: string, attributes: Record<string, string> } {
+    const mappings: Record<string, { tag: string, attributes: Record<string, string> }> = {
+      'ONLY_IF': { tag: 'L', attributes: { n: 'tests' } },
+      'DO': { tag: 'U', attributes: { n: 'outcome' } },
+      'WHEN': { tag: 'V', attributes: { n: 'enabled' } },
+      'Interactions': { tag: 'L', attributes: { n: 'interactions' } },
+      'Buffs': { tag: 'L', attributes: { n: 'buffs' } }
+    }
+
+    if (mappings[sectionName]) {
+      return { ...mappings[sectionName] }
+    }
+
+    // --- Smart Container Heuristic ---
+    // If the section name starts with an uppercase letter (Title_Case) 
+    // and it's not a known primitive tag, it's likely a named unit/instance.
+    // Sims 4 Tunings: <U n="name"> or <V n="name"> or <L n="name">
+    // Default to Unit (U) which is the most common container.
+    if (/^[A-Z]/.test(sectionName) && !['Value', 'Unit', 'Variant', 'List'].includes(sectionName)) {
+      const lowerName = sectionName.toLowerCase()
+      // If it ends with 's' it's often a List (L)
+      if (lowerName.endsWith('s')) {
+        return {
+          tag: 'L',
+          attributes: { n: this.unSanitizeKey(lowerName) }
+        }
+      }
+      return {
+        tag: 'U',
+        attributes: { n: this.unSanitizeKey(lowerName) }
+      }
+    }
+
+    // Default: Convert Title_Case section name to camelCase tag
+    return {
+      tag: this.sectionNameToTag(sectionName),
+      attributes: {}
+    }
+  }
+
+  /**
+   * Checks if a key should be treated as a standard XML attribute
+   */
+  private static isMetadataAttribute(key: string): boolean {
+    const metadataFields = [
+      'c', 'i', 'm', 'n', 't', 's',
+      'class', 'id', 'module', 'type', 'content', 'name', 'instance'
+    ]
+    return metadataFields.includes(key)
+  }
+
+  /**
    * Convert JPE section name back to XML tag
    */
   private static sectionNameToTag(sectionName: string): string {
-    // Convert Title_Case or Title-Case back to camelCase
+    // Specialized Tag Restoration
+    if (sectionName === 'Value') return 'T'
+    if (sectionName === 'Unit') return 'U'
+    if (sectionName === 'Variant') return 'V'
+    if (sectionName === 'List') return 'L'
+
+    // Convert Title_Case back to camelCase
     return sectionName
       .split(/[_-]/)
       .map((word, index) => {
@@ -182,10 +293,9 @@ export class JPEToXMLTranslator {
   }
 
   /**
-   * Reverse of sanitizeKey - reconstruct original key
+   * Reconstruct original key (reverse of sanitizeKey)
    */
   private static unSanitizeKey(key: string): string {
-    // This is a simple reverse - in practice, we may lose some information
     return key
   }
 }

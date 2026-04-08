@@ -3,6 +3,11 @@
  * Prevents UI blocking during project compilation
  */
 
+// Real JPE Engine Imports
+import { tokenize, parse } from '../engine/jpe'
+import { jpeToXml } from '../engine/translators/jpeToXml'
+import { XMLCompiler } from '../engine/compilers/XMLCompiler'
+
 // Message types
 interface CompileMessage {
   type: 'compile'
@@ -25,139 +30,93 @@ interface CompileResult {
   }
 }
 
-interface ErrorMessage {
-  type: 'compile-error'
-  error: string
-  fileId: string
-}
-
 type WorkerMessage = CompileMessage
 
-// Mock compilation function
+/**
+ * Real Compilation Logic
+ * Executes the full Lexing -> Parsing -> Translation -> Serialization pipeline
+ */
 function compileContent(
   content: string,
-  format: string,
+  fileType: 'xml' | 'jpe',
   targetFormat: string
 ): {
   success: boolean
   output: string
   format: string
+  error?: string
 } {
-  const startTime = performance.now()
-
   try {
-    // Simulate compilation delay based on content size
-    const delay = Math.min(content.length / 100, 500)
-
-    if (targetFormat === 'jpe') {
-      // XML to JPE conversion simulation
-      const lines = content.split('\n')
-      const jpeLines: string[] = []
-      const inTag = false
-      const currentTag = ''
-
-      lines.forEach((line) => {
-        const trimmed = line.trim()
-
-        if (trimmed.startsWith('<I ')) {
-          const match = trimmed.match(/i="([^"]+)"/)
-          if (match) {
-            jpeLines.push(`[${match[1].split(':')[1] || 'Unknown'}]`)
-          }
-        } else if (trimmed.startsWith('<T ')) {
-          const nameMatch = trimmed.match(/n="([^"]+)"/)
-          const content = trimmed.match(/>([^<]+)</)
-          if (nameMatch && content) {
-            jpeLines.push(`${nameMatch[1]} = ${content[1]}`)
-          }
-        }
-      })
-
+    if (targetFormat === 'xml' && fileType === 'jpe') {
+      // 1. JPE -> XML (Compilation)
+      const tokens = tokenize(content)
+      const ast = parse(tokens)
+      const xmlElement = jpeToXml(ast)
+      
+      if (!xmlElement) throw new Error('Translation failed: Null XML AST')
+      
+      const xmlString = XMLCompiler.elementToXMLString(xmlElement, true, 0)
+      
       return {
         success: true,
-        output: jpeLines.join('\n'),
-        format: 'jpe'
-      }
-    } else {
-      // JPE to XML conversion simulation
-      const lines = content.split('\n')
-      const xmlLines = ['<?xml version="1.0"?>']
-      let inSection = false
-      let sectionName = ''
-
-      lines.forEach((line) => {
-        const trimmed = line.trim()
-
-        if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
-          if (inSection) {
-            xmlLines.push('</I>')
-          }
-          sectionName = trimmed.slice(1, -1)
-          xmlLines.push(`<I c="${sectionName}" i="${sectionName}">`)
-          inSection = true
-        } else if (trimmed.includes(' = ')) {
-          const [key, value] = trimmed.split(' = ')
-          xmlLines.push(`  <T n="${key}">${value}</T>`)
-        }
-      })
-
-      if (inSection) {
-        xmlLines.push('</I>')
-      }
-
-      return {
-        success: true,
-        output: xmlLines.join('\n'),
+        output: xmlString,
         format: 'xml'
       }
+    } else if (targetFormat === 'jpe' && fileType === 'xml') {
+      // 2. XML -> JPE (Decompilation - Placeholder for now, can be expanded)
+      return {
+        success: false,
+        output: '',
+        format: 'jpe',
+        error: 'Reverse compilation in workers not yet optimized'
+      }
+    }
+
+    return {
+      success: false,
+      output: '',
+      format: '',
+      error: `Unsupported transformation: ${fileType} to ${targetFormat}`
     }
   } catch (error) {
     return {
       success: false,
       output: '',
-      format: ''
+      format: '',
+      error: error instanceof Error ? error.message : 'Unknown compilation error'
     }
   }
 }
 
 // Handle incoming messages
-self.onmessage = (event: MessageEvent<WorkerMessage>) => {
-  const { type, payload } = event.data
+self.onmessage = (event: MessageEvent<WorkerMessage & { _taskId: string }>) => {
+  const { type, payload, _taskId } = event.data
 
   if (type === 'compile') {
-    try {
-      const startTime = performance.now()
-      const targetFormat = payload.fileType === 'xml' ? 'jpe' : 'xml'
+    const startTime = performance.now()
+    const targetFormat = payload.fileType === 'xml' ? 'jpe' : 'xml'
 
-      const result = compileContent(payload.fileContent, payload.fileType, targetFormat)
+    const result = compileContent(payload.fileContent, payload.fileType, targetFormat)
+    const duration = performance.now() - startTime
 
-      const duration = performance.now() - startTime
-
-      if (result.success) {
-        const message: CompileResult = {
-          type: 'compile-complete',
-          result: {
-            fileId: payload.fileId,
-            success: true,
-            outputFormat: result.format,
-            compiledContent: result.output,
-            duration
-          }
+    if (result.success) {
+      const message: CompileResult & { _taskId: string } = {
+        type: 'compile-complete',
+        _taskId,
+        result: {
+          fileId: payload.fileId,
+          success: true,
+          outputFormat: result.format,
+          compiledContent: result.output,
+          duration
         }
-
-        self.postMessage(message)
-      } else {
-        const errorMsg: ErrorMessage = {
-          type: 'compile-error',
-          error: 'Compilation failed',
-          fileId: payload.fileId
-        }
-        self.postMessage(errorMsg)
       }
-    } catch (error) {
-      const errorMsg: ErrorMessage = {
+      self.postMessage(message)
+    } else {
+      const errorMsg = {
         type: 'compile-error',
-        error: error instanceof Error ? error.message : 'Unknown compilation error',
+        _taskId,
+        error: result.error || 'Compilation failed',
         fileId: payload.fileId
       }
       self.postMessage(errorMsg)

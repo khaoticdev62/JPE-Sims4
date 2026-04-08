@@ -119,7 +119,7 @@ export class PythonParser {
    */
   private static extractDocstring(source: string): string | undefined {
     // Look for module docstring
-    const tripleQuoteMatch = source.match(/^(\"{3}|'{3})([\s\S]*?)\1/m)
+    const tripleQuoteMatch = source.match(/^("{3}|'{3})([\s\S]*?)\1/m)
     if (tripleQuoteMatch) {
       return tripleQuoteMatch[2].trim()
     }
@@ -258,12 +258,31 @@ export class PythonParser {
         // Extract docstring
         const docstring = this.extractFunctionDocstring(lines, i + 1)
 
-        // Extract methods (simplified - just find def statements in the class)
+        // Extract methods (indentation-aware)
         const methods: PythonFunction[] = []
-        for (let j = i + 1; j < lines.length && j < i + 100; j++) {
+        let classIndentation: string | null = null
+
+        for (let j = i + 1; j < lines.length; j++) {
           const methodLine = lines[j]
-          // Stop at next class or unindented code
-          if (methodLine && !methodLine.startsWith('    ') && !methodLine.startsWith('\t')) {
+          
+          // Skip empty lines or comments when determining indentation
+          if (!methodLine.trim() || methodLine.trim().startsWith('#')) {
+            continue
+          }
+
+          // Initial indentation check
+          const match = methodLine.match(/^(\s+)/)
+          const currentIndent = match ? match[1] : ''
+
+          if (classIndentation === null) {
+            if (currentIndent.length > 0) {
+              classIndentation = currentIndent
+            } else {
+              // Not indented, so empty class or end of class
+              break
+            }
+          } else if (currentIndent.length < classIndentation.length && methodLine.trim()) {
+            // Indentation decreased on a non-empty line: End of class
             break
           }
 

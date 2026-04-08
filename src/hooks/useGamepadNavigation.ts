@@ -1,46 +1,73 @@
-import { useState, useCallback, useRef } from 'react'
-import { useGamepadButtonDown } from './useGamepadInput'
+import { useState, useCallback, useEffect } from 'react'
+import { gamepad } from '@/services/input/GamepadService'
 import { useUIStore } from '@/stores/useUIStore'
 import { useEditorStore } from '@/stores/useEditorStore'
-import { ControllerMapper } from '@/services/input/ControllerMapper'
 
 export function useGamepadNavigation() {
   const { focusedPane, setFocusedPane, toggleSidebar } = useUIStore()
   const { tabs, activeTabId, setActiveTab } = useEditorStore()
   
   const [showHelp, setShowHelp] = useState(false)
-  const mapper = useRef(new ControllerMapper())
+  const [focusMode, setFocusMode] = useState(false)
+  const [focusedActionIndex, setFocusedActionIndex] = useState(0)
   
-  const handleAction = useCallback((action: string) => {
+  const handleAction = useCallback((data: any) => {
+    const action = data.action;
+    
     switch (action) {
+      case 'ignite':
+        window.dispatchEvent(new CustomEvent('jpe:ignite'));
+        break;
+
+      case 'build':
+        window.dispatchEvent(new CustomEvent('jpe:build'));
+        break;
+
+      case 'focus-mode':
+        setFocusMode(prev => !prev);
+        break;
+
+      case 'cursor-up':
+        setFocusedActionIndex(prev => Math.max(0, prev - 3));
+        break;
+        
+      case 'cursor-down':
+        setFocusedActionIndex(prev => Math.min(5, prev + 3));
+        break;
+        
+      case 'cursor-left':
+        if (focusedPane === 'editor') {
+          setFocusedPane('sidebar');
+        } else {
+          setFocusedActionIndex(prev => Math.max(0, prev - 1));
+        }
+        break;
+        
+      case 'cursor-right':
+        if (focusedPane === 'sidebar') {
+          setFocusedPane('editor');
+        } else {
+          setFocusedActionIndex(prev => Math.min(5, prev + 1));
+        }
+        break;
+
+      case 'confirm':
+        // Trigger generic confirm action
+        window.dispatchEvent(new CustomEvent('jpe:confirm', { detail: { index: focusedActionIndex } }));
+        break;
+
       case 'prev-tab': {
         const currentIndex = tabs.findIndex(t => t.id === activeTabId)
-        if (currentIndex > 0) {
-          setActiveTab(tabs[currentIndex - 1].id)
-        } else if (tabs.length > 0) {
-          setActiveTab(tabs[tabs.length - 1].id) // Cycle to last
-        }
+        if (currentIndex > 0) setActiveTab(tabs[currentIndex - 1].id)
         break
       }
       
       case 'next-tab': {
         const currentIndex = tabs.findIndex(t => t.id === activeTabId)
-        if (currentIndex < tabs.length - 1) {
-          setActiveTab(tabs[currentIndex + 1].id)
-        } else if (tabs.length > 0) {
-          setActiveTab(tabs[0].id) // Cycle to first
-        }
+        if (currentIndex < tabs.length - 1) setActiveTab(tabs[currentIndex + 1].id)
         break
       }
       
-      case 'focus-editor':
-        setFocusedPane('editor')
-        break
-        
-      case 'focus-terminal': // Mapping to diagnostics for now
-        setFocusedPane('diagnostics')
-        break
-        
       case 'show-menu':
         toggleSidebar()
         break
@@ -48,47 +75,19 @@ export function useGamepadNavigation() {
       case 'show-settings':
         setShowHelp(prev => !prev)
         break
-
-      // Pane cycling with D-Pad
-      case 'cursor-left':
-        if (focusedPane === 'editor') setFocusedPane('sidebar')
-        else if (focusedPane === 'right-panel') setFocusedPane('editor')
-        break
-        
-      case 'cursor-right':
-        if (focusedPane === 'sidebar') setFocusedPane('editor')
-        else if (focusedPane === 'editor') setFocusedPane('right-panel')
-        break
-        
-      case 'cursor-down':
-        if (focusedPane !== 'diagnostics') setFocusedPane('diagnostics')
-        break
-        
-      case 'cursor-up':
-        if (focusedPane === 'diagnostics') setFocusedPane('editor')
-        break
     }
-  }, [tabs, activeTabId, focusedPane, setActiveTab, setFocusedPane, toggleSidebar])
+  }, [tabs, activeTabId, focusedPane, setActiveTab, setFocusedPane, toggleSidebar, focusedActionIndex])
 
-  // Navigation Buttons
-  useGamepadButtonDown(4, () => handleAction(mapper.current.getAction('button_4')!)) // LB
-  useGamepadButtonDown(5, () => handleAction(mapper.current.getAction('button_5')!)) // RB
-  
-  // Pane Focus / Shortcuts
-  useGamepadButtonDown(10, () => handleAction(mapper.current.getAction('button_10')!)) // L3
-  useGamepadButtonDown(11, () => handleAction(mapper.current.getAction('button_11')!)) // R3
-  useGamepadButtonDown(8, () => handleAction(mapper.current.getAction('button_8')!))   // Select
-  useGamepadButtonDown(9, () => handleAction(mapper.current.getAction('button_9')!))   // Start
-  
-  // D-Pad Navigation
-  useGamepadButtonDown(12, () => handleAction(mapper.current.getAction('button_12')!)) // Up
-  useGamepadButtonDown(13, () => handleAction(mapper.current.getAction('button_13')!)) // Down
-  useGamepadButtonDown(14, () => handleAction(mapper.current.getAction('button_14')!)) // Left
-  useGamepadButtonDown(15, () => handleAction(mapper.current.getAction('button_15')!)) // Right
+  useEffect(() => {
+    gamepad.on('action', handleAction);
+    return () => gamepad.off('action', handleAction);
+  }, [handleAction]);
 
   return {
     focusedPane,
     showHelp,
-    setShowHelp
+    setShowHelp,
+    focusMode,
+    focusedActionIndex
   }
 }

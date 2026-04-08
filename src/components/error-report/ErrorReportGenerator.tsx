@@ -1,3 +1,5 @@
+"use client";
+
 /**
  * Error Report Generator
  * Generate shareable error reports for debugging

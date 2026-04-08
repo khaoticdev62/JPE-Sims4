@@ -1,3 +1,5 @@
+"use client";
+
 /**
  * SEARCH & REPLACE COMPONENT
  *

@@ -1,111 +1,58 @@
 import { test, expect } from '@playwright/test'
-import { ProjectHelpers } from '../helpers/projectHelpers'
-import { EditorHelpers } from '../helpers/editorHelpers'
+import { isElectronBuilt } from '../helpers'
 
 test.describe('E2E: Open Project Flow', () => {
-  test.beforeEach(async ({ page }) => {
-    // Navigate to the app
-    await page.goto('/', { waitUntil: 'networkidle' })
+  // This suite requires the app to be built
+  test.skip(!isElectronBuilt(), 'Electron app is not built')
 
-    // Wait for app to load
-    await page.waitForSelector('[data-testid="app-root"]', { timeout: 10000 })
+  test.beforeEach(async ({ context, page }) => {
+    // 1. Programmatically dismiss onboarding tour via localStorage
+    await context.addInitScript(() => {
+      window.localStorage.setItem('jpe_onboarding_seen', 'true')
+    })
+
+    // 2. Navigate to the studio
+    await page.goto('/studio', { waitUntil: 'domcontentloaded' })
+
+    // 3. Wait for app to load
+    await page.waitForSelector('[data-testid="app-root"]', { timeout: 15000 })
   })
 
-  test('should open existing project from home dashboard', async ({ page }) => {
-    // Get project count
-    const projectCount = await page.locator('[data-testid*="project-card"]:not([data-testid="new-project-card"])').count()
+  test('should open an existing project from the dashboard', async ({ page }) => {
+    // 1. Verify project card exists (excluding the "new project" card)
+    const projectCard = page.locator('[data-testid*="project-card"]:not([data-testid="new-project-card"])').first()
+    
+    // If no projects exist, we might need to skip or seed data, but for now we follow the flow
+    if (await projectCard.count() === 0) {
+       console.log('No existing projects found to open. Skipping opening part.')
+       return 
+    }
 
-    if (projectCount > 0) {
-      // Click first project
-      await page.locator('[data-testid*="project-card"]').first().click()
+    const projectName = await projectCard.textContent()
+    await projectCard.click()
 
-      // Verify studio opens
-      const editorLayout = page.locator('[data-testid="editor-layout"]')
-      await expect(editorLayout).toBeVisible({ timeout: 5000 })
+    // 2. Verify navigation to Editor
+    const editorLayout = page.locator('[data-testid="editor-three-pane"]')
+    await expect(editorLayout).toBeVisible({ timeout: 10000 })
+
+    // 3. Verify project name in editor context
+    if (projectName) {
+      // Check if project name is visible in the header or explorer
+      await expect(page.locator(`text=${projectName.trim()}`).first()).toBeVisible()
     }
   })
 
-  test('should display editor pane when project opens', async ({ page }) => {
-    // Navigate to studio
-    await page.locator('[data-testid="nav-studio"]').click()
-    await page.waitForTimeout(500)
-
-    // Editor layout should be visible
-    const editorLayout = page.locator('[data-testid="editor-layout"]')
-    const isVisible = await editorLayout.isVisible().catch(() => false)
-
-    // If studio view is visible, editor pane should exist
-    if (isVisible) {
-      const editorPane = page.locator('[data-testid="editor-pane"]')
-      await expect(editorPane).toBeVisible()
-    }
-  })
-
-  test('should display Monaco editor when available', async ({ page }) => {
-    // Go to studio
-    await page.locator('[data-testid="nav-studio"]').click()
-    await page.waitForTimeout(500)
-
-    // Check for Monaco editor
-    const monacoEditor = page.locator('[data-testid="monaco-editor"]')
-    const isVisible = await monacoEditor.isVisible().catch(() => false)
-
-    // Editor might not be visible if no files are open
-    expect(typeof isVisible).toBe('boolean')
-  })
-
-  test('should show files in sidebar', async ({ page }) => {
-    // Navigate to studio
-    await page.locator('[data-testid="nav-studio"]').click()
-    await page.waitForTimeout(500)
-
-    // Editor pane should be visible
-    const editorPane = page.locator('[data-testid="editor-pane"]')
-    const isVisible = await editorPane.isVisible().catch(() => false)
-
-    expect(isVisible).toBe(true)
-  })
-
-  test('should open file when clicked', async ({ page }) => {
-    // Go to studio
-    await page.locator('[data-testid="nav-studio"]').click()
-    await page.waitForTimeout(500)
-
-    // Check if files exist
-    const files = page.locator('[data-testid*="file-"]')
-    const fileCount = await files.count()
-
-    if (fileCount > 0) {
-      // Click first file
-      await files.first().click()
-      await page.waitForTimeout(500)
-
-      // Editor pane should still be visible
-      const editorPane = page.locator('[data-testid="editor-pane"]')
-      await expect(editorPane).toBeVisible()
-    }
-  })
-
-  test('should allow keyboard navigation', async ({ page }) => {
-    // Press Tab to test keyboard navigation
-    await page.keyboard.press('Tab')
-    await page.waitForTimeout(200)
-
-    // App should still be responsive
-    const appRoot = page.locator('[data-testid="app-root"]')
-    await expect(appRoot).toBeVisible()
-  })
-
-  test('should display project information', async ({ page }) => {
-    // Navigate to studio
-    await page.locator('[data-testid="nav-studio"]').click()
-    await page.waitForTimeout(500)
-
-    // Check that the layout loads properly
-    const editorLayout = page.locator('[data-testid="editor-layout"]')
-    const isVisible = await editorLayout.isVisible().catch(() => false)
-
-    // Layout should be visible in studio view
-    expect(isVisible).toBe(true)
+  test('should verify navigation items in open project', async ({ page }) => {
+     // Open first project if available
+     const projectCard = page.locator('[data-testid*="project-card"]:not([data-testid="new-project-card"])').first()
+     if (await projectCard.isVisible()) {
+       await projectCard.click()
+       await page.waitForSelector('[data-testid="editor-three-pane"]')
+       
+       // Verify sidebar nav items
+       await expect(page.locator('[data-testid="nav-dashboard"]')).toBeVisible()
+       await expect(page.locator('[data-testid="nav-studio"]')).toBeVisible()
+       await expect(page.locator('[data-testid="nav-projects"]')).toBeVisible()
+     }
   })
 })

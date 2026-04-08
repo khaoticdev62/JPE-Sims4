@@ -1,0 +1,154 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0a0c10;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#13151c;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0f1116;stop-opacity:1" />
+    </linearGradient>
+    
+    <linearGradient id="cyanGlow" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#63B3ED;stop-opacity:0" />
+      <stop offset="50%" style="stop-color:#63B3ED;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#63B3ED;stop-opacity:0" />
+    </linearGradient>
+    
+    <linearGradient id="roseGlow" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#FC8181;stop-opacity:0" />
+      <stop offset="50%" style="stop-color:#FC8181;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#FC8181;stop-opacity:0" />
+    </linearGradient>
+    
+    <linearGradient id="amberGlow" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#F6AD55;stop-opacity:0" />
+      <stop offset="50%" style="stop-color:#F6AD55;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#F6AD55;stop-opacity:0" />
+    </linearGradient>
+    
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="6" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    
+    <filter id="glowStrong">
+      <feGaussianBlur stdDeviation="10" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="800" height="400" fill="url(#bgGrad)"/>
+  
+  <!-- Grid pattern -->
+  <g opacity="0.08">
+    <line x1="0" y1="0" x2="0" y2="400" stroke="#63B3ED" stroke-width="1"/>
+    <line x1="100" y1="0" x2="100" y2="400" stroke="#63B3ED" stroke-width="1"/>
+    <line x1="200" y1="0" x2="200" y2="400" stroke="#63B3ED" stroke-width="1"/>
+    <line x1="300" y1="0" x2="300" y2="400" stroke="#63B3ED" stroke-width="1"/>
+    <line x1="400" y1="0" x2="400" y2="400" stroke="#63B3ED" stroke-width="1"/>
+    <line x1="500" y1="0" x2="500" y2="400" stroke="#63B3ED" stroke-width="1"/>
+    <line x1="600" y1="0" x2="600" y2="400" stroke="#63B3ED" stroke-width="1"/>
+    <line x1="700" y1="0" x2="700" y2="400" stroke="#63B3ED" stroke-width="1"/>
+    <line x1="800" y1="0" x2="800" y2="400" stroke="#63B3ED" stroke-width="1"/>
+    
+    <line x1="0" y1="0" x2="800" y2="0" stroke="#63B3ED" stroke-width="1"/>
+    <line x1="0" y1="50" x2="800" y2="50" stroke="#63B3ED" stroke-width="1"/>
+    <line x1="0" y1="100" x2="800" y2="100" stroke="#63B3ED" stroke-width="1"/>
+    <line x1="0" y1="150" x2="800" y2="150" stroke="#63B3ED" stroke-width="1"/>
+    <line x1="0" y1="200" x2="800" y2="200" stroke="#63B3ED" stroke-width="1"/>
+    <line x1="0" y1="250" x2="800" y2="250" stroke="#63B3ED" stroke-width="1"/>
+    <line x1="0" y1="300" x2="800" y2="300" stroke="#63B3ED" stroke-width="1"/>
+    <line x1="0" y1="350" x2="800" y2="350" stroke="#63B3ED" stroke-width="1"/>
+    <line x1="0" y1="400" x2="800" y2="400" stroke="#63B3ED" stroke-width="1"/>
+  </g>
+  
+  <!-- Diagnostic scan visualization -->
+  <g opacity="0.7">
+    <!-- Central scanning core -->
+    <circle cx="400" cy="200" r="120" fill="none" stroke="#63B3ED" stroke-width="2" filter="url(#glow)" opacity="0.6"/>
+    <circle cx="400" cy="200" r="90" fill="none" stroke="#8B5CF6" stroke-width="2" filter="url(#glow)" opacity="0.5"/>
+    <circle cx="400" cy="200" r="60" fill="none" stroke="#FC8181" stroke-width="2" filter="url(#glow)" opacity="0.4"/>
+    <circle cx="400" cy="200" r="30" fill="#63B3ED" opacity="0.2" filter="url(#glowStrong)"/>
+    
+    <!-- Scanning line -->
+    <line x1="280" y1="200" x2="520" y2="200" stroke="#63B3ED" stroke-width="2" filter="url(#glowStrong)">
+      <animate attributeName="y1" values="80;320;80" dur="4s" repeatCount="indefinite"/>
+      <animate attributeName="y2" values="80;320;80" dur="4s" repeatCount="indefinite"/>
+    </line>
+    
+    <!-- Error nodes -->
+    <circle cx="340" cy="160" r="8" fill="#FC8181" filter="url(#glow)">
+      <animate attributeName="opacity" values="0.4;1;0.4" dur="2s" repeatCount="indefinite"/>
+    </circle>
+    <text x="340" y="145" font-family="monospace" font-size="9" fill="#FC8181" text-anchor="middle">CRITICAL</text>
+    
+    <circle cx="460" cy="180" r="6" fill="#F6AD55" filter="url(#glow)">
+      <animate attributeName="opacity" values="0.5;1;0.5" dur="2.5s" repeatCount="indefinite"/>
+    </circle>
+    <text x="460" y="165" font-family="monospace" font-size="9" fill="#F6AD55" text-anchor="middle">WARNING</text>
+    
+    <circle cx="380" cy="240" r="7" fill="#63B3ED" filter="url(#glow)">
+      <animate attributeName="opacity" values="0.6;1;0.6" dur="3s" repeatCount="indefinite"/>
+    </circle>
+    <text x="380" y="260" font-family="monospace" font-size="9" fill="#63B3ED" text-anchor="middle">ERROR</text>
+    
+    <circle cx="440" cy="260" r="5" fill="#48BB78" filter="url(#glow)">
+      <animate attributeName="opacity" values="0.5;0.9;0.5" dur="1.8s" repeatCount="indefinite"/>
+    </circle>
+    <text x="440" y="280" font-family="monospace" font-size="9" fill="#48BB78" text-anchor="middle">RESOLVED</text>
+    
+    <!-- Connection lines between nodes -->
+    <line x1="340" y1="160" x2="380" y2="240" stroke="#FC8181" stroke-width="1" opacity="0.4"/>
+    <line x1="460" y1="180" x2="440" y2="260" stroke="#F6AD55" stroke-width="1" opacity="0.4"/>
+    <line x1="380" y1="240" x2="440" y2="260" stroke="#63B3ED" stroke-width="1" opacity="0.3"/>
+    
+    <!-- Diagnostic log entries on sides -->
+    <g opacity="0.8">
+      <rect x="30" y="80" width="180" height="240" rx="6" fill="#13151c" stroke="#63B3ED" stroke-width="1"/>
+      <text x="120" y="105" font-family="monospace" font-size="11" fill="#A0AEC0" text-anchor="middle" letter-spacing="2">LOG INTERCEPTS</text>
+      
+      <text x="45" y="130" font-family="monospace" font-size="9" fill="#FC8181">[14:02:41] System Exception</text>
+      <text x="45" y="150" font-family="monospace" font-size="9" fill="#F6AD55">[14:02:39] Memory Access</text>
+      <text x="45" y="170" font-family="monospace" font-size="9" fill="#63B3ED">[14:02:35] Null Pointer</text>
+      <text x="45" y="190" font-family="monospace" font-size="9" fill="#FC8181">[14:02:31] Buffer Overflow</text>
+      <text x="45" y="210" font-family="monospace" font-size="9" fill="#63B3ED">[14:02:28] Type Coercion</text>
+      <text x="45" y="230" font-family="monospace" font-size="9" fill="#F6AD55">[14:02:24] Race Condition</text>
+      <text x="45" y="250" font-family="monospace" font-size="9" fill="#63B3ED">[14:02:19] Symbol Ref</text>
+      <text x="45" y="270" font-family="monospace" font-size="9" fill="#48BB78">[14:02:15] Resolved</text>
+      
+      <rect x="590" y="80" width="180" height="240" rx="6" fill="#13151c" stroke="#8B5CF6" stroke-width="1"/>
+      <text x="680" y="105" font-family="monospace" font-size="11" fill="#A0AEC0" text-anchor="middle" letter-spacing="2">STACK TRACE</text>
+      
+      <text x="605" y="130" font-family="monospace" font-size="9" fill="#E2E8F0">Traceback (most recent):</text>
+      <text x="605" y="150" font-family="monospace" font-size="9" fill="#63B3ED">  at translate()</text>
+      <text x="605" y="170" font-family="monospace" font-size="9" fill="#63B3ED">  at parseXML()</text>
+      <text x="605" y="190" font-family="monospace" font-size="9" fill="#F6AD55">  at validate()</text>
+      <text x="605" y="210" font-family="monospace" font-size="9" fill="#FC8181">  at compile()</text>
+      <text x="605" y="230" font-family="monospace" font-size="9" fill="#63B3ED">  at index()</text>
+      <text x="605" y="250" font-family="monospace" font-size="9" fill="#48BB78">✓ Complete</text>
+    </g>
+  </g>
+  
+  <!-- Title -->
+  <text x="400" y="45" font-family="system-ui, sans-serif" font-size="20" font-weight="bold" fill="#E2E8F0" text-anchor="middle" filter="url(#glowStrong)" letter-spacing="6">DIAGNOSTIC NEXUS</text>
+  
+  <!-- Decorative corner elements -->
+  <g opacity="0.6">
+    <rect x="15" y="15" width="30" height="3" fill="#63B3ED"/>
+    <rect x="15" y="15" width="3" height="30" fill="#63B3ED"/>
+    
+    <rect x="755" y="15" width="30" height="3" fill="#8B5CF6"/>
+    <rect x="782" y="15" width="3" height="30" fill="#8B5CF6"/>
+    
+    <rect x="15" y="382" width="30" height="3" fill="#8B5CF6"/>
+    <rect x="15" y="355" width="3" height="30" fill="#8B5CF6"/>
+    
+    <rect x="755" y="382" width="30" height="3" fill="#63B3ED"/>
+    <rect x="782" y="355" width="3" height="30" fill="#63B3ED"/>
+  </g>
+</svg>

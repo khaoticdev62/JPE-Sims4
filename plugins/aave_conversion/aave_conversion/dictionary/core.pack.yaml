@@ -1,0 +1,175 @@
+version: 1
+pack_id: 'core.aave.v1'
+language: 'en-US'
+registers: ['mild', 'standard', 'heavy']
+
+entries:
+  # --- Core verbs / ops ---
+  - canonical: 'increase'
+    token_type: 'verb'
+    domains: ['generic', 'loot', 'buffs', 'traits', 'skills']
+    aliases:
+      mild: ['boost']
+      standard: ['turn up']
+      heavy: ['crank up']
+    reversible_key: 'increase::verb'
+    popularity: 0.9
+    examples:
+      - canonical: 'increase skill by 2'
+        aave: 'turn up skill by 2'
+    notes: ['Use mild register for documentation-heavy files.']
+
+  - canonical: 'intensify'
+    token_type: 'verb'
+    domains: ['generic', 'loot', 'buffs']
+    aliases:
+      mild: ['intensify']
+      standard: ['turn up']
+      heavy: ['take it up a notch']
+    reversible_key: 'intensify::verb'
+    popularity: 0.3
+    notes: ["Shares alias with 'increase' on purpose; ambiguity tests should catch this."]
+
+  - canonical: 'decrease'
+    token_type: 'verb'
+    domains: ['generic', 'loot', 'buffs', 'traits', 'skills']
+    aliases:
+      mild: ['lower']
+      standard: ['turn down']
+      heavy: ['dial back']
+    reversible_key: 'decrease::verb'
+    popularity: 0.8
+
+  - canonical: 'add'
+    token_type: 'verb'
+    domains: ['generic', 'lists', 'buffs', 'traits']
+    aliases:
+      mild: ['add']
+      standard: ['throw in']
+      heavy: ['slide in']
+    reversible_key: 'add::verb'
+    popularity: 0.7
+
+  - canonical: 'remove'
+    token_type: 'verb'
+    domains: ['generic', 'lists', 'buffs', 'traits']
+    aliases:
+      mild: ['remove']
+      standard: ['take out']
+      heavy: ['pull up out']
+    reversible_key: 'remove::verb'
+    popularity: 0.7
+
+  - canonical: 'random'
+    token_type: 'modifier'
+    domains: ['generic', 'loot']
+    aliases:
+      mild: ['random']
+      standard: ['at random']
+      heavy: ['on some random']
+    reversible_key: 'random::modifier'
+    popularity: 0.6
+
+  # --- Core nouns ---
+  - canonical: 'interaction'
+    token_type: 'noun'
+    domains: ['generic', 'interactions']
+    aliases:
+      mild: ['interaction']
+      standard: ['move']
+      heavy: ['play']
+    reversible_key: 'interaction::noun'
+    popularity: 0.6
+    notes:
+      ["'move' reads clean in editor previews; keep canonical in final docs if desired."]
+
+  - canonical: 'test'
+    token_type: 'noun'
+    domains: ['generic', 'tests']
+    aliases:
+      mild: ['test']
+      standard: ['check']
+      heavy: ["see what's good with"]
+    reversible_key: 'test::noun'
+    popularity: 0.65
+
+  - canonical: 'condition'
+    token_type: 'noun'
+    domains: ['generic', 'tests']
+    aliases:
+      mild: ['condition']
+      standard: ['rule']
+      heavy: ['what gotta be true']
+    reversible_key: 'condition::noun'
+    popularity: 0.6
+
+  - canonical: 'buff'
+    token_type: 'noun'
+    domains: ['generic', 'buffs']
+    aliases:
+      mild: ['buff']
+      standard: ['boost effect']
+      heavy: ['power-up vibe']
+    reversible_key: 'buff::noun'
+    popularity: 0.55
+
+  - canonical: 'trait'
+    token_type: 'noun'
+    domains: ['generic', 'traits']
+    aliases:
+      mild: ['trait']
+      standard: ['personality tag']
+      heavy: ['who they is']
+    reversible_key: 'trait::noun'
+    popularity: 0.55
+
+  - canonical: 'loot action'
+    token_type: 'noun'
+    domains: ['generic', 'loot']
+    aliases:
+      mild: ['loot action']
+      standard: ['reward action']
+      heavy: ['the payoff']
+    reversible_key: 'loot_action::noun'
+    popularity: 0.6
+
+  # --- Keywords locked (no slang by default) ---
+  - canonical: 'if'
+    token_type: 'keyword'
+    domains: ['generic', 'tests']
+    aliases:
+      mild: ['if']
+      standard: ['if']
+      heavy: ['if']
+    reversible_key: 'if::keyword'
+    locked: true
+    popularity: 1.0
+
+  - canonical: 'then'
+    token_type: 'keyword'
+    domains: ['generic', 'tests']
+    aliases:
+      mild: ['then']
+      standard: ['then']
+      heavy: ['then']
+    reversible_key: 'then::keyword'
+    locked: true
+    popularity: 1.0
+
+  - canonical: 'else'
+    token_type: 'keyword'
+    domains: ['generic', 'tests']
+    aliases:
+      mild: ['else']
+      standard: ['else']
+      heavy: ['else']
+    reversible_key: 'else::keyword'
+    locked: true
+    popularity: 1.0
+
+rules:
+  - id: 'R_IF_THEN_FLAVOR'
+    pattern: 'if (.+) then (.+)'
+    replacement: "if \\1 then go ahead and \\2"
+    domain: 'generic'
+    priority: 10

@@ -1,7 +1,54 @@
 /**
  * AI Service Types
- * Defines types for Claude API integration and caching
+ * Defines types for AI API integration and caching
  */
+
+export enum AIProvider {
+  CLAUDE = 'claude',
+  OPENAI = 'openai',
+  GEMINI = 'gemini',
+  QWEN = 'qwen',
+  OLLAMA = 'ollama'
+}
+
+export interface AIModelConfig {
+  id: string
+  name: string
+  maxTokens: number
+  contextWindow: number
+}
+
+export interface AIConfig {
+  activeProvider: AIProvider
+  models: Record<AIProvider, string>
+  temperature: number
+  maxTokens: number
+  baseUrl?: string // For local/proxy serving
+}
+
+export interface AISecret {
+  provider: AIProvider
+  key: string
+  updatedAt: number
+}
+
+export interface AIMessage {
+  role: 'user' | 'assistant' | 'system'
+  content: string
+}
+
+export interface AIResult {
+  success: boolean
+  text?: string
+  explanation?: Explanation
+  fixedCode?: string
+  diagnostics?: any[]
+  report?: any
+  error?: string
+  cached: boolean
+  timestamp: number
+  provider?: AIProvider
+}
 
 export interface ClaudeMessage {
   role: 'user' | 'assistant'
@@ -34,6 +81,9 @@ export interface ClaudeResponse {
 export interface Explanation {
   overview: string
   purpose: string
+  rootCause?: string     // BETTER EXCEPTIONS: What triggered the error
+  logicPath?: string     // BETTER EXCEPTIONS: Component relationship
+  fixStrategy?: string   // BETTER EXCEPTIONS: Step-by-step resolution
   keyFields: string[]
   effects: string[]
   notes: string[]
@@ -71,4 +121,5 @@ export interface ApiUsageStats {
   cacheHitRate: number
   totalTokensUsed: number
   averageResponseTime: number
+  responseTimes: number[]
 }

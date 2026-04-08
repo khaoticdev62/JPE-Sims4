@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "AAVEPack Lexicon Pack",
+  "type": "object",
+  "required": [
+    "version",
+    "pack_id",
+    "language",
+    "registers",
+    "entries"
+  ],
+  "properties": {
+    "version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "pack_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "language": {
+      "type": "string",
+      "minLength": 1
+    },
+    "registers": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1
+    },
+    "entries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "canonical",
+          "token_type",
+          "domains",
+          "aliases",
+          "reversible_key"
+        ],
+        "properties": {
+          "canonical": {
+            "type": "string",
+            "minLength": 1
+          },
+          "token_type": {
+            "type": "string"
+          },
+          "domains": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1
+          },
+          "aliases": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "reversible_key": {
+            "type": "string",
+            "minLength": 1
+          },
+          "locked": {
+            "type": "boolean"
+          },
+          "popularity": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "notes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "examples": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "safety": {
+            "type": "object",
+            "properties": {
+              "blocked": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

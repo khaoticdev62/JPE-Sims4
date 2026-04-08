@@ -1,0 +1,27 @@
+{
+  "id": "jpe.plugin.aave_conversion",
+  "name": "AAVE Conversion (AAVEPack)",
+  "version": "1.0.2",
+  "entrypoint": "aave_conversion.plugin:AAVEConversionPlugin",
+  "capabilities": [
+    "render.postprocess",
+    "normalize.preparse",
+    "dictionary.lookup",
+    "lint",
+    "suggest",
+    "stats",
+    "validate-pack"
+  ],
+  "requires": {
+    "python": ">=3.11",
+    "deps": [
+      "pyyaml>=6.0",
+      "rich>=13.7"
+    ]
+  },
+  "optional": {
+    "tui": [
+      "textual>=0.56.0"
+    ]
+  }
+}

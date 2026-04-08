@@ -13,7 +13,30 @@
  * This is the bridge between the editor and the filesystem.
  */
 
-import type { Project, ProjectFile, FileService as IFileService } from './types'
+import { safeStorage } from '../utils/storage'
+import { sanitizePath } from '../utils/fileUtils'
+
+/**
+ * Internal Project types for FileService
+ * These define the structure of the project.json file
+ */
+export interface ProjectFile {
+  id: string
+  name: string
+  path: string
+  type: 'xml' | 'stbl' | 'jpe' | 'package' | 'python'
+  createdAt: string
+  modifiedAt: string
+}
+
+export interface Project {
+  id: string
+  name: string
+  path: string
+  files: ProjectFile[]
+  createdAt: string
+  updatedAt: string
+}
 
 /**
  * File Service interface (for dependency injection)
@@ -61,25 +84,26 @@ export class FileService {
     projectName: string
   ): Promise<Project> {
     try {
+      const sanitizedRoot = sanitizePath(projectPath, '')
       // Create project directory
-      await this.backend.mkdir(projectPath)
+      await this.backend.mkdir(sanitizedRoot)
 
       // Create files subdirectory
-      const filesDir = `${projectPath}/files`
+      const filesDir = `${sanitizedRoot}/files`
       await this.backend.mkdir(filesDir)
 
       // Create project metadata
       const project: Project = {
         id: generateProjectId(),
         name: projectName,
-        path: projectPath,
+        path: sanitizedRoot,
         files: [],
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       }
 
       // Save project.json
-      await this.saveProjectMetadata(projectPath, project)
+      await this.saveProjectMetadata(sanitizedRoot, project)
 
       return project
     } catch (error) {
@@ -96,11 +120,12 @@ export class FileService {
    */
   async loadProject(projectPath: string): Promise<Project> {
     try {
+      const sanitizedRoot = sanitizePath(projectPath, '')
       // Load project metadata
-      const project = await this.loadProjectMetadata(projectPath)
+      const project = await this.loadProjectMetadata(sanitizedRoot)
 
       // Scan files directory to get current file list
-      const filesDir = `${projectPath}/files`
+      const filesDir = `${sanitizedRoot}/files`
       const fileNames = await this.backend.readdir(filesDir)
 
       // Build file list
@@ -134,7 +159,7 @@ export class FileService {
     projectPath: string,
     project: Project
   ): Promise<void> {
-    const metadataPath = `${projectPath}/project.json`
+    const metadataPath = sanitizePath(projectPath, 'project.json')
     const content = JSON.stringify(project, null, 2)
     await this.backend.writeFile(metadataPath, content)
   }
@@ -143,7 +168,7 @@ export class FileService {
    * Load project metadata (project.json)
    */
   private async loadProjectMetadata(projectPath: string): Promise<Project> {
-    const metadataPath = `${projectPath}/project.json`
+    const metadataPath = sanitizePath(projectPath, 'project.json')
     const content = await this.backend.readFile(metadataPath)
     return JSON.parse(content) as Project
   }
@@ -155,7 +180,8 @@ export class FileService {
    */
   async deleteProject(projectPath: string): Promise<void> {
     try {
-      await this.backend.rmdir(projectPath)
+      const sanitizedRoot = sanitizePath(projectPath, '')
+      await this.backend.rmdir(sanitizedRoot)
     } catch (error) {
       throw new Error(
         `Failed to delete project: ${error instanceof Error ? error.message : 'Unknown error'}`
@@ -183,7 +209,7 @@ export class FileService {
       const safeFileName = fileName.endsWith('.xml') ? fileName : `${fileName}.xml`
 
       // Create file path
-      const filePath = `${projectPath}/files/${safeFileName}`
+      const filePath = sanitizePath(projectPath, `files/${safeFileName}`)
 
       // Write file
       await this.backend.writeFile(filePath, content)
@@ -268,7 +294,7 @@ export class FileService {
     files: ProjectFile[]
   ): Promise<void> {
     try {
-      for (const file of files) {
+      for (const _file of files) {
         // Re-read to get current content from editor
         // Note: This assumes file content is passed separately
         // In real implementation, content would come from editor state
@@ -284,7 +310,7 @@ export class FileService {
    * Load all files in a project into memory
    */
   async loadProjectFilesContent(
-    projectPath: string,
+    _projectPath: string,
     files: ProjectFile[]
   ): Promise<Map<string, string>> {
     try {
@@ -317,7 +343,7 @@ export class ElectronFileService extends FileService {
    * import path from 'path'
    * const service = ElectronFileService.create(fs, path)
    */
-  static create(fsPromises: any, pathModule: any): ElectronFileService {
+  static create(fsPromises: any, _pathModule: any): ElectronFileService {
     const backend: FileServiceBackend = {
       readFile: (path: string) => fsPromises.readFile(path, 'utf8'),
       writeFile: (path: string, content: string) =>
@@ -356,7 +382,7 @@ export class BrowserFileService extends FileService {
     const backend: FileServiceBackend = {
       readFile: async (path: string) => {
         const key = `file:${path}`
-        const content = localStorage.getItem(key)
+        const content = safeStorage.getItem(key)
         if (!content) {
           throw new Error(`File not found: ${path}`)
         }
@@ -365,32 +391,32 @@ export class BrowserFileService extends FileService {
 
       writeFile: async (path: string, content: string) => {
         const key = `file:${path}`
-        localStorage.setItem(key, content)
+        safeStorage.setItem(key, content)
       },
 
       fileExists: async (path: string) => {
         const key = `file:${path}`
-        return localStorage.getItem(key) !== null
+        return safeStorage.getItem(key) !== null
       },
 
-      mkdir: async (path: string) => {
+      mkdir: async (_path: string) => {
         // No-op in browser
       },
 
       rmdir: async (path: string) => {
         // Remove all files starting with path
         const prefix = `file:${path}`
-        const keys = Object.keys(localStorage)
+        const keys = safeStorage.getAllKeys()
         for (const key of keys) {
           if (key.startsWith(prefix)) {
-            localStorage.removeItem(key)
+            safeStorage.removeItem(key)
           }
         }
       },
 
       readdir: async (path: string) => {
         const prefix = `file:${path}/`
-        const keys = Object.keys(localStorage)
+        const keys = safeStorage.getAllKeys()
         const files = new Set<string>()
 
         for (const key of keys) {

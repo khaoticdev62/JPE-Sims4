@@ -24,7 +24,7 @@ export class EditorHelpers {
             return
           }
         }
-      } catch (error) {
+      } catch (_error) {
         // Ignore errors during polling
       }
 

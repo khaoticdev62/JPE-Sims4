@@ -1,3 +1,5 @@
+"use client";
+
 /**
  * Shortcut Editor
  * Dialog for editing individual keyboard shortcuts

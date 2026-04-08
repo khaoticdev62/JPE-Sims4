@@ -1,14 +1,18 @@
+"use client";
+
 import { useEffect, useRef } from 'react'
 import type { ModFile } from '@/types/index'
 
 interface FileContextMenuProps {
-  file: ModFile
+  file?: ModFile
+  isGroupHeader?: boolean
   position: { x: number; y: number }
   onClose: () => void
   onOpen?: (file: ModFile) => void
   onValidate?: (file: ModFile) => void
   onDelete?: (file: ModFile) => void
   onRename?: (file: ModFile) => void
+  onAddFile?: () => void
 }
 
 /**
@@ -16,12 +20,14 @@ interface FileContextMenuProps {
  */
 export default function FileContextMenu({
   file,
+  isGroupHeader = false,
   position,
   onClose,
   onOpen,
   onValidate,
   onDelete,
   onRename,
+  onAddFile,
 }: FileContextMenuProps) {
   const menuRef = useRef<HTMLDivElement>(null)
 
@@ -50,33 +56,46 @@ export default function FileContextMenu({
   }, [onClose])
 
   const menuItems = [
-    {
-      id: 'open',
-      label: 'Open',
-      icon: '📂',
-      action: onOpen,
-      divider: true,
-    },
-    {
-      id: 'validate',
-      label: 'Validate File',
-      icon: '✅',
-      action: onValidate,
-    },
-    {
-      id: 'rename',
-      label: 'Rename',
-      icon: '✏️',
-      action: onRename,
-    },
-    {
-      id: 'delete',
-      label: 'Delete',
-      icon: '🗑️',
-      action: onDelete,
-      divider: true,
-      className: 'text-state-error',
-    },
+    // Add File option (only for group headers)
+    ...(isGroupHeader && onAddFile ? [
+      {
+        id: 'add-file',
+        label: 'Add File',
+        icon: '📎',
+        action: onAddFile,
+        divider: true,
+      },
+    ] : []),
+    // File-specific actions (only when file is provided)
+    ...(file ? [
+      {
+        id: 'open',
+        label: 'Open',
+        icon: '📂',
+        action: onOpen,
+        divider: true,
+      },
+      {
+        id: 'validate',
+        label: 'Validate File',
+        icon: '✅',
+        action: onValidate,
+      },
+      {
+        id: 'rename',
+        label: 'Rename',
+        icon: '✏️',
+        action: onRename,
+      },
+      {
+        id: 'delete',
+        label: 'Delete',
+        icon: '🗑️',
+        action: onDelete,
+        divider: true,
+        className: 'text-state-error',
+      },
+    ] : []),
   ].filter((item) => item.action)
 
   return (
@@ -93,7 +112,8 @@ export default function FileContextMenu({
           <div key={item.id}>
             <button
               onClick={() => {
-                item.action?.(file)
+                if (file) (item.action as (f: ModFile) => void)?.(file)
+                else (item.action as () => void)?.()
                 onClose()
               }}
               className={`w-full text-left px-4 py-2 text-sm flex items-center gap-2 hover:bg-background-secondary transition-colors ${

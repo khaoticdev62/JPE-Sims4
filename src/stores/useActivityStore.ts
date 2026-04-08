@@ -1,5 +1,6 @@
 import { create } from 'zustand'
-import { devtools, persist } from 'zustand/middleware'
+import { devtools, persist, createJSONStorage } from 'zustand/middleware'
+import { safeStorage } from '@/utils/storage'
 
 /**
  * Activity types for tracking user actions
@@ -87,6 +88,7 @@ export const useActivityStore = create<ActivityState>()(
       }),
       {
         name: 'jpe-activity-store',
+        storage: createJSONStorage(() => safeStorage),
         partialize: (state) => ({
           activities: state.activities,
         }),

@@ -1,9 +1,30 @@
-import { useState } from 'react'
+"use client";
+
+import { useState, useCallback } from 'react'
 import { useProjectStore } from '@/stores/useProjectStore'
 import { useEditorStore } from '@/stores/useEditorStore'
 import { FileService } from '@/services/FileService'
 import Modal from '@/components/common/Modal'
 import Button from '@/components/common/Button'
+import { FilePlus, X, CheckCircle2, XCircle, Loader2, AlertTriangle } from 'lucide-react'
+
+/** Supported file extensions */
+const SUPPORTED_EXTENSIONS = new Set([
+  'xml', 'jpe', 'stbl', 'ts4script', 'package', 'py', 'json', 'cfg',
+])
+
+interface SelectedFile {
+  path: string
+  name: string
+  extension: string
+  supported: boolean
+}
+
+interface FileAddStatus {
+  file: SelectedFile
+  status: 'pending' | 'adding' | 'success' | 'failed'
+  error?: string
+}
 
 interface AddFileDialogProps {
   isOpen: boolean
@@ -13,16 +34,171 @@ interface AddFileDialogProps {
 export default function AddFileDialog({ isOpen, onClose }: AddFileDialogProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
+  const [selectedFiles, setSelectedFiles] = useState<SelectedFile[]>([])
+  const [addStatuses, setAddStatuses] = useState<FileAddStatus[]>([])
+  const [showPreview, setShowPreview] = useState(false)
 
   const { currentProject, addFile, setError: setStoreError } = useProjectStore()
-  const { openTab, updateTabContent } = useEditorStore()
+  const { openTab } = useEditorStore()
+
+  /**
+   * Check if a file extension is supported
+   */
+  const isExtensionSupported = useCallback((filename: string): boolean => {
+    const ext = filename.split('.').pop()?.toLowerCase() ?? ''
+    return SUPPORTED_EXTENSIONS.has(ext)
+  }, [])
+
+  /**
+   * Handle file selection from file picker
+   */
+  const handleSelectFiles = async () => {
+    setError('')
+    setSelectedFiles([])
+    setAddStatuses([])
+    setShowPreview(false)
+
+    try {
+      const filePaths = await FileService.openFile()
+      if (!filePaths || filePaths.length === 0) {
+        return
+      }
+
+      // Ensure filePaths is an array
+      const paths = Array.isArray(filePaths) ? filePaths : [filePaths]
+
+      const files: SelectedFile[] = paths.map((fp: string) => {
+        const name = fp.split('/').pop()?.split('\\').pop() ?? fp
+        const ext = name.split('.').pop()?.toLowerCase() ?? ''
+        return {
+          path: fp,
+          name,
+          extension: ext,
+          supported: isExtensionSupported(name),
+        }
+      })
+
+      setSelectedFiles(files)
+      setShowPreview(true)
+
+      // Check for unsupported files
+      const unsupported = files.filter((f) => !f.supported)
+      if (unsupported.length > 0) {
+        setError(
+          `Skipping ${unsupported.length} unsupported file(s): ${unsupported.map((f) => f.name).join(', ')}`
+        )
+      }
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : 'Failed to select files'
+      setError(errorMsg)
+      setStoreError(errorMsg)
+    }
+  }
+
+  /**
+   * Remove a file from the selection list
+   */
+  const removeFile = (index: number) => {
+    setSelectedFiles((prev) => prev.filter((_, i) => i !== index))
+  }
+
+  /**
+   * Add all selected (supported) files to the project
+   */
+  const handleAddFiles = async () => {
+    const supportedFiles = selectedFiles.filter((f) => f.supported)
+    if (supportedFiles.length === 0) {
+      setError('No supported files selected')
+      return
+    }
+
+    setIsLoading(true)
+    setError('')
+
+    // Initialize statuses
+    const statuses: FileAddStatus[] = supportedFiles.map((file) => ({
+      file,
+      status: 'pending' as const,
+    }))
+    setAddStatuses(statuses)
+
+    let successCount = 0
+    let failCount = 0
+
+    // Add files one by one with progress
+    for (let i = 0; i < supportedFiles.length; i++) {
+      const sf = supportedFiles[i]
+
+      // Update status to 'adding'
+      setAddStatuses((prev) =>
+        prev.map((s, idx) => (idx === i ? { ...s, status: 'adding' } : s))
+      )
+
+      try {
+        const newFile = await addFile(sf.path)
+
+        if (newFile) {
+          // Open file in editor
+          const tabId = `tab-${newFile.id}`
+          openTab({
+            id: tabId,
+            fileId: newFile.id,
+            name: newFile.name,
+            isDirty: false,
+          })
+
+          setAddStatuses((prev) =>
+            prev.map((s, idx) => (idx === i ? { ...s, status: 'success' } : s))
+          )
+          successCount++
+        } else {
+          setAddStatuses((prev) =>
+            prev.map((s, idx) =>
+              idx === i
+                ? { ...s, status: 'failed', error: 'File could not be added' }
+                : s
+            )
+          )
+          failCount++
+        }
+      } catch (err) {
+        const errorMsg = err instanceof Error ? err.message : 'Unknown error'
+        setAddStatuses((prev) =>
+          prev.map((s, idx) =>
+            idx === i ? { ...s, status: 'failed', error: errorMsg } : s
+          )
+        )
+        failCount++
+      }
+    }
+
+    // Set final message
+    if (failCount > 0) {
+      setError(`${successCount} file(s) added, ${failCount} failed`)
+    }
+
+    setIsLoading(false)
+
+    // Close after a brief delay to show results
+    if (failCount === 0) {
+      setTimeout(() => {
+        setSelectedFiles([])
+        setAddStatuses([])
+        setShowPreview(false)
+        onClose()
+      }, 800)
+    }
+  }
 
   if (!currentProject) {
     return (
       <Modal isOpen={isOpen} title="Add File" onClose={onClose}>
-        <div className="text-center py-4">
-          <p className="text-sm text-slate-400">No project loaded</p>
-          <p className="text-xs text-slate-500 mt-2">
+        <div className="text-center py-8">
+          <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-slate-800 flex items-center justify-center">
+            <FilePlus className="w-6 h-6 text-slate-500" />
+          </div>
+          <p className="text-sm text-slate-300 mb-1">No project loaded</p>
+          <p className="text-xs text-slate-500">
             Create or open a project first
           </p>
         </div>
@@ -30,119 +206,181 @@ export default function AddFileDialog({ isOpen, onClose }: AddFileDialogProps) {
     )
   }
 
-  const handleAddFiles = async () => {
-    setIsLoading(true)
-    setError('')
-
-    try {
-      const filePaths = await FileService.openFile()
-      if (!filePaths || filePaths.length === 0) {
-        setIsLoading(false)
-        return
-      }
-
-      // Create file objects and add to project
-      for (const filePath of filePaths) {
-        const fileName = filePath.split('\\').pop() || filePath
-        const fileType = fileName.split('.').pop() || 'txt'
-
-        // Read file content
-        const fileContent = await FileService.readFile(filePath)
-
-        const newFile = {
-          id: `file-${Date.now()}-${Math.random()}`,
-          projectId: currentProject.id,
-          name: fileName,
-          path: filePath,
-          type: fileType as any,
-          content: fileContent.success ? fileContent.content || '' : '',
-          isDirty: false,
-          size: fileContent.size || 0,
-          lastModified: Date.now(),
-        }
-
-        addFile(newFile)
-
-        // Open file in editor
-        const tabId = `tab-${newFile.id}`
-        openTab({
-          id: tabId,
-          fileId: newFile.id,
-          name: newFile.name,
-          isDirty: false,
-        })
-
-        // Load content into editor
-        if (fileContent.success && fileContent.content) {
-          updateTabContent(tabId, fileContent.content)
-        }
-      }
-
-      onClose()
-    } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : 'Failed to add files'
-      setError(errorMsg)
-      setStoreError(errorMsg)
-    } finally {
-      setIsLoading(false)
-    }
-  }
+  const supportedCount = selectedFiles.filter((f) => f.supported).length
+  const unsupportedCount = selectedFiles.filter((f) => !f.supported).length
 
   return (
     <Modal isOpen={isOpen} title="Add File to Project" onClose={onClose}>
       <div className="space-y-4">
-        <div className="bg-slate-800 rounded p-4 text-center">
-          <p className="text-sm text-slate-100 mb-2">
-            📁 {currentProject.name}
-          </p>
-          <p className="text-xs text-slate-400">
-            Select mod files to add to your project
-          </p>
-        </div>
-
-        <div className="bg-slate-800 border-2 border-dashed border-slate-600 rounded p-6 text-center">
-          <p className="text-sm text-slate-300 mb-4">
-            Supported formats:
-          </p>
-          <div className="flex flex-wrap gap-2 justify-center">
-            {['XML', 'STBL', 'TS4Script', 'Package', 'Python', 'JSON', 'CFG'].map(
-              (format) => (
-                <span
-                  key={format}
-                  className="px-2 py-1 bg-slate-700 text-xs text-slate-300 rounded"
-                >
-                  {format}
-                </span>
-              )
-            )}
+        {/* Project Info */}
+        <div className="bg-slate-800 rounded-lg p-3 flex items-center gap-3">
+          <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center">
+            <FilePlus className="w-4 h-4 text-blue-400" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm text-slate-100 font-medium truncate">
+              {currentProject.name}
+            </p>
+            <p className="text-xs text-slate-400">
+              Select files to add to your project
+            </p>
           </div>
         </div>
 
-        {error && (
-          <div className="bg-red-950 border border-red-500 rounded p-3">
-            <p className="text-sm text-red-200">{error}</p>
+        {/* Supported Formats */}
+        <div className="bg-slate-800/50 border border-slate-700/50 rounded-lg p-3">
+          <p className="text-xs text-slate-400 mb-2 font-medium uppercase tracking-wider">
+            Supported Formats
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {Array.from(SUPPORTED_EXTENSIONS).map((ext) => (
+              <span
+                key={ext}
+                className="px-2 py-0.5 bg-slate-700/50 text-xs text-slate-300 rounded font-mono"
+              >
+                .{ext}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        {/* File Preview (after selection) */}
+        {showPreview && selectedFiles.length > 0 && (
+          <div>
+            <p className="text-xs text-slate-400 mb-2 font-medium uppercase tracking-wider">
+              Selected Files ({selectedFiles.length})
+              {unsupportedCount > 0 && (
+                <span className="text-yellow-400 ml-1">
+                  • {unsupportedCount} unsupported
+                </span>
+              )}
+            </p>
+
+            <div className="space-y-1 max-h-40 overflow-y-auto">
+              {selectedFiles.map((file, index) => (
+                <div
+                  key={`${file.path}-${index}`}
+                  className="flex items-center gap-2 px-2 py-1.5 bg-slate-800/30 rounded group"
+                >
+                  {file.supported ? (
+                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 flex-shrink-0" />
+                  ) : (
+                    <div className="w-1.5 h-1.5 rounded-full bg-red-400 flex-shrink-0" />
+                  )}
+                  <span className={`text-xs flex-1 truncate ${
+                    file.supported ? 'text-slate-200' : 'text-slate-500 line-through'
+                  }`}>
+                    {file.name}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => removeFile(index)}
+                    className="opacity-0 group-hover:opacity-100 text-slate-500 hover:text-red-400 transition-all"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
+        {/* Add Progress (during adding) */}
+        {addStatuses.length > 0 && (
+          <div>
+            <p className="text-xs text-slate-400 mb-2 font-medium uppercase tracking-wider">
+              Adding Files
+            </p>
+            <div className="space-y-1 max-h-40 overflow-y-auto">
+              {addStatuses.map((item, index) => (
+                <div
+                  key={`status-${index}`}
+                  className="flex items-center gap-2 px-2 py-1.5 bg-slate-800/30 rounded"
+                >
+                  {item.status === 'pending' && (
+                    <div className="w-3.5 h-3.5 rounded-full border-2 border-slate-600 flex-shrink-0" />
+                  )}
+                  {item.status === 'adding' && (
+                    <Loader2 className="w-3.5 h-3.5 text-blue-400 animate-spin flex-shrink-0" />
+                  )}
+                  {item.status === 'success' && (
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
+                  )}
+                  {item.status === 'failed' && (
+                    <XCircle className="w-3.5 h-3.5 text-red-400 flex-shrink-0" />
+                  )}
+                  <span className="text-xs flex-1 truncate text-slate-200">
+                    {item.file.name}
+                  </span>
+                  {item.status === 'failed' && item.error && (
+                    <span className="text-[10px] text-red-400 truncate max-w-[120px]" title={item.error}>
+                      {item.error}
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Error Display */}
+        {error && (
+          <div className={`p-3 rounded-lg border flex items-start gap-2 ${
+            unsupportedCount > 0
+              ? 'bg-yellow-950/30 border-yellow-700/50'
+              : 'bg-red-950/30 border-red-700/50'
+          }`}>
+            <AlertTriangle className={`w-4 h-4 mt-0.5 flex-shrink-0 ${
+              unsupportedCount > 0 ? 'text-yellow-400' : 'text-red-400'
+            }`} />
+            <p className={`text-xs ${
+              unsupportedCount > 0 ? 'text-yellow-200' : 'text-red-200'
+            }`}>
+              {error}
+            </p>
+          </div>
+        )}
+
+        {/* Actions */}
         <div className="flex gap-3 pt-4 border-t border-slate-800">
           <Button
             type="button"
             variant="secondary"
-            onClick={onClose}
+            onClick={() => {
+              setSelectedFiles([])
+              setAddStatuses([])
+              setShowPreview(false)
+              setError('')
+              onClose()
+            }}
             disabled={isLoading}
             className="flex-1"
           >
-            Cancel
+            {showPreview ? 'Back' : 'Cancel'}
           </Button>
-          <Button
-            type="button"
-            variant="primary"
-            isLoading={isLoading}
-            onClick={handleAddFiles}
-            className="flex-1"
-          >
-            Select Files
-          </Button>
+          {!showPreview ? (
+            <Button
+              type="button"
+              variant="primary"
+              isLoading={isLoading}
+              onClick={handleSelectFiles}
+              className="flex-1"
+            >
+              <FilePlus className="w-4 h-4 mr-1" />
+              Select Files
+            </Button>
+          ) : (
+            <Button
+              type="button"
+              variant="primary"
+              isLoading={isLoading}
+              onClick={handleAddFiles}
+              disabled={supportedCount === 0}
+              className="flex-1"
+            >
+              Add {supportedCount} File{supportedCount !== 1 ? 's' : ''}
+            </Button>
+          )}
         </div>
       </div>
     </Modal>

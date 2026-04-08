@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useEffect } from 'react'
 import { GamepadService } from '@/services/input/GamepadService'
 import { useGamepadNavigation } from '@/hooks/useGamepadNavigation'
@@ -12,7 +14,7 @@ interface ControllerManagerProps {
 export function ControllerManager({ children }: ControllerManagerProps) {
   // Initialize navigation and editing hooks
   const { showHelp, setShowHelp } = useGamepadNavigation()
-  const { cursorController, textInputHandler } = useGamepadEditing()
+  const { cursorController: _cursorController, textInputHandler: _textInputHandler } = useGamepadEditing()
 
   useEffect(() => {
     const gamepadService = GamepadService.getInstance()
@@ -27,7 +29,7 @@ export function ControllerManager({ children }: ControllerManagerProps) {
     <>
       {children}
       <ControllerIndicator />
-      {showHelp && <ControllerHelp onClose={() => setShowHelp(false)} />}
+      {showHelp && <ControllerHelp visible={showHelp} onClose={() => setShowHelp(false)} />}
     </>
   )
 }

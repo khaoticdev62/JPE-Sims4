@@ -1,3 +1,4 @@
+@import "./styles/accessibility.css";
 /*! tailwindcss v4.1.3 | MIT License | https://tailwindcss.com */
 @layer properties {
   @supports (((-webkit-hyphens: none)) and (not (margin-trim: inline))) or ((-moz-orient: inline) and (not (color: rgb(from red r g b)))) {
@@ -193,7 +194,6 @@
   }
 
   img, svg, video, canvas, audio, iframe, embed, object {
-    vertical-align: middle;
     display: block;
   }
 
@@ -516,6 +516,7 @@
   }
 
   .line-clamp-2 {
+    line-clamp: 2;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     display: -webkit-box;
@@ -1534,17 +1535,17 @@
 }
 
 :root {
-  --background-primary: #000;
-  --background-secondary: #121212;
-  --background-tertiary: #1c1c1e;
-  --text-primary: #fff;
-  --text-secondary: #8e8e93;
-  --accent-primary: #0a84ff;
-  --accent-focus: #007aff;
-  --border-subtle: #38383a;
-  --state-error: #ff453a;
-  --state-success: #32d74b;
-  --state-warning: #ff9f0a;
+  --background-primary: #0a0c10;
+  --background-secondary: #0f1116;
+  --background-tertiary: #181b24;
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --accent-primary: #38bdf8;
+  --accent-focus: #0ea5e9;
+  --border-subtle: #475569;
+  --state-error: #ef4444;
+  --state-success: #22c55e;
+  --state-warning: #f59e0b;
   --font-family-sans: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-size-xs: .75rem;
   --font-size-sm: .875rem;
@@ -1604,6 +1605,47 @@
   --sidebar-accent-foreground: var(--text-primary);
   --sidebar-border: var(--border-subtle);
   --sidebar-ring: var(--accent-focus);
+}
+
+/* HIGH-CONTRAST THEME (WCAG 2.1 AAA) */
+.theme-high-contrast {
+  --background-primary: #000000;
+  --background-secondary: #000000;
+  --background-tertiary: #111111;
+  --text-primary: #ffffff;
+  --text-secondary: #ffff00;
+  --accent-primary: #ffff00;
+  --accent-focus: #ffffff;
+  --border-subtle: #ffffff;
+  --state-error: #ff0000;
+  --state-success: #00ff00;
+  --state-warning: #ffff00;
+  
+  /* Reset shadcn-like aliases for high-contrast */
+  --background: var(--background-primary);
+  --foreground: var(--text-primary);
+  --border: #ffffff;
+  --ring: #ffffff;
+}
+
+/* LIGHT THEME */
+.light {
+  --background-primary: #f8fafc;
+  --background-secondary: #f1f5f9;
+  --background-tertiary: #e2e8f0;
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --accent-primary: #0ea5e9;
+  --accent-focus: #0284c7;
+  --border-subtle: #cbd5e1;
+  --state-error: #dc2626;
+  --state-success: #16a34a;
+  --state-warning: #d97706;
+  
+  --background: var(--background-primary);
+  --foreground: var(--text-primary);
+  --border: var(--border-subtle);
+  --ring: var(--accent-focus);
 }
 
 html {

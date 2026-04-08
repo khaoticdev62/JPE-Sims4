@@ -20,10 +20,6 @@ import {
   detectConfigFormat,
   parseJSON,
   parseYAML,
-  ProjectMetadata,
-  BuildConfig,
-  FileConfig,
-  ValidationConfig,
 } from './types/config'
 
 /**
@@ -33,7 +29,7 @@ export class ConfigParser {
   /**
    * Parse configuration file content (JSON or YAML)
    */
-  static parse(content: string, filename?: string): ConfigParseResult {
+  static parse(content: string, _filename?: string): ConfigParseResult {
     const startTime = performance.now()
     const errors: ConfigError[] = []
     const warnings: ConfigWarning[] = []
@@ -212,7 +208,7 @@ export class ConfigParser {
   /**
    * Validate files section
    */
-  private static validateFiles(files: any, errors: ConfigError[], warnings: ConfigWarning[]): void {
+  private static validateFiles(files: any, errors: ConfigError[], _warnings: ConfigWarning[]): void {
     if (typeof files !== 'object' || files === null) {
       errors.push({
         field: 'files',
@@ -251,7 +247,7 @@ export class ConfigParser {
   /**
    * Validate build section
    */
-  private static validateBuild(build: any, errors: ConfigError[], warnings: ConfigWarning[]): void {
+  private static validateBuild(build: any, errors: ConfigError[], _warnings: ConfigWarning[]): void {
     if (typeof build !== 'object' || build === null) {
       errors.push({
         field: 'build',
@@ -303,7 +299,7 @@ export class ConfigParser {
   /**
    * Validate validation section
    */
-  private static validateValidation(validation: any, errors: ConfigError[], warnings: ConfigWarning[]): void {
+  private static validateValidation(validation: any, errors: ConfigError[], _warnings: ConfigWarning[]): void {
     if (typeof validation !== 'object' || validation === null) {
       errors.push({
         field: 'validation',

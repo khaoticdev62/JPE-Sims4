@@ -1,9 +1,11 @@
+"use client";
+
 /**
  * Cloud Sync Panel
  * UI for cloud/mobile sync features (backend integration planned for future phase)
  */
 
-import { useState, useEffect } from 'react'
+import { useState} from 'react'
 import SyncStatus from './SyncStatus'
 import SyncHistory from './SyncHistory'
 

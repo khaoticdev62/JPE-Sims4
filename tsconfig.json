@@ -1,39 +1,38 @@
 {
   "compilerOptions": {
     "target": "ES2020",
-    "useDefineForClassFields": true,
-    "lib": ["ES2020", "DOM", "DOM.Iterable"],
-    "module": "ESNext",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
     "skipLibCheck": true,
-
-    /* Bundler mode */
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
     "moduleResolution": "bundler",
-    "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "noEmit": true,
-    "jsx": "react-jsx",
-
-    /* Linting */
-    "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true,
-
-    /* Path Mapping */
-    "baseUrl": ".",
+    "jsx": "preserve",
+    "incremental": true,
+    "downlevelIteration": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
     "paths": {
-      "@/*": ["src/*"],
-      "@components/*": ["src/components/*"],
-      "@hooks/*": ["src/hooks/*"],
-      "@stores/*": ["src/stores/*"],
-      "@services/*": ["src/services/*"],
-      "@engine/*": ["src/engine/*"],
-      "@types/*": ["src/types/*"],
-      "@utils/*": ["src/utils/*"],
-      "@constants/*": ["src/constants/*"]
+      "@/*": ["./src/*"],
+      "@app/*": ["./src/app/*"],
+      "@components/*": ["./src/components/*"],
+      "@constants/*": ["./src/constants/*"],
+      "@engine/*": ["./src/engine/*"],
+      "@hooks/*": ["./src/hooks/*"],
+      "@services/*": ["./src/services/*"],
+      "@stores/*": ["./src/stores/*"],
+      "@styles/*": ["./src/styles/*"],
+      "@types/*": ["./src/types/*"],
+      "@utils/*": ["./src/utils/*"]
     }
   },
-  "include": ["src"],
-  "references": [{ "path": "./tsconfig.node.json" }]
+  "include": ["next-env.d.ts", "keytar.d.ts", "src/preload.ts", "src/types/**/*.ts", "src/types/**/*.d.ts", "src/app/**/*.ts", "src/app/**/*.tsx", "src/components/**/*.ts", "src/components/**/*.tsx", "src/services/**/*.ts", "src/stores/**/*.ts", "src/utils/**/*.ts", "src/engine_legacy/jpe/**/*.ts", ".next/types/**/*.ts"],
+  "exclude": ["node_modules", "legacy", "docs/archive", "src/engine_legacy/**/__tests__/**", "src/engine_legacy/**/*.test.ts", "src/engine_legacy/compilers", "src/engine_legacy/diagnostics", "src/engine_legacy/validators", "src/engine_legacy/parsers", "src/engine_legacy/translators", "**/jpe_sims4/**", "**/jpe_studio/**", "**/plugins/**", "**/config/**", "**/design_system/**", "**/tests/**", "**/examples/**", "**/scripts/**", "**/fonts/**", "**/packaging/**", "**/core/**"]
 }

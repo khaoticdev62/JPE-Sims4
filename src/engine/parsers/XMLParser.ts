@@ -54,21 +54,22 @@ export class XMLParser {
     xml: string,
     startIndex: number
   ): { element: XMLElement | null; endIndex: number } {
-    // Find opening tag
-    const openMatch = xml.substring(startIndex).match(/^<([a-zA-Z0-9_:.-]+)([^>]*)>/)
+    // Find opening tag (non-greedy attributes, explicit self-closing slash capture)
+    const openMatch = xml.substring(startIndex).match(/^<([a-zA-Z0-9_:.-]+)([^>]*?)([/]?)>/)
     if (!openMatch) {
       return { element: null, endIndex: startIndex }
     }
 
     const tagName = openMatch[1]
     const attributesStr = openMatch[2]
+    const isSelfClosing = openMatch[3] === '/'
     const tagStart = startIndex + openMatch[0].length
 
     // Parse attributes
     const attributes = this.parseAttributes(attributesStr)
 
     // Check for self-closing tag
-    if (attributesStr.trim().endsWith('/')) {
+    if (isSelfClosing) {
       return {
         element: {
           tag: tagName,
@@ -175,7 +176,7 @@ export class XMLParser {
    * Convert parsed XML to JPE format
    */
   static convertToJPE(xmlElement: XMLElement): JPEModule {
-    const module: JPEModule = {
+    const jpeModule: JPEModule = {
       type: xmlElement.tag,
       id: xmlElement.attributes['id'] || `${xmlElement.tag}-${Date.now()}`,
       name: xmlElement.attributes['name'],
@@ -194,16 +195,16 @@ export class XMLParser {
         content: this.elementToString(child),
       }
 
-      module.sections.push(section)
+      jpeModule.sections.push(section)
     }
 
-    return module
+    return jpeModule;
   }
 
   /**
    * Convert element back to readable string
    */
-  private static elementToString(element: XMLElement): string {
+  public static elementToString(element: XMLElement): string {
     if (element.tag === '#text') {
       return element.text || ''
     }

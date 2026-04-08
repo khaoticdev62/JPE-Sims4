@@ -1,3 +1,5 @@
+"use client";
+
 /**
  * Keyboard Shortcuts Settings
  * Allow users to customize keyboard shortcuts

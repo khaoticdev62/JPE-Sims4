@@ -1,6 +1,9 @@
+"use client";
+
 import { useState } from 'react'
 import { useProjectStore } from '@/stores/useProjectStore'
 import { FileService } from '@/services/FileService'
+import { toast } from 'sonner'
 import Modal from '@/components/common/Modal'
 import Button from '@/components/common/Button'
 import TextInput from '@/components/common/TextInput'
@@ -31,6 +34,8 @@ export default function NewProjectDialog({ isOpen, onClose }: NewProjectDialogPr
 
     if (!projectName.trim()) {
       newErrors.name = 'Project name is required'
+    } else if (!/^[a-zA-Z0-9_-]+$/.test(projectName.trim())) {
+      newErrors.name = 'Project name can only contain letters, numbers, underscores, and hyphens'
     }
 
     if (!projectPath.trim()) {
@@ -48,13 +53,28 @@ export default function NewProjectDialog({ isOpen, onClose }: NewProjectDialogPr
 
     setIsLoading(true)
     try {
-      await createProject(projectName.trim(), projectPath.trim())
+      const name = projectName.trim()
+      const path = projectPath.trim()
+      
+      await createProject(name, path)
+      
+      // Success feedback
+      toast.success(`Project "${name}" created successfully!`, {
+        description: `Location: ${path}`,
+        duration: 5000,
+      })
+      
+      // Reset form
       setProjectName('')
       setProjectPath('')
       setErrors({})
       onClose()
     } catch (error) {
-      setError(`Failed to create project: ${error}`)
+      const message = error instanceof Error ? error.message : String(error)
+      toast.error(`Failed to create project: ${message}`, {
+        duration: 8000,
+      })
+      setError(message)
     } finally {
       setIsLoading(false)
     }

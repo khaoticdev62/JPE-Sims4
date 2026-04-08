@@ -2,42 +2,42 @@ import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
 
 function EditMenu() {
   const handleUndo = () => {
-    console.log('Undo action')
+    console.warn('Undo action')
     // Will integrate with editor state
   }
 
   const handleRedo = () => {
-    console.log('Redo action')
+    console.warn('Redo action')
     // Will integrate with editor state
   }
 
   const handleCut = () => {
-    console.log('Cut action')
+    console.warn('Cut action')
     // Will integrate with editor
   }
 
   const handleCopy = () => {
-    console.log('Copy action')
+    console.warn('Copy action')
     // Will integrate with editor
   }
 
   const handlePaste = () => {
-    console.log('Paste action')
+    console.warn('Paste action')
     // Will integrate with editor
   }
 
   const handleFind = () => {
-    console.log('Find action')
+    console.warn('Find action')
     // Will trigger find dialog
   }
 
   const handleReplace = () => {
-    console.log('Replace action')
+    console.warn('Replace action')
     // Will trigger replace dialog
   }
 
   const handleFindInFiles = () => {
-    console.log('Find in files action')
+    console.warn('Find in files action')
     // Will trigger find in files dialog
   }
 

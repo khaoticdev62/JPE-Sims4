@@ -1,9 +1,11 @@
+"use client";
+
 /**
  * Performance Panel
  * Display performance metrics and profiling information
  */
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import PerformanceMetrics from './PerformanceMetrics'
 import PerformanceGraph from './PerformanceGraph'
 

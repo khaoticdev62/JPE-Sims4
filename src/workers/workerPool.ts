@@ -17,29 +17,38 @@ export class WorkerPool<T> {
   private taskQueue: WorkerTask<T>[] = []
   private taskMap: Map<string, WorkerTask<T>> = new Map()
   private nextTaskId = 0
+  private size: number
+  private workerScript: string
 
   constructor(size: number, workerScript: string) {
+    this.size = size
+    this.workerScript = workerScript
     try {
       for (let i = 0; i < size; i++) {
-        const worker = new Worker(workerScript, { type: 'module' })
-
-        // Handle worker messages
-        worker.onmessage = (event) => {
-          this.handleWorkerMessage(event.data)
-        }
-
-        // Handle worker errors
-        worker.onerror = (error) => {
-          console.error('Worker error:', error)
-          this.recycleWorker(worker)
-        }
-
-        this.workers.push(worker)
-        this.availableWorkers.push(worker)
+        this.createWorker()
       }
     } catch (error) {
       console.error('Failed to create worker pool:', error)
     }
+  }
+
+  private createWorker(): void {
+    const worker = new Worker(this.workerScript, { type: 'module' })
+
+    // Handle worker messages
+    worker.onmessage = (event) => {
+      this.handleWorkerMessage(event.data)
+    }
+
+    // Handle worker errors
+    worker.onerror = (error) => {
+      console.error('Worker error:', error)
+      this.recycleWorker(worker)
+    }
+
+    this.workers.push(worker)
+    this.availableWorkers.push(worker)
+    this.processQueue()
   }
 
   /**
@@ -114,9 +123,13 @@ export class WorkerPool<T> {
       this.availableWorkers = this.availableWorkers.filter((w) => w !== worker)
 
       // Create replacement worker if needed
-      if (this.workers.length < this.workers.length + 1) {
-        // Recreate worker (simplified - would need script path)
-        console.warn('Worker recycled, consider increasing pool size')
+      if (this.workers.length < this.size) {
+        console.warn(`Worker recycled, spawning replacement. Active: ${this.workers.length}/${this.size}`)
+        try {
+          this.createWorker()
+        } catch (err) {
+          console.error('Failed to spawn replacement worker:', err)
+        }
       }
     }
   }

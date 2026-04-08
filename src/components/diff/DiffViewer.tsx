@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useMemo, useEffect } from 'react'
 import DiffControls from './DiffControls'
 import DiffSideBySide from './DiffSideBySide'

@@ -1,0 +1,6 @@
+# Minimal safe defaults. Add project-specific disallowed phrases here.
+blocked:
+  - "kill yourself"
+  - "kys"
+  - "dox"
+  - "doxx"

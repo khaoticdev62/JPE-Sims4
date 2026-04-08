@@ -11,7 +11,7 @@
  * The lexer tracks line and column numbers for diagnostics.
  */
 
-import { Token, TokenType, TokenPatterns, createToken } from './tokens'
+import { Token, TokenType, createToken } from './tokens'
 
 /**
  * JPE Lexer - Converts source text to token stream

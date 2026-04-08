@@ -1,130 +1,66 @@
-/**
- * Telemetry Store
- * Zustand store for managing telemetry state and preferences
- */
-
 import { create } from 'zustand'
-import { TelemetryService } from '@services/analytics/TelemetryService'
-import type { TelemetryStats } from '@services/analytics/types'
 
-export interface TelemetryState {
-  // Configuration
-  enabled: boolean
-  consentGiven: boolean
-
-  // Statistics
-  stats: TelemetryStats | null
-
-  // UI State
-  showConsentDialog: boolean
-
-  // Actions
-  enableTelemetry: () => void
-  disableTelemetry: () => void
-  setConsentGiven: (given: boolean) => void
-  updateStats: () => void
-  clearAllData: () => void
-  setShowConsentDialog: (show: boolean) => void
-  resetStats: () => void
+export interface TelemetrySnapshot {
+  timestamp: number
+  fps: number
+  scriptExecutionTime: number // ms
+  loadedTuningCount: number
+  activeLot: string
+  simCount: number
+  engineState: 'idle' | 'running' | 'paused' | 'loading'
 }
 
-export const useTelemetryStore = create<TelemetryState>((set) => {
-  // Initialize service
-  const service = TelemetryService.getInstance()
-  const initialEnabled = service.isEnabled()
+export interface TelemetryState {
+  snap: TelemetrySnapshot | null
+  history: TelemetrySnapshot[]
+  isConnected: boolean
+  lastSeen: number | null
+  isConsentGiven: boolean | null
+  stats: Record<string, any>
 
-  return {
-    // Initial state
-    enabled: initialEnabled,
-    consentGiven: initialEnabled,
-    stats: service.getStats(),
-    showConsentDialog: !initialEnabled, // Show dialog if not enabled
+  // Actions
+  updateSnapshot: (newSnap: TelemetrySnapshot) => void
+  setConnection: (status: boolean) => void
+  clearHistory: () => void
+  enableTelemetry: () => void
+  disableTelemetry: () => void
+}
 
-    /**
-     * Enable telemetry
-     */
-    enableTelemetry: () => {
-      const service = TelemetryService.getInstance()
-      service.enable()
+const MAX_HISTORY = 60; // 1 minute of 1s snapshots or similar
 
-      set({
-        enabled: true,
-        consentGiven: true,
-        showConsentDialog: false,
-      })
+export const useTelemetryStore = create<TelemetryState>((set) => ({
+  snap: null,
+  history: [],
+  isConnected: false,
+  lastSeen: null,
+  isConsentGiven: null,
+  stats: {},
 
-      // Persist consent
-      localStorage.setItem('telemetry-consent-given', 'true')
-      console.debug('[TelemetryStore] Telemetry enabled')
-    },
+  updateSnapshot: (newSnap) => {
+    set((state) => {
+      const newHistory = [...state.history, newSnap].slice(-MAX_HISTORY);
+      return {
+        snap: newSnap,
+        history: newHistory,
+        lastSeen: Date.now(),
+        isConnected: true
+      };
+    });
+  },
 
-    /**
-     * Disable telemetry
-     */
-    disableTelemetry: () => {
-      const service = TelemetryService.getInstance()
-      service.disable()
+  setConnection: (status) => {
+    set({ isConnected: status });
+  },
 
-      set({
-        enabled: false,
-        showConsentDialog: false,
-      })
+  clearHistory: () => {
+    set({ history: [], snap: null });
+  },
 
-      localStorage.setItem('telemetry-consent-given', 'false')
-      console.debug('[TelemetryStore] Telemetry disabled')
-    },
+  enableTelemetry: () => {
+    set({ isConsentGiven: true });
+  },
 
-    /**
-     * Set consent flag
-     */
-    setConsentGiven: (given) => {
-      set({ consentGiven: given })
-      localStorage.setItem('telemetry-consent-given', given ? 'true' : 'false')
-    },
-
-    /**
-     * Update statistics
-     */
-    updateStats: () => {
-      const service = TelemetryService.getInstance()
-      const stats = service.getStats()
-
-      set({ stats })
-      console.debug('[TelemetryStore] Statistics updated')
-    },
-
-    /**
-     * Clear all data
-     */
-    clearAllData: () => {
-      const service = TelemetryService.getInstance()
-      service.clearAllData()
-
-      set({
-        enabled: false,
-        consentGiven: false,
-        stats: service.getStats(),
-      })
-
-      console.debug('[TelemetryStore] All telemetry data cleared')
-    },
-
-    /**
-     * Show/hide consent dialog
-     */
-    setShowConsentDialog: (show) => {
-      set({ showConsentDialog: show })
-    },
-
-    /**
-     * Reset statistics
-     */
-    resetStats: () => {
-      const service = TelemetryService.getInstance()
-      service.resetStats()
-
-      set({ stats: service.getStats() })
-      console.debug('[TelemetryStore] Statistics reset')
-    },
+  disableTelemetry: () => {
+    set({ isConsentGiven: false });
   }
-})
+}));

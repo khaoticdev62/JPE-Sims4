@@ -5,12 +5,11 @@
 
 import axios, {
   AxiosInstance,
-  AxiosError,
   AxiosRequestConfig,
   AxiosResponse,
 } from 'axios'
 import axiosRetry from 'axios-retry'
-import type { ApiRequestConfig, ApiResponse, ApiError, HttpClientConfig } from './types'
+import type { ApiResponse, ApiError, HttpClientConfig } from './types'
 
 export class HttpClient {
   private client: AxiosInstance

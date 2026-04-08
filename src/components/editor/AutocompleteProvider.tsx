@@ -121,18 +121,20 @@ export function getStblKeyCompletions(): Array<{ value: string; label: string }>
 export function filterCompletions(
   completions: string[] | Array<{ value: string; label: string }>,
   query: string
-): typeof completions {
+): string[] | Array<{ value: string; label: string }> {
   if (!query) return completions
 
   const lowerQuery = query.toLowerCase()
 
-  return completions.filter((item) => {
-    if (typeof item === 'string') {
-      return item.toLowerCase().includes(lowerQuery)
-    }
-    return (
+  if (completions.length > 0 && typeof completions[0] === 'string') {
+    return (completions as string[]).filter((item) =>
+      item.toLowerCase().includes(lowerQuery)
+    )
+  }
+
+  return (completions as Array<{ value: string; label: string }>).filter(
+    (item) =>
       item.value.toLowerCase().includes(lowerQuery) ||
       item.label.toLowerCase().includes(lowerQuery)
-    )
-  })
+  )
 }

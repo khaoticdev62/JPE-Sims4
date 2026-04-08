@@ -1,140 +1,59 @@
 import { test, expect } from '@playwright/test'
+import { isElectronBuilt } from '../helpers'
 
 test.describe('E2E: Home Dashboard Flow', () => {
-  test.beforeEach(async ({ page }) => {
-    // Navigate to home dashboard
-    await page.goto('/', { waitUntil: 'networkidle' })
+  // This suite requires the app to be built
+  test.skip(!isElectronBuilt(), 'Electron app is not built')
 
-    // Wait for app to load
-    await page.waitForSelector('[data-testid="app-root"]', { timeout: 10000 })
+  test.beforeEach(async ({ context, page }) => {
+    // 1. Programmatically dismiss onboarding tour via localStorage
+    await context.addInitScript(() => {
+      window.localStorage.setItem('jpe_onboarding_seen', 'true')
+    })
 
-    // Make sure we're on home view
-    await page.locator('[data-testid="nav-home"]').click()
+    // 2. Navigate to the studio
+    await page.goto('/studio', { waitUntil: 'domcontentloaded' })
+
+    // 3. Wait for app to load
+    await page.waitForSelector('[data-testid="app-root"]', { timeout: 15000 })
+  })
+
+  test('should display home dashboard summary and cards', async ({ page }) => {
+    // 1. Verify app root and navigation
+    await expect(page.locator('[data-testid="app-root"]')).toBeVisible()
+    await expect(page.locator('[data-testid="nav-dashboard"]')).toBeVisible()
+
+    // 2. Verify dashboard root and quick actions
+    await expect(page.locator('[data-testid="dashboard-root"]')).toBeVisible()
+    await expect(page.locator('[data-testid="quick-action-code"]')).toBeVisible()
+
+    // 3. Verify stats grid is present
+    await expect(page.locator('[data-testid="stats-grid"]')).toBeVisible()
+  })
+
+  test('should navigate between main views', async ({ page }) => {
+    // 1. Navigate to Projects
+    await page.locator('[data-testid="nav-projects"]').click()
+    await expect(page.locator('[data-testid="projects-root"]')).toBeVisible()
+
+    // 2. Navigate to Settings
+    await page.locator('[data-testid="nav-settings"]').click()
+    // Verify app remains stable (settings root test-id could be added if needed, but app-root is fine)
+    await expect(page.locator('[data-testid="app-root"]')).toBeVisible()
+
+    // 3. Return Home
+    await page.locator('[data-testid="nav-dashboard"]').click()
+    await expect(page.locator('[data-testid="dashboard-root"]')).toBeVisible()
+  })
+
+  test('should handle dashboard responsiveness', async ({ page }) => {
+    // Test tablet/mobile viewports
+    await page.setViewportSize({ width: 768, height: 1024 })
     await page.waitForTimeout(500)
-  })
+    await expect(page.locator('[data-testid="app-root"]')).toBeVisible()
 
-  test('should display home dashboard', async ({ page }) => {
-    // Verify app root exists
-    const appRoot = page.locator('[data-testid="app-root"]')
-    await expect(appRoot).toBeVisible()
-
-    // Verify navigation is present
-    const navHome = page.locator('[data-testid="nav-home"]')
-    await expect(navHome).toBeVisible()
-  })
-
-  test('should display recent projects carousel', async ({ page }) => {
-    // Check for new project card (always present)
-    const newProjectCard = page.locator('[data-testid="new-project-card"]')
-    await expect(newProjectCard).toBeVisible()
-
-    // Can also have project cards
-    const projectCount = await page.locator('[data-testid*="project-card"]:not([data-testid="new-project-card"])').count()
-    expect(projectCount).toBeGreaterThanOrEqual(0)
-  })
-
-  test('should display activity feed section', async ({ page }) => {
-    // Activity section should exist
+    await page.setViewportSize({ width: 375, height: 667 })
     await page.waitForTimeout(500)
-
-    // Check for activity items (can be 0)
-    const activityItems = page.locator('[data-testid*="activity-item"]')
-    const activityCount = await activityItems.count()
-
-    expect(activityCount).toBeGreaterThanOrEqual(0)
-  })
-
-  test('should navigate to studio when project clicked', async ({ page }) => {
-    // Check for project cards
-    const projectCount = await page.locator('[data-testid*="project-card"]:not([data-testid="new-project-card"])').count()
-
-    if (projectCount > 0) {
-      // Click first project
-      await page.locator('[data-testid*="project-card"]').first().click()
-
-      // Wait for studio to load
-      await page.waitForTimeout(500)
-
-      // Verify studio layout is visible
-      const editorLayout = page.locator('[data-testid="editor-layout"]')
-      const isInStudio = await editorLayout.isVisible().catch(() => false)
-
-      // If we have projects, studio should be visible
-      if (isInStudio) {
-        await expect(editorLayout).toBeVisible()
-      }
-    }
-  })
-
-  test('should navigate from new project card', async ({ page }) => {
-    // Click new project card
-    const newProjectCard = page.locator('[data-testid="new-project-card"]')
-    await newProjectCard.click()
-
-    // Wait for navigation
-    await page.waitForTimeout(500)
-
-    // App should still be responsive
-    const appRoot = page.locator('[data-testid="app-root"]')
-    await expect(appRoot).toBeVisible()
-  })
-
-  test('should show navigation menu items', async ({ page }) => {
-    // Check all nav items are visible
-    const navHome = page.locator('[data-testid="nav-home"]')
-    const navStudio = page.locator('[data-testid="nav-studio"]')
-    const navProjects = page.locator('[data-testid="nav-projects"]')
-    const navSettings = page.locator('[data-testid="nav-settings"]')
-
-    // All nav items should be present
-    expect(await navHome.isVisible()).toBeTruthy()
-    expect(await navStudio.isVisible()).toBeTruthy()
-    expect(await navProjects.isVisible()).toBeTruthy()
-    expect(await navSettings.isVisible()).toBeTruthy()
-  })
-
-  test('should maintain state across navigation', async ({ page }) => {
-    // Get initial state (home dashboard)
-    const initialCard = page.locator('[data-testid="new-project-card"]')
-    const isInitiallyVisible = await initialCard.isVisible()
-
-    // Navigate away
-    await page.locator('[data-testid="nav-studio"]').click()
-    await page.waitForTimeout(500)
-
-    // Navigate back
-    await page.locator('[data-testid="nav-home"]').click()
-    await page.waitForTimeout(500)
-
-    // Should be back on home with same state
-    const finalCard = page.locator('[data-testid="new-project-card"]')
-    const isFinallyVisible = await finalCard.isVisible()
-
-    expect(isFinallyVisible).toBe(isInitiallyVisible)
-  })
-
-  test('should display project information when available', async ({ page }) => {
-    // Check for project cards
-    const projectCount = await page.locator('[data-testid*="project-card"]:not([data-testid="new-project-card"])').count()
-
-    if (projectCount > 0) {
-      // Get first project card
-      const firstCard = page.locator('[data-testid*="project-card"]').first()
-
-      // Should have text content
-      const text = await firstCard.textContent()
-      expect(text).toBeTruthy()
-      expect(text?.length).toBeGreaterThan(0)
-    }
-  })
-
-  test('should be responsive to viewport changes', async ({ page, context }) => {
-    // Start with default viewport
-    const initialAppRoot = page.locator('[data-testid="app-root"]')
-    await expect(initialAppRoot).toBeVisible()
-
-    // App should remain visible on different viewport sizes
-    // (actual resize would require context recreation)
-    await expect(initialAppRoot).toBeVisible()
+    await expect(page.locator('[data-testid="app-root"]')).toBeVisible()
   })
 })

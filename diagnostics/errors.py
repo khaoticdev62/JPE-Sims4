@@ -1,62 +1,114 @@
+"""Error definitions for JPE Sims 4 Mod Translator."""
+
 from __future__ import annotations
-
-from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from dataclasses import dataclass
+from typing import Optional, List
 
 
-class ErrorCategory(str, Enum):
+class ErrorCategory(Enum):
+    """Categories of errors for classification and filtering."""
+
     PARSER_JPE = "parser_jpe"
-    PARSER_JPE_XML = "parser_jpe_xml"
     PARSER_XML = "parser_xml"
-    VALIDATION_SCHEMA = "validation_schema"
-    VALIDATION_SEMANTIC = "validation_semantic"
+    PARSER_JPE_XML = "parser_jpe_xml"
+    VALIDATOR_SYNTAX = "validator_syntax"
+    VALIDATOR_SEMANTIC = "validator_semantic"
+    GENERATOR_XML = "generator_xml"
     IO_FILE = "io_file"
+    IO_NETWORK = "io_network"
     PLUGIN = "plugin"
-    SYNC_CLOUD = "sync_cloud"
+    INTERNAL = "internal"
 
 
-class ErrorSeverity(str, Enum):
+class ErrorSeverity(Enum):
+    """Severity levels for errors."""
+
     INFO = "info"
     WARNING = "warning"
     ERROR = "error"
     FATAL = "fatal"
 
 
-@dataclass(slots=True)
+@dataclass
 class ErrorPosition:
-    """Position of an error within a text source."""
+    """Position information for an error."""
 
     line: Optional[int] = None
     column: Optional[int] = None
 
 
-@dataclass(slots=True)
+@dataclass
+class BuildReport:
+    """Report generated after a build operation."""
+
+    status: str  # 'success', 'failed', 'warning'
+    errors: List[EngineError]
+    warnings: List[EngineError]
+    info: List[str]
+    build_id: str
+    timestamp: str
+
+
+@dataclass
 class EngineError:
-    """Structured diagnostic describing a single error or warning."""
+    """Represents an error in the JPE engine.
+
+    Attributes:
+        code: Unique error code for identification
+        category: Error category for classification
+        severity: Error severity level
+        message_short: Brief error message
+        message_long: Detailed error description
+        suggested_fix: Suggested remediation
+        file_path: Optional path to related file
+        line_number: Optional line number in source
+        column: Optional column number in source
+        position: Optional ErrorPosition object (alternative to line_number/column)
+    """
 
     code: str
     category: ErrorCategory
     severity: ErrorSeverity
     message_short: str
     message_long: str
-    file_path: Optional[str] = None
-    resource_id: Optional[str] = None
-    language_layer: Optional[str] = None
-    position: Optional[ErrorPosition] = None
-    snippet: Optional[str] = None
     suggested_fix: Optional[str] = None
-    stack_trace_sanitized: Optional[str] = None
-    plugin_id: Optional[str] = None
-    extra: Dict[str, Any] = field(default_factory=dict)
+    file_path: Optional[str] = None
+    line_number: Optional[int] = None
+    column: Optional[int] = None
+    position: Optional[ErrorPosition] = None
 
+    def to_dict(self) -> dict:
+        """Convert error to dictionary for serialization."""
+        result = {
+            "code": self.code,
+            "category": self.category.value,
+            "severity": self.severity.value,
+            "message_short": self.message_short,
+            "message_long": self.message_long,
+            "suggested_fix": self.suggested_fix,
+            "file_path": self.file_path,
+            "line_number": self.line_number,
+            "column": self.column,
+        }
+        if self.position is not None:
+            result["position"] = {
+                "line": self.position.line,
+                "column": self.position.column,
+            }
+        return result
 
-@dataclass(slots=True)
-class BuildReport:
-    """Aggregate diagnostics for a single build operation."""
-
-    build_id: str
-    project_id: str
-    status: str
-    errors: List[EngineError] = field(default_factory=list)
-    warnings: List[EngineError] = field(default_factory=list)
+    @classmethod
+    def from_dict(cls, data: dict) -> "EngineError":
+        """Create EngineError from dictionary."""
+        return cls(
+            code=data["code"],
+            category=ErrorCategory(data["category"]),
+            severity=ErrorSeverity(data["severity"]),
+            message_short=data["message_short"],
+            message_long=data["message_long"],
+            suggested_fix=data.get("suggested_fix"),
+            file_path=data.get("file_path"),
+            line_number=data.get("line_number"),
+            column=data.get("column"),
+        )

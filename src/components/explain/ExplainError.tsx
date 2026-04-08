@@ -141,7 +141,7 @@ export default function ExplainError({
       </div>
 
       {/* Debug info */}
-      {import.meta.env.DEV && (
+      {process.env.NODE_ENV === 'development' && (
         <div className="text-xs text-text-tertiary bg-background-tertiary p-2 rounded border border-border-subtle font-mono break-all">
           {error}
         </div>

@@ -1,0 +1,9 @@
+# BMAD framework directories (not core to this project)
+.bmad-core/
+.bmad-creative-writing/
+.bmad-godot-game-dev/
+.bmad-2d-unity-game-dev/
+.bmad-2d-phaser-game-dev/
+.bmad-infrastructure-devops/
+_bmad/
+conductor/

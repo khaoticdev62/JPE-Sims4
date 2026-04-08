@@ -6,8 +6,8 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import { STBLParser, parseSTBL } from '../STBLParser'
-import { STBLCompiler, compileSTBL } from '@/engine/compilers/STBLCompiler'
+import { STBLParser} from '../STBLParser'
+import { STBLCompiler} from '@/engine/compilers/STBLCompiler'
 import type { STBLData } from '../types/stbl'
 import { stringToFNV32, encodeUTF16LE, decodeUTF16LE } from '../types/stbl'
 
@@ -162,9 +162,7 @@ describe('STBL Parser', () => {
         metadata: {
           entryCount: 3,
           fileSize: 0,
-          parseTime: 0,
-        },
-      }
+          parseTime: 0}}
     })
 
     it('should find entry by key', () => {
@@ -341,8 +339,7 @@ describe('Round-trip Translation (STBL → Buffer → STBL)', () => {
   it('should handle large STBL with 1000+ entries', () => {
     const entries = Array.from({ length: 1000 }, (_, i) => ({
       key: 0x10000000 + i,
-      value: `Entry ${i}`,
-    }))
+      value: `Entry ${i}`}))
 
     const original = STBLCompiler.create(entries)
     const compiled = STBLCompiler.compile(original)
@@ -385,8 +382,7 @@ describe('Performance', () => {
   it('should parse large STBL quickly', () => {
     const entries = Array.from({ length: 500 }, (_, i) => ({
       key: 0x10000000 + i,
-      value: `Entry ${i}`,
-    }))
+      value: `Entry ${i}`}))
 
     const data = STBLCompiler.create(entries)
     const compiled = STBLCompiler.compile(data)
@@ -402,8 +398,7 @@ describe('Performance', () => {
   it('should compile large STBL quickly', () => {
     const entries = Array.from({ length: 500 }, (_, i) => ({
       key: 0x10000000 + i,
-      value: `Entry ${i}`,
-    }))
+      value: `Entry ${i}`}))
 
     const data = STBLCompiler.create(entries)
 
@@ -418,8 +413,7 @@ describe('Performance', () => {
   it('should handle round-trip of large STBL under 200ms', () => {
     const entries = Array.from({ length: 1000 }, (_, i) => ({
       key: 0x10000000 + i,
-      value: `Entry ${i}`,
-    }))
+      value: `Entry ${i}`}))
 
     const data = STBLCompiler.create(entries)
 

@@ -62,7 +62,7 @@ function parseXML(content: string): {
     let currentDepth = 0
     let rootElement: string | null = null
 
-    lines.forEach((line, idx) => {
+    lines.forEach((line, _idx) => {
       const trimmed = line.trim()
 
       if (trimmed.startsWith('<?xml')) {

@@ -1,0 +1,46 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "jpe-aave-conversion"
+version = "1.0.2"
+description = "AAVE conversion / normalization plugin for JPE Sims 4 Translation Suite"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "pyyaml>=6.0",
+  "rich>=13.7",
+]
+
+[project.optional-dependencies]
+tui = ["textual>=0.56.0"]
+dev = [
+  "pytest>=8.0",
+  "ruff>=0.6",
+  "mypy>=1.10",
+  "types-PyYAML>=6.0.12.20240808",
+]
+
+[project.scripts]
+jpe-aave = "aave_conversion.cli:main"
+
+# Optional: allow host apps to discover this plugin via Python entry points.
+[project.entry-points."jpe.plugins"]
+aave_conversion = "aave_conversion.jpe_entry:create_plugin"
+
+[tool.setuptools]
+package-dir = {"" = "."}
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["aave_conversion*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.2",
+]

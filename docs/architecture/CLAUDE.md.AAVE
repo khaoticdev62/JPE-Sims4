@@ -1,0 +1,1258 @@
+# CLAUDE.md - Developer Guide (Yo, Developers - Read This!)
+
+Ayo, this file right here? It's your roadmap when you workin' in this codebase. Everything you need to know about how we do things, how to set up, how to build, how to test - it's all here. Keep it close.
+
+---
+
+## 🎯 What This Project Really Is
+
+Alright, so here's the thing: **JPE Sims 4 Mod Translator 2.0** is basically a complete toolkit for making Sims 4 mods way easier. You know how Sims 4 mods usually come with all that complicated XML code that makes your brain hurt? Yeah, we fixed that.
+
+With JPE (Just Plain English), you write mods in actual English-like language instead of wrestling with confusing XML tags. It's straight fire.
+
+### What We're Working With (Tech Stack)
+
+Here's the breakdown of all the different pieces:
+
+- **Frontend** (What you see): TypeScript + React 18 + Vite + Tailwind CSS + Electron for desktop
+- **Backend** (The brain): Python 3.11+ running the whole translation engine, validators, plugins, and cloud sync
+- **Mobile Apps**: React Native for Android and web, plus native Swift/SwiftUI for iOS
+- **Core Engine**: Rust code for super-fast diagnostics (in `core/crates/`)
+- **Testing**: Vitest for frontend tests, Pytest for backend, Playwright for end-to-end
+- **Building**: npm/yarn for the JavaScript parts, setuptools for Python, Electron Builder for desktop apps
+
+### What Can You Do With It?
+
+- Translate JPE ↔ JPE-XML ↔ Sims 4 XML (works both directions, no cap)
+- Full desktop IDE with syntax highlighting and real-time error catching
+- Mobile apps so you can code on iOS and Android
+- Cloud sync that keeps your work safe and synced across devices
+- Plugin system so you can extend what's possible
+- Smart error messages that actually make sense (not that cryptic nonsense)
+- 10 different UI themes so you can vibe with your setup
+
+**Status**: All 8 phases done. This thing is production-ready, facts.
+
+---
+
+## 🏗️ How Everything Works Together (Architecture)
+
+### The Big Picture
+
+Alright, so you got different ways people use this - desktop, iOS, Android, web. They all talk to the same Python engine in the back. Think of it like this:
+
+```
+┌─────────────────────────────────────────────────────┐
+│                  What Users See                      │
+├──────────────┬──────────────────┬──────────────────┤
+│  Desktop App │   iPhone App     │  Android/Web     │
+│  (Electron)  │  (Swift/SwiftUI) │  (React Native)  │
+└──────┬───────┴────────┬─────────┴────────┬─────────┘
+       │                │                  │
+       │ (All talking to the same backend) │
+       │                                   │
+       └────────────────┼──────────────────┘
+                        │
+              Connection Bridge (IPC/REST)
+                        │
+       ┌────────────────┴──────────────────┐
+       │                                   │
+┌──────▼──────────────────────────────────▼──────┐
+│      Python Translation Engine (The Brain)     │
+├────────────────────────────────────────────────┤
+│ Takes your JPE files and transforms them:     │
+│ • Parser (Reads JPE files)                    │
+│ • Validator (Checks if everything's good)    │
+│ • Generator (Creates XML output)              │
+│ • Compiler (Makes final mod files)            │
+│                                               │
+│ Plus: Plugins, Cloud sync, Error reporting    │
+└────────────────────────────────────────────────┘
+       │
+       │ (Sometimes uses Rust for speed)
+       │
+       └─────────────────┬─────────────────┐
+       (File handling, config management)   │
+                                    ┌──────▼──────┐
+                                    │ Rust Diag.  │
+                                    │ Fast & Lean │
+                                    └─────────────┘
+```
+
+### Who Does What (Module Breakdown)
+
+| What It Does | Where It Lives | What Language | Important Files |
+|---|---|---|---|
+| **Frontend UI & Editor** | `src/` | TypeScript/React | `App.tsx`, `main.tsx`, `components/` |
+| **Translation Engine** | `engine/` | Python | `engine.py`, `ir.py` (this is the core) |
+| **Validation** | `engine/validation/` | Python | `validator.py`, `error_system.py` |
+| **Format Readers** | `engine/parsers/` | Python | `jpe_parser.py`, `xml_parser.py` |
+| **Format Writers** | `engine/generators/` | Python | `xml_generator.py` |
+| **Plugins** | `plugins/` | Python | `manager.py`, `registry.py` |
+| **Cloud Stuff** | `cloud/` | Python | `api.py`, `sync_engine.py` |
+| **Speed Diagnostics** | `core/crates/jpe_diag/` | Rust | `src/lib.rs` |
+| **Onboarding Tutorial** | `onboarding/` | Python | `the_codex.py`, `teaching_system.py` |
+| **Command Line** | Root | Python | `cli.py` |
+
+### How Files Get Transformed (Translation Flow)
+
+Here's what happens when you build a mod:
+
+```
+You write: interaction.jpe (English-like code)
+    ↓
+Parser reads it → Creates internal representation
+    ↓
+Validator checks everything → Catches errors
+    ↓
+Generator converts to XML format
+    ↓
+Compiler packages it up
+    ↓
+Output: interaction.xml (Sims 4 ready mod file)
+```
+
+---
+
+## ⚡ Get Running in 5 Minutes
+
+### What You Need First
+
+- **Node.js 18 or higher** (for the frontend)
+- **Python 3.11 or higher** (for the backend)
+- **Git** (version control)
+
+### Set Everything Up
+
+#### If you want the whole thing (Frontend + Backend):
+```bash
+# Get Python stuff ready
+pip install -e ".[dev]"
+
+# Get JavaScript stuff ready
+npm install
+
+# Make sure everything installed right
+python -m pytest tests/ --collect-only  # Check Python side
+npm run lint                            # Check TypeScript side
+```
+
+#### If you just want the frontend:
+```bash
+npm install
+npm run dev
+```
+
+#### If you just want the backend (Python):
+```bash
+pip install -e ".[dev]"
+python -m pytest tests/ -v
+```
+
+### Fire It Up
+
+```bash
+# Desktop app (Electron) - the full experience
+npm run dev:electron
+
+# Web version (in your browser)
+npm run dev
+
+# Command line mode
+jpe-sims4 --help
+jpe-studio  # Opens desktop app
+
+# Build a test project
+jpe-sims4 build ./path/to/project --build-id test_001
+```
+
+---
+
+## 🛠️ Setting Up Your Dev Environment (The Detailed Way)
+
+### Full Stack Setup (Do This First Time)
+
+#### Part 1: Get the Code
+```bash
+git clone https://github.com/tuwana/jpe-sims4.git
+cd jpe-sims4
+```
+
+#### Part 2: Python Setup
+```bash
+# Make a separate Python environment (trust me, do this)
+python -m venv venv
+
+# Activate it
+source venv/bin/activate  # Mac/Linux
+# OR
+venv\Scripts\activate  # Windows
+
+# Install everything for development
+pip install -e ".[dev]"
+
+# Verify it worked
+python -c "import jpe_sims4; print('Python side is good!')"
+python -m pytest tests/ --collect-only
+```
+
+#### Part 3: JavaScript Setup
+```bash
+# Get all the Node packages
+npm install
+
+# Make sure the code is clean
+npm run lint
+npm run type-check
+```
+
+#### Part 4: Verify Everything
+```bash
+# Run tests for both sides
+npm run test:all
+
+# Or do them separate
+npm test          # Frontend tests
+python -m pytest  # Backend tests
+```
+
+### IDE Setup (Pick Your Weapon)
+
+**If You Use VSCode (Recommended for full stack):**
+Install these extensions:
+- Python (by Microsoft) - for Python development
+- Pylance - for smart Python help
+- TypeScript Vue Plugin - for React/TypeScript
+- Tailwind CSS IntelliSense - for styling
+- Prettier - for code formatting
+
+**If You Use PyCharm (Best for backend work):**
+- Built-in Python support
+- Built-in Node.js/TypeScript support
+- Excellent debugging tools
+- No extra setup needed, just open the folder
+
+---
+
+## 📁 Where Everything Lives
+
+Here's the full breakdown of the project structure:
+
+```
+jpe-sims4/
+│
+├── src/                          # React/TypeScript frontend stuff
+│   ├── components/               # All the UI pieces
+│   │   ├── common/               # Basic blocks (Button, Input, Modal)
+│   │   ├── layout/               # Page layouts (Sidebar, Editor, etc.)
+│   │   ├── modals/               # Dialog boxes
+│   │   ├── editor/               # Code editor specific components
+│   │   └── [features]/           # Features (if there are many)
+│   ├── services/                 # Logic that talks to backend
+│   ├── stores/                   # App state (Zustand)
+│   ├── hooks/                    # Custom React functions
+│   ├── design-system/            # Colors, fonts, spacing rules
+│   └── App.tsx                   # Main component
+│
+├── engine/                       # Python translation engine (the heart)
+│   ├── engine.py                 # Main orchestrator
+│   ├── ir.py                     # Internal representation (data model)
+│   ├── parsers/                  # Reads different formats
+│   │   ├── jpe_parser.py         # Reads JPE syntax
+│   │   ├── xml_parser.py         # Reads XML
+│   │   └── jpe_xml_parser.py     # Reads hybrid format
+│   ├── generators/               # Writes different formats
+│   │   └── xml_generator.py      # Writes Sims 4 XML
+│   └── validation/               # Checks everything
+│       ├── validator.py          # Core checking logic
+│       └── error_system.py       # Error messages
+│
+├── plugins/                      # Extension system (add your own stuff)
+│   ├── manager.py                # Finds and loads plugins
+│   ├── registry.py               # Keeps track of plugins
+│   ├── base.py                   # Base plugin class
+│   └── [plugin_name]/            # Individual plugins
+│
+├── cloud/                        # Cloud synchronization
+│   ├── api.py                    # Talks to servers
+│   ├── sync_engine.py            # Keeps things in sync
+│   └── auth.py                   # Login stuff
+│
+├── core/                         # Rust speed demons
+│   └── crates/
+│       └── jpe_diag/             # Fast error detection
+│           ├── src/lib.rs        # Rust code
+│           ├── Cargo.toml        # Rust config
+│           └── tests/            # Rust tests
+│
+├── mobile_app/                   # React Native (Android/Web)
+│   ├── src/                      # Mobile-specific code
+│   └── package.json              # Mobile dependencies
+│
+├── tests/                        # Python tests
+│   ├── test_engine.py
+│   ├── test_validators.py
+│   └── [test_*.py]
+│
+├── cli.py                        # Command line interface
+├── studio.py                     # Desktop app (old Tkinter version)
+├── __main__.py                   # App starter
+├── setup.py                      # Python package config
+├── pyproject.toml                # Python dependencies list
+├── package.json                  # JavaScript dependencies
+├── vite.config.ts                # Frontend build config
+├── vite.electron.config.ts       # Desktop app build config
+└── tsconfig.json                 # TypeScript config
+```
+
+---
+
+## 📋 Commands You'll Use (Quick Reference)
+
+### Just Frontend (React/Vite)
+
+```bash
+npm install              # Get packages
+npm run dev             # Start dev server (http://localhost:3000)
+npm run build           # Build for production
+npm run lint            # Check code quality
+npm run lint:fix        # Fix problems automatically
+npm test                # Run frontend tests
+npm test:ui             # Tests with visual interface
+npm test:watch          # Tests update as you code
+npm test:coverage       # See how much code you're testing
+npm run type-check      # TypeScript checking
+npm run format          # Auto-format code nicely
+```
+
+### Just Backend (Python)
+
+```bash
+pip install -e ".[dev]"          # Install for development
+python -m pytest tests/           # Run all tests
+python -m pytest tests/test_engine.py -v  # Run one test file
+python -m pytest tests/ --cov=jpe_sims4   # Coverage report
+python -m pytest -k "validator" -v        # Run tests by name
+python -m pytest tests/ -x          # Stop at first failure
+
+# Command line stuff
+jpe-sims4 --help                  # See all commands
+jpe-sims4 validate /path/to/project       # Check a project
+jpe-sims4 build /path/to/project --build-id build_001  # Build it
+```
+
+### Full Stack (Both at Same Time)
+
+```bash
+# Start everything together
+npm run dev:electron            # Electron app + Vite server
+
+# Run all tests (frontend and backend)
+npm run test:all               # Runs both npm test and pytest
+```
+
+### Building (Making the Final Product)
+
+```bash
+# Just the web version
+npm run build
+
+# Desktop app build
+npm run build:electron
+
+# Everything for distribution (all platforms)
+npm run dist               # Creates .exe, .dmg, .AppImage, etc.
+
+# Build specific platform
+npm run build:electron && electron-builder --win   # Windows
+npm run build:electron && electron-builder --mac   # macOS
+npm run build:electron && electron-builder --linux # Linux
+```
+
+### Code Quality
+
+```bash
+npm run lint               # Check TypeScript
+npm run type-check         # Type checking
+python -m pylint engine/   # Python checking (if set up)
+python -m black engine/    # Python formatting (if set up)
+```
+
+### Testing Strategy
+
+```bash
+# Unit tests only
+npm test
+python -m pytest tests/ -v
+
+# End-to-end tests (real browser interaction)
+npm run test:e2e
+
+# Everything at once
+npm run test:all
+
+# Coverage reports
+npm test:coverage
+python -m pytest --cov=jpe_sims4 --cov-report=html
+```
+
+---
+
+## 💻 Frontend Development (React/Design System)
+
+Yo, this is the visual side of things. If you're making the UI look good, this section is for you.
+
+### The Real Talk on Design
+
+We keep everything consistent by using a **design system**. That means:
+- Colors come from a specific list (no random colors)
+- Spacing is measured in 4px units (4px, 8px, 16px, etc.)
+- Fonts come from a specific family (Inter)
+- Components are reused everywhere
+
+Think of it like a band - everyone plays by the same rules so it sounds good together.
+
+### Colors Explained (No Guessing)
+
+Everything comes from `src/design-system/tokens.json`. Here's what we got:
+
+**Backgrounds:**
+- `bg-background-primary` (#151A24) - Main dark navy background
+- `bg-background-secondary` (#1E2633) - Slightly lighter navy
+- `bg-background-tertiary` (#2A3447) - Darkest navy (for cards)
+- `bg-background-light` (#F5F7FA) - Light backgrounds (saved for light mode later)
+
+**Text:**
+- `text-text-primary` (#FFFFFF) - Main white text
+- `text-text-secondary` (#B0B0B0) - Gray text (less important stuff)
+- `text-text-tertiary` (#777777) - Even grayer (disabled things)
+
+**Actions & Highlights:**
+- `bg-accent-primary` (#2EC4B6) - Our brand teal (main button, highlights)
+- `bg-accent-focus` (#26A89B) - Darker teal (when hovering)
+- `bg-accent-light` (#E6F8F6) - Light teal (backgrounds)
+
+**Status Messages:**
+- `bg-state-error` (#E12D39) - Red for problems
+- `bg-state-warning` (#F5A623) - Orange for caution
+- `bg-state-info` (#2680C2) - Blue for info
+- `bg-state-success` (#2E8540) - Green for good news
+
+**Borders & Dividers:**
+- `border-border-subtle` (#444444) - Main divider lines
+- `border-border-light` (#B0B0B0) - Light dividers
+
+### Spacing (It's All 4px Base Units)
+
+- `p-1` = 4px
+- `p-2` = 8px
+- `p-4` = 16px (standard)
+- `p-6` = 24px
+- `p-8` = 32px
+
+Think of it like music - 4px is the beat, and everything is a multiple of that beat.
+
+### Making Components
+
+All React components go in `src/components/`. Here's how we organize them:
+
+- **`common/`** - Basic building blocks (Button, TextInput, Modal)
+- **`layout/`** - Page structure pieces (Sidebar, Editor, RightPanel)
+- **`modals/`** - Dialog boxes and wizards
+- **`editor/`** - Code editor specific stuff
+- **`[feature]/`** - Specific features if there are lots
+
+**Component Rules:**
+- File names are PascalCase: `Button.tsx`, `EditorPane.tsx`
+- Props interface is `[ComponentName]Props`
+- Every component accepts a `className` prop for custom styling
+- Use Tailwind utility classes with our design tokens
+
+### Example Component
+
+Here's what a proper component looks like:
+
+```tsx
+import React from 'react'
+
+interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: 'primary' | 'secondary' | 'danger'
+  size?: 'sm' | 'md' | 'lg'
+}
+
+export default function Button({
+  variant = 'primary',
+  size = 'md',
+  className = '',
+  children,
+  ...props
+}: ButtonProps) {
+  // Decide what class to use based on variant
+  const variantClasses = {
+    primary: 'bg-accent-primary hover:bg-accent-focus text-white',
+    secondary: 'bg-background-secondary hover:bg-background-tertiary text-white',
+    danger: 'bg-state-error hover:opacity-90 text-white'
+  }
+
+  const sizeClasses = {
+    sm: 'px-2 py-1 text-sm',
+    md: 'px-4 py-2 text-base',
+    lg: 'px-6 py-3 text-lg'
+  }
+
+  return (
+    <button
+      className={`rounded-lg transition-colors ${variantClasses[variant]} ${sizeClasses[size]} ${className}`}
+      {...props}
+    >
+      {children}
+    </button>
+  )
+}
+```
+
+### Import Paths (Keep It Clean)
+
+Always use `@/` alias imports:
+
+```tsx
+// ✅ Right
+import Button from '@/components/common/Button'
+import { useProjectStore } from '@/stores/useProjectStore'
+
+// ❌ Wrong
+import Button from '../../../components/common/Button'
+```
+
+### State Management (Zustand)
+
+For state that multiple components need, use Zustand:
+
+```typescript
+// src/stores/useProjectStore.ts
+import { create } from 'zustand'
+
+export const useProjectStore = create((set) => ({
+  projects: [],
+  currentProject: null,
+  setCurrentProject: (project) => set({ currentProject: project }),
+}))
+
+// In component:
+const currentProject = useProjectStore(state => state.currentProject)
+```
+
+For state that only one component uses, just use React's `useState`.
+
+---
+
+## 🐍 Backend Development (Python)
+
+This is where the actual translation magic happens. The Python side is the brain of this whole operation.
+
+### Understanding the Engine
+
+The main engine is in `engine/engine.py`. Here's how you use it:
+
+```python
+from engine.engine import Engine
+from engine.ir import ProjectIR
+
+# Create an instance of the engine
+engine = Engine()
+
+# Parse a JPE file (reads English-like syntax)
+ir = engine.parse_jpe_file("my_interaction.jpe")
+
+# Validate it (makes sure everything's good)
+errors = engine.validate(ir)
+
+# Generate XML (converts to Sims 4 format)
+xml = engine.generate_xml(ir)
+
+# Compile it (packages it up nicely)
+engine.compile_project(ir, output_path)
+```
+
+### The Intermediate Representation (IR)
+
+Think of IR as the "universal translator." When we read JPE code, we convert it to IR. When we need to output XML, we convert from IR. It's the middle ground.
+
+Here are the main IR classes (in `engine/ir.py`):
+
+```python
+from engine.ir import Interaction, Buff, Trait, ProjectIR
+
+# Create an interaction (one action a Sim can do)
+interaction = Interaction(
+    name="custom_interaction",
+    display_name="My Awesome Interaction",
+    target_type="OBJECT",
+    tests=[...],  # Conditions for when it's available
+    outcomes=[...]  # What happens when you do it
+)
+
+# Create a buff (mood effect)
+buff = Buff(
+    name="happy_buff",
+    display_name="So Happy!",
+    mood_type="Happy",
+    duration=100  # In Sims time
+)
+
+# Create a trait (personality thing)
+trait = Trait(
+    name="bookworm",
+    display_name="Bookworm",
+    description="Loves reading"
+)
+
+# Put everything in a project
+project = ProjectIR()
+project.add_interaction(interaction)
+project.add_buff(buff)
+project.add_trait(trait)
+
+# Convert to dict if needed
+data = project.to_dict()
+```
+
+### Plugin System (Extend Everything)
+
+Plugins let people add new features without touching core code. Here's how to make one:
+
+```python
+# plugins/my_plugin/my_plugin.py
+from plugins.base import BasePlugin
+
+class MyPlugin(BasePlugin):
+    name = "my_plugin"
+    version = "1.0.0"
+    description = "Does something cool"
+
+    def on_parse(self, ir):
+        """Called after parsing, before validation"""
+        print("Just parsed some code!")
+
+    def on_validate(self, ir):
+        """Called during validation"""
+        print("Checking things...")
+
+    def on_generate(self, ir):
+        """Called during generation"""
+        print("Making XML...")
+```
+
+To load plugins:
+
+```python
+from plugins.manager import PluginManager
+
+manager = PluginManager()
+plugins = manager.discover_plugins("plugins/")
+manager.register_plugins(plugins)
+```
+
+### Validators (Catching Mistakes)
+
+The validator checks that everything in your code makes sense:
+
+```python
+from engine.validation.validator import Validator
+from engine.ir import ProjectIR
+
+validator = Validator()
+errors = validator.validate(project_ir)
+
+for error in errors:
+    print(f"[{error.severity}] {error.message}")
+    print(f"  Location: {error.file}:{error.line}")
+```
+
+Error severity levels (in order of badness):
+- `CRITICAL` - Will break the mod (fix immediately)
+- `WARNING` - Might cause problems (should fix)
+- `CAUTION` - Potential issues (probably fix)
+- `INFO` - FYI messages
+- `SUCCESS` - Good job! Messages
+
+### Making Parsers & Generators
+
+**Create a new parser (reader):**
+
+```python
+# engine/parsers/my_format_parser.py
+from engine.parsers.base import BaseParser
+
+class MyFormatParser(BaseParser):
+    def parse(self, content: str) -> ProjectIR:
+        # Read your custom format
+        # Return ProjectIR object
+        pass
+```
+
+**Create a new generator (writer):**
+
+```python
+# engine/generators/my_format_generator.py
+from engine.generators.base import BaseGenerator
+
+class MyFormatGenerator(BaseGenerator):
+    def generate(self, ir: ProjectIR) -> str:
+        # Convert IR to your format
+        # Return the formatted string
+        pass
+```
+
+### Testing Python Code
+
+Here's how to write tests for backend stuff:
+
+```python
+# tests/test_my_feature.py
+import pytest
+from engine.engine import Engine
+from engine.ir import Interaction, ProjectIR
+from engine.validation.validator import Validator
+
+def test_parse_simple_jpe():
+    """Test that we can read a simple JPE file"""
+    engine = Engine()
+    ir = engine.parse_jpe_file("test.jpe")
+
+    assert ir is not None
+    assert len(ir.interactions) > 0
+
+def test_validate_interaction():
+    """Test that validation catches bad interactions"""
+    validator = Validator()
+    interaction = Interaction(
+        name="test",
+        display_name="Test"
+    )
+
+    errors = validator.validate_interaction(interaction)
+    # Should be valid (no errors)
+    assert len(errors) == 0
+
+def test_generate_xml():
+    """Test that we can convert to XML"""
+    engine = Engine()
+    project = ProjectIR()
+
+    # Add some stuff
+    interaction = Interaction(name="test", display_name="Test")
+    project.add_interaction(interaction)
+
+    # Generate XML
+    xml = engine.generate_xml(project)
+    assert xml is not None
+    assert "test" in xml
+```
+
+---
+
+## 🖥️ Desktop App Development (Electron)
+
+The desktop app combines React frontend with a Node.js backend process. Think of it like two apps talking to each other.
+
+### How Electron Works
+
+- **Main Process** - Node.js that handles files, window creation, system stuff
+- **Renderer Process** - React app (same as web version)
+- **Communication** - IPC (Inter-Process Communication) sends messages between them
+
+### Dev Workflow
+
+Start everything:
+
+```bash
+npm run dev:electron
+```
+
+This runs:
+1. `npm run dev` - Starts Vite dev server
+2. `npm run build:electron:watch` - Watches your code and rebuilds main process
+3. `electron .` - Opens the Electron app
+
+So you got hot reload on both sides. Sweet.
+
+### Building for Distribution
+
+```bash
+# Build everything
+npm run dist
+
+# Or build specific platform
+npm run build:electron && electron-builder --win   # Windows .exe
+npm run build:electron && electron-builder --mac   # macOS .dmg
+npm run build:electron && electron-builder --linux # Linux .AppImage
+```
+
+---
+
+## 🧪 Testing (Making Sure Everything Works)
+
+### Frontend Tests (React)
+
+```bash
+npm test                # Run all frontend tests
+npm test:watch          # Auto-run as you code
+npm test:coverage       # See coverage report
+
+# Test specific file
+npm test -- Button.test.tsx
+
+# Test matching pattern
+npm test -- --grep "button"
+```
+
+Here's a test example:
+
+```typescript
+import { render, screen } from '@testing-library/react'
+import Button from '@/components/common/Button'
+
+describe('Button Component', () => {
+  it('renders with correct text', () => {
+    render(<Button>Click me</Button>)
+    expect(screen.getByRole('button')).toHaveTextContent('Click me')
+  })
+
+  it('calls onClick when clicked', () => {
+    const handleClick = jest.fn()
+    render(<Button onClick={handleClick}>Click</Button>)
+
+    screen.getByRole('button').click()
+    expect(handleClick).toHaveBeenCalled()
+  })
+})
+```
+
+### Backend Tests (Python)
+
+```bash
+python -m pytest tests/                    # All tests
+python -m pytest tests/test_engine.py -v   # One file, detailed
+python -m pytest -k "validator" -v         # Tests with "validator" in name
+python -m pytest --cov=jpe_sims4           # With coverage
+```
+
+Here's a test example:
+
+```python
+def test_engine_parses_jpe():
+    """Make sure the engine can read JPE files"""
+    engine = Engine()
+    ir = engine.parse_jpe_file("tests/fixtures/simple.jpe")
+
+    assert ir is not None
+    assert isinstance(ir, ProjectIR)
+
+def test_validator_catches_errors():
+    """Make sure validation works"""
+    validator = Validator()
+
+    # Bad interaction (missing required stuff)
+    bad_interaction = Interaction(name="test")
+    errors = validator.validate_interaction(bad_interaction)
+
+    # Should have caught the error
+    assert len(errors) > 0
+```
+
+### End-to-End Tests (Real Browser)
+
+These actually run the full app and test it like a user would:
+
+```bash
+npm run test:e2e                # Run all E2E tests
+npm run test:e2e:ui             # With visual interface
+npm run test:e2e:debug          # Debug mode
+npm run test:e2e:report         # View report after running
+```
+
+### Running Everything
+
+```bash
+npm run test:all    # Runs both frontend and backend tests
+```
+
+---
+
+## 🎯 Common Tasks (Copy & Paste Central)
+
+### Adding a New React Component
+
+1. Create file: `src/components/[category]/MyComponent.tsx`
+2. Write the component (copy from existing, change the name)
+3. Define props interface
+4. Use design tokens (no hardcoding colors)
+5. Create test file: `src/components/[category]/MyComponent.test.tsx`
+6. Export from category if needed
+
+### Working with App State
+
+```typescript
+// For global state, use Zustand
+import { useProjectStore } from '@/stores/useProjectStore'
+
+const { projects, setCurrentProject } = useProjectStore()
+
+// For local component state, use React
+const [value, setValue] = useState('')
+const [isLoading, setIsLoading] = useState(false)
+```
+
+### Adding Python Code
+
+1. Create `.py` file in appropriate place (`engine/`, `plugins/`, root)
+2. Write tests in `tests/test_module.py`
+3. Update `__init__.py` if creating a package
+4. Add docstrings explaining what it does
+5. Run tests: `pytest tests/test_module.py -v`
+
+### Calling Python from Electron
+
+```typescript
+// In main Electron process
+import { spawn } from 'child_process'
+
+const pythonProcess = spawn('python', [
+  '-m', 'jpe_sims4',
+  'build',
+  projectPath
+])
+
+pythonProcess.stdout.on('data', (data) => {
+  console.log(`Output: ${data}`)
+})
+
+pythonProcess.on('close', (code) => {
+  console.log(`Process exited with code ${code}`)
+})
+```
+
+---
+
+## 🐛 When Something Breaks (Troubleshooting)
+
+### Python says "Module not found"
+
+```bash
+# Make sure you installed it right
+pip install -e ".[dev]"
+
+# Check your Python path
+python -c "import sys; print(sys.path)"
+```
+
+### Frontend builds fail
+
+```bash
+# Clear everything and start fresh
+rm -rf node_modules package-lock.json
+npm install
+npm run build
+```
+
+### Electron won't start
+
+```bash
+# Make sure Electron was built
+npm run build:electron
+
+# Check the Vite dev server is running
+npm run dev
+
+# Check port 3000 is available
+lsof -i :3000  # macOS/Linux
+netstat -ano | findstr :3000  # Windows
+```
+
+### Tests are failing
+
+```bash
+# Run with more details
+pytest tests/ -v -s
+
+# Run just one test
+pytest tests/test_engine.py::test_parse -vv
+
+# Debug mode (stops at errors)
+pytest tests/ -vv --pdb
+```
+
+### Import paths broken
+
+Frontend: Always use `@/` (configured in vite.config.ts)
+Backend: Use absolute imports or add to sys.path
+Never: Use `../../../` relative imports beyond parent directory
+
+---
+
+## 📚 Git Workflow (Keep Things Clean)
+
+### Branch Names
+
+```
+feature/description       # New features
+fix/description          # Bug fixes
+chore/description        # Maintenance
+docs/description         # Documentation
+refactor/description     # Code cleanup
+```
+
+### Commit Messages
+
+```
+feat: Add button component with variants
+fix: Resolve editor lag on large files
+chore: Update dependencies
+docs: Add deployment guide
+test: Add validation tests
+```
+
+### The Process
+
+```bash
+# 1. Create your branch
+git checkout -b feature/my-feature
+
+# 2. Make changes and commit
+git add .
+git commit -m "feat: Add my feature"
+
+# 3. Push to remote
+git push -u origin feature/my-feature
+
+# 4. Create pull request (on GitHub)
+# Wait for review and CI/CD checks
+
+# 5. Merge and update local
+git checkout main
+git pull origin main
+git rebase origin/main feature/my-feature
+```
+
+---
+
+## 🎨 Design System Rules (Keep Everything Consistent)
+
+### Rule 1: Use Design Tokens (No Hardcoding Colors)
+
+```tsx
+// ✅ Right
+<div className="bg-background-secondary text-text-primary p-4 rounded-lg">
+  <h2 className="text-xl font-semibold">Heading</h2>
+  <p className="text-text-secondary">Description</p>
+</div>
+
+// ❌ Wrong
+<div style={{ backgroundColor: '#1E2633', padding: '16px' }}>
+  This is bad!
+</div>
+```
+
+### Rule 2: Component Locations
+
+```
+src/components/
+├── common/          # Atomic components (Button, Input, Modal)
+├── layout/          # Layout pieces (Sidebar, EditorPane, TitleBar)
+├── modals/          # Dialog boxes
+├── editor/          # Editor-specific
+└── [features]/      # Feature-specific stuff
+```
+
+### Rule 3: Use Tailwind (Utility-First)
+
+```tsx
+// ✅ Right - Tailwind with design tokens
+<div className="bg-background-secondary p-4 border border-border-subtle rounded-lg">
+  {children}
+</div>
+
+// ❌ Wrong - Inline styles
+<div style={{ backgroundColor: '#1E2633', padding: '16px' }}>
+  Bad!
+</div>
+```
+
+### Rule 4: Responsive Design
+
+```tsx
+// Works on all screen sizes
+<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+  {items.map(item => <Card key={item.id}>{item}</Card>)}
+</div>
+```
+
+### Rule 5: Accessibility
+
+```tsx
+// ✅ Right - Accessible
+<button
+  aria-label="Close dialog"
+  className="p-2 hover:bg-background-tertiary rounded focus:outline-none focus:ring-2 focus:ring-accent-primary"
+>
+  ✕
+</button>
+
+// ❌ Wrong - Not accessible
+<div onClick={handleClose}>X</div>
+```
+
+### Rule 6: Component Composition
+
+Every component needs:
+- Props interface
+- `className` prop support
+- TypeScript types
+- Sensible defaults
+
+```tsx
+interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
+  variant?: 'default' | 'elevated'
+}
+
+export default function Card({
+  variant = 'default',
+  className = '',
+  children,
+  ...props
+}: CardProps) {
+  return (
+    <div
+      className={`bg-background-secondary p-4 rounded-lg ${
+        variant === 'elevated' && 'shadow-lg'
+      } ${className}`}
+      {...props}
+    >
+      {children}
+    </div>
+  )
+}
+```
+
+### Rule 7: State Management
+
+```typescript
+// App-wide state → Zustand
+export const useProjectStore = create(...)
+
+// Component-local state → React hooks
+const [isOpen, setIsOpen] = useState(false)
+```
+
+### Rule 8: Memoization (Keep It Fast)
+
+```tsx
+// For expensive components
+const FileItem = React.memo(({ file }) => {
+  return <div>{file.name}</div>
+})
+
+// For computed values
+const expensive = useMemo(() => {
+  return computeSomethingHeavy(data)
+}, [data])
+
+// For callback functions
+const handleClick = useCallback(() => {
+  doSomething()
+}, [])
+```
+
+### Rule 9: Import Organization
+
+```tsx
+// 1. React stuff
+import { useState } from 'react'
+
+// 2. Third-party
+import { useProjectStore } from '@/stores/useProjectStore'
+
+// 3. Internal stuff
+import Button from '@/components/common/Button'
+
+// 4. Types
+import type { Project } from '@/types'
+```
+
+### Rule 10: Spacing Uses 4px Base
+
+- `p-1` = 4px
+- `p-2` = 8px
+- `p-4` = 16px (most common)
+- `p-6` = 24px
+- `p-8` = 32px
+
+---
+
+## 🚀 What You Need to Know
+
+### New to the Project?
+1. Read this file (you're doing it!)
+2. Follow the setup guide
+3. Run `npm run dev:electron` to see it working
+4. Explore the `src/` folder
+
+### Working on Frontend?
+1. Check the design system section
+2. Reuse components from `src/components/common/`
+3. Follow the styling rules
+4. Test your components
+
+### Working on Backend?
+1. Understand the IR (Intermediate Representation)
+2. Check the engine architecture
+3. Write tests for your code
+4. Use the validator to check your work
+
+### Adding New Features?
+1. Plan it out (what goes where?)
+2. Write tests first
+3. Implement the feature
+4. Test everything
+5. Git commit with good message
+
+---
+
+## 📞 Resources & Links
+
+### Files You Should Know
+
+- **Design System**: `src/design-system/tokens.json`
+- **Build Config**: `vite.config.ts`, `vite.electron.config.ts`
+- **Python Setup**: `pyproject.toml`, `setup.py`
+- **Frontend Setup**: `package.json`, `tsconfig.json`
+
+### External Docs
+
+- [React Documentation](https://react.dev)
+- [Vite Guide](https://vitejs.dev)
+- [Tailwind CSS](https://tailwindcss.com)
+- [Electron Docs](https://www.electronjs.org/docs)
+- [Python setuptools](https://setuptools.pypa.io/)
+- [Zustand State Management](https://github.com/pmndrs/zustand)
+
+---
+
+## Version Information
+
+- **Project Version**: 2.0.0
+- **Python Minimum**: 3.11
+- **Node.js Minimum**: 18.0
+- **Status**: Production Ready
+- **Last Updated**: March 2026
+
+---
+
+## Real Talk
+
+This project is comprehensive, no cap. You got frontend, backend, mobile, desktop - it's a whole ecosystem. The docs are here to help you navigate it. If something's confusing, check here first. If it's still confusing, your future self (or a teammate) will appreciate you updating these docs.
+
+Keep the code clean, keep the tests passing, keep the vibes good.
+
+Now go build something amazing. 🚀

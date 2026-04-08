@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from "react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "./ui/card";
 import { Button } from "./ui/button";
@@ -72,7 +74,7 @@ export function LayoutShowcase() {
             {/* Focusable Cards Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {projects.map((project) => (
-                <Card key={project.id} focusable>
+                <Card key={project.id} tabIndex={0}>
                   <CardHeader>
                     <div className="flex items-start justify-between">
                       <FileText className="w-8 h-8 text-accent-primary" />
@@ -120,7 +122,7 @@ export function LayoutShowcase() {
 
               {/* Add New Card */}
               <Card
-                focusable
+                tabIndex={0}
                 className="border-dashed border-2 hover:border-accent-primary/50 cursor-pointer"
                 onClick={() => setModalOpen(true)}
               >

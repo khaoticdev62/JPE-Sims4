@@ -1,10 +1,11 @@
 "use client";
 
 import * as React from "react";
-import * as DialogPrimitive from "@radix-ui/react-dialog@1.1.6";
-import { XIcon } from "lucide-react@0.487.0";
+import * as DialogPrimitive from "@radix-ui/react-dialog";
+import { XIcon } from "lucide-react";
 
 import { cn } from "./utils";
+import { T } from "../robust/jpe-theme";
 
 function Dialog({
   ...props
@@ -15,7 +16,7 @@ function Dialog({
 function DialogTrigger({
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Trigger>) {
-  return <DialogPrimitive.Trigger data-slot="dialog-trigger" {...props} />;
+  return <DialogPrimitive.Trigger data-slot="dialog-trigger" data-testid="dialog-trigger" {...props} />;
 }
 
 function DialogPortal({
@@ -30,52 +31,56 @@ function DialogClose({
   return <DialogPrimitive.Close data-slot="dialog-close" {...props} />;
 }
 
-const DialogOverlay = React.forwardRef<
-  React.ElementRef<typeof DialogPrimitive.Overlay>,
-  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay>
->(({ className, ...props }, ref) => (
-  <DialogPrimitive.Overlay
-    ref={ref}
-    data-slot="dialog-overlay"
-    className={cn(
-      "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/70 backdrop-blur-md",
-      className,
-    )}
-    {...props}
-  />
-));
-DialogOverlay.displayName = DialogPrimitive.Overlay.displayName;
-
-const DialogContent = React.forwardRef<
-  React.ElementRef<typeof DialogPrimitive.Content>,
-  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>
->(({ className, children, ...props }, ref) => (
-  <DialogPortal>
-    <DialogOverlay />
-    <DialogPrimitive.Content
-      ref={ref}
-      data-slot="dialog-content"
+function DialogOverlay({
+  className,
+  ...props
+}: React.ComponentProps<typeof DialogPrimitive.Overlay>) {
+  return (
+    <DialogPrimitive.Overlay
+      data-slot="dialog-overlay"
       className={cn(
-        "bg-background-tertiary/95 backdrop-blur-xl border-border-subtle text-text-primary",
-        "data-[state=open]:animate-in data-[state=closed]:animate-out",
-        "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
-        "data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
-        "data-[state=closed]:slide-out-to-top-[2%] data-[state=open]:slide-in-from-top-[2%]",
-        "fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%]",
-        "gap-6 rounded-2xl border p-8 shadow-[0_24px_64px_rgba(0,0,0,0.5)] duration-300 sm:max-w-lg",
+        "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 bg-black/60 transition-all",
         className,
       )}
+      style={{ zIndex: T.zModal, backdropFilter: T.glassBlur }}
       {...props}
-    >
-      {children}
-      <DialogPrimitive.Close className="absolute top-5 right-5 rounded-lg p-1.5 opacity-70 transition-all hover:opacity-100 hover:bg-background-tertiary focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-accent-focus disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-5">
-        <XIcon />
-        <span className="sr-only">Close</span>
-      </DialogPrimitive.Close>
-    </DialogPrimitive.Content>
-  </DialogPortal>
-));
-DialogContent.displayName = DialogPrimitive.Content.displayName;
+    />
+  );
+}
+
+function DialogContent({
+  className,
+  children,
+  ...props
+}: React.ComponentProps<typeof DialogPrimitive.Content>) {
+  return (
+    <DialogPortal data-slot="dialog-portal">
+      <DialogOverlay />
+      <DialogPrimitive.Content
+        data-slot="dialog-content"
+        data-testid="dialog-content"
+        className={cn(
+          "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] grid w-full max-w-[calc(100%-2rem)] gap-4 rounded-2xl border p-6 shadow-apple-lg duration-200 sm:max-w-lg bg-bgSurface/95 backdrop-blur-xl border-border overflow-hidden",
+          className,
+        )}
+        style={{ zIndex: T.zModal + 1 }}
+        {...props}
+      >
+        <div 
+          className="absolute inset-0 pointer-events-none opacity-[0.03] mix-blend-overlay"
+          style={{ backgroundImage: T.noiseSvg }}
+        />
+        <div className="relative z-10 flex flex-col gap-4">
+          {children}
+        </div>
+        <DialogPrimitive.Close className="absolute top-4 right-4 p-1 hover:bg-white/10 rounded-md text-textTertiary hover:text-white transition-all focus:outline-none">
+          <XIcon className="w-4 h-4" />
+          <span className="sr-only">Close</span>
+        </DialogPrimitive.Close>
+      </DialogPrimitive.Content>
+    </DialogPortal>
+  );
+}
 
 function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
@@ -107,6 +112,7 @@ function DialogTitle({
   return (
     <DialogPrimitive.Title
       data-slot="dialog-title"
+      data-testid="dialog-title"
       className={cn("text-lg leading-none font-semibold", className)}
       {...props}
     />
@@ -120,6 +126,7 @@ function DialogDescription({
   return (
     <DialogPrimitive.Description
       data-slot="dialog-description"
+      data-testid="dialog-description"
       className={cn("text-muted-foreground text-sm", className)}
       {...props}
     />

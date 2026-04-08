@@ -1,45 +1,83 @@
-from __future__ import annotations
+"""Report writer for build reports."""
 
-import json
-from dataclasses import asdict
 from pathlib import Path
-from typing import Iterable
-
+from typing import List
 from .errors import BuildReport, EngineError
 
 
 class ReportWriter:
-    """Responsible for writing build reports to disk.
+    """Writes build reports to disk."""
 
-    The writer does not interpret the errors; it only serializes data structures.
-    """
+    def __init__(self, reports_dir: Path):
+        self.reports_dir = reports_dir
+        self.reports_dir.mkdir(parents=True, exist_ok=True)
 
-    def __init__(self, base_directory: Path) -> None:
-        self._base_directory = base_directory
+    def write_report(self, report: BuildReport) -> Path:
+        """Write a build report to disk."""
+        report_file = self.reports_dir / f"{report.build_id}.json"
+        
+        # Simple JSON serialization
+        import json
+        data = {
+            'status': report.status,
+            'errors': [e.to_dict() for e in report.errors],
+            'warnings': [w.to_dict() for w in report.warnings],
+            'info': report.info,
+            'build_id': report.build_id,
+            'timestamp': report.timestamp,
+        }
+        
+        report_file.write_text(json.dumps(data, indent=2))
+        return report_file
 
-    def write_build_report(self, report: BuildReport) -> Path:
-        self._base_directory.mkdir(parents=True, exist_ok=True)
-        file_path = self._base_directory / f"build_{report.build_id}.json"
-        payload = asdict(report)
-        file_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
-        return file_path
-
-
-def collect_errors(errors: Iterable[EngineError]) -> dict:
-    """Return a summary structure from a sequence of errors.
-
-    This can be used by UIs to quickly assess project health without parsing
-    the entire build report.
-    """
-
-    summary: dict[str, int] = {
-        "info": 0,
-        "warning": 0,
-        "error": 0,
-        "fatal": 0,
-    }
-    for error in errors:
-        key = error.severity.value
-        if key in summary:
-            summary[key] += 1
-    return summary
+    def get_report(self, build_id: str) -> BuildReport | None:
+        """Read a build report from disk."""
+        report_file = self.reports_dir / f"{build_id}.json"
+        
+        if not report_file.exists():
+            return None
+        
+        import json
+        from .errors import ErrorCategory, ErrorSeverity
+        
+        data = json.loads(report_file.read_text())
+        
+        # Reconstruct objects
+        errors = [
+            EngineError(
+                code=e['code'],
+                category=ErrorCategory(e['category']),
+                severity=ErrorSeverity(e['severity']),
+                message_short=e['message_short'],
+                message_long=e['message_long'],
+                suggested_fix=e.get('suggested_fix'),
+                file_path=e.get('file_path'),
+                line_number=e.get('line_number'),
+                column=e.get('column'),
+            )
+            for e in data.get('errors', [])
+        ]
+        
+        warnings = [
+            EngineError(
+                code=w['code'],
+                category=ErrorCategory(w['category']),
+                severity=ErrorSeverity(w['severity']),
+                message_short=w['message_short'],
+                message_long=w['message_long'],
+                suggested_fix=w.get('suggested_fix'),
+                file_path=w.get('file_path'),
+                line_number=w.get('line_number'),
+                column=w.get('column'),
+            )
+            for w in data.get('warnings', [])
+        ]
+        
+        return BuildReport(
+            status=data['status'],
+            errors=errors,
+            warnings=warnings,
+            info=data.get('info', []),
+            build_id=data['build_id'],
+            timestamp=data['timestamp'],
+        )

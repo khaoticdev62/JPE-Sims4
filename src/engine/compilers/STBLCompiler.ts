@@ -1,187 +1,201 @@
 /**
  * STBL Compiler
  *
- * Compiles STBLData back to binary STBL format.
- * Handles round-trip: STBL binary → STBLData → STBL binary
+ * Compiles JPE text representation back to binary STBL format.
+ * Takes JPE text (e.g., "String 0x00000001: \"Hello World\"") and produces
+ * a valid STBL binary that the game can read.
  *
- * Critical for data integrity: output must match input exactly.
+ * STBL Binary Format:
+ * - Header: magic "STBL" (4B), version (2B), flags (2B), entryCount (4B)
+ * - Entries: key (4B), flags (2B), length (2B), value (UTF-16LE)
  */
 
-import type { STBLData, STBLEntry, STBLCompileResult } from '@/engine/parsers/types/stbl'
-import { encodeUTF16LE } from '@/engine/parsers/types/stbl'
+import type { STBLEntry, STBLCompileResult } from '../parsers/types/stbl'
+import { encodeUTF16LE} from '../parsers/types/stbl'
 
 /**
- * Compiles STBLData to binary STBL buffer
+ * Compiled STBL file header structure
  */
+const STBL_MAGIC = 'STBL'
+const STBL_VERSION = 1
+const STBL_FLAGS = 0
+
 export class STBLCompiler {
   /**
-   * Compile STBLData to ArrayBuffer
+   * Compile JPE text to binary STBL format.
+   *
+   * JPE format:
+   *   // STBL File
+   *   // Version: 1
+   *   // Flags: 0
+   *
+   *   String 0x00000001: "Hello World"
+   *   String 0x00000002: "Goodbye World"
+   *   String 0xDEADBEEF: "Sims 4 String"
    */
-  static compile(data: STBLData): STBLCompileResult {
+  static compile(jpeText: string): STBLCompileResult {
     const startTime = performance.now()
     const errors: string[] = []
 
     try {
-      // Calculate total size needed
-      let totalSize = 12 // Header
+      const entries = this.parseJPEText(jpeText, errors)
 
-      for (const entry of data.entries) {
-        totalSize += 8 // Key, flags, length
-        totalSize += entry.value.length * 2 // UTF-16 encoded string
-      }
-
-      // Create buffer
-      const buffer = new ArrayBuffer(totalSize)
-      const view = new DataView(buffer)
-      const uint8View = new Uint8Array(buffer)
-
-      let offset = 0
-
-      // Write header
-      this.writeString(uint8View, offset, data.magic, 4)
-      offset += 4
-
-      view.setUint16(offset, data.version, true)
-      offset += 2
-
-      view.setUint16(offset, data.flags, true)
-      offset += 2
-
-      view.setUint32(offset, data.entries.length, true)
-      offset += 4
-
-      // Write entries
-      for (const entry of data.entries) {
-        if (offset + 8 > buffer.byteLength) {
-          errors.push(`Entry exceeds buffer bounds at offset ${offset}`)
-          break
-        }
-
-        view.setUint32(offset, entry.key, true)
-        offset += 4
-
-        view.setUint16(offset, entry.flags, true)
-        offset += 2
-
-        view.setUint16(offset, entry.value.length, true)
-        offset += 2
-
-        // Write UTF-16 LE string
-        const encoded = encodeUTF16LE(entry.value)
-        if (offset + encoded.length > buffer.byteLength) {
-          errors.push(`Entry string data exceeds buffer bounds at offset ${offset}`)
-          break
-        }
-
-        uint8View.set(encoded, offset)
-        offset += encoded.length
-      }
-
-      const compileTime = performance.now() - startTime
-
-      if (errors.length === 0) {
-        return {
-          success: true,
-          buffer,
-          byteLength: buffer.byteLength,
-          errors: [],
-          metadata: {
-            entryCount: data.entries.length,
-            compileTime,
-          },
-        }
-      } else {
+      if (errors.length > 0) {
         return {
           success: false,
           errors,
-          metadata: {
-            entryCount: data.entries.length,
-            compileTime,
-          },
-        }
+          metadata: { entryCount: 0, compileTime: performance.now() - startTime }}
       }
+
+      // Build binary buffer
+      const buffer = this.buildBinary(entries)
+
+      return {
+        success: true,
+        buffer,
+        byteLength: buffer.byteLength,
+        errors: [],
+        metadata: {
+          entryCount: entries.length,
+          compileTime: performance.now() - startTime}}
     } catch (error) {
-      const compileTime = performance.now() - startTime
+      errors.push(`Compilation failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
       return {
         success: false,
-        errors: [error instanceof Error ? error.message : 'Unknown compilation error'],
-        metadata: {
-          entryCount: data.entries.length,
-          compileTime,
-        },
-      }
+        errors,
+        metadata: { entryCount: 0, compileTime: performance.now() - startTime }}
     }
   }
 
   /**
-   * Create new STBLData with specified entries
+   * Parse JPE text into structured entries.
    */
-  static create(entries: Array<{ key: number; value: string; flags?: number }>): STBLData {
+  private static parseJPEText(text: string, errors: string[]): STBLEntry[] {
+    const entries: STBLEntry[] = []
+    const lines = text.split('\n')
+    const seenKeys = new Set<number>()
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim()
+
+      // Skip empty lines and comments
+      if (!line || line.startsWith('//')) continue
+
+      // Parse: String 0x00000001: "value"  OR  String 12345: "value"
+      const match = line.match(/^String\s+(0x[0-9a-fA-F]+|\d+)\s*:\s*"(.*)"$/s)
+      if (!match) {
+        errors.push(`Line ${i + 1}: Invalid STBL entry format: "${line.substring(0, 80)}"`)
+        continue
+      }
+
+      // Parse key (hex or decimal)
+      const keyStr = match[1]
+      let key: number
+      if (keyStr.startsWith('0x')) {
+        key = parseInt(keyStr, 16)
+      } else {
+        key = parseInt(keyStr, 10)
+      }
+
+      if (isNaN(key) || key < 0 || key > 0xFFFFFFFF) {
+        errors.push(`Line ${i + 1}: Invalid key: "${keyStr}"`)
+        continue
+      }
+
+      // Check for duplicate keys
+      if (seenKeys.has(key)) {
+        errors.push(`Line ${i + 1}: Duplicate key: 0x${key.toString(16).toUpperCase().padStart(8, '0')}`)
+        continue
+      }
+      seenKeys.add(key)
+
+      // Parse value (handle escaped quotes)
+      const value = match[2].replace(/\\"/g, '"').replace(/\\\\/g, '\\')
+
+      entries.push({
+        key,
+        flags: 0,
+        value})
+    }
+
+    return entries
+  }
+
+  /**
+   * Build binary STBL buffer from entries.
+   */
+  private static buildBinary(entries: STBLEntry[]): ArrayBuffer {
+    // Calculate total size
+    const headerSize = 12 // magic(4) + version(2) + flags(2) + entryCount(4)
+    let entryDataSize = 0
+
+    for (const entry of entries) {
+      entryDataSize += 8 // key(4) + flags(2) + length(2)
+      entryDataSize += entry.value.length * 2 // UTF-16LE string
+    }
+
+    const totalSize = headerSize + entryDataSize
+    const buffer = new ArrayBuffer(totalSize)
+    const view = new DataView(buffer)
+
+    // Write header
+    view.setUint8(0, STBL_MAGIC.charCodeAt(0))
+    view.setUint8(1, STBL_MAGIC.charCodeAt(1))
+    view.setUint8(2, STBL_MAGIC.charCodeAt(2))
+    view.setUint8(3, STBL_MAGIC.charCodeAt(3))
+    view.setUint16(4, STBL_VERSION, true)
+    view.setUint16(6, STBL_FLAGS, true)
+    view.setUint32(8, entries.length, true)
+
+    // Write entries
+    let offset = headerSize
+
+    for (const entry of entries) {
+      view.setUint32(offset, entry.key, true)
+      view.setUint16(offset + 4, entry.flags, true)
+      view.setUint16(offset + 6, entry.value.length, true)
+
+      // Write UTF-16LE string
+      offset += 8
+      const encoded = encodeUTF16LE(entry.value)
+      const uint8View = new Uint8Array(buffer)
+      uint8View.set(encoded, offset)
+
+      offset += entry.value.length * 2
+    }
+
+    return buffer
+  }
+
+  /**
+   * Recompile entries with updated values (for partial saves).
+   * Takes existing entries and updates values from a map of key→newValue.
+   */
+  static recompile(
+    existingEntries: STBLEntry[],
+    updates: Map<number, string>
+  ): STBLCompileResult {
+    const startTime = performance.now()
+    const errors: string[] = []
+
+    // Apply updates
+    const entries = existingEntries.map((entry) => {
+      if (updates.has(entry.key)) {
+        return { ...entry, value: updates.get(entry.key)! }
+      }
+      return entry
+    })
+
+    // Build binary
+    const buffer = this.buildBinary(entries)
+
     return {
-      magic: 'STBL',
-      version: 0,
-      flags: 0,
-      entries: entries.map(e => ({
-        key: e.key,
-        flags: e.flags ?? 0,
-        value: e.value,
-      })),
+      success: true,
+      buffer,
+      byteLength: buffer.byteLength,
+      errors,
       metadata: {
         entryCount: entries.length,
-        fileSize: 0,
-        parseTime: 0,
-      },
-    }
+        compileTime: performance.now() - startTime}}
   }
-
-  /**
-   * Add entry to STBLData
-   */
-  static addEntry(data: STBLData, key: number, value: string, flags: number = 0): void {
-    // Check for duplicate keys
-    const existing = data.entries.findIndex(e => e.key === key)
-    if (existing >= 0) {
-      data.entries[existing] = { key, value, flags }
-    } else {
-      data.entries.push({ key, value, flags })
-    }
-    data.metadata.entryCount = data.entries.length
-  }
-
-  /**
-   * Remove entry from STBLData
-   */
-  static removeEntry(data: STBLData, key: number): boolean {
-    const index = data.entries.findIndex(e => e.key === key)
-    if (index >= 0) {
-      data.entries.splice(index, 1)
-      data.metadata.entryCount = data.entries.length
-      return true
-    }
-    return false
-  }
-
-  /**
-   * Sort entries by key for consistency
-   */
-  static sort(data: STBLData): void {
-    data.entries.sort((a, b) => a.key - b.key)
-  }
-
-  /**
-   * Write ASCII string to buffer
-   */
-  private static writeString(buffer: Uint8Array, offset: number, str: string, maxLength: number): void {
-    const length = Math.min(str.length, maxLength)
-    for (let i = 0; i < length; i++) {
-      buffer[offset + i] = str.charCodeAt(i) & 0xff
-    }
-  }
-}
-
-/**
- * Quick helper function to compile STBL data
- */
-export function compileSTBL(data: STBLData): STBLCompileResult {
-  return STBLCompiler.compile(data)
 }

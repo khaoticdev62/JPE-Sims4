@@ -116,16 +116,18 @@ export class AnalyticsService {
   /**
    * Get file type breakdown
    */
-  static getFileTypeBreakdown(currentProject: Project | null): Record<string, number> {
-    const breakdown: Record<string, number> = {
+  static getFileTypeBreakdown(currentProject: Project | null) {
+    const breakdown = {
       xml: 0,
       jpe: 0,
       txt: 0,
       other: 0,
     }
 
-    (currentProject?.files || []).forEach((file) => {
-      const ext = file.name?.split('.').pop()?.toLowerCase() || 'other'
+    const files = currentProject?.files ?? []
+    files.forEach((file: { name: string }) => {
+      const parts = file.name.split('.')
+      const ext = parts.length > 1 ? parts.pop()?.toLowerCase() : 'other'
 
       if (ext === 'xml') breakdown.xml++
       else if (ext === 'jpe') breakdown.jpe++

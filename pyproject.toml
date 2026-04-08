@@ -24,6 +24,7 @@ dependencies = [
     "imageio>=2.9.0",
     "numpy>=1.21.0",
     "lxml>=4.9.0",
+    "defusedxml>=0.7.1",
 ]
 classifiers = [
     "Development Status :: 3 - Alpha",

@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useEffect } from 'react'
 import { useBuildStore } from '@/stores/useBuildStore'
 import { useEditorStore } from '@/stores/useEditorStore'
@@ -37,7 +39,7 @@ export default function BuildPanel() {
   }, [buildStatus])
 
   // Handle navigation to error in editor
-  const handleNavigateToError = (fileId: string, line: number) => {
+  const handleNavigateToError = (fileId: string, _line: number) => {
     openTab({
       id: `tab-${fileId}`,
       fileId,

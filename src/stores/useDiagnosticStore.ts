@@ -6,16 +6,21 @@ interface DiagnosticState {
   diagnostics: Diagnostic[]
   activeSeverityFilter: 'all' | 'error' | 'warning' | 'info'
   activeFileFilter: string | null
+  isAiScanning: boolean
 
   // Actions
   addDiagnostic: (diagnostic: Diagnostic) => void
+  addDiagnostics: (diagnostics: Diagnostic[]) => void
   removeDiagnostic: (diagnosticId: string) => void
   setDiagnostics: (diagnostics: Diagnostic[]) => void
   clearDiagnostics: (fileId?: string) => void
+  clearDiagnosticsBySource: (source: 'ai' | 'community' | 'syntax') => void
+  setDiagnosticsForFile: (fileId: string, diagnostics: Diagnostic[]) => void
   setSeverityFilter: (severity: 'all' | 'error' | 'warning' | 'info') => void
   setFileFilter: (fileId: string | null) => void
   getFilteredDiagnostics: () => Diagnostic[]
   getDiagnosticsForFile: (fileId: string) => Diagnostic[]
+  setIsAiScanning: (scanning: boolean) => void
 }
 
 export const useDiagnosticStore = create<DiagnosticState>()(
@@ -23,10 +28,17 @@ export const useDiagnosticStore = create<DiagnosticState>()(
     diagnostics: [],
     activeSeverityFilter: 'all',
     activeFileFilter: null,
+    isAiScanning: false,
 
     addDiagnostic: (diagnostic) => {
       set((state) => ({
         diagnostics: [...state.diagnostics, diagnostic],
+      }))
+    },
+
+    addDiagnostics: (newDiagnostics) => {
+      set((state) => ({
+        diagnostics: [...state.diagnostics, ...newDiagnostics],
       }))
     },
 
@@ -45,6 +57,21 @@ export const useDiagnosticStore = create<DiagnosticState>()(
         diagnostics: fileId
           ? state.diagnostics.filter((d) => d.fileId !== fileId)
           : [],
+      }))
+    },
+
+    clearDiagnosticsBySource: (source) => {
+      set((state) => ({
+        diagnostics: state.diagnostics.filter((d) => d.source !== source),
+      }))
+    },
+
+    setDiagnosticsForFile: (fileId, newDiagnostics) => {
+      set((state) => ({
+        diagnostics: [
+          ...state.diagnostics.filter((d) => d.fileId !== fileId),
+          ...newDiagnostics,
+        ],
       }))
     },
 
@@ -70,6 +97,10 @@ export const useDiagnosticStore = create<DiagnosticState>()(
 
     getDiagnosticsForFile: (fileId) => {
       return get().diagnostics.filter((d) => d.fileId === fileId)
+    },
+
+    setIsAiScanning: (scanning) => {
+      set({ isAiScanning: scanning })
     },
   }))
 )

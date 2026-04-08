@@ -4,7 +4,8 @@
  */
 
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { persist, createJSONStorage } from 'zustand/middleware'
+import { safeStorage } from '@/utils/storage'
 
 export interface Shortcut {
   id: string
@@ -276,6 +277,22 @@ const DEFAULT_SHORTCUTS: Shortcut[] = [
     defaultKeys: 'F12',
     currentKeys: 'F12',
     description: 'About JPE Translator'
+  },
+  {
+    id: 'help-dictionary',
+    label: 'Command Dictionary',
+    category: 'Help',
+    defaultKeys: 'Ctrl+K',
+    currentKeys: 'Ctrl+K',
+    description: 'Open the JPE Command Dictionary'
+  },
+  {
+    id: 'project-conflict-scan',
+    label: 'Scan for Project Conflicts',
+    category: 'Project',
+    defaultKeys: 'Ctrl+Shift+L',
+    currentKeys: 'Ctrl+Shift+L',
+    description: 'Run project-wide AI conflict detection'
   }
 ]
 
@@ -346,7 +363,8 @@ export const useShortcutStore = create<ShortcutState>()(
     }),
     {
       name: 'shortcut-store',
-      version: 1
+      version: 1,
+      storage: createJSONStorage(() => safeStorage),
     }
   )
 )

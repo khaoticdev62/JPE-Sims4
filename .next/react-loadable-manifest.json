@@ -1,0 +1,66 @@
+{
+  "..\\node_modules\\next\\dist\\client\\dev\\hot-reloader\\app\\use-websocket.js -> @vercel/turbopack-ecmascript-runtime/browser/dev/hmr-client/hmr-client.ts": {
+    "id": "..\\node_modules\\next\\dist\\client\\dev\\hot-reloader\\app\\use-websocket.js -> @vercel/turbopack-ecmascript-runtime/browser/dev/hmr-client/hmr-client.ts",
+    "files": [
+      "static/chunks/_app-pages-browser_node_modules_next_dist_client_dev_noop-turbopack-hmr_js.js"
+    ]
+  },
+  "app\\components\\page.tsx -> @/components/jpe/jpe-code-editor": {
+    "id": "app\\components\\page.tsx -> @/components/jpe/jpe-code-editor",
+    "files": []
+  },
+  "app\\components\\page.tsx -> @/components/jpe/jpe-graph-viewer": {
+    "id": "app\\components\\page.tsx -> @/components/jpe/jpe-graph-viewer",
+    "files": []
+  },
+  "components\\DashboardView.tsx -> ./charts/DashboardCharts": {
+    "id": "components\\DashboardView.tsx -> ./charts/DashboardCharts",
+    "files": [
+      "static/chunks/_app-pages-browser_src_components_charts_DashboardCharts_tsx.js"
+    ]
+  },
+  "components\\sidebar\\Sidebar.tsx -> ../charts/DashboardCharts": {
+    "id": "components\\sidebar\\Sidebar.tsx -> ../charts/DashboardCharts",
+    "files": [
+      "static/chunks/_app-pages-browser_src_components_charts_DashboardCharts_tsx.js"
+    ]
+  },
+  "components\\visual\\VisualJpeEditor.tsx -> @/services/input/GamepadService": {
+    "id": "components\\visual\\VisualJpeEditor.tsx -> @/services/input/GamepadService",
+    "files": []
+  },
+  "services\\PackageService.ts -> @/engine/parsers/types/package": {
+    "id": "services\\PackageService.ts -> @/engine/parsers/types/package",
+    "files": []
+  },
+  "services\\TransformationService.ts -> @/services/translation/lexer": {
+    "id": "services\\TransformationService.ts -> @/services/translation/lexer",
+    "files": []
+  },
+  "services\\TransformationService.ts -> @/services/translation/parser": {
+    "id": "services\\TransformationService.ts -> @/services/translation/parser",
+    "files": []
+  },
+  "stores\\useProjectStore.ts -> ./useAIStore": {
+    "id": "stores\\useProjectStore.ts -> ./useAIStore",
+    "files": [
+      "static/chunks/_app-pages-browser_src_stores_useAIStore_ts.js"
+    ]
+  },
+  "stores\\useProjectStore.ts -> ./useDiagnosticStore": {
+    "id": "stores\\useProjectStore.ts -> ./useDiagnosticStore",
+    "files": [
+      "static/chunks/_app-pages-browser_src_stores_useDiagnosticStore_ts.js"
+    ]
+  },
+  "stores\\useProjectStore.ts -> ./useEditorStore": {
+    "id": "stores\\useProjectStore.ts -> ./useEditorStore",
+    "files": []
+  },
+  "stores\\useProjectStore.ts -> @/services/ai/BetterExceptionsJPE": {
+    "id": "stores\\useProjectStore.ts -> @/services/ai/BetterExceptionsJPE",
+    "files": [
+      "static/chunks/_app-pages-browser_src_services_ai_BetterExceptionsJPE_ts.js"
+    ]
+  }
+}

@@ -1,10 +1,12 @@
+"use client";
+
 /**
  * Telemetry Consent Dialog
  * First-run consent dialog for anonymous telemetry opt-in
  */
 
 import { useState } from 'react'
-import { useTelemetryStore } from '@stores/useTelemetryStore'
+import { useTelemetryStore } from '@/stores/useTelemetryStore'
 
 interface TelemetryConsentDialogProps {
   isOpen: boolean

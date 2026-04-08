@@ -1,4 +1,5 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+// Vitest not available - using Jest
+import { describe, it, expect, beforeEach } from '@jest/globals'
 import { ControllerMapper } from './ControllerMapper'
 
 describe('ControllerMapper', () => {

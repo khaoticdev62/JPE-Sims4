@@ -1,0 +1,2075 @@
+﻿diff --git a/src/components/settings/AISettings.tsx b/src/components/settings/AISettings.tsx
+new file mode 100644
+index 00000000..7186815b
+--- /dev/null
++++ b/src/components/settings/AISettings.tsx
+@@ -0,0 +1,305 @@
++"use client"
++
++import * as React from "react"
++import { 
++  X, 
++  Brain, 
++  Key, 
++  ExternalLink,
++  ShieldCheck,
++  AlertTriangle,
++  Globe,
++  Zap,
++  Sparkles,
++  Shield,
++  Server,
++  RefreshCw
++} from "lucide-react"
++import { AIProvider } from "@/services/ai/types"
++import { useAIStore } from "@/stores/useAIStore"
++import { toast } from "sonner"
++import { cn } from "@/utils/cn"
++
++interface AISettingsProps {
++  isOpen: boolean
++  onClose: () => void
++}
++
++const PROVIDERS = [
++  { id: AIProvider.GEMINI, name: 'Google Gemini', icon: <Globe className="w-4 h-4" />, color: 'text-blue-400', link: 'https://aistudio.google.com/' },
++  { id: AIProvider.CLAUDE, name: 'Anthropic Claude', icon: <Brain className="w-4 h-4" />, color: 'text-orange-400', link: 'https://console.anthropic.com/' },
++  { id: AIProvider.OPENAI, name: 'OpenAI GPT', icon: <Zap className="w-4 h-4" />, color: 'text-emerald-400', link: 'https://platform.openai.com/' },
++  { id: AIProvider.QWEN, name: 'Alibaba Qwen', icon: <Sparkles className="w-4 h-4" />, color: 'text-purple-400', link: 'https://dashscope.aliyun.com/' },
++  { id: AIProvider.OLLAMA, name: 'Local Qwen (Ollama)', icon: <Server className="w-4 h-4" />, color: 'text-white', link: 'https://ollama.com/' },
++]
++
++export function AISettings({ isOpen, onClose }: AISettingsProps) {
++  const { 
++    activeProvider, 
++    setProvider, 
++    setApiKey, 
++    apiKeyConfigured,
++    clearCache,
++    includeProjectContext,
++    includeExternalSymbols,
++    setContextSetting,
++    usageStats,
++    updateUsageStats
++  } = useAIStore()
++
++  React.useEffect(() => {
++    if (isOpen) {
++      updateUsageStats()
++      const interval = setInterval(updateUsageStats, 5000)
++      return () => clearInterval(interval)
++    }
++  }, [isOpen, activeProvider, updateUsageStats])
++
++  const [localKey, setLocalKey] = React.useState("")
++
++  const handleSaveKey = () => {
++    if (localKey.trim()) {
++      setApiKey(activeProvider, localKey)
++      toast.success(`${activeProvider.toUpperCase()} Key Secured!`)
++      setLocalKey("")
++    }
++  }
++
++  const handleClearCache = () => {
++    clearCache()
++    toast.success("AI Cache Purged")
++  }
++
++  if (!isOpen) return null
++
++  const currentProvider = PROVIDERS.find(p => p.id === activeProvider)
++
++  return (
++    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
++      <div className="w-full max-w-4xl bg-jpe-surface border border-jpe-border rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200 flex flex-col md:flex-row h-[700px] md:h-[600px]">
++        
++        {/* Sidebar - Provider Selection */}
++        <div className="w-full md:w-72 border-b md:border-b-0 md:border-r border-jpe-border bg-jpe-bg/30 p-5 space-y-2">
++          <div className="px-2 py-3 mb-4">
++            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-jpe-muted opacity-50 italic">Standardized AI Layer</h3>
++          </div>
++          {PROVIDERS.map((p) => (
++            <button
++              key={p.id}
++              onClick={() => setProvider(p.id)}
++              className={cn(
++                "w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-bold transition-all border border-transparent",
++                activeProvider === p.id 
++                  ? "bg-jpe-primary/10 border-jpe-primary/20 text-jpe-primary shadow-sm shadow-jpe-primary/5" 
++                  : "text-jpe-muted hover:bg-white/5 hover:text-white"
++              )}
++            >
++              <span className={activeProvider === p.id ? p.color : "text-jpe-muted"}>{p.icon}</span>
++              {p.name}
++              {activeProvider === p.id && (
++                <div className="ml-auto w-2 h-2 rounded-full bg-jpe-primary shadow-[0_0_10px_rgba(var(--jpe-primary-rgb),0.5)]" />
++              )}
++            </button>
++          ))}
++        </div>
++
++        {/* Content Area */}
++        <div className="flex-1 flex flex-col bg-jpe-surface">
++          {/* Header */}
++          <div className="px-8 py-6 border-b border-jpe-border/50 flex items-center justify-between bg-jpe-bg/20">
++            <div>
++              <h2 className="text-xl font-black tracking-tight text-white uppercase italic">Intelligence Core</h2>
++              <p className="text-[10px] text-jpe-muted mt-1 uppercase font-bold tracking-widest opacity-60">
++                Switching to {currentProvider?.name} Active Instance
++              </p>
++            </div>
++            <button 
++              onClick={onClose}
++              className="p-2.5 rounded-xl hover:bg-white/5 text-jpe-muted hover:text-white transition-all shadow-inner"
++            >
++              <X className="w-5 h-5" />
++            </button>
++          </div>
++
++          {/* Body */}
++          <div className="p-8 flex-1 space-y-8 overflow-y-auto scrollbar-hide">
++            
++            {/* Server Status & Performance - Story 6.5 */}
++            <div className="space-y-4">
++              <label className="text-[10px] font-black uppercase tracking-[0.2em] text-jpe-muted flex items-center gap-2">
++                <Shield className="w-3.5 h-3.5" />
++                Intelligence Core Metrics
++              </label>
++              
++              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
++                {/* Latency */}
++                <div className="bg-jpe-bg/40 border border-jpe-border rounded-2xl p-4 flex flex-col justify-between h-24">
++                  <span className="text-[9px] font-black uppercase tracking-widest text-jpe-muted opacity-50">Avg Latency</span>
++                  <div className="flex items-baseline gap-2">
++                    <span className="text-xl font-black text-jpe-primary tracking-tighter">
++                      {usageStats?.averageResponseTime ? (usageStats.averageResponseTime / 1000).toFixed(2) : "0.00"}
++                    </span>
++                    <span className="text-[10px] font-bold text-jpe-muted uppercase">sec</span>
++                  </div>
++                </div>
++
++                {/* Tokens */}
++                <div className="bg-jpe-bg/40 border border-jpe-border rounded-2xl p-4 flex flex-col justify-between h-24">
++                  <span className="text-[9px] font-black uppercase tracking-widest text-jpe-muted opacity-50 text-wrap">Daily Intelligence</span>
++                  <div className="flex items-baseline gap-2">
++                    <span className="text-xl font-black text-white tracking-tighter">
++                      {usageStats?.totalTokensUsed || 0}
++                    </span>
++                    <span className="text-[10px] font-bold text-jpe-muted uppercase tracking-tight">tokens</span>
++                  </div>
++                </div>
++
++                {/* Cache efficiency */}
++                <div className="bg-jpe-bg/40 border border-jpe-border rounded-2xl p-4 flex flex-col justify-between h-24">
++                  <span className="text-[9px] font-black uppercase tracking-widest text-jpe-muted opacity-50">Cache Hit Rate</span>
++                  <div className="flex items-baseline gap-2">
++                    <span className="text-xl font-black text-emerald-400 tracking-tighter">
++                      {Math.round((usageStats?.cacheHitRate || 0) * 100)}
++                    </span>
++                    <span className="text-[10px] font-bold text-jpe-muted uppercase">%</span>
++                  </div>
++                </div>
++              </div>
++
++              {/* Status Alert */}
++              <div className={cn(
++                "rounded-2xl p-6 flex items-center justify-between transition-all border",
++                apiKeyConfigured 
++                  ? "bg-jpe-primary/5 border-jpe-primary/20" 
++                  : "bg-emerald-500/5 border-emerald-500/20"
++              )}>
++                <div className="flex items-center gap-4">
++                  {/* Status Indicator */}
++                  <div className={cn(
++                    "w-12 h-12 rounded-xl flex items-center justify-center relative",
++                    apiKeyConfigured ? "bg-jpe-primary/20" : "bg-emerald-500/20"
++                  )}>
++                    {apiKeyConfigured ? (
++                      <>
++                        <RefreshCw className="w-5 h-5 text-jpe-primary animate-spin-slow" />
++                        <div className="absolute inset-0 rounded-xl border border-jpe-primary animate-ping opacity-20" />
++                      </>
++                    ) : (
++                      <ShieldCheck className="w-5 h-5 text-emerald-500" />
++                    )}
++                  </div>
++                  <div>
++                    <h3 className={cn("text-xs font-black uppercase tracking-widest", apiKeyConfigured ? "text-jpe-primary" : "text-emerald-500")}>
++                      {apiKeyConfigured ? `${currentProvider?.name} Instance Active` : "Local Handshake Active"}
++                    </h3>
++                    <p className="text-[10px] text-jpe-muted font-bold mt-0.5 uppercase tracking-wide">
++                      {apiKeyConfigured 
++                        ? `Secure multi-model integration layer online`
++                        : "Inheriting system-wide AI credentials"}
++                    </p>
++                  </div>
++                </div>
++              </div>
++            </div>
++
++            {/* Context Tuning - Story 6.2 */}
++            <div className="space-y-4">
++              <label className="text-[10px] font-black uppercase tracking-[0.2em] text-jpe-muted flex items-center gap-2">
++                <Sparkles className="w-3.5 h-3.5" />
++                Context Tuning
++              </label>
++
++              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
++                <button
++                  onClick={() => setContextSetting('includeProjectContext', !includeProjectContext)}
++                  className={cn(
++                    "flex flex-col items-start p-5 rounded-2xl border transition-all text-left",
++                    includeProjectContext 
++                      ? "bg-jpe-primary/5 border-jpe-primary/30" 
++                      : "bg-white/5 border-white/10 opacity-60 hover:opacity-100"
++                  )}
++                >
++                  <div className="flex items-center gap-2 mb-2">
++                    <Globe className={cn("w-4 h-4", includeProjectContext ? "text-jpe-primary" : "text-jpe-muted")} />
++                    <span className={cn("text-[10px] font-black uppercase tracking-widest", includeProjectContext ? "text-jpe-primary" : "text-jpe-muted")}>Project Context</span>
++                  </div>
++                  <p className="text-[9px] text-jpe-muted font-inter leading-relaxed">Inject open tabs and file structure into every AI request.</p>
++                </button>
++
++                <button
++                  onClick={() => setContextSetting('includeExternalSymbols', !includeExternalSymbols)}
++                  className={cn(
++                    "flex flex-col items-start p-5 rounded-2xl border transition-all text-left",
++                    includeExternalSymbols 
++                      ? "bg-purple-500/5 border-purple-500/30" 
++                      : "bg-white/5 border-white/10 opacity-60 hover:opacity-100"
++                  )}
++                >
++                  <div className="flex items-center gap-2 mb-2">
++                    <Server className={cn("w-4 h-4", includeExternalSymbols ? "text-purple-400" : "text-jpe-muted")} />
++                    <span className={cn("text-[10px] font-black uppercase tracking-widest", includeExternalSymbols ? "text-purple-400" : "text-jpe-muted")}>External Symbols</span>
++                  </div>
++                  <p className="text-[9px] text-jpe-muted font-inter leading-relaxed">Cross-reference game interactions and STBL strings (High Token Usage).</p>
++                </button>
++              </div>
++            </div>
++
++            {/* Custom Key Intervention */}
++            <div className="space-y-4">
++              <div className="flex items-center justify-between">
++                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-jpe-muted flex items-center gap-2">
++                  <Key className="w-3.5 h-3.5" />
++                  Provider Authorization
++                </label>
++                <a href={currentProvider?.link} target="_blank" rel="noopener noreferrer" className="text-[10px] font-black text-jpe-primary hover:underline flex items-center gap-1 uppercase italic tracking-wider">
++                  Generate Token <ExternalLink className="w-3 h-3" />
++                </a>
++              </div>
++              
++              <div className="relative group">
++                <input 
++                  type="password"
++                  placeholder={activeProvider === AIProvider.OLLAMA ? "Local URL (Default: http://localhost:11434)" : `Enter your ${currentProvider?.name} key...`}
++                  className="w-full bg-jpe-bg border border-jpe-border rounded-xl px-5 py-4 text-sm font-mono focus:ring-2 focus:ring-jpe-primary focus:border-transparent outline-none transition-all pr-32 shadow-inner"
++                  value={localKey}
++                  onChange={(e) => setLocalKey(e.target.value)}
++                />
++                <button 
++                  onClick={handleSaveKey}
++                  disabled={!localKey.trim()}
++                  className="absolute right-2 top-2 bottom-2 px-4 bg-jpe-primary rounded-lg text-[10px] font-black text-jpe-bg hover:scale-[1.02] active:scale-95 transition-all shadow-lg disabled:grayscale disabled:opacity-40 uppercase tracking-widest"
++                >
++                  Apply Key
++                </button>
++              </div>
++              
++              <div className="flex items-center gap-4">
++                <button
++                  onClick={handleClearCache}
++                  className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-white/5 border border-white/10 rounded-xl text-[10px] font-black uppercase tracking-widest text-jpe-muted hover:text-white transition-all hover:bg-white/10"
++                >
++                  <RefreshCw className="w-3 h-3" />
++                  Purge Semantic Cache
++                </button>
++              </div>
++            </div>
++          </div>
++
++          {/* Footer */}
++          <div className="px-8 py-6 bg-jpe-bg/50 border-t border-jpe-border/50 flex items-center justify-between">
++            <div className="flex items-center gap-2 opacity-30">
++              <Shield className="w-3.5 h-3.5" />
++              <span className="text-[9px] font-black uppercase tracking-[0.2em] italic">XOR-Obfuscated Local Storage</span>
++            </div>
++            <button 
++              onClick={onClose}
++              className="px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-white/5 transition-all text-jpe-muted hover:text-white border border-transparent hover:border-jpe-border"
++            >
++              Verify & Return
++            </button>
++          </div>
++        </div>
++      </div>
++    </div>
++  )
++}
+diff --git a/src/services/ai/BaseAIService.ts b/src/services/ai/BaseAIService.ts
+new file mode 100644
+index 00000000..4370a0dd
+--- /dev/null
++++ b/src/services/ai/BaseAIService.ts
+@@ -0,0 +1,181 @@
++/**
++ * Base AI Service (Abstract)
++ */
++
++import { RateLimiterMemory } from 'rate-limiter-flexible'
++import { AICache } from './AICache'
++import { 
++  AIMessage, 
++  AIResult, 
++  Explanation, 
++  ApiUsageStats, 
++  CacheConfig 
++} from './types'
++
++export abstract class BaseAIService {
++  protected cache: AICache
++  protected rateLimiter: RateLimiterMemory
++  protected initialized = false
++
++  protected usageStats = {
++    requestsToday: 0,
++    requestsThisMonth: 0,
++    cacheHits: 0,
++    cacheMisses: 0,
++    totalTokensUsed: 0,
++    responseTimes: [] as number[],
++  }
++
++  constructor(cacheConfig: CacheConfig = { max: 100, ttl: 24 * 60 * 60 * 1000 }) {
++    this.cache = new AICache(cacheConfig)
++    this.rateLimiter = new RateLimiterMemory({
++      points: 50,
++      duration: 60,
++    })
++  }
++
++  abstract initialize(): Promise<void>;
++  
++  protected abstract ensureInitialized(): Promise<void>;
++
++  abstract chat(messages: AIMessage[]): Promise<AIResult>;
++
++  abstract explainMod(fileContent: string, fileName: string): Promise<AIResult>;
++
++  abstract suggestFix(
++    fileContent: string, 
++    fileName: string, 
++    errorMessage: string,
++    errorContext: string
++  ): Promise<AIResult>;
++
++  /**
++   * AI-powered project-wide conflict detection
++   * @param map Symbolic map of the project
++   */
++  abstract analyzeProjectConflicts(map: any): Promise<AIResult>;
++
++  /**
++   * AI-powered Sims 4 exception analysis
++   * @param logContent The lastException.txt content
++   */
++  abstract analyzeException(logContent: string): Promise<AIResult>;
++
++  /**
++   * Purge the local semantic cache for this provider
++   */
++  clearCache(): void {
++    this.cache.clear()
++    console.info(`[AI] Cache purged for provider instance`)
++  }
++
++  /**
++   * Standardized Execution Wrapper (Story 6.5)
++   * Handles Latency measurement and Usage stats
++   */
++  protected async performRequest<T>(
++    label: string, 
++    task: () => Promise<T>,
++    tokenCountText?: string,
++    useHeuristicTokens: boolean = true
++  ): Promise<T> {
++    const start = Date.now()
++    this.usageStats.requestsToday++
++    
++    try {
++      const result = await this.executeWithRetry(task)
++      const duration = Date.now() - start
++      
++      // Update latency stats
++      this.usageStats.responseTimes.push(duration)
++      if (this.usageStats.responseTimes.length > 50) {
++        this.usageStats.responseTimes.shift() // Keep moving window
++      }
++
++      // Update tokens (Only if heuristic is requested or no API count provided later)
++      if (useHeuristicTokens && tokenCountText) {
++        this.usageStats.totalTokensUsed += this.estimateTokens(tokenCountText)
++      }
++
++      console.info(`[AI:${label}] Success in ${duration}ms`)
++      return result
++    } catch (error) {
++      console.error(`[AI:${label}] Failed after retries:`, error)
++      throw error
++    }
++  }
++
++  /**
++   * Exponential Backoff Retry Logic (Story 6.5)
++   */
++  protected async executeWithRetry<T>(task: () => Promise<T>, retries = 3): Promise<T> {
++    let lastError: any
++    
++    for (let i = 0; i < retries; i++) {
++      try {
++        return await task()
++      } catch (error: any) {
++        lastError = error
++        
++        // Retry on rate limits (429), timeouts, or service unavailable (503)
++        const status = error?.response?.status
++        const isRetryable = status === 429 || status === 503 || error?.code === 'ECONNABORTED' || error?.message?.includes('timeout')
++        
++        if (isRetryable && i < retries - 1) {
++          const delay = Math.pow(2, i) * 1000
++          console.warn(`[AI] Transient error (${status || 'Timeout'}). Retrying in ${delay}ms... (Attempt ${i + 1}/${retries})`)
++          await new Promise(resolve => setTimeout(resolve, delay))
++          continue
++        }
++        
++        throw error
++      }
++    }
++    
++    throw lastError
++  }
++
++  /**
++   * Local Token Estimator (Story 6.5)
++   * A resilient heuristic (approx 4 chars per token / 0.75 tokens per word)
++   */
++  protected estimateTokens(text: string): number {
++    if (!text) return 0
++    return Math.ceil(text.length / 4)
++  }
++
++  protected parseExplanation(text: string): Explanation {
++    const extract = (section: string) => {
++      const regex = new RegExp(`\\*\\*${section}\\*\\*:?\\s*([^\\n]*(?:\\n(?!\\*\\*).*)*)`, 'i')
++      const match = text.match(regex)
++      return match ? match[1].trim() : ''
++    }
++
++    return {
++      overview: extract('Overview'),
++      purpose: extract('Purpose') || 'Mod customization',
++      keyFields: extract('Key Fields').split('\n').filter(l => l.startsWith('-')).map(l => l.substring(1).trim()),
++      effects: extract('Effects').split('\n').filter(l => l.startsWith('-')).map(l => l.substring(1).trim()),
++      notes: [],
++    }
++  }
++
++  getUsageStats(): ApiUsageStats {
++    const avgResponseTime = this.usageStats.responseTimes.length > 0
++      ? this.usageStats.responseTimes.reduce((a, b) => a + b, 0) / this.usageStats.responseTimes.length
++      : 0
++    
++    const hits = this.usageStats.cacheHits
++    const misses = this.usageStats.cacheMisses
++    
++    return {
++      requestsToday: this.usageStats.requestsToday,
++      requestsThisMonth: this.usageStats.requestsThisMonth,
++      cacheHits: hits,
++      cacheMisses: misses,
++      cacheHitRate: hits / (hits + misses || 1),
++      totalTokensUsed: this.usageStats.totalTokensUsed,
++      averageResponseTime: avgResponseTime,
++    }
++  }
++}
+diff --git a/src/services/ai/ClaudeService.ts b/src/services/ai/ClaudeService.ts
+index 523ccde2..bee0e0ed 100644
+--- a/src/services/ai/ClaudeService.ts
++++ b/src/services/ai/ClaudeService.ts
+@@ -4,55 +4,25 @@
+  */
+ 
+ import Anthropic from '@anthropic-ai/sdk'
++import axios from 'axios'
+ import { RateLimiterMemory } from 'rate-limiter-flexible'
+-import { CredentialManager } from '@services/api/CredentialManager'
+-import { ClaudeCache } from './ClaudeCache'
+-import type {
+-  Explanation,
+-  ExplanationResult,
+-  ApiUsageStats,
+-  ClaudeMessage,
++import { BaseAIService } from './BaseAIService'
++import { 
++  AIMessage, 
++  AIResult, 
++  AIProvider 
+ } from './types'
++import { AIKeyStore } from './AIKeyStore'
+ 
+-export class ClaudeService {
++export class ClaudeService extends BaseAIService {
+   private static instance: ClaudeService | null = null
+-
+   private client: Anthropic | null = null
+-  private cache: ClaudeCache
+-  private rateLimiter: RateLimiterMemory
+-  private useProxy = true
+-  private lastCacheHit = false
+-  private initialized = false
+-
+-  // Usage statistics
+-  private usageStats = {
+-    requestsToday: 0,
+-    requestsThisMonth: 0,
+-    cacheHits: 0,
+-    cacheMisses: 0,
+-    totalTokensUsed: 0,
+-    responseTimes: [] as number[],
+-  }
++  private model = 'claude-3-5-sonnet-20241022'
+ 
+   private constructor() {
+-    // Initialize cache: max 100 entries, 24-hour TTL
+-    this.cache = new ClaudeCache({
+-      max: 100,
+-      ttl: 24 * 60 * 60 * 1000, // 24 hours in milliseconds
+-    })
+-
+-    // Initialize rate limiter: 50 requests per 60 seconds
+-    this.rateLimiter = new RateLimiterMemory({
+-      points: 50,
+-      duration: 60,
+-    })
+-
+-    console.debug('[Claude] Service initialized with cache and rate limiter')
++    super({ max: 100, ttl: 24 * 60 * 60 * 1000 })
+   }
+ 
+-  /**
+-   * Get singleton instance
+-   */
+   static getInstance(): ClaudeService {
+     if (!ClaudeService.instance) {
+       ClaudeService.instance = new ClaudeService()
+@@ -60,409 +30,181 @@ export class ClaudeService {
+     return ClaudeService.instance
+   }
+ 
+-  /**
+-   * Initialize the service with API credentials
+-   */
+   async initialize(): Promise<void> {
+-    if (this.initialized) return
+-
+-    try {
+-      const apiKey = await CredentialManager.getClaudeAPIKey()
+-
+-      if (apiKey) {
+-        this.client = new Anthropic({ apiKey })
+-        this.useProxy = false
+-        console.info('[Claude] Using direct API with user-provided key')
+-      } else {
+-        this.useProxy = true
+-        console.info('[Claude] Using proxy tier (free)')
+-      }
+-
+-      this.initialized = true
+-    } catch (error) {
+-      console.error('[Claude] Initialization error:', error)
+-      this.useProxy = true
++    const apiKey = AIKeyStore.getKey(AIProvider.CLAUDE)
++    if (apiKey) {
++      this.client = new Anthropic({ apiKey })
+       this.initialized = true
+     }
+   }
+ 
+-  /**
+-   * Ensure service is initialized before use
+-   */
+-  private async ensureInitialized(): Promise<void> {
+-    if (!this.initialized) {
+-      await this.initialize()
++  protected async ensureInitialized(): Promise<void> {
++    const apiKey = AIKeyStore.getKey(AIProvider.CLAUDE)
++    if (apiKey && !this.client) {
++      this.client = new Anthropic({ apiKey })
++      this.initialized = true
+     }
+   }
+ 
+-  /**
+-   * Explain a mod file
+-   * @param fileContent The XML content of the mod file
+-   * @param fileName The name of the file
+-   * @returns Explanation result with parsed content
+-   */
+-  async explainMod(fileContent: string, fileName: string): Promise<ExplanationResult> {
+-    await this.ensureInitialized()
++  async chat(messages: AIMessage[]): Promise<AIResult> {
++    const apiKey = AIKeyStore.getKey(AIProvider.CLAUDE)
++    if (!apiKey) return { success: false, error: 'Claude API not configured', cached: false, timestamp: Date.now() }
+ 
+-    // Check rate limit
+     try {
+-      await this.rateLimiter.consume(1)
+-    } catch (error) {
+-      console.warn('[Claude] Rate limit exceeded')
+-      return {
+-        success: false,
+-        error: 'Rate limit exceeded. Maximum 50 requests per minute.',
+-        cached: false,
+-        timestamp: Date.now(),
+-      }
+-    }
+-
+-    // Check cache first
+-    const cacheKey = ClaudeCache.generateKey(fileContent, fileName)
+-    const cachedResult = this.cache.get(cacheKey)
+-
+-    if (cachedResult) {
+-      this.lastCacheHit = true
+-      this.usageStats.cacheHits++
+-      console.debug('[Claude] Cache hit for file:', fileName)
+-
+-      try {
+-        const explanation = this.parseExplanation(cachedResult)
+-        return {
+-          success: true,
+-          explanation,
+-          cached: true,
+-          timestamp: Date.now(),
++      const response = await this.performRequest<any>('chat', () => axios.post(
++        'https://api.anthropic.com/v1/messages',
++        {
++          model: this.model,
++          max_tokens: 1024,
++          messages: messages.map(m => ({ role: m.role, content: m.content }))
++        },
++        {
++          headers: {
++            'x-api-key': apiKey,
++            'anthropic-version': '2023-06-01',
++            'content-type': 'application/json'
++          }
+         }
+-      } catch (error) {
+-        console.warn('[Claude] Failed to parse cached explanation:', error)
+-      }
+-    }
+-
+-    this.lastCacheHit = false
+-    this.usageStats.cacheMisses++
+-
+-    // Call API
+-    const startTime = performance.now()
+-
+-    try {
+-      const explanationText = this.useProxy
+-        ? await this.callProxyAPI(fileContent, fileName)
+-        : await this.callDirectAPI(fileContent, fileName)
++      ), messages.map(m => m.content).join(' '), false)
+ 
+-      const duration = performance.now() - startTime
+-      this.usageStats.responseTimes.push(duration)
++      const data = response.data
++      if (data.content[0].type !== 'text') throw new Error('Unexpected response format')
+ 
+-      // Cache the result
+-      this.cache.set(cacheKey, explanationText)
+-
+-      const explanation = this.parseExplanation(explanationText)
+-
+-      this.usageStats.requestsToday++
+-      this.usageStats.requestsThisMonth++
+-
+-      return {
+-        success: true,
+-        explanation,
+-        cached: false,
+-        timestamp: Date.now(),
++      // Update actual token usage if provided (Anthropic uses input + output tokens)
++      if (data.usage) {
++        this.usageStats.totalTokensUsed += (data.usage.input_tokens + data.usage.output_tokens)
+       }
+-    } catch (error) {
+-      const duration = performance.now() - startTime
+-      this.usageStats.responseTimes.push(duration)
+-
+-      const errorMessage = error instanceof Error ? error.message : String(error)
+-      console.error('[Claude] API call failed:', errorMessage)
+ 
+       return {
+-        success: false,
+-        error: errorMessage,
++        success: true,
++        text: data.content[0].text,
+         cached: false,
+-        timestamp: Date.now(),
++        timestamp: Date.now()
+       }
++    } catch (error: any) {
++      return { success: false, error: error.message, cached: false, timestamp: Date.now() }
+     }
+   }
+ 
+-  /**
+-   * Call direct Claude API with user's API key
+-   */
+-  private async callDirectAPI(fileContent: string, fileName: string): Promise<string> {
+-    if (!this.client) {
+-      throw new Error('Claude API client not initialized')
+-    }
+-
+-    const prompt = this.buildModExplanationPrompt(fileContent, fileName)
+-
+-    const messages: ClaudeMessage[] = [
+-      {
+-        role: 'user',
+-        content: prompt,
+-      },
+-    ]
+-
+-    try {
+-      const response = await this.client.messages.create({
+-        model: 'claude-3-5-sonnet-20241022',
+-        max_tokens: 1024,
+-        messages: messages as Parameters<typeof this.client.messages.create>[0]['messages'],
+-      })
+-
+-      if (response.content[0].type !== 'text') {
+-        throw new Error('Unexpected response format from Claude API')
+-      }
+-
+-      // Track token usage
+-      this.usageStats.totalTokensUsed +=
+-        response.usage.input_tokens + response.usage.output_tokens
+-
+-      return response.content[0].text
+-    } catch (error) {
+-      const message = error instanceof Error ? error.message : String(error)
+-
+-      if (message.includes('401') || message.includes('authentication')) {
+-        throw new Error('Invalid Claude API key. Please check your credentials.')
+-      } else if (message.includes('429')) {
+-        throw new Error('Claude API rate limit exceeded. Please try again later.')
+-      } else if (message.includes('timeout') || message.includes('exceeded')) {
+-        throw new Error('Claude API request timed out. Please try again.')
+-      }
+-
+-      throw new Error(`Claude API error: ${message}`)
++  async explainMod(fileContent: string, fileName: string): Promise<AIResult> {
++    const prompt = `Explain this Sims 4 mod file: ${fileName}\n\n${fileContent.substring(0, 4000)}`
++    const res = await this.chat([{ role: 'user', content: prompt }])
++    
++    if (res.success && res.text) {
++      return { ...res, explanation: this.parseExplanation(res.text) }
+     }
++    return res
+   }
+ 
+-  /**
+-   * Call proxy API (free tier)
+-   * In production, this would call a backend proxy server
+-   */
+-  private async callProxyAPI(fileContent: string, fileName: string): Promise<string> {
+-    // For now, return a placeholder message indicating proxy is needed
+-    // In production, this would make an HTTP request to a proxy endpoint
+-
+-    console.warn(
+-      '[Claude] Proxy tier not yet implemented. Configure your Claude API key in settings.'
+-    )
+-
+-    throw new Error(
+-      'Proxy API tier not configured. Please add your Claude API key in Settings ΓåÆ AI Configuration.'
+-    )
+-  }
+-
+-  /**
+-   * Build prompt for mod file explanation
+-   */
+-  private buildModExplanationPrompt(fileContent: string, fileName: string): string {
+-    return `You are an expert Sims 4 mod creator. Explain this mod file in simple, beginner-friendly terms.
+-
+-File: ${fileName}
+-
+-Content:
+-\`\`\`xml
+-${fileContent.substring(0, 2000)}${fileContent.length > 2000 ? '\n... (truncated)' : ''}
+-\`\`\`
+-
+-Provide a structured explanation with these sections:
+-
+-1. **Overview**: What this mod does in 1-2 sentences
+-2. **Purpose**: Why a mod creator would use this (practical use cases)
+-3. **Key Fields**: List 3-5 important tuning parameters with brief explanations
+-4. **Effects**: What changes in gameplay when this mod is active
+-5. **Tips & Warnings**: Important considerations for modders
+-
+-Keep explanations concise and avoid technical jargon where possible. Format your response with clear section headers.`
+-  }
+-
+-  /**
+-   * Suggest a fix for an error in a mod file
+-   * @param fileContent Current file content
+-   * @param fileName File name
+-   * @param errorMessage Error message from diagnostics
+-   * @param errorContext Snippet around the error
+-   * @returns Fix result with proposed code
+-   */
+   async suggestFix(
+     fileContent: string, 
+     fileName: string, 
+     errorMessage: string,
+     errorContext: string
+-  ): Promise<{ success: boolean; fixedCode?: string; explanation?: string; error?: string }> {
+-    await this.ensureInitialized()
+-
+-    if (this.useProxy) {
+-      return {
+-        success: false,
+-        error: 'Proxy API tier does not support code fixes. Please add your Claude API key.'
+-      }
+-    }
++  ): Promise<AIResult> {
++    const apiKey = AIKeyStore.getKey(AIProvider.CLAUDE)
++    if (!apiKey) return { success: false, error: 'Claude API not configured', cached: false, timestamp: Date.now() }
+ 
+-    const prompt = `You are an expert Sims 4 mod creator. A user has an error in their JPE XML file.
++    const prompt = `Fix this Sims 4 JPE error in ${fileName}:\nError: ${errorMessage}\nContext: ${errorContext}\n\nContent:\n${fileContent}\n\nReturn JSON with "fixedCode" and "explanation".`
+     
+-File: ${fileName}
+-Error: ${errorMessage}
+-Context: 
+-${errorContext}
+-
+-Current Full Content:
+-\`\`\`xml
+-${fileContent}
+-\`\`\`
+-
+-Analyze the error and provide a fix. Return a JSON object with:
+-1. "fixedCode": The complete corrected content of the file.
+-2. "explanation": A short explanation of what you fixed and why.
+-
+-Ensure the returned code is valid JPE XML and preserves all other parts of the file.`
+-
+     try {
+-      const response = await this.client!.messages.create({
+-        model: 'claude-3-5-sonnet-20241022',
+-        max_tokens: 4096,
+-        messages: [{ role: 'user', content: prompt }],
+-      })
++      const response = await this.performRequest<any>('fix', () => axios.post(
++        'https://api.anthropic.com/v1/messages',
++        {
++          model: this.model,
++          max_tokens: 4096,
++          messages: [{ role: 'user', content: prompt }],
++        },
++        {
++          headers: {
++            'x-api-key': apiKey,
++            'anthropic-version': '2023-06-01',
++            'content-type': 'application/json'
++          }
++        }
++      ), prompt, false)
+ 
+-      if (response.content[0].type !== 'text') {
+-        throw new Error('Unexpected response format')
++      const data = response.data
++      if (data.content[0].type !== 'text') throw new Error('Unexpected response format')
++      
++      if (data.usage) {
++        this.usageStats.totalTokensUsed += (data.usage.input_tokens + data.usage.output_tokens)
+       }
+ 
+-      const text = response.content[0].text
+-      // Extract JSON from response if wrapped in text
+-      const jsonMatch = text.match(/\{[\s\S]*\}/)
+-      if (!jsonMatch) throw new Error('Failed to parse AI response as JSON')
++      const result = JSON.parse(data.content[0].text.match(/\{[\s\S]*\}/)?.[0] || '{}')
+       
+-      const result = JSON.parse(jsonMatch[0])
+       return {
+         success: true,
+         fixedCode: result.fixedCode,
+-        explanation: result.explanation
+-      }
+-    } catch (error) {
+-      return {
+-        success: false,
+-        error: error instanceof Error ? error.message : String(error)
++        explanation: result.explanation,
++        cached: false,
++        timestamp: Date.now()
+       }
++    } catch (error: any) {
++      return { success: false, error: error.message, cached: false, timestamp: Date.now() }
+     }
+   }
+ 
+-  /**
+-   * Parse explanation text into structured format
+-   */
+-  private parseExplanation(text: string): Explanation {
+-    const sections = {
+-      overview: this.extractSection(text, 'Overview') || 'No overview available',
+-      purpose: this.extractSection(text, 'Purpose') || 'No purpose available',
+-      keyFields: this.extractListSection(text, 'Key Fields') || [],
+-      effects: this.extractListSection(text, 'Effects') || [],
+-      notes: this.extractListSection(text, 'Tips & Warnings') || [],
+-    }
+-
+-    return sections
+-  }
+-
+-  /**
+-   * Extract a section from explanation text
+-   */
+-  private extractSection(text: string, sectionName: string): string | null {
+-    const regex = new RegExp(
+-      `\\*\\*${sectionName}\\*\\*:?\\s*([^\\n]*(?:\\n(?!\\*\\*).*)*?)(?=\\n\\*\\*|$)`,
+-      'i'
+-    )
+-    const match = text.match(regex)
+-    return match ? match[1].trim() : null
+-  }
+-
+-  /**
+-   * Extract a list section from explanation text
+-   */
+-  private extractListSection(text: string, sectionName: string): string[] {
+-    const regex = new RegExp(
+-      `\\*\\*${sectionName}\\*\\*:?\\s*([^\\n]*(?:\\n[-ΓÇó*].*)*?)(?=\\n\\*\\*|$)`,
+-      'i'
+-    )
+-    const match = text.match(regex)
+-
+-    if (!match) return []
+-
+-    const items = match[1]
+-      .split('\n')
+-      .filter((line) => line.match(/^[-ΓÇó*]/))
+-      .map((line) => line.replace(/^[-ΓÇó*]\s*/, '').trim())
+-      .filter((item) => item.length > 0)
+-
+-    return items
+-  }
+-
+-  /**
+-   * Check if last operation was a cache hit
+-   */
+-  wasCacheHit(): boolean {
+-    return this.lastCacheHit
+-  }
+-
+-  /**
+-   * Get current API usage statistics
+-   */
+-  getUsageStats(): ApiUsageStats {
+-    const avgResponseTime =
+-      this.usageStats.responseTimes.length > 0
+-        ? this.usageStats.responseTimes.reduce((a, b) => a + b, 0) /
+-          this.usageStats.responseTimes.length
+-        : 0
+-
+-    const total = this.usageStats.cacheHits + this.usageStats.cacheMisses
+-    const cacheHitRate = total > 0 ? (this.usageStats.cacheHits / total) * 100 : 0
+-
+-    return {
+-      requestsToday: this.usageStats.requestsToday,
+-      requestsThisMonth: this.usageStats.requestsThisMonth,
+-      cacheHits: this.usageStats.cacheHits,
+-      cacheMisses: this.usageStats.cacheMisses,
+-      cacheHitRate: Math.round(cacheHitRate * 100) / 100,
+-      totalTokensUsed: this.usageStats.totalTokensUsed,
+-      averageResponseTime: Math.round(avgResponseTime * 100) / 100,
+-    }
+-  }
++  async analyzeProjectConflicts(map: any): Promise<AIResult> {
++    const apiKey = AIKeyStore.getKey(AIProvider.CLAUDE)
++    if (!apiKey) return { success: false, error: 'Claude API not configured', cached: false, timestamp: Date.now() }
+ 
+-  /**
+-   * Reset usage statistics
+-   */
+-  resetStats(): void {
+-    this.usageStats = {
+-      requestsToday: 0,
+-      requestsThisMonth: 0,
+-      cacheHits: 0,
+-      cacheMisses: 0,
+-      totalTokensUsed: 0,
+-      responseTimes: [],
++    const prompt = `Analyze these Sims 4 project elements for conflicts:\n${JSON.stringify(map)}\n\nReturn JSON with "diagnostics": [ { fileId, line, column, severity, message, code } ]`
++    
++    try {
++       const res = await this.performRequest<any>('conflicts', () => axios.post(
++        'https://api.anthropic.com/v1/messages',
++        {
++          model: this.model,
++          max_tokens: 4096,
++          messages: [{ role: 'user', content: prompt }],
++        },
++        {
++          headers: {
++            'x-api-key': apiKey,
++            'anthropic-version': '2023-06-01',
++            'content-type': 'application/json'
++          }
++        }
++      ), JSON.stringify(map), false)
++
++       const data = res.data
++       if (data.content[0].type !== 'text') throw new Error('Unexpected response format')
++       
++       if (data.usage) {
++         this.usageStats.totalTokensUsed += (data.usage.input_tokens + data.usage.output_tokens)
++       }
++
++       const result = JSON.parse(data.content[0].text.match(/\{[\s\S]*\}/)?.[0] || '{}')
++       return { success: true, diagnostics: result.diagnostics, cached: false, timestamp: Date.now() }
++    } catch (e: any) {
++      return { success: false, error: e.message, cached: false, timestamp: Date.now() }
+     }
+-    this.cache.resetStats()
+-    console.debug('[Claude] Statistics reset')
+-  }
+-
+-  /**
+-   * Clear all cached explanations
+-   */
+-  clearCache(): void {
+-    this.cache.clear()
+-  }
+-
+-  /**
+-   * Check if API key is configured
+-   */
+-  async isConfigured(): Promise<boolean> {
+-    return await CredentialManager.hasClaudeAPIKey()
+   }
+ 
+-  /**
+-   * Check if using proxy tier
+-   */
+-  isUsingProxy(): boolean {
+-    return this.useProxy
+-  }
++  async analyzeException(logContent: string): Promise<AIResult> {
++    await this.ensureInitialized()
++    if (!this.client) return { success: false, error: 'Claude API not configured', cached: false, timestamp: Date.now() }
+ 
+-  /**
+-   * Get cache statistics
+-   */
+-  getCacheStats() {
+-    return this.cache.getStats()
++    const prompt = `Analyze this Sims 4 exception and provide a JPE-focused report:\n${logContent}\n\nReturn JSON with "report": { "explanation", "rootCause", "suggestedJpeFix" }`
++    
++    try {
++       const res = await this.performRequest('exception', () => this.client!.messages.create({
++         model: this.model,
++         max_tokens: 4096,
++         messages: [{ role: 'user', content: prompt }],
++       }), prompt)
++
++       if (res.content[0].type !== 'text') throw new Error('Unexpected response format')
++
++       if (res.usage) {
++         this.usageStats.totalTokensUsed += (res.usage.input_tokens + res.usage.output_tokens)
++       }
++
++       const result = JSON.parse(res.content[0].text.match(/\{[\s\S]*\}/)?.[0] || '{}')
++       return { success: true, report: result.report, cached: false, timestamp: Date.now() }
++    } catch (e: any) {
++      return { success: false, error: e.message, cached: false, timestamp: Date.now() }
++    }
+   }
+ }
+diff --git a/src/services/ai/GeminiService.ts b/src/services/ai/GeminiService.ts
+new file mode 100644
+index 00000000..86ba4fbe
+--- /dev/null
++++ b/src/services/ai/GeminiService.ts
+@@ -0,0 +1,254 @@
++/**
++ * Gemini Service (Implementation)
++ */
++
++import axios from 'axios'
++import { BaseAIService } from './BaseAIService'
++import { AIKeyStore } from './AIKeyStore'
++import { AICache } from './AICache'
++import { AIMessage, AIResult, AIProvider } from './types'
++
++export class GeminiService extends BaseAIService {
++  private static instance: GeminiService | null = null
++  private model = 'gemini-1.5-pro'
++
++  private constructor() {
++    super({ max: 100, ttl: 24 * 60 * 60 * 1000 })
++  }
++
++  static getInstance(): GeminiService {
++    if (!GeminiService.instance) {
++      GeminiService.instance = new GeminiService()
++    }
++    return GeminiService.instance
++  }
++
++  async initialize(): Promise<void> {
++    this.initialized = true
++  }
++
++  protected async ensureInitialized(): Promise<void> {
++    if (!this.initialized) {
++      await this.initialize()
++    }
++  }
++
++  private getApiKey(): string {
++    return AIKeyStore.getKey(AIProvider.GEMINI)
++  }
++
++  async chat(messages: AIMessage[]): Promise<AIResult> {
++    await this.ensureInitialized()
++    const apiKey = this.getApiKey()
++
++    if (!apiKey) {
++      return { success: false, error: 'Gemini API not configured.', cached: false, timestamp: Date.now() }
++    }
++
++    try {
++      const response = await this.performRequest('chat', () => axios.post(
++        `https://generativelanguage.googleapis.com/v1beta/models/${this.model}:generateContent?key=${apiKey}`,
++        {
++          contents: messages.map(m => ({
++            role: m.role === 'assistant' ? 'model' : 'user',
++            parts: [{ text: m.content }]
++          })),
++        }
++      ), messages.map(m => m.content).join(' '), false)
++
++      // Update actual token usage if provided
++      if (response.data.usageMetadata?.totalTokenCount) {
++        this.usageStats.totalTokensUsed += response.data.usageMetadata.totalTokenCount
++      }
++
++      const text = response.data.candidates[0].content.parts[0].text
++      return { 
++        success: true, 
++        text, 
++        cached: false, 
++        timestamp: Date.now() 
++      }
++    } catch (error: unknown) {
++      const message = axios.isAxiosError(error) ? error.response?.data?.error?.message : 'Chat failed'
++      return { 
++        success: false, 
++        error: message || 'Chat failed', 
++        cached: false, 
++        timestamp: Date.now() 
++      }
++    }
++  }
++
++  async explainMod(fileContent: string, fileName: string): Promise<AIResult> {
++    await this.ensureInitialized()
++    const apiKey = this.getApiKey()
++
++    if (!apiKey) return { success: false, error: 'API not configured', cached: false, timestamp: Date.now() }
++
++    const cacheKey = AICache.generateKey(fileContent, fileName)
++    const cachedResult = this.cache.get(cacheKey)
++
++    if (cachedResult) {
++      this.usageStats.cacheHits++
++      return { 
++        success: true, 
++        explanation: this.parseExplanation(cachedResult), 
++        cached: true, 
++        timestamp: Date.now() 
++      }
++    }
++
++    try {
++      const prompt = `Summarize this Sims 4 JPE mod file.
++File: ${fileName}
++Content:
++${fileContent.substring(0, 3000)}
++
++Provide:
++1. **Overview**: Purpose of this mod.
++2. **Key Fields**: Major tunable parameters.
++3. **Effects**: Gameplay impact.`
++
++      const response = await this.performRequest('explain', () => axios.post(
++        `https://generativelanguage.googleapis.com/v1beta/models/${this.model}:generateContent?key=${apiKey}`,
++        { contents: [{ role: 'user', parts: [{ text: prompt }] }] }
++      ), prompt)
++
++      if (response.data.usageMetadata?.totalTokenCount) {
++        this.usageStats.totalTokensUsed += response.data.usageMetadata.totalTokenCount
++      }
++
++      const text = response.data.candidates[0].content.parts[0].text
++      this.cache.set(cacheKey, text)
++
++      return {
++        success: true,
++        explanation: this.parseExplanation(text),
++        cached: false,
++        timestamp: Date.now(),
++      }
++    } catch (error: unknown) {
++      const message = axios.isAxiosError(error) ? error.response?.data?.error?.message : 'API call failed'
++      return { 
++        success: false, 
++        error: message || 'API call failed', 
++        cached: false, 
++        timestamp: Date.now() 
++      }
++    }
++  }
++
++  async suggestFix(
++    fileContent: string, 
++    fileName: string, 
++    errorMessage: string,
++    errorContext: string
++  ): Promise<AIResult> {
++    await this.ensureInitialized()
++    const apiKey = this.getApiKey()
++
++    if (!apiKey) return { success: false, error: 'AI not configured', cached: false, timestamp: Date.now() }
++
++    try {
++      const prompt = `Fix the following error in a JPE file: ${fileName}
++Error: ${errorMessage}
++Context: ${errorContext}
++
++Full Content:
++${fileContent}
++
++Return ONLY a JSON object with "fixedCode" and "explanation".`
++
++      const response = await this.performRequest('fix', () => axios.post(
++        `https://generativelanguage.googleapis.com/v1beta/models/${this.model}:generateContent?key=${apiKey}`,
++        {
++          contents: [{ role: 'user', parts: [{ text: prompt }] }],
++          generationConfig: { responseMimeType: 'application/json' }
++        }
++      ), prompt)
++
++      if (response.data.usageMetadata?.totalTokenCount) {
++        this.usageStats.totalTokensUsed += response.data.usageMetadata.totalTokenCount
++      }
++
++      const result = JSON.parse(response.data.candidates[0].content.parts[0].text)
++      return { 
++        success: true, 
++        fixedCode: result.fixedCode, 
++        explanation: result.explanation, 
++        cached: false, 
++        timestamp: Date.now() 
++      }
++    } catch (error: unknown) {
++      const message = axios.isAxiosError(error) ? error.response?.data?.error?.message : 'API call failed'
++      return { 
++        success: false, 
++        error: message || 'API call failed', 
++        cached: false, 
++        timestamp: Date.now() 
++      }
++    }
++  }
++
++  async analyzeProjectConflicts(map: any): Promise<AIResult> {
++    await this.ensureInitialized()
++    const apiKey = this.getApiKey()
++
++    if (!apiKey) return { success: false, error: 'AI not configured', cached: false, timestamp: Date.now() }
++
++    try {
++      const prompt = `Analyze this symbolic map of a Sims 4 project for logical conflicts:
++${JSON.stringify(map, null, 2)}
++
++Return ONLY a JSON object with "diagnostics": [ { "fileId", "line", "column", "severity", "message", "code" } ]`
++
++      const response = await this.performRequest('conflicts', () => axios.post(
++        `https://generativelanguage.googleapis.com/v1beta/models/${this.model}:generateContent?key=${apiKey}`,
++        {
++          contents: [{ role: 'user', parts: [{ text: prompt }] }],
++          generationConfig: { responseMimeType: 'application/json' }
++        }
++      ), JSON.stringify(map), false)
++
++      if (response.data.usageMetadata?.totalTokenCount) {
++        this.usageStats.totalTokensUsed += response.data.usageMetadata.totalTokenCount
++      }
++
++      const result = JSON.parse(response.data.candidates[0].content.parts[0].text)
++      return { success: true, diagnostics: result.diagnostics, cached: false, timestamp: Date.now() }
++    } catch (error: unknown) {
++      return { success: false, error: 'Conflict analysis failed', cached: false, timestamp: Date.now() }
++    }
++  }
++
++  async analyzeException(logContent: string): Promise<AIResult> {
++    await this.ensureInitialized()
++    const apiKey = this.getApiKey()
++
++    if (!apiKey) return { success: false, error: 'AI not configured', cached: false, timestamp: Date.now() }
++
++    try {
++      const prompt = `Analyze this Sims 4 exception log and explain it in Plain English for a modder:
++${logContent}
++
++Return ONLY a JSON object with "report": { "explanation", "rootCause", "suggestedJpeFix" }`
++
++      const response = await this.performRequest('exception', () => axios.post(
++        `https://generativelanguage.googleapis.com/v1beta/models/${this.model}:generateContent?key=${apiKey}`,
++        {
++          contents: [{ role: 'user', parts: [{ text: prompt }] }],
++          generationConfig: { responseMimeType: 'application/json' }
++        }
++      ), logContent, false)
++
++      if (response.data.usageMetadata?.totalTokenCount) {
++        this.usageStats.totalTokensUsed += response.data.usageMetadata.totalTokenCount
++      }
++
++      const result = JSON.parse(response.data.candidates[0].content.parts[0].text)
++      return { success: true, report: result.report, cached: false, timestamp: Date.now() }
++    } catch (error: unknown) {
++      return { success: false, error: 'Exception analysis failed', cached: false, timestamp: Date.now() }
++    }
++  }
++}
+diff --git a/src/services/ai/OpenAIService.ts b/src/services/ai/OpenAIService.ts
+new file mode 100644
+index 00000000..5482f6f7
+--- /dev/null
++++ b/src/services/ai/OpenAIService.ts
+@@ -0,0 +1,245 @@
++/**
++ * OpenAI Service (Implementation)
++ */
++
++import axios from 'axios'
++import { BaseAIService } from './BaseAIService'
++import { AIKeyStore } from './AIKeyStore'
++import { AICache } from './AICache'
++import { AIMessage, AIResult, AIProvider } from './types'
++
++export class OpenAIService extends BaseAIService {
++  private static instance: OpenAIService | null = null
++  private model = 'gpt-4o'
++
++  private constructor() {
++    super({ max: 100, ttl: 24 * 60 * 60 * 1000 })
++  }
++
++  static getInstance(): OpenAIService {
++    if (!OpenAIService.instance) {
++      OpenAIService.instance = new OpenAIService()
++    }
++    return OpenAIService.instance
++  }
++
++  async initialize(): Promise<void> {
++    this.initialized = true
++  }
++
++  protected async ensureInitialized(): Promise<void> {
++    this.initialized = true
++  }
++
++  private getApiKey(): string {
++    return AIKeyStore.getKey(AIProvider.OPENAI)
++  }
++
++  async chat(messages: AIMessage[]): Promise<AIResult> {
++    await this.ensureInitialized()
++    const apiKey = this.getApiKey()
++
++    if (!apiKey) {
++      return { success: false, error: 'OpenAI API not configured.', cached: false, timestamp: Date.now() }
++    }
++
++    try {
++      const response = await this.performRequest<any>('chat', () => axios.post(
++        'https://api.openai.com/v1/chat/completions',
++        {
++          model: this.model,
++          messages: messages.map(m => ({ role: m.role, content: m.content }))
++        },
++        {
++          headers: {
++            'Authorization': `Bearer ${apiKey}`,
++            'Content-Type': 'application/json'
++          }
++        }
++      ), messages.map(m => m.content).join(' '), false)
++
++      if (response.data.usage?.total_tokens) {
++        this.usageStats.totalTokensUsed += response.data.usage.total_tokens
++      }
++
++      return { 
++        success: true, 
++        text: response.data.choices[0].message.content, 
++        cached: false, 
++        timestamp: Date.now() 
++      }
++    } catch (error: unknown) {
++      const message = axios.isAxiosError(error) ? error.response?.data?.error?.message : 'Chat failed'
++      return { 
++        success: false, 
++        error: message || 'Chat failed', 
++        cached: false, 
++        timestamp: Date.now() 
++      }
++    }
++  }
++
++  async explainMod(fileContent: string, fileName: string): Promise<AIResult> {
++    await this.ensureInitialized()
++    const apiKey = this.getApiKey()
++
++    if (!apiKey) return { success: false, error: 'API not configured', cached: false, timestamp: Date.now() }
++
++    const cacheKey = AICache.generateKey(fileContent, fileName)
++    const cachedResult = this.cache.get(cacheKey)
++
++    if (cachedResult) {
++      this.usageStats.cacheHits++
++      return { 
++        success: true, 
++        explanation: this.parseExplanation(cachedResult), 
++        cached: true, 
++        timestamp: Date.now() 
++      }
++    }
++
++    try {
++      const prompt = `Summarize this Sims 4 JPE mod file.
++File: ${fileName}
++Content:
++${fileContent.substring(0, 3000)}
++
++Provide:
++1. **Overview**: Purpose of this mod.
++2. **Key Fields**: Major tunable parameters.
++3. **Effects**: Gameplay impact.`
++
++      const res = await this.chat([{ role: 'user', content: prompt }])
++      if (res.success && res.text) {
++        this.cache.set(cacheKey, res.text)
++        return { ...res, explanation: this.parseExplanation(res.text) }
++      }
++      return res
++    } catch (error: unknown) {
++      return { success: false, error: 'API call failed', cached: false, timestamp: Date.now() }
++    }
++  }
++
++  async suggestFix(
++    fileContent: string, 
++    fileName: string, 
++    errorMessage: string,
++    errorContext: string
++  ): Promise<AIResult> {
++    await this.ensureInitialized()
++    const apiKey = this.getApiKey()
++
++    if (!apiKey) return { success: false, error: 'AI not configured', cached: false, timestamp: Date.now() }
++
++    try {
++      const prompt = `Fix the following error in a JPE file: ${fileName}
++Error: ${errorMessage}
++Context: ${errorContext}
++
++Full Content:
++${fileContent}
++
++Return ONLY a JSON object with "fixedCode" and "explanation".`
++
++      const response = await this.performRequest('fix', () => axios.post(
++        'https://api.openai.com/v1/chat/completions',
++        {
++          model: this.model,
++          messages: [{ role: 'user', content: prompt }],
++          response_format: { type: 'json_object' }
++        },
++        {
++          headers: {
++            'Authorization': `Bearer ${apiKey}`,
++            'Content-Type': 'application/json'
++          }
++        }
++      ), prompt)
++
++      if (response.data.usage?.total_tokens) {
++        this.usageStats.totalTokensUsed += response.data.usage.total_tokens
++      }
++
++      const result = JSON.parse(response.data.choices[0].message.content)
++      return { 
++        success: true, 
++        fixedCode: result.fixedCode, 
++        explanation: result.explanation, 
++        cached: false, 
++        timestamp: Date.now() 
++      }
++    } catch (error: unknown) {
++      return { success: false, error: 'API call failed', cached: false, timestamp: Date.now() }
++    }
++  }
++
++  async analyzeProjectConflicts(map: any): Promise<AIResult> {
++    await this.ensureInitialized()
++    const apiKey = this.getApiKey()
++
++    if (!apiKey) return { success: false, error: 'AI not configured', cached: false, timestamp: Date.now() }
++
++    try {
++      const prompt = `Analyze these Sims 4 project elements for conflicts:\n${JSON.stringify(map)}\n\nReturn JSON with "diagnostics": [ { fileId, line, column, severity, message, code } ]`
++      
++      const res = await this.performRequest<any>('conflicts', () => axios.post(
++        'https://api.openai.com/v1/chat/completions',
++        {
++          model: this.model,
++          messages: [{ role: 'user', content: prompt }],
++          response_format: { type: 'json_object' }
++        },
++        {
++          headers: {
++            'Authorization': `Bearer ${apiKey}`,
++            'Content-Type': 'application/json'
++          }
++        }
++      ), JSON.stringify(map), false)
++      
++      if (res.data.usage?.total_tokens) {
++        this.usageStats.totalTokensUsed += res.data.usage.total_tokens
++      }
++
++      const result = JSON.parse(res.data.choices[0].message.content)
++      return { success: true, diagnostics: result.diagnostics, cached: false, timestamp: Date.now() }
++    } catch (e: any) {
++      return { success: false, error: e.message, cached: false, timestamp: Date.now() }
++    }
++  }
++
++  async analyzeException(logContent: string): Promise<AIResult> {
++    await this.ensureInitialized()
++    const apiKey = this.getApiKey()
++
++    if (!apiKey) return { success: false, error: 'AI not configured', cached: false, timestamp: Date.now() }
++
++    try {
++      const prompt = `Analyze this Sims 4 exception log and explain it in Plain English for a modder:\n${logContent}\n\nReturn JSON with "report": { "explanation", "rootCause", "suggestedJpeFix" }`
++
++      const res = await this.performRequest<any>('exception', () => axios.post(
++        'https://api.openai.com/v1/chat/completions',
++        {
++          model: this.model,
++          messages: [{ role: 'user', content: prompt }],
++          response_format: { type: 'json_object' }
++        },
++        {
++          headers: {
++            'Authorization': `Bearer ${apiKey}`,
++            'Content-Type': 'application/json'
++          }
++        }
++      ), logContent, false)
++      
++      if (res.data.usage?.total_tokens) {
++        this.usageStats.totalTokensUsed += res.data.usage.total_tokens
++      }
++
++      const result = JSON.parse(res.data.choices[0].message.content)
++      return { success: true, report: result.report, cached: false, timestamp: Date.now() }
++    } catch (e: any) {
++      return { success: false, error: e.message, cached: false, timestamp: Date.now() }
++    }
++  }
++}
+diff --git a/src/services/ai/QwenService.ts b/src/services/ai/QwenService.ts
+new file mode 100644
+index 00000000..ed425d64
+--- /dev/null
++++ b/src/services/ai/QwenService.ts
+@@ -0,0 +1,212 @@
++/**
++ * Qwen Service (DashScope Implementation)
++ */
++
++import axios from 'axios'
++import { BaseAIService } from './BaseAIService'
++import { AIKeyStore } from './AIKeyStore'
++import { AICache } from './AICache'
++import { AIMessage, AIResult, AIProvider } from './types'
++
++export class QwenService extends BaseAIService {
++  private static instance: QwenService | null = null
++  private model = 'qwen-plus'
++  private baseUrl = 'https://dashscope.aliyuncs.com/compatible-mode/v1'
++
++  private constructor() {
++    super({ max: 100, ttl: 24 * 60 * 60 * 1000 })
++  }
++
++  static getInstance(): QwenService {
++    if (!QwenService.instance) {
++      QwenService.instance = new QwenService()
++    }
++    return QwenService.instance
++  }
++
++  async initialize(): Promise<void> {
++    this.initialized = true
++  }
++
++  protected async ensureInitialized(): Promise<void> {
++    this.initialized = true
++  }
++
++  private getApiKey(): string {
++    return AIKeyStore.getKey(AIProvider.QWEN)
++  }
++
++  async chat(messages: AIMessage[]): Promise<AIResult> {
++    await this.ensureInitialized()
++    const apiKey = this.getApiKey()
++
++    // Support for Local Ollama if no key is provided and baseUrl is local
++    const isLocal = this.baseUrl.includes('localhost') || this.baseUrl.includes('127.0.0.1')
++    
++    if (!apiKey && !isLocal) {
++      return { success: false, error: 'Qwen API not configured.', cached: false, timestamp: Date.now() }
++    }
++
++    try {
++      const response = await this.performRequest<any>('chat', () => axios.post(
++        `${this.baseUrl}/chat/completions`,
++        {
++          model: this.model,
++          messages: messages.map(m => ({
++            role: m.role,
++            content: m.content
++          })),
++        },
++        {
++          headers: {
++            'Authorization': apiKey ? `Bearer ${apiKey}` : '',
++            'Content-Type': 'application/json'
++          }
++        }
++      ), messages.map(m => m.content).join(' '), false)
++
++      if (response.data.usage?.total_tokens) {
++        this.usageStats.totalTokensUsed += response.data.usage.total_tokens
++      }
++
++      return { 
++        success: true, 
++        text: response.data.choices[0].message.content, 
++        cached: false, 
++        timestamp: Date.now() 
++      }
++    } catch (error: any) {
++      return { success: false, error: error.message, cached: false, timestamp: Date.now() }
++    }
++  }
++
++  async explainMod(fileContent: string, fileName: string): Promise<AIResult> {
++    await this.ensureInitialized()
++    const prompt = `Explain this Sims 4 mod file: ${fileName}\n\n${fileContent.substring(0, 4000)}`
++    const res = await this.chat([{ role: 'user', content: prompt }])
++    if (res.success && res.text) {
++      return { ...res, explanation: this.parseExplanation(res.text) }
++    }
++    return res
++  }
++
++  async suggestFix(
++    fileContent: string, 
++    fileName: string, 
++    errorMessage: string,
++    errorContext: string
++  ): Promise<AIResult> {
++    await this.ensureInitialized()
++    const prompt = `Fix this Sims 4 JPE error in ${fileName}:\nError: ${errorMessage}\nContext: ${errorContext}\n\nContent:\n${fileContent}\n\nReturn JSON with "fixedCode" and "explanation".`
++    
++    await this.ensureInitialized()
++    const apiKey = this.getApiKey()
++    
++    try {
++       const res = await this.performRequest('fix', () => axios.post(
++         `${this.baseUrl}/chat/completions`,
++         {
++           model: this.model,
++           messages: [{ role: 'user', content: prompt }],
++         },
++         {
++           headers: {
++             'Authorization': apiKey ? `Bearer ${apiKey}` : '',
++             'Content-Type': 'application/json'
++           }
++         }
++       ), prompt)
++
++       if (res.data.usage?.total_tokens) {
++         this.usageStats.totalTokensUsed += res.data.usage.total_tokens
++       }
++
++       if (res.data.choices?.[0]?.message?.content) {
++         const content = res.data.choices[0].message.content
++         const result = JSON.parse(content.match(/\{[\s\S]*\}/)?.[0] || '{}')
++         return { success: true, fixedCode: result.fixedCode, explanation: result.explanation, cached: false, timestamp: Date.now() }
++       }
++       return { success: false, error: 'Empty response', cached: false, timestamp: Date.now() }
++    } catch (e: any) {
++      return { success: false, error: e.message, cached: false, timestamp: Date.now() }
++    }
++  }
++
++  async analyzeProjectConflicts(map: any): Promise<AIResult> {
++    await this.ensureInitialized()
++    const prompt = `Analyze these Sims 4 project elements for conflicts:\n${JSON.stringify(map)}\n\nReturn JSON with "diagnostics": [ { fileId, line, column, severity, message, code } ]`
++    
++    await this.ensureInitialized()
++    const apiKey = this.getApiKey()
++
++    try {
++       const res = await this.performRequest('conflict', () => axios.post(
++         `${this.baseUrl}/chat/completions`,
++         {
++           model: this.model,
++           messages: [{ role: 'user', content: prompt }],
++         },
++         {
++           headers: {
++             'Authorization': apiKey ? `Bearer ${apiKey}` : '',
++             'Content-Type': 'application/json'
++           }
++         }
++       ), prompt)
++
++       if (res.data.usage?.total_tokens) {
++         this.usageStats.totalTokensUsed += res.data.usage.total_tokens
++       }
++
++       if (res.data.choices?.[0]?.message?.content) {
++         const content = res.data.choices[0].message.content
++         const result = JSON.parse(content.match(/\{[\s\S]*\}/)?.[0] || '{}')
++         return { success: true, diagnostics: result.diagnostics, cached: false, timestamp: Date.now() }
++       }
++       return { success: false, error: 'Empty response', cached: false, timestamp: Date.now() }
++    } catch (e: any) {
++      return { success: false, error: e.message, cached: false, timestamp: Date.now() }
++    }
++  }
++
++  async analyzeException(logContent: string): Promise<AIResult> {
++    await this.ensureInitialized()
++    const prompt = `Analyze this Sims 4 exception and provide a JPE-focused report:\n${logContent}\n\nReturn JSON with "report": { "explanation", "rootCause", "suggestedJpeFix" }`
++    
++    await this.ensureInitialized()
++    const apiKey = this.getApiKey()
++
++    try {
++       const res = await this.performRequest('exception', () => axios.post(
++         `${this.baseUrl}/chat/completions`,
++         {
++           model: this.model,
++           messages: [{ role: 'user', content: prompt }],
++         },
++         {
++           headers: {
++             'Authorization': apiKey ? `Bearer ${apiKey}` : '',
++             'Content-Type': 'application/json'
++           }
++         }
++       ), prompt)
++
++       if (res.data.usage?.total_tokens) {
++         this.usageStats.totalTokensUsed += res.data.usage.total_tokens
++       }
++
++       if (res.data.choices?.[0]?.message?.content) {
++         const content = res.data.choices[0].message.content
++         const result = JSON.parse(content.match(/\{[\s\S]*\}/)?.[0] || '{}')
++         return { success: true, report: result.report, cached: false, timestamp: Date.now() }
++       }
++       return { success: false, error: 'Empty response', cached: false, timestamp: Date.now() }
++    } catch (e: any) {
++      return { success: false, error: e.message, cached: false, timestamp: Date.now() }
++    }
++  }
++
++  setBaseUrl(url: string) {
++    this.baseUrl = url
++  }
++}
+diff --git a/src/stores/useAIStore.ts b/src/stores/useAIStore.ts
+index 559a1273..7cc0b797 100644
+--- a/src/stores/useAIStore.ts
++++ b/src/stores/useAIStore.ts
+@@ -1,16 +1,12 @@
+-/**
+- * AI Configuration Store
+- * Manages Claude API configuration, usage statistics, and preferences
+- */
+-
+ import { create } from 'zustand'
+-import { ClaudeService } from '@services/ai/ClaudeService'
+-import type { ApiUsageStats } from '@services/ai/types'
++import { AIServiceFactory } from '@/services/ai/AIServiceFactory'
++import { AIKeyStore } from '@/services/ai/AIKeyStore'
++import { AIProvider, ApiUsageStats } from '@/services/ai/types'
+ 
+ export interface AIState {
+   // Configuration
++  activeProvider: AIProvider
+   apiKeyConfigured: boolean
+-  useProxy: boolean
+   initialized: boolean
+ 
+   // Statistics
+@@ -20,155 +16,97 @@ export interface AIState {
+   showAPISettings: boolean
+   lastError: string | null
+ 
++  // Context Settings
++  includeProjectContext: boolean
++  includeExternalSymbols: boolean
++
++  // Latency History (Story 6.5)
++  latencyHistory: Record<AIProvider, number[]>
++
+   // Actions
++  setProvider: (provider: AIProvider) => void
+   initializeAI: () => Promise<void>
+-  checkApiKeyStatus: () => Promise<boolean>
+-  setShowAPISettings: (show: boolean) => void
+-  updateUsageStats: () => Promise<void>
++  updateUsageStats: () => void
++  setApiKey: (provider: AIProvider, key: string) => void
++  setContextSetting: (key: 'includeProjectContext' | 'includeExternalSymbols', value: boolean) => void
+   clearCache: () => void
+-  resetStats: () => void
+-  setLastError: (error: string | null) => void
++  setShowAPISettings: (show: boolean) => void
+ }
+ 
+ export const useAIStore = create<AIState>((set, get) => ({
+-  // Initial state
++  activeProvider: (localStorage.getItem('jpe_ai_provider') as AIProvider) || AIProvider.GEMINI,
+   apiKeyConfigured: false,
+-  useProxy: true,
+   initialized: false,
+   usageStats: null,
+   showAPISettings: false,
+   lastError: null,
++  latencyHistory: JSON.parse(localStorage.getItem('jpe_ai_latency_history') || '{}') as Record<AIProvider, number[]>,
++  includeProjectContext: localStorage.getItem('jpe_ai_context_project') !== 'false',
++  includeExternalSymbols: localStorage.getItem('jpe_ai_context_external') === 'true',
++
++  setProvider: (provider: AIProvider) => {
++    localStorage.setItem('jpe_ai_provider', provider)
++    set({ activeProvider: provider })
++    get().initializeAI()
++  },
+ 
+-  /**
+-   * Initialize AI service
+-   */
+   initializeAI: async () => {
+     try {
+-      const service = ClaudeService.getInstance()
++      const { activeProvider } = get()
++      const service = AIServiceFactory.getService(activeProvider)
+       await service.initialize()
+-
+-      const configured = await service.isConfigured()
+-      const useProxy = service.isUsingProxy()
++      
+       const stats = service.getUsageStats()
++      const hasKey = !!AIKeyStore.getKey(activeProvider)
+ 
+       set({
+         initialized: true,
+-        apiKeyConfigured: configured,
+-        useProxy,
+         usageStats: stats,
+-        lastError: null,
+-      })
+-
+-      console.debug('[AIStore] Initialization complete', {
+-        configured,
+-        useProxy,
+-      })
+-    } catch (error) {
+-      const message = error instanceof Error ? error.message : 'Unknown error'
+-      console.error('[AIStore] Initialization failed:', message)
+-
+-      set({
+-        initialized: true,
+-        apiKeyConfigured: false,
+-        useProxy: true,
+-        lastError: message,
++        apiKeyConfigured: hasKey,
++        lastError: null
+       })
++    } catch (error: any) {
++      set({ lastError: error.message, initialized: true })
+     }
+   },
+ 
+-  /**
+-   * Check if API key is configured
+-   */
+-  checkApiKeyStatus: async () => {
+-    try {
+-      const service = ClaudeService.getInstance()
+-      const configured = await service.isConfigured()
+-
+-      set({
+-        apiKeyConfigured: configured,
+-        useProxy: !configured,
+-      })
+-
+-      return configured
+-    } catch (error) {
+-      const message = error instanceof Error ? error.message : 'Unknown error'
+-      console.error('[AIStore] Status check failed:', message)
+-      set({ lastError: message })
+-      return false
++  updateUsageStats: () => {
++    const { activeProvider, latencyHistory } = get()
++    const service = AIServiceFactory.getService(activeProvider)
++    const stats = service.getUsageStats()
++    
++    // Sync latency history to store (Story 6.5)
++    if (stats.responseTimes.length > 0) {
++      const updatedHistory = { ...latencyHistory, [activeProvider]: [...stats.responseTimes] }
++      localStorage.setItem('jpe_ai_latency_history', JSON.stringify(updatedHistory))
++      set({ usageStats: stats, latencyHistory: updatedHistory })
++    } else {
++      set({ usageStats: stats })
+     }
+   },
+ 
+-  /**
+-   * Toggle API settings visibility
+-   */
+-  setShowAPISettings: (show) => {
+-    set({ showAPISettings: show })
+-  },
+-
+-  /**
+-   * Update usage statistics
+-   */
+-  updateUsageStats: async () => {
+-    try {
+-      const service = ClaudeService.getInstance()
+-      const stats = service.getUsageStats()
+-
+-      set({
+-        usageStats: stats,
+-        lastError: null,
+-      })
+-
+-      console.debug('[AIStore] Statistics updated:', stats)
+-    } catch (error) {
+-      const message = error instanceof Error ? error.message : 'Unknown error'
+-      console.error('[AIStore] Failed to update stats:', message)
+-      set({ lastError: message })
++  setApiKey: (provider: AIProvider, key: string) => {
++    if (key) {
++      AIKeyStore.saveKey(provider, key)
++    } else {
++      AIKeyStore.deleteKey(provider)
+     }
+-  },
+-
+-  /**
+-   * Clear cache
+-   */
+-  clearCache: () => {
+-    try {
+-      const service = ClaudeService.getInstance()
+-      service.clearCache()
+-
+-      set({ lastError: null })
+-      console.debug('[AIStore] Cache cleared')
+-    } catch (error) {
+-      const message = error instanceof Error ? error.message : 'Unknown error'
+-      console.error('[AIStore] Failed to clear cache:', message)
+-      set({ lastError: message })
++    
++    if (get().activeProvider === provider) {
++      set({ apiKeyConfigured: !!key })
+     }
+   },
+ 
+-  /**
+-   * Reset statistics
+-   */
+-  resetStats: () => {
+-    try {
+-      const service = ClaudeService.getInstance()
+-      service.resetStats()
+-
+-      const stats = service.getUsageStats()
+-      set({
+-        usageStats: stats,
+-        lastError: null,
+-      })
+-
+-      console.debug('[AIStore] Statistics reset')
+-    } catch (error) {
+-      const message = error instanceof Error ? error.message : 'Unknown error'
+-      console.error('[AIStore] Failed to reset stats:', message)
+-      set({ lastError: message })
+-    }
++  setContextSetting: (key, value) => {
++    const storageKey = key === 'includeProjectContext' ? 'jpe_ai_context_project' : 'jpe_ai_context_external'
++    localStorage.setItem(storageKey, String(value))
++    set({ [key]: value } as any)
+   },
+ 
+-  /**
+-   * Set last error message
+-   */
+-  setLastError: (error) => {
+-    set({ lastError: error })
++  clearCache: () => {
++    const { activeProvider } = get()
++    AIServiceFactory.getService(activeProvider).clearCache()
+   },
++
++  setShowAPISettings: (show: boolean) => set({ showAPISettings: show })
+ }))

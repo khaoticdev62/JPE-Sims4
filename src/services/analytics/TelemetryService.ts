@@ -7,12 +7,13 @@ import { v4 as uuidv4 } from 'uuid'
 import { TelemetryBatcher } from './TelemetryBatcher'
 import { PIISanitizer } from './PIISanitizer'
 import type { TelemetryEvent, EventCategory, TelemetryStats } from './types'
+import { safeStorage } from '@/utils/storage'
 
 export class TelemetryService {
   private static instance: TelemetryService | null = null
 
-  private userId: string
-  private batcher: TelemetryBatcher
+  private userId: string = 'ssr-user'
+  private batcher: TelemetryBatcher | null = null
   private enabled = false
   private stats = {
     totalEvents: 0,
@@ -21,13 +22,12 @@ export class TelemetryService {
   }
 
   private constructor() {
-    this.userId = this.getOrCreateUserId()
-    this.batcher = new TelemetryBatcher()
-
-    // Load enabled state from localStorage
-    this.enabled = this.loadEnabledState()
-
-    console.debug(`[Telemetry] Service initialized. Enabled: ${this.enabled}`)
+    if (typeof window !== 'undefined') {
+      this.userId = this.getOrCreateUserId()
+      this.batcher = new TelemetryBatcher()
+      this.enabled = this.loadEnabledState()
+      console.debug(`[Telemetry] Service initialized. Enabled: ${this.enabled}`)
+    }
   }
 
   /**
@@ -45,7 +45,7 @@ export class TelemetryService {
    */
   enable(): void {
     this.enabled = true
-    localStorage.setItem('telemetry-enabled', 'true')
+    safeStorage.setItem('telemetry-enabled', 'true')
     console.info('[Telemetry] Telemetry enabled')
   }
 
@@ -54,7 +54,7 @@ export class TelemetryService {
    */
   disable(): void {
     this.enabled = false
-    localStorage.setItem('telemetry-enabled', 'false')
+    safeStorage.setItem('telemetry-enabled', 'false')
     console.info('[Telemetry] Telemetry disabled')
   }
 
@@ -73,7 +73,7 @@ export class TelemetryService {
     action: string,
     metadata?: Record<string, any>
   ): void {
-    if (!this.enabled) return
+    if (!this.enabled || !this.batcher) return
 
     const event: TelemetryEvent = {
       userId: this.userId,
@@ -114,7 +114,7 @@ export class TelemetryService {
    * Track error
    */
   trackError(error: Error, context?: string): void {
-    if (!this.enabled) return
+    if (!this.enabled || !this.batcher) return
 
     const metadata: Record<string, any> = {
       errorName: error.name,
@@ -165,9 +165,9 @@ export class TelemetryService {
    */
   clearAllData(): void {
     this.disable()
-    localStorage.removeItem('telemetry-user-id')
-    localStorage.removeItem('telemetry-enabled')
-    this.batcher.clear()
+    safeStorage.removeItem('telemetry-user-id')
+    safeStorage.removeItem('telemetry-enabled')
+    if (this.batcher) this.batcher.clear()
     this.resetStats()
     this.userId = this.getOrCreateUserId()
     console.info('[Telemetry] All data cleared')
@@ -177,11 +177,11 @@ export class TelemetryService {
    * Get or create anonymous user ID
    */
   private getOrCreateUserId(): string {
-    let id = localStorage.getItem('telemetry-user-id')
+    let id = safeStorage.getItem('telemetry-user-id')
 
     if (!id) {
       id = uuidv4()
-      localStorage.setItem('telemetry-user-id', id)
+      safeStorage.setItem('telemetry-user-id', id)
       console.debug(`[Telemetry] Created new user ID: ${id}`)
     }
 
@@ -192,7 +192,7 @@ export class TelemetryService {
    * Load enabled state from localStorage
    */
   private loadEnabledState(): boolean {
-    const stored = localStorage.getItem('telemetry-enabled')
+    const stored = safeStorage.getItem('telemetry-enabled')
 
     // Default to disabled (opt-in)
     if (stored === null) {

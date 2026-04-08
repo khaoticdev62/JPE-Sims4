@@ -1,5 +1,5 @@
-import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
+import '@testing-library/jest-dom';
 import userEvent from '@testing-library/user-event'
 import Button from './Button'
 
@@ -100,7 +100,7 @@ describe('Button Component', () => {
 
   describe('interactions', () => {
     it('should handle click events', async () => {
-      const handleClick = vi.fn()
+      const handleClick = jest.fn()
       render(<Button onClick={handleClick}>Click</Button>)
 
       const user = userEvent.setup()
@@ -111,7 +111,7 @@ describe('Button Component', () => {
     })
 
     it('should not trigger click when disabled', async () => {
-      const handleClick = vi.fn()
+      const handleClick = jest.fn()
       render(<Button onClick={handleClick} disabled>Disabled</Button>)
 
       const user = userEvent.setup()
@@ -122,7 +122,7 @@ describe('Button Component', () => {
     })
 
     it('should not trigger click when isLoading', async () => {
-      const handleClick = vi.fn()
+      const handleClick = jest.fn()
       render(<Button onClick={handleClick} isLoading>Loading</Button>)
 
       const user = userEvent.setup()
@@ -133,7 +133,7 @@ describe('Button Component', () => {
     })
 
     it('should handle keyboard events', async () => {
-      const handleClick = vi.fn()
+      const handleClick = jest.fn()
       render(<Button onClick={handleClick}>Keyboard</Button>)
 
       const user = userEvent.setup()
@@ -174,7 +174,7 @@ describe('Button Component', () => {
 
   describe('combinations', () => {
     it('should render with all props combined', () => {
-      const handleClick = vi.fn()
+      const handleClick = jest.fn()
       render(
         <Button
           variant="danger"

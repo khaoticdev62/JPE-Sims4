@@ -1,6 +1,9 @@
+"use client";
+
 import { useState, useMemo } from 'react'
 import type { ModFile, Diagnostic } from '@/types/index'
 import FileStatusIcon from './FileStatusIcon'
+import FileTypeIcon from './FileTypeIcon'
 import FileContextMenu from './FileContextMenu'
 
 interface FileTreeNodeProps {
@@ -35,15 +38,6 @@ export default function FileTreeNode({
     }
   }, [diagnostics])
 
-  // Get file type icon
-  const getFileIcon = (name: string): string => {
-    if (name.endsWith('.xml')) return '📄'
-    if (name.endsWith('.jpe')) return '📝'
-    if (name.endsWith('.stbl')) return '🔤'
-    if (name.endsWith('.package')) return '📦'
-    return '📋'
-  }
-
   const handleContextMenu = (e: React.MouseEvent) => {
     e.preventDefault()
     setContextMenu({ x: e.clientX, y: e.clientY })
@@ -54,6 +48,9 @@ export default function FileTreeNode({
       <button
         onClick={() => onOpenFile?.(file)}
         onContextMenu={handleContextMenu}
+        role="treeitem"
+        aria-selected={isSelected}
+        aria-label={`${file.name}${hasErrors ? `, ${diagnostics.length} errors` : ''}${hasWarnings ? `, ${diagnostics.length} warnings` : ''}`}
         className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-text-primary rounded transition-colors ${
           isSelected
             ? 'bg-accent-primary/20 hover:bg-accent-primary/30'
@@ -68,7 +65,7 @@ export default function FileTreeNode({
         />
 
         {/* File Type Icon */}
-        <span className="text-base leading-none">{getFileIcon(file.name)}</span>
+        <FileTypeIcon type={file.type} size={16} />
 
         {/* File Name */}
         <span className="flex-1 truncate text-left">{file.name}</span>

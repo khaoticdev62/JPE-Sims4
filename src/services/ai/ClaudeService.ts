@@ -1,58 +1,29 @@
 /**
- * Claude Service
- * Main service for Claude API integration with caching, rate limiting, and hybrid API support
+ * Claude AI Service
+ * 
+ * Industrial-grade integration with Anthropic Claude via secure proxy.
  */
 
-import Anthropic from '@anthropic-ai/sdk'
-import { RateLimiterMemory } from 'rate-limiter-flexible'
-import { CredentialManager } from '@services/api/CredentialManager'
-import { ClaudeCache } from './ClaudeCache'
-import type {
-  Explanation,
-  ExplanationResult,
-  ApiUsageStats,
-  ClaudeMessage,
+
+import axios from 'axios'
+import { BaseAIService } from './BaseAIService'
+import { 
+  AIMessage, 
+  AIResult, 
+  AIProvider,
+  Explanation
 } from './types'
+import { Diagnostic } from '@/types/index'
+import { AIKeyStore } from './AIKeyStore'
 
-export class ClaudeService {
+export class ClaudeService extends BaseAIService {
   private static instance: ClaudeService | null = null
-
-  private client: Anthropic | null = null
-  private cache: ClaudeCache
-  private rateLimiter: RateLimiterMemory
-  private useProxy = true
-  private lastCacheHit = false
-  private initialized = false
-
-  // Usage statistics
-  private usageStats = {
-    requestsToday: 0,
-    requestsThisMonth: 0,
-    cacheHits: 0,
-    cacheMisses: 0,
-    totalTokensUsed: 0,
-    responseTimes: [] as number[],
-  }
+  private model = 'claude-3-5-sonnet-20241022'
 
   private constructor() {
-    // Initialize cache: max 100 entries, 24-hour TTL
-    this.cache = new ClaudeCache({
-      max: 100,
-      ttl: 24 * 60 * 60 * 1000, // 24 hours in milliseconds
-    })
-
-    // Initialize rate limiter: 50 requests per 60 seconds
-    this.rateLimiter = new RateLimiterMemory({
-      points: 50,
-      duration: 60,
-    })
-
-    console.debug('[Claude] Service initialized with cache and rate limiter')
+    super({ max: 50, ttl: 24 * 60 * 60 * 1000 })
   }
 
-  /**
-   * Get singleton instance
-   */
   static getInstance(): ClaudeService {
     if (!ClaudeService.instance) {
       ClaudeService.instance = new ClaudeService()
@@ -60,409 +31,263 @@ export class ClaudeService {
     return ClaudeService.instance
   }
 
-  /**
-   * Initialize the service with API credentials
-   */
   async initialize(): Promise<void> {
-    if (this.initialized) return
-
-    try {
-      const apiKey = await CredentialManager.getClaudeAPIKey()
-
-      if (apiKey) {
-        this.client = new Anthropic({ apiKey })
-        this.useProxy = false
-        console.info('[Claude] Using direct API with user-provided key')
-      } else {
-        this.useProxy = true
-        console.info('[Claude] Using proxy tier (free)')
-      }
-
-      this.initialized = true
-    } catch (error) {
-      console.error('[Claude] Initialization error:', error)
-      this.useProxy = true
-      this.initialized = true
-    }
+    this.initialized = true
   }
 
-  /**
-   * Ensure service is initialized before use
-   */
-  private async ensureInitialized(): Promise<void> {
-    if (!this.initialized) {
-      await this.initialize()
-    }
+  protected async ensureInitialized(): Promise<void> {
+    if (!this.initialized) await this.initialize()
   }
 
-  /**
-   * Explain a mod file
-   * @param fileContent The XML content of the mod file
-   * @param fileName The name of the file
-   * @returns Explanation result with parsed content
-   */
-  async explainMod(fileContent: string, fileName: string): Promise<ExplanationResult> {
+  async chat(messages: AIMessage[]): Promise<AIResult> {
     await this.ensureInitialized()
-
-    // Check rate limit
-    try {
-      await this.rateLimiter.consume(1)
-    } catch (error) {
-      console.warn('[Claude] Rate limit exceeded')
-      return {
-        success: false,
-        error: 'Rate limit exceeded. Maximum 50 requests per minute.',
-        cached: false,
-        timestamp: Date.now(),
-      }
-    }
-
+    const apiKey = await AIKeyStore.getKey(AIProvider.CLAUDE)
+    
     // Check cache first
-    const cacheKey = ClaudeCache.generateKey(fileContent, fileName)
+    const cacheKey = JSON.stringify(messages)
     const cachedResult = this.cache.get(cacheKey)
-
     if (cachedResult) {
-      this.lastCacheHit = true
       this.usageStats.cacheHits++
-      console.debug('[Claude] Cache hit for file:', fileName)
-
-      try {
-        const explanation = this.parseExplanation(cachedResult)
-        return {
-          success: true,
-          explanation,
-          cached: true,
-          timestamp: Date.now(),
-        }
-      } catch (error) {
-        console.warn('[Claude] Failed to parse cached explanation:', error)
+      return { 
+        success: true, 
+        text: cachedResult, 
+        cached: true, 
+        timestamp: Date.now() 
       }
     }
 
-    this.lastCacheHit = false
     this.usageStats.cacheMisses++
 
-    // Call API
-    const startTime = performance.now()
-
     try {
-      const explanationText = this.useProxy
-        ? await this.callProxyAPI(fileContent, fileName)
-        : await this.callDirectAPI(fileContent, fileName)
+      const response = await this.performRequest<any>('chat', () => axios.post(
+        `${this.apiBaseUrl}/claude/chat`,
+        {
+          model: this.model,
+          messages: messages.map(m => ({ role: m.role, content: m.content }))
+        },
+        {
+          headers: {
+            'x-api-key': apiKey,
+            'Content-Type': 'application/json'
+          }
+        }
+      ), messages.map(m => m.content).join(' '), false)
 
-      const duration = performance.now() - startTime
-      this.usageStats.responseTimes.push(duration)
+      const data = response.data
+      if (!data.success || !data.text) {
+        throw new Error(data.error || 'Claude API request failed')
+      }
 
-      // Cache the result
-      this.cache.set(cacheKey, explanationText)
+      // Update actual token usage from proxy report
+      if (data.usage) {
+        const input = data.usage.inputTokens || 0
+        const output = data.usage.outputTokens || 0
+        this.usageStats.totalTokensUsed += (input + output)
+      }
 
-      const explanation = this.parseExplanation(explanationText)
-
-      this.usageStats.requestsToday++
-      this.usageStats.requestsThisMonth++
+      const text = data.text
+      this.cache.set(cacheKey, text)
 
       return {
         success: true,
-        explanation,
+        text,
         cached: false,
-        timestamp: Date.now(),
+        timestamp: Date.now()
       }
-    } catch (error) {
-      const duration = performance.now() - startTime
-      this.usageStats.responseTimes.push(duration)
-
-      const errorMessage = error instanceof Error ? error.message : String(error)
-      console.error('[Claude] API call failed:', errorMessage)
-
-      return {
-        success: false,
-        error: errorMessage,
-        cached: false,
-        timestamp: Date.now(),
-      }
+    } catch (error: any) {
+      console.error('[ClaudeService] Chat Error:', error)
+      return { success: false, error: error.message, cached: false, timestamp: Date.now() }
     }
   }
 
-  /**
-   * Call direct Claude API with user's API key
-   */
-  private async callDirectAPI(fileContent: string, fileName: string): Promise<string> {
-    if (!this.client) {
-      throw new Error('Claude API client not initialized')
+  async explainMod(fileContent: string, fileName: string): Promise<AIResult> {
+    await this.ensureInitialized()
+    const apiKey = await AIKeyStore.getKey(AIProvider.CLAUDE)
+
+    // Specific cache for explanations
+    const cacheKey = `explain:${fileName}:${this.estimateTokens(fileContent)}`
+    const cachedResult = this.cache.get(cacheKey)
+    if (cachedResult) {
+      this.usageStats.cacheHits++
+      return { 
+        success: true, 
+        explanation: this.parseExplanation(cachedResult), 
+        cached: true, 
+        timestamp: Date.now() 
+      }
     }
-
-    const prompt = this.buildModExplanationPrompt(fileContent, fileName)
-
-    const messages: ClaudeMessage[] = [
-      {
-        role: 'user',
-        content: prompt,
-      },
-    ]
 
     try {
-      const response = await this.client.messages.create({
-        model: 'claude-3-5-sonnet-20241022',
-        max_tokens: 1024,
-        messages: messages as Parameters<typeof this.client.messages.create>[0]['messages'],
-      })
+      const response = await this.performRequest<any>('explain', () => axios.post(
+        `${this.apiBaseUrl}/claude/chat`,
+        {
+          model: this.model,
+          messages: [{ role: 'user', content: `Explain this Sims 4 mod file: ${fileName}\n\n${fileContent.substring(0, 4000)}` }]},
+        {
+          headers: {
+            'x-api-key': apiKey,
+            'Content-Type': 'application/json'
+          }
+        }
+      ), fileContent, false)
 
-      if (response.content[0].type !== 'text') {
-        throw new Error('Unexpected response format from Claude API')
+      const data = response.data
+      if (!data.success || !data.text) {
+        throw new Error(data.error || 'Explanation failed')
+      }
+      
+      if (data.usage) {
+        this.usageStats.totalTokensUsed += (data.usage.inputTokens + data.usage.outputTokens)
       }
 
-      // Track token usage
-      this.usageStats.totalTokensUsed +=
-        response.usage.input_tokens + response.usage.output_tokens
+      const text = data.text
+      this.cache.set(cacheKey, text)
 
-      return response.content[0].text
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error)
-
-      if (message.includes('401') || message.includes('authentication')) {
-        throw new Error('Invalid Claude API key. Please check your credentials.')
-      } else if (message.includes('429')) {
-        throw new Error('Claude API rate limit exceeded. Please try again later.')
-      } else if (message.includes('timeout') || message.includes('exceeded')) {
-        throw new Error('Claude API request timed out. Please try again.')
+      return {
+        success: true,
+        explanation: this.parseExplanation(text),
+        cached: false,
+        timestamp: Date.now()
       }
-
-      throw new Error(`Claude API error: ${message}`)
+    } catch (error: any) {
+      return { success: false, error: error.message, cached: false, timestamp: Date.now() }
     }
   }
 
-  /**
-   * Call proxy API (free tier)
-   * In production, this would call a backend proxy server
-   */
-  private async callProxyAPI(fileContent: string, fileName: string): Promise<string> {
-    // For now, return a placeholder message indicating proxy is needed
-    // In production, this would make an HTTP request to a proxy endpoint
-
-    console.warn(
-      '[Claude] Proxy tier not yet implemented. Configure your Claude API key in settings.'
-    )
-
-    throw new Error(
-      'Proxy API tier not configured. Please add your Claude API key in Settings → AI Configuration.'
-    )
-  }
-
-  /**
-   * Build prompt for mod file explanation
-   */
-  private buildModExplanationPrompt(fileContent: string, fileName: string): string {
-    return `You are an expert Sims 4 mod creator. Explain this mod file in simple, beginner-friendly terms.
-
-File: ${fileName}
-
-Content:
-\`\`\`xml
-${fileContent.substring(0, 2000)}${fileContent.length > 2000 ? '\n... (truncated)' : ''}
-\`\`\`
-
-Provide a structured explanation with these sections:
-
-1. **Overview**: What this mod does in 1-2 sentences
-2. **Purpose**: Why a mod creator would use this (practical use cases)
-3. **Key Fields**: List 3-5 important tuning parameters with brief explanations
-4. **Effects**: What changes in gameplay when this mod is active
-5. **Tips & Warnings**: Important considerations for modders
-
-Keep explanations concise and avoid technical jargon where possible. Format your response with clear section headers.`
-  }
-
-  /**
-   * Suggest a fix for an error in a mod file
-   * @param fileContent Current file content
-   * @param fileName File name
-   * @param errorMessage Error message from diagnostics
-   * @param errorContext Snippet around the error
-   * @returns Fix result with proposed code
-   */
   async suggestFix(
-    fileContent: string, 
-    fileName: string, 
+    fileContent: string,
+    fileName: string,
     errorMessage: string,
     errorContext: string
-  ): Promise<{ success: boolean; fixedCode?: string; explanation?: string; error?: string }> {
+  ): Promise<AIResult> {
     await this.ensureInitialized()
+    const apiKey = await AIKeyStore.getKey(AIProvider.CLAUDE)
 
-    if (this.useProxy) {
-      return {
-        success: false,
-        error: 'Proxy API tier does not support code fixes. Please add your Claude API key.'
-      }
-    }
+    const aiPrompt = `You are an expert Sims 4 mod creator. Fix the following error in a JPE file.\n\nFile: ${fileName}\nError: ${errorMessage}\nContext: ${errorContext || 'N/A'}\n\nFull Content:\n${fileContent}\n\nReturn ONLY a JSON object with:\n1. "fixedCode": The complete corrected content.\n2. "explanation": What you fixed.\n`
 
-    const prompt = `You are an expert Sims 4 mod creator. A user has an error in their JPE XML file.
-    
-File: ${fileName}
-Error: ${errorMessage}
-Context: 
-${errorContext}
-
-Current Full Content:
-\`\`\`xml
-${fileContent}
-\`\`\`
-
-Analyze the error and provide a fix. Return a JSON object with:
-1. "fixedCode": The complete corrected content of the file.
-2. "explanation": A short explanation of what you fixed and why.
-
-Ensure the returned code is valid JPE XML and preserves all other parts of the file.`
+    if (!apiKey) return { success: false, error: 'AI not configured', cached: false, timestamp: Date.now() }
 
     try {
-      const response = await this.client!.messages.create({
-        model: 'claude-3-5-sonnet-20241022',
-        max_tokens: 4096,
-        messages: [{ role: 'user', content: prompt }],
-      })
+      const response = await this.performRequest<any>('fix', () => axios.post(
+        `${this.apiBaseUrl}/claude/chat`,
+        {
+          model: this.model,
+          messages: [{ role: 'user', content: aiPrompt }]},
+        {
+          headers: {
+            'x-api-key': apiKey,
+            'Content-Type': 'application/json'
+          }
+        }
+      ), aiPrompt, false)
 
-      if (response.content[0].type !== 'text') {
-        throw new Error('Unexpected response format')
+      const data = response.data
+      if (!data.success || !data.text) {
+        throw new Error(data.error || 'Fix suggestion failed')
+      }
+      
+      if (data.usage) {
+        this.usageStats.totalTokensUsed += (data.usage.inputTokens + data.usage.outputTokens)
       }
 
-      const text = response.content[0].text
-      // Extract JSON from response if wrapped in text
-      const jsonMatch = text.match(/\{[\s\S]*\}/)
-      if (!jsonMatch) throw new Error('Failed to parse AI response as JSON')
+      let result = { fixedCode: '', explanation: { overview: 'Extraction failed', purpose: '', keyFields: [], effects: [], notes: [] } as Explanation }
+      try {
+        const jsonMatch = data.text.match(/\{[\s\S]*\}/)
+        if (jsonMatch) {
+          const parsed = JSON.parse(jsonMatch[0])
+          result = {
+            fixedCode: parsed.fixedCode || '',
+            explanation: { overview: parsed.explanation || '', purpose: '', keyFields: [], effects: [], notes: [] }
+          }
+        }
+      } catch (_e) {
+        console.warn('[Claude] JSON Parse failed, falling back to raw text')
+      }
       
-      const result = JSON.parse(jsonMatch[0])
       return {
         success: true,
         fixedCode: result.fixedCode,
-        explanation: result.explanation
+        explanation: result.explanation,
+        cached: false,
+        timestamp: Date.now()
       }
-    } catch (error) {
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : String(error)
-      }
+    } catch (error: any) {
+      return { success: false, error: error.message, cached: false, timestamp: Date.now() }
     }
   }
 
-  /**
-   * Parse explanation text into structured format
-   */
-  private parseExplanation(text: string): Explanation {
-    const sections = {
-      overview: this.extractSection(text, 'Overview') || 'No overview available',
-      purpose: this.extractSection(text, 'Purpose') || 'No purpose available',
-      keyFields: this.extractListSection(text, 'Key Fields') || [],
-      effects: this.extractListSection(text, 'Effects') || [],
-      notes: this.extractListSection(text, 'Tips & Warnings') || [],
-    }
+  async analyzeProjectConflicts(map: any): Promise<AIResult> {
+    await this.ensureInitialized()
+    const apiKey = await AIKeyStore.getKey(AIProvider.CLAUDE)
 
-    return sections
-  }
+    const prompt = `Analyze this symbolic map of a Sims 4 project for logical conflicts:\n${JSON.stringify(map, null, 2)}\n\nReturn ONLY a JSON object with "diagnostics": [ { "fileId", "line", "column", "severity", "message", "code" } ]`
 
-  /**
-   * Extract a section from explanation text
-   */
-  private extractSection(text: string, sectionName: string): string | null {
-    const regex = new RegExp(
-      `\\*\\*${sectionName}\\*\\*:?\\s*([^\\n]*(?:\\n(?!\\*\\*).*)*?)(?=\\n\\*\\*|$)`,
-      'i'
-    )
-    const match = text.match(regex)
-    return match ? match[1].trim() : null
-  }
+    try {
+      const response = await this.performRequest<any>('conflicts', () => axios.post(
+        `${this.apiBaseUrl}/claude/chat`,
+        {
+          model: this.model,
+          messages: [{ role: 'user', content: prompt }]},
+        {
+          headers: { 'x-api-key': apiKey, 'Content-Type': 'application/json' }
+        }
+      ), prompt, false)
 
-  /**
-   * Extract a list section from explanation text
-   */
-  private extractListSection(text: string, sectionName: string): string[] {
-    const regex = new RegExp(
-      `\\*\\*${sectionName}\\*\\*:?\\s*([^\\n]*(?:\\n[-•*].*)*?)(?=\\n\\*\\*|$)`,
-      'i'
-    )
-    const match = text.match(regex)
-
-    if (!match) return []
-
-    const items = match[1]
-      .split('\n')
-      .filter((line) => line.match(/^[-•*]/))
-      .map((line) => line.replace(/^[-•*]\s*/, '').trim())
-      .filter((item) => item.length > 0)
-
-    return items
-  }
-
-  /**
-   * Check if last operation was a cache hit
-   */
-  wasCacheHit(): boolean {
-    return this.lastCacheHit
-  }
-
-  /**
-   * Get current API usage statistics
-   */
-  getUsageStats(): ApiUsageStats {
-    const avgResponseTime =
-      this.usageStats.responseTimes.length > 0
-        ? this.usageStats.responseTimes.reduce((a, b) => a + b, 0) /
-          this.usageStats.responseTimes.length
-        : 0
-
-    const total = this.usageStats.cacheHits + this.usageStats.cacheMisses
-    const cacheHitRate = total > 0 ? (this.usageStats.cacheHits / total) * 100 : 0
-
-    return {
-      requestsToday: this.usageStats.requestsToday,
-      requestsThisMonth: this.usageStats.requestsThisMonth,
-      cacheHits: this.usageStats.cacheHits,
-      cacheMisses: this.usageStats.cacheMisses,
-      cacheHitRate: Math.round(cacheHitRate * 100) / 100,
-      totalTokensUsed: this.usageStats.totalTokensUsed,
-      averageResponseTime: Math.round(avgResponseTime * 100) / 100,
+      const data = response.data
+      const jsonMatch = data.text.match(/\{[\s\S]*\}/)
+      const result = jsonMatch ? JSON.parse(jsonMatch[0]) : { diagnostics: [] }
+      
+      return { success: true, diagnostics: result.diagnostics, cached: false, timestamp: Date.now() }
+    } catch (error: any) {
+      return { success: false, error: error.message, cached: false, timestamp: Date.now() }
     }
   }
 
-  /**
-   * Reset usage statistics
-   */
-  resetStats(): void {
-    this.usageStats = {
-      requestsToday: 0,
-      requestsThisMonth: 0,
-      cacheHits: 0,
-      cacheMisses: 0,
-      totalTokensUsed: 0,
-      responseTimes: [],
+  async analyzeException(logContent: string): Promise<AIResult> {
+    await this.ensureInitialized()
+    const apiKey = await AIKeyStore.getKey(AIProvider.CLAUDE)
+
+    const prompt = `Analyze this Sims 4 exception log and explain it in Plain English for a modder:\n${logContent}\n\nReturn ONLY a JSON object with "report": { "explanation", "rootCause", "suggestedJpeFix" }`
+
+    try {
+      const response = await this.performRequest<any>('exception', () => axios.post(
+        `${this.apiBaseUrl}/claude/chat`,
+        {
+          model: this.model,
+          messages: [{ role: 'user', content: prompt }]},
+        {
+          headers: { 'x-api-key': apiKey, 'Content-Type': 'application/json' }
+        }
+      ), prompt, false)
+
+      const data = response.data
+      const jsonMatch = data.text.match(/\{[\s\S]*\}/)
+      const result = jsonMatch ? JSON.parse(jsonMatch[0]) : { report: null }
+      
+      return { success: true, report: result.report, cached: false, timestamp: Date.now() }
+    } catch (error: any) {
+      return { success: false, error: error.message, cached: false, timestamp: Date.now() }
     }
-    this.cache.resetStats()
-    console.debug('[Claude] Statistics reset')
   }
 
-  /**
-   * Clear all cached explanations
-   */
-  clearCache(): void {
-    this.cache.clear()
+  async explainDiagnostic(fileContent: string, fileName: string, diagnostic: Diagnostic): Promise<AIResult> {
+    await this.ensureInitialized()
+    const context = this.extractContext(fileContent, diagnostic.line - 1)
+    
+    const prompt = `As a Sims 4 Modding Expert, explain why this error occurred and how it relates to Sims 4 tuning logic.\n\nFile: ${fileName}\nError Line: ${diagnostic.line}\nError: ${diagnostic.message}\nCode Snippet:\n${context}\n\nProvide a clear, concise explanation of the logical impact and the best way to resolve it.`
+    
+    return this.chat([{ role: 'user', content: prompt }])
   }
 
-  /**
-   * Check if API key is configured
-   */
-  async isConfigured(): Promise<boolean> {
-    return await CredentialManager.hasClaudeAPIKey()
+  async fixDiagnostic(fileContent: string, fileName: string, diagnostic: Diagnostic, context: string): Promise<AIResult> {
+    return this.suggestFix(fileContent, fileName, diagnostic.message, context)
   }
 
-  /**
-   * Check if using proxy tier
-   */
-  isUsingProxy(): boolean {
-    return this.useProxy
-  }
-
-  /**
-   * Get cache statistics
-   */
-  getCacheStats() {
-    return this.cache.getStats()
+  async getPredictiveCompletion(content: string, fileName: string, cursorOffset: number, projectContext?: string): Promise<AIResult> {
+    await this.ensureInitialized()
+    const beforeCursor = content.slice(0, cursorOffset)
+    const afterCursor = content.slice(cursorOffset)
+    const prompt = `As a Sims 4 Modding Expert (JPE Studio), provide a ONE-LINE completion for the code following (|).\n\nFile: ${fileName}\nContext: ${projectContext || 'General'}\n\nCode Context:\n---\n${beforeCursor.slice(-500)}|${afterCursor.slice(0, 100)}\n---\n\nReturn ONLY the predicted characters. No explanations.`
+    return this.chat([{ role: 'user', content: prompt }])
   }
 }

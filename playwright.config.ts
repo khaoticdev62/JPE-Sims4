@@ -19,8 +19,8 @@ export default defineConfig({
     timeout: 5000, // 5 seconds for assertions
   },
 
-  // Retry and reporting
-  retries: 0, // No retries
+  // Retries and reporting
+  retries: process.env.CI ? 2 : 0,
   reporter: [
     ['html', { outputFolder: 'playwright-report' }],
     ['list'],
@@ -28,9 +28,17 @@ export default defineConfig({
 
   // Browser configuration
   use: {
-    baseURL: 'http://localhost:3000', // Dev server port matches vite.config.ts
+    baseURL: 'http://localhost:3000', // Matches unified dev server port
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
+  },
+
+  // Web server for local development and CI
+  webServer: {
+    command: 'npm run dev',
+    url: 'http://localhost:3000',
+    reuseExistingServer: !process.env.CI,
+    timeout: 120 * 1000,
   },
 
   // Projects

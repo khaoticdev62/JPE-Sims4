@@ -5,8 +5,7 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import { PythonParser, parsePython } from '../PythonParser'
-import type { PythonScript } from '../PythonParser'
+import { PythonParser} from '../PythonParser'
 
 describe('Python Parser', () => {
   describe('Basic parsing', () => {

@@ -44,7 +44,7 @@ export class OptimizationDetector {
    */
   private static detectRedundancy(
     patterns: TuningPattern[],
-    files: ModFile[]
+    _files: ModFile[]
   ): Optimization[] {
     const optimizations: Optimization[] = []
 

@@ -1,3 +1,5 @@
+"use client";
+
 import { XIcon } from 'lucide-react'
 import { ControllerMapper } from '@/services/input/ControllerMapper'
 import { useMemo } from 'react'

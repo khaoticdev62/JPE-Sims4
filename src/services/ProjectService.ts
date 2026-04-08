@@ -4,9 +4,18 @@
  */
 
 import { FileService } from './FileService'
+import { BrowserFileService } from './BrowserFileService'
 import type { Project, ModFile } from '@/types/index'
+import { PythonService } from './PythonService'
 
 export class ProjectService {
+  /**
+   * Read file as binary buffer
+   */
+  static async readFileBuffer(path: string): Promise<ArrayBuffer | null> {
+    return await FileService.readFileBuffer(path)
+  }
+
   /**
    * Create a new project structure
    */
@@ -141,6 +150,34 @@ export class ProjectService {
             // if (stats) { newFile.size = stats.size; newFile.lastModified = stats.modified }
 
             newProject.files.push(newFile)
+
+            // Story 4.4: If it's a .ts4script, peek inside and add internal files as virtual project files
+            if (newFile.type === 'ts4script') {
+              try {
+                const buffer = await this.readFileBuffer(newFile.path)
+                if (buffer) {
+                  const zipFiles = await PythonService.extractFromArchive(buffer)
+                  zipFiles.forEach((data: Uint8Array, relativePath: string) => {
+                    if (relativePath.endsWith('.py') || relativePath.endsWith('.pyc')) {
+                      const virtualFile: ModFile = {
+                        id: `file-${Date.now()}-${Math.random()}`,
+                        projectId: newProject.id,
+                        name: relativePath,
+                        path: `${newFile.path}::${relativePath}`, // Protocol for virtual files
+                        type: relativePath.endsWith('.pyc') ? 'py' : 'py', // Treat pyc as py for now
+                        content: '', // Lazy load
+                        isDirty: false,
+                        size: data.byteLength,
+                        lastModified: newFile.lastModified,
+                      }
+                      newProject.files.push(virtualFile)
+                    }
+                  })
+                }
+              } catch (err) {
+                console.error(`Failed to peek into .ts4script: ${newFile.name}`, err)
+              }
+            }
           }
         }
       }
@@ -153,10 +190,35 @@ export class ProjectService {
   }
 
   /**
-   * Load content for a specific file on demand
+   * Load content for a specific file on demand (Supports Virtual Archive Files)
    */
   static async loadFileContent(file: ModFile): Promise<string | null> {
     try {
+      // Story 4.4: Handle virtual files from archives (e.g. mod.ts4script::main.py)
+      if (file.path.includes('::')) {
+        const [archivePath, internalPath] = file.path.split('::')
+        
+        const buffer = await this.readFileBuffer(archivePath)
+        if (!buffer) return null
+        
+        const zipFiles = await PythonService.extractFromArchive(buffer)
+        const fileData = zipFiles.get(internalPath)
+        
+        if (fileData) {
+          // If it's a Python file, decompile to JPE for translation
+          if (internalPath.endsWith('.py') || internalPath.endsWith('.pyc')) {
+            const decoder = new TextDecoder()
+            const source = decoder.decode(fileData)
+            return PythonService.decompileToJpe(source, internalPath)
+          }
+          
+          // Fallback for other files inside archives
+          return new TextDecoder().decode(fileData)
+        }
+        return null
+      }
+
+      // Standard file loading
       const result = await FileService.readFile(file.path)
       if (result.success && result.content !== undefined) {
         return result.content
@@ -218,11 +280,42 @@ export class ProjectService {
   }
 
   /**
+   * Create a new file in a project
+   */
+  static async createFile(path: string, content: string, projectId: string): Promise<ModFile | null> {
+    try {
+      const fileName = path.split(/[/\\]/).pop() || 'unknown'
+      const writeResult = await FileService.writeFile(path, content)
+      if (!writeResult.success) {
+        throw new Error(`Failed to write file: ${writeResult.error}`)
+      }
+
+      const ext = '.' + fileName.split('.').pop()?.toLowerCase()
+      const newFile: ModFile = {
+        id: `file-${Date.now()}-${Math.random()}`,
+        projectId,
+        name: fileName,
+        path,
+        type: this.getFileTypeFromExtension(ext),
+        content,
+        isDirty: false,
+        size: writeResult.size || content.length,
+        lastModified: Date.now(),
+      }
+
+      return newFile
+    } catch (error) {
+      console.error('Failed to create file', error)
+      return null
+    }
+  }
+
+  /**
    * Save a single file
    */
   static async saveFile(file: ModFile): Promise<boolean> {
     try {
-      const result = await FileService.writeFile(file.path, file.content)
+      const result = await BrowserFileService.saveFile(file.path, file.content, { createBackup: true })
       return result.success
     } catch (error) {
       console.error('Failed to save file', error)
@@ -309,7 +402,8 @@ export class ProjectService {
    */
   static async deleteFileFromProject(file: ModFile): Promise<boolean> {
     try {
-      return await FileService.deleteFile(file.path)
+      const result = await FileService.deleteFile(file.path)
+      return result.success
     } catch (error) {
       console.error('Failed to delete file', error)
       return false

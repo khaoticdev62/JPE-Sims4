@@ -58,7 +58,10 @@ export class XMLToJPETranslator {
       `type = "${element.tag}"`,
     ]
 
-    // Add common attributes as metadata
+    // Map common DBPF Tuning attributes
+    if (element.attributes.s) {
+      metadata.push(`instance = "0x${this.escapeString(element.attributes.s)}"`)
+    }
     if (element.attributes.c) {
       metadata.push(`class = "${this.escapeString(element.attributes.c)}"`)
     }
@@ -68,10 +71,13 @@ export class XMLToJPETranslator {
     if (element.attributes.m) {
       metadata.push(`module = "${this.escapeString(element.attributes.m)}"`)
     }
+    if (element.attributes.n) {
+      metadata.push(`name = "${this.escapeString(element.attributes.n)}"`)
+    }
 
-    // Add any other attributes
+    // Add any other attributes to ensure parity
     for (const [key, value] of Object.entries(element.attributes)) {
-      if (!['c', 'i', 'm'].includes(key) && value) {
+      if (!['s', 'c', 'i', 'm', 'n'].includes(key) && value) {
         const sanitizedKey = this.sanitizeKey(key)
         metadata.push(`${sanitizedKey} = "${this.escapeString(value)}"`)
       }
@@ -90,53 +96,90 @@ export class XMLToJPETranslator {
    */
   private static convertElementToSections(element: XMLElement, depth: number): string[] {
     const sections: string[] = []
-    const indent = '  '.repeat(depth)
 
-    // Skip root element for section, but process its children
+    // Skip root element for section, but process its children as top-level sections
     if (depth === 0) {
-      // Process root's children as top-level sections
       for (const child of element.children) {
-        sections.push(...this.convertElementToSections(child, depth + 1))
+        sections.push(...this.convertElementToSections(child, 1))
       }
       return sections
     }
 
-    // For non-root elements, create a section
-    const sectionName = this.getSectionName(element.tag)
-    let section = `[${sectionName}]`
+    const indent = '  '.repeat(depth - 1)
+    const keyword = this.rehydrateKeyword(element)
+    const n = element.attributes.n
 
-    // Add element attributes as assignments
+    // --- Semantic Flattening for <T> tags (Values) ---
+    if (element.tag === 'T' && n && element.children.length === 0) {
+      const value = element.text?.trim() || ''
+      return [`${indent}${this.sanitizeKey(n)} = "${this.escapeString(value)}"`]
+    }
+
+    // --- Smart Section Naming ---
+    // Use 'n' attribute as the section name if available, prioritized by JPE Keywords
+    const sectionName = keyword || (n ? this.sanitizeKey(n) : this.getSectionName(element.tag))
+    const sectionHeader = `[${sectionName}]`
+    
     const assignments: string[] = []
+    
+    // Add element attributes as assignments
     for (const [key, value] of Object.entries(element.attributes)) {
-      assignments.push(`${indent}${this.sanitizeKey(key)} = "${this.escapeString(value)}"`)
+      // Skip 'n' if it's already used as the section name or rehydrated
+      if ((keyword || n) && key === 'n') continue
+      assignments.push(`${indent}  ${this.sanitizeKey(key)} = "${this.escapeString(value)}"`)
     }
 
     // Add text content
     if (element.text && element.text.trim()) {
-      assignments.push(`${indent}content = "${this.escapeString(element.text.trim())}"`)
+      assignments.push(`${indent}  content = "${this.escapeString(element.text.trim())}"`)
     }
 
-    // Add child elements
+    // Recursively process children
+    const childOutput: string[] = []
     for (const child of element.children) {
-      const childSections = this.convertElementToSections(child, depth + 1)
-      assignments.push(...childSections.map(s => indent + s))
+      const result = this.convertElementToSections(child, depth + 1)
+      childOutput.push(...result)
     }
 
-    if (assignments.length > 0) {
-      section += '\n' + assignments.join('\n')
-    }
+    // Final Assembly
+    const output = [`${indent}${sectionHeader}`]
+    output.push(...assignments)
+    output.push(...childOutput)
 
-    sections.push(section)
-    return sections
+    return output
+  }
+
+  /**
+   * Recognizes Sims 4 XML patterns and "rehydrates" them into JPE keywords
+   */
+  private static rehydrateKeyword(element: XMLElement): string | null {
+    const n = element.attributes.n
+    if (!n) return null
+
+    const lowerN = n.toLowerCase()
+    
+    if (lowerN === 'tests' || lowerN === 'test_globals') return 'ONLY_IF'
+    if (lowerN === 'outcome' || lowerN === 'outcomes') return 'DO'
+    if (lowerN === 'enabled') return 'WHEN'
+    if (lowerN === 'interactions') return 'Interactions'
+    if (lowerN === 'buffs') return 'Buffs'
+
+    return null
   }
 
   /**
    * Generate section name from element tag
    */
   private static getSectionName(tag: string): string {
+    // Specialized Tag Conversions
+    if (tag === 'T') return 'Value'
+    if (tag === 'U') return 'Unit'
+    if (tag === 'V') return 'Variant'
+    if (tag === 'L') return 'List'
+
     // Convert camelCase or snake_case to Title Case
     return tag
-      .replace(/([a-z])([A-Z])/g, '$1_$2') // camelCase to snake_case
+      .replace(/([a-z])([A-Z])/g, '$1_$2')
       .split(/[_-]/)
       .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
       .join('_')

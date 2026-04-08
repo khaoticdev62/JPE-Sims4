@@ -4,6 +4,7 @@
  */
 
 import type { ProjectPatterns, PatternStore as PatternStoreType } from './types'
+import { safeStorage } from '@/utils/storage'
 
 export class PatternStore {
   private static readonly STORE_KEY = 'jpe-pattern-analysis'
@@ -22,7 +23,7 @@ export class PatternStore {
       }
 
       const key = this.getStorageKey(projectName)
-      localStorage.setItem(key, JSON.stringify(store))
+      safeStorage.setItem(key, JSON.stringify(store))
 
       console.debug(`[PatternStore] Patterns saved for project: ${projectName}`)
     } catch (error) {
@@ -36,7 +37,7 @@ export class PatternStore {
   static loadPatterns(projectName: string = 'default'): ProjectPatterns | null {
     try {
       const key = this.getStorageKey(projectName)
-      const data = localStorage.getItem(key)
+      const data = safeStorage.getItem(key)
 
       if (!data) {
         console.debug(`[PatternStore] No patterns found for project: ${projectName}`)
@@ -66,7 +67,7 @@ export class PatternStore {
   static hasValidPatterns(projectName: string = 'default'): boolean {
     try {
       const key = this.getStorageKey(projectName)
-      const data = localStorage.getItem(key)
+      const data = safeStorage.getItem(key)
 
       if (!data) return false
 
@@ -90,7 +91,7 @@ export class PatternStore {
   static clearPatterns(projectName: string = 'default'): void {
     try {
       const key = this.getStorageKey(projectName)
-      localStorage.removeItem(key)
+      safeStorage.removeItem(key)
 
       console.debug(`[PatternStore] Patterns cleared for project: ${projectName}`)
     } catch (error) {
@@ -105,15 +106,15 @@ export class PatternStore {
     try {
       const keys: string[] = []
 
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i)
+      for (let i = 0; i < safeStorage.length; i++) {
+        const key = safeStorage.key(i)
         if (key && key.startsWith(this.STORE_KEY)) {
           keys.push(key)
         }
       }
 
       keys.forEach((key) => {
-        localStorage.removeItem(key)
+        safeStorage.removeItem(key)
       })
 
       console.debug(`[PatternStore] All patterns cleared (${keys.length} entries)`)
@@ -130,10 +131,10 @@ export class PatternStore {
       let totalSize = 0
       let projectCount = 0
 
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i)
+      for (let i = 0; i < safeStorage.length; i++) {
+        const key = safeStorage.key(i)
         if (key && key.startsWith(this.STORE_KEY)) {
-          const data = localStorage.getItem(key)
+          const data = safeStorage.getItem(key)
           if (data) {
             totalSize += data.length
             projectCount++
@@ -159,10 +160,10 @@ export class PatternStore {
     const result: Record<string, ProjectPatterns> = {}
 
     try {
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i)
+      for (let i = 0; i < safeStorage.length; i++) {
+        const key = safeStorage.key(i)
         if (key && key.startsWith(this.STORE_KEY)) {
-          const data = localStorage.getItem(key)
+          const data = safeStorage.getItem(key)
           if (data) {
             const store: PatternStoreType = JSON.parse(data)
             const projectName = key.replace(this.STORE_KEY + '_', '')

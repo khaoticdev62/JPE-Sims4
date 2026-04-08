@@ -17,7 +17,6 @@ export const ModuleDeclarationRule: ValidationRule = {
       }
       if (line.startsWith('MODULE:')) {
         foundModule = true
-        lineIndex = i
         break
       }
       // If we found something else that isn't a comment or empty line, it's an error

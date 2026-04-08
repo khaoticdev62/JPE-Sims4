@@ -1,31 +1,44 @@
+"use client";
+
 import { useState } from 'react'
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
 import { useUIStore } from '@/stores/useUIStore'
 
 function ViewMenu() {
-  const { showSidebar, showContextPane, showDiagnostics, toggleSidebar, toggleContextPane, toggleDiagnostics } = useUIStore()
+  const { 
+    sidebarCollapsed, 
+    rightPanelCollapsed, 
+    showDiagnostics, 
+    toggleSidebar, 
+    toggleRightPanel, 
+    toggleDiagnostics 
+  } = useUIStore()
+
+  const showSidebar = !sidebarCollapsed
+  const showContextPane = !rightPanelCollapsed
+  const toggleContextPane = toggleRightPanel
   const [zoom, setZoom] = useState(100)
 
   const handleCommandPalette = () => {
     // Will trigger command palette
-    console.log('Open command palette')
+    console.warn('Open command palette')
   }
 
   const handleZoomIn = () => {
     const newZoom = Math.min(zoom + 10, 200)
     setZoom(newZoom)
-    console.log('Zoom in:', newZoom)
+    console.warn('Zoom in:', newZoom)
   }
 
   const handleZoomOut = () => {
     const newZoom = Math.max(zoom - 10, 50)
     setZoom(newZoom)
-    console.log('Zoom out:', newZoom)
+    console.warn('Zoom out:', newZoom)
   }
 
   const handleResetZoom = () => {
     setZoom(100)
-    console.log('Reset zoom to 100%')
+    console.warn('Reset zoom to 100%')
   }
 
   return (

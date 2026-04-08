@@ -20,7 +20,7 @@ describe('JPE Parser', () => {
     it('should parse empty document', () => {
       const tokens = tokenize('')
       const parser = new JPEParser(tokens)
-      const ast = parser.parse()
+      const _ast = parser.parse()
 
       expect(ast.type).toBe('Document')
       expect(ast.children).toHaveLength(0)
@@ -30,7 +30,7 @@ describe('JPE Parser', () => {
     it('should parse single section', () => {
       const tokens = tokenize('[Metadata]')
       const parser = new JPEParser(tokens)
-      const ast = parser.parse()
+      const _ast = parser.parse()
 
       expect(ast.type).toBe('Document')
       expect(ast.children).toHaveLength(1)
@@ -42,7 +42,7 @@ describe('JPE Parser', () => {
       const code = '[Section1]\n[Section2]\n[Section3]'
       const tokens = tokenize(code)
       const parser = new JPEParser(tokens)
-      const ast = parser.parse()
+      const _ast = parser.parse()
 
       expect(ast.children).toHaveLength(3)
       expect(ast.children?.[0].name).toBe('Section1')
@@ -56,7 +56,7 @@ describe('JPE Parser', () => {
       const code = '[Metadata]\ntype = "tuning"'
       const tokens = tokenize(code)
       const parser = new JPEParser(tokens)
-      const ast = parser.parse()
+      const _ast = parser.parse()
 
       const section = ast.children?.[0]
       expect(section?.type).toBe('Section')
@@ -68,7 +68,7 @@ describe('JPE Parser', () => {
       const code = '[Config]\nkey1 = "value1"\nkey2 = 42\nkey3 = true'
       const tokens = tokenize(code)
       const parser = new JPEParser(tokens)
-      const ast = parser.parse()
+      const _ast = parser.parse()
 
       const section = ast.children?.[0]
       expect(section?.children?.length).toBe(3)
@@ -80,7 +80,7 @@ describe('JPE Parser', () => {
       const code = '[Test]\nkey = "value"'
       const tokens = tokenize(code)
       const parser = new JPEParser(tokens)
-      const ast = parser.parse()
+      const _ast = parser.parse()
 
       const assignment = ast.children?.[0].children?.[0]
       expect(assignment?.type).toBe('Assignment')
@@ -92,7 +92,7 @@ describe('JPE Parser', () => {
       const code = '[Config]\nparent.child.field = "value"'
       const tokens = tokenize(code)
       const parser = new JPEParser(tokens)
-      const ast = parser.parse()
+      const _ast = parser.parse()
 
       const assignment = ast.children?.[0].children?.[0]
       expect(assignment?.key).toBe('parent.child.field')
@@ -102,7 +102,7 @@ describe('JPE Parser', () => {
       const code = '[Test]\nname = "John Doe"'
       const tokens = tokenize(code)
       const parser = new JPEParser(tokens)
-      const ast = parser.parse()
+      const _ast = parser.parse()
 
       const assignment = ast.children?.[0].children?.[0]
       expect(assignment?.value).toBe('John Doe')
@@ -112,7 +112,7 @@ describe('JPE Parser', () => {
       const code = '[Test]\ncount = 42'
       const tokens = tokenize(code)
       const parser = new JPEParser(tokens)
-      const ast = parser.parse()
+      const _ast = parser.parse()
 
       const assignment = ast.children?.[0].children?.[0]
       expect(assignment?.value).toBe(42)
@@ -122,7 +122,7 @@ describe('JPE Parser', () => {
       const code = '[Test]\nprice = 19.99'
       const tokens = tokenize(code)
       const parser = new JPEParser(tokens)
-      const ast = parser.parse()
+      const _ast = parser.parse()
 
       const assignment = ast.children?.[0].children?.[0]
       expect(assignment?.value).toBe(19.99)
@@ -132,7 +132,7 @@ describe('JPE Parser', () => {
       const code = '[Test]\nenabled = true'
       const tokens = tokenize(code)
       const parser = new JPEParser(tokens)
-      const ast = parser.parse()
+      const _ast = parser.parse()
 
       const assignment = ast.children?.[0].children?.[0]
       expect(assignment?.value).toBe(true)
@@ -142,7 +142,7 @@ describe('JPE Parser', () => {
       const code = '[Test]\ndisabled = false'
       const tokens = tokenize(code)
       const parser = new JPEParser(tokens)
-      const ast = parser.parse()
+      const _ast = parser.parse()
 
       const assignment = ast.children?.[0].children?.[0]
       expect(assignment?.value).toBe(false)
@@ -152,7 +152,7 @@ describe('JPE Parser', () => {
       const code = '[Test]\nskill = ref:CookingSkill'
       const tokens = tokenize(code)
       const parser = new JPEParser(tokens)
-      const ast = parser.parse()
+      const _ast = parser.parse()
 
       const assignment = ast.children?.[0].children?.[0]
       expect(assignment?.value?.type).toBe('Reference')
@@ -165,7 +165,7 @@ describe('JPE Parser', () => {
       const code = '[Test]\n# This is a comment\nkey = value'
       const tokens = tokenize(code)
       const parser = new JPEParser(tokens)
-      const ast = parser.parse()
+      const _ast = parser.parse()
 
       const section = ast.children?.[0]
       const hasComment = section?.children?.some(n => n.type === 'Comment')
@@ -176,7 +176,7 @@ describe('JPE Parser', () => {
       const code = '[Section1]\n# Comment between sections\n[Section2]'
       const tokens = tokenize(code)
       const parser = new JPEParser(tokens)
-      const ast = parser.parse()
+      const _ast = parser.parse()
 
       expect(ast.children).toHaveLength(2)
     })
@@ -187,7 +187,7 @@ describe('JPE Parser', () => {
       const code = '[Test]\ndesc = "line1\\nline2"'
       const tokens = tokenize(code)
       const parser = new JPEParser(tokens)
-      const ast = parser.parse()
+      const _ast = parser.parse()
 
       const assignment = ast.children?.[0].children?.[0]
       expect(assignment?.value).toContain('\n')
@@ -197,7 +197,7 @@ describe('JPE Parser', () => {
       const code = '[Test]\nformatted = "col1\\tcol2"'
       const tokens = tokenize(code)
       const parser = new JPEParser(tokens)
-      const ast = parser.parse()
+      const _ast = parser.parse()
 
       const assignment = ast.children?.[0].children?.[0]
       expect(assignment?.value).toContain('\t')
@@ -207,7 +207,7 @@ describe('JPE Parser', () => {
       const code = '[Test]\nquote = "He said \\"hello\\""'
       const tokens = tokenize(code)
       const parser = new JPEParser(tokens)
-      const ast = parser.parse()
+      const _ast = parser.parse()
 
       const assignment = ast.children?.[0].children?.[0]
       expect(assignment?.value).toContain('"')
@@ -232,7 +232,7 @@ fr = "French Text"`
 
       const tokens = tokenize(code)
       const parser = new JPEParser(tokens)
-      const ast = parser.parse()
+      const _ast = parser.parse()
 
       expect(ast.children).toHaveLength(3)
       expect(ast.children?.[0].name).toBe('Metadata')
@@ -244,7 +244,7 @@ fr = "French Text"`
       const code = '[Empty]\n\n[Another]\nkey = value'
       const tokens = tokenize(code)
       const parser = new JPEParser(tokens)
-      const ast = parser.parse()
+      const _ast = parser.parse()
 
       expect(ast.children).toHaveLength(2)
       const emptySection = ast.children?.[0]
@@ -257,7 +257,7 @@ fr = "French Text"`
       const code = '[Metadata'
       const tokens = tokenize(code)
       const parser = new JPEParser(tokens)
-      const ast = parser.parse()
+      const _ast = parser.parse()
 
       expect(ast.metadata?.hasErrors).toBe(true)
       expect(parser.getErrors().length).toBeGreaterThan(0)
@@ -267,7 +267,7 @@ fr = "French Text"`
       const code = '[Test]\nkey value'
       const tokens = tokenize(code)
       const parser = new JPEParser(tokens)
-      const ast = parser.parse()
+      const _ast = parser.parse()
 
       expect(parser.getErrors().length).toBeGreaterThan(0)
     })
@@ -276,7 +276,7 @@ fr = "French Text"`
       const code = '[Section1\n[Section2'
       const tokens = tokenize(code)
       const parser = new JPEParser(tokens)
-      const ast = parser.parse()
+      const _ast = parser.parse()
 
       expect(parser.getErrors().length).toBeGreaterThan(0)
     })
@@ -305,7 +305,7 @@ fr = "French Text"`
       const code = '[Test]   \n  key   =   "value"  '
       const tokens = tokenize(code)
       const parser = new JPEParser(tokens)
-      const ast = parser.parse()
+      const _ast = parser.parse()
 
       const assignment = ast.children?.[0].children?.[0]
       expect(assignment?.key).toBe('key')
@@ -316,7 +316,7 @@ fr = "French Text"`
       const code = '[Section1]\n\n\n[Section2]'
       const tokens = tokenize(code)
       const parser = new JPEParser(tokens)
-      const ast = parser.parse()
+      const _ast = parser.parse()
 
       expect(ast.children).toHaveLength(2)
     })
@@ -327,7 +327,7 @@ fr = "French Text"`
       const code = '[Metadata]\nkey = value'
       const tokens = tokenize(code)
       const parser = new JPEParser(tokens)
-      const ast = parser.parse()
+      const _ast = parser.parse()
 
       const section = ast.children?.[0]
       expect(section?.metadata?.line).toBe(1)

@@ -1,6 +1,7 @@
+"use client";
+
 import { useEffect, useState } from 'react'
-import { GamepadIcon, Info } from 'lucide-react'
-import { useGamepadInput } from '@/hooks/useGamepadInput'
+import { GamepadIcon } from 'lucide-react'
 import { useUIStore } from '@/stores/useUIStore'
 
 export default function ControllerIndicator() {

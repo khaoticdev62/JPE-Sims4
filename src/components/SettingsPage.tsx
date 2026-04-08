@@ -1,12 +1,26 @@
+"use client";
+
 import { useState } from 'react'
 import { AppNavigation } from '@/components/AppNavigation'
-import { Settings as SettingsIcon, Moon, Sun, FileText, Bell } from 'lucide-react'
+import { Settings as SettingsIcon, Moon, Sun, FileText, Bell, HardDrive, RefreshCw, Loader2 } from 'lucide-react'
+import { useUIStore } from '@/stores/useUIStore'
+import { useSymbolStore } from '@/stores/useSymbolStore'
+import { FileService } from '@/services/FileService'
+import { ModIndexingService } from '@/services/ModIndexingService'
 
 interface SettingsPageProps {
   onNavigate?: (view: string) => void
 }
 
 export function SettingsPage({ onNavigate }: SettingsPageProps) {
+  const { modsFolderPath, setModsFolderPath } = useUIStore()
+  const { 
+    isIndexingMods, 
+    indexedPackagesCount, 
+    externalInteractions, 
+    externalStblKeys 
+  } = useSymbolStore()
+  
   const [activeNav, setActiveNav] = useState('settings')
   const [darkMode, setDarkMode] = useState(true)
   const [notifications, setNotifications] = useState(true)
@@ -113,6 +127,73 @@ export function SettingsPage({ onNavigate }: SettingsPageProps) {
                   />
                   <span className="text-text-secondary min-w-12">14px</span>
                 </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Sims 4 Modding Settings */}
+          <section className="space-y-6">
+            <div className="flex items-center gap-3 mb-6">
+              <HardDrive className="w-6 h-6 text-accent-primary" />
+              <h2 className="text-xl font-semibold text-text-primary">Sims 4 Modding</h2>
+            </div>
+
+            <div className="bg-background-secondary border border-border-subtle rounded-lg p-6 space-y-6">
+              {/* Mods Folder Path */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-text-primary font-medium">Mods Folder Path</h3>
+                    <p className="text-text-secondary text-sm">
+                      Location of your Sims 4 Mods directory for cross-mod reference indexing
+                    </p>
+                  </div>
+                  <button
+                    onClick={async () => {
+                      const path = await FileService.openFolder()
+                      if (path) {
+                        setModsFolderPath(path)
+                        ModIndexingService.indexModsFolder(path)
+                      }
+                    }}
+                    className="px-4 py-2 bg-accent-primary hover:bg-accent-secondary text-text-primary rounded-md text-sm font-medium transition-colors"
+                  >
+                    Browse
+                  </button>
+                </div>
+                
+                <div className="bg-background-tertiary border border-border-subtle rounded px-4 py-2 font-mono text-xs text-text-secondary truncate">
+                  {modsFolderPath || 'Not semi-configured. Please select your Mods folder.'}
+                </div>
+              </div>
+
+              {/* Indexing Status */}
+              <div className="border-t border-border-subtle pt-6 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  {isIndexingMods ? (
+                    <Loader2 className="w-5 h-5 text-accent-primary animate-spin" />
+                  ) : (
+                    <div className="w-5 h-5 rounded-full bg-state-success/20 flex items-center justify-center">
+                      <div className="w-2 h-2 rounded-full bg-state-success" />
+                    </div>
+                  )}
+                  <div>
+                    <h3 className="text-text-primary font-medium">External Symbols Index</h3>
+                    <p className="text-text-secondary text-sm">
+                      {isIndexingMods 
+                        ? `Indexing mods... (${indexedPackagesCount} packages scanned)` 
+                        : `${externalInteractions.size + externalStblKeys.size} external references indexed from ${indexedPackagesCount} packages`}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  disabled={isIndexingMods || !modsFolderPath}
+                  onClick={() => modsFolderPath && ModIndexingService.indexModsFolder(modsFolderPath)}
+                  className="p-2 hover:bg-background-tertiary rounded-md transition-colors disabled:opacity-50"
+                  title="Re-index Mods"
+                >
+                  <RefreshCw className={`w-5 h-5 text-text-secondary ${isIndexingMods ? 'animate-spin' : ''}`} />
+                </button>
               </div>
             </div>
           </section>

@@ -9,7 +9,6 @@ import type {
   DiagnosticInput,
   DiagnosticReport,
   DiagnosticSeverity,
-  DiagnosticCategory,
   DiagnosticRule,
   DiagnosticConfig,
   DiagnosticCollection,

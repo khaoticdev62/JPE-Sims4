@@ -18,6 +18,7 @@ import { DescriptionRequiredRule } from './rules/DescriptionRequiredRule'
 import { IndentationRule } from './rules/IndentationRule'
 import { LocalizationCompletenessRule } from './rules/LocalizationCompletenessRule'
 import { CompatibilityWarningRule } from './rules/CompatibilityWarningRule'
+import { ReferenceRule } from './rules/ReferenceRule'
 
 export type { ValidationRule }
 
@@ -34,6 +35,7 @@ export class ValidationEngine {
     IndentationRule,
     LocalizationCompletenessRule,
     CompatibilityWarningRule,
+    ReferenceRule,
   ]
 
   /**

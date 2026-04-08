@@ -65,13 +65,16 @@ export function stringToFNV32(str: string): number {
   const FNV1_32A_INIT = 0x811c9dc5
   let hash = FNV1_32A_INIT
 
-  for (let i = 0; i < str.length; i++) {
-    const byte = str.charCodeAt(i) & 0xff
-    hash = hash ^ byte
-    hash = (hash * FNV_32_PRIME) >>> 0 // Use unsigned right shift to keep 32-bit
+  // Use TextEncoder to get proper UTF-8 bytes for hashing (Multi-byte support)
+  const encoder = new TextEncoder()
+  const bytes = encoder.encode(str)
+
+  for (let i = 0; i < bytes.length; i++) {
+    hash = hash ^ bytes[i]
+    hash = Math.imul(hash, FNV_32_PRIME) >>> 0
   }
 
-  return hash >>> 0 // Convert to unsigned
+  return hash >>> 0
 }
 
 /**

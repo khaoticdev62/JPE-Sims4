@@ -1,4 +1,8 @@
-import type { BuildResults } from '@/stores/useBuildStore'
+import { useState } from 'react'
+import { useBuildStore, type BuildResults } from '@/stores/useBuildStore'
+import { sims4 } from '@/services/Sims4Service'
+import { Rocket, PackageCheck } from 'lucide-react'
+import { cn } from '@/utils/cn'
 
 interface BuildResultsProps {
   results: BuildResults | null
@@ -8,7 +12,18 @@ interface BuildResultsProps {
  * Build results summary showing statistics and metrics
  */
 export default function BuildResults({ results }: BuildResultsProps) {
+  const { packageBuffer } = useBuildStore()
+  const [isDeploying, setIsDeploying] = useState(false)
+
   if (!results) return null
+
+  const handlePushToProduction = async () => {
+    if (!packageBuffer) return;
+    
+    setIsDeploying(true);
+    await sims4.deployProductionPackage(packageBuffer, "JPE_Production_Bundle.package");
+    setIsDeploying(false);
+  }
 
   const successCount = results.filesProcessed - results.filesWithErrors - results.filesWithWarnings
 
@@ -106,6 +121,35 @@ export default function BuildResults({ results }: BuildResultsProps) {
           </div>
         </div>
       </div>
+
+      {/* Story 4.3: Push to Production (One-Click Release) */}
+      {results.totalErrors === 0 && packageBuffer && (
+        <div className="pt-4 border-t border-white/5">
+          <button
+            onClick={handlePushToProduction}
+            disabled={isDeploying}
+            className={cn(
+              "w-full py-4 rounded-xl font-black uppercase tracking-widest text-[11px] flex items-center justify-center gap-3 transition-all",
+              "bg-gradient-to-r from-[#10b981] to-[#059669] text-white shadow-lg shadow-emerald-500/20 hover:scale-[1.02] active:scale-95 disabled:opacity-50"
+            )}
+          >
+            {isDeploying ? (
+              <>
+                <Rocket className="w-4 h-4 animate-bounce" />
+                Technical Ignition in Progress...
+              </>
+            ) : (
+              <>
+                <PackageCheck className="w-4 h-4" />
+                Push to Production
+              </>
+            )}
+          </button>
+          <p className="text-[9px] text-slate-500 font-bold uppercase tracking-tighter text-center mt-3 opacity-60">
+            Industrial deployment to: Sims 4 / Mods
+          </p>
+        </div>
+      )}
     </div>
   )
 }

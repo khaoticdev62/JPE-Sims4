@@ -2,8 +2,8 @@ import { test, expect } from '@playwright/test'
 
 test.describe('E2E: Real-Time Validation Flow', () => {
   test.beforeEach(async ({ page }) => {
-    // Navigate to the app
-    await page.goto('/', { waitUntil: 'networkidle' })
+    // Navigate to the studio
+    await page.goto('/studio', { waitUntil: 'domcontentloaded' })
 
     // Wait for app to load
     await page.waitForSelector('[data-testid="app-root"]', { timeout: 10000 })
@@ -15,7 +15,7 @@ test.describe('E2E: Real-Time Validation Flow', () => {
     await expect(appRoot).toBeVisible()
 
     // Navigation should be visible
-    const navHome = page.locator('[data-testid="nav-home"]')
+    const navHome = page.locator('[data-testid="nav-dashboard"]')
     await expect(navHome).toBeVisible()
   })
 
@@ -25,7 +25,7 @@ test.describe('E2E: Real-Time Validation Flow', () => {
     await page.waitForTimeout(500)
 
     // Studio layout should be visible
-    const editorLayout = page.locator('[data-testid="editor-layout"]')
+    const editorLayout = page.locator('[data-testid="editor-three-pane"]')
     const isVisible = await editorLayout.isVisible().catch(() => false)
 
     expect(isVisible).toBe(true)
@@ -70,7 +70,7 @@ test.describe('E2E: Real-Time Validation Flow', () => {
 
   test('should handle navigation between views', async ({ page }) => {
     // Navigate through different views
-    await page.locator('[data-testid="nav-home"]').click()
+    await page.locator('[data-testid="nav-dashboard"]').click()
     await page.waitForTimeout(300)
 
     await page.locator('[data-testid="nav-studio"]').click()
@@ -92,7 +92,7 @@ test.describe('E2E: Real-Time Validation Flow', () => {
     await page.locator('[data-testid="nav-studio"]').click()
     await page.waitForTimeout(300)
 
-    await page.locator('[data-testid="nav-home"]').click()
+    await page.locator('[data-testid="nav-dashboard"]').click()
     await page.waitForTimeout(300)
 
     // Project count should be the same

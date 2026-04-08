@@ -1,3 +1,5 @@
+"use client";
+
 /**
  * INTEGRATED EDITOR COMPONENT
  *
@@ -11,26 +13,22 @@
  */
 
 import { useState, useCallback } from 'react'
-import MonacoEditor, { getEditorInstance } from './MonacoEditor'
+import MonacoEditor from './MonacoEditor'
 import EditorToolbar from './EditorToolbar'
 import SearchReplace from './SearchReplace'
 import DiagnosticsPanel from './DiagnosticsPanel'
-import { DiffPreviewModal } from '../modals/DiffPreviewModal'
+import { FixDiffModal } from './FixDiffModal'
+import { AIExplanationModal } from '../common/AIExplanationModal'
 import { useCodeFix } from '@/hooks/useCodeFix'
 import { t } from '@/constants/locales'
-
-interface EditorDiagnostic {
-  line: number
-  severity: 'error' | 'warning' | 'info'
-  message: string
-  code?: string
-}
+import { Diagnostic } from '@/types'
+import { revealInMonaco } from '@/utils/editor'
 
 interface IntegratedEditorProps {
   value: string
   onChange: (value: string) => void
   language?: string
-  diagnostics?: EditorDiagnostic[]
+  diagnostics?: Diagnostic[]
   onSave?: () => Promise<void>
   onCompile?: () => Promise<{ success: boolean; error?: string }>
   canUndo?: boolean
@@ -62,7 +60,18 @@ export default function IntegratedEditor({
   const [isSaving, setIsSaving] = useState(false)
   const [isCompiling, setIsCompiling] = useState(false)
 
-  const { isFixing, diffData, setDiffData, requestFix, applyFix } = useCodeFix()
+  const { 
+    isFixing, 
+    isExplaining, 
+    processingId, 
+    diffData, 
+    explanationData, 
+    setDiffData, 
+    setExplanationData, 
+    requestFix, 
+    requestExplanation, 
+    applyFix 
+  } = useCodeFix()
 
   // Handle save
   const handleSave = useCallback(async () => {
@@ -212,40 +221,47 @@ export default function IntegratedEditor({
         />
       </div>
 
-      {/* Diagnostics panel (optional) */}
-      {showDiagnostics && diagnostics.length > 0 && (
+
+      {/* Diagnostics panel (bottom) */}
+      {showDiagnostics && (
         <div className="h-48 border-t border-border-subtle overflow-hidden">
           <DiagnosticsPanel
             diagnostics={diagnostics}
-            onSelectDiagnostic={(diag) => {
-              // Navigate to line in editor
-              const editor = getEditorInstance('current')
-              if (editor) {
-                editor.revealLineInCenter(diag.line)
-                editor.setPosition({ lineNumber: diag.line, column: 1 })
-                editor.focus()
-              }
-            }}
-            onFix={(diag) => requestFix(diag.message, diag.line)}
+            onSelectDiagnostic={(diag) => revealInMonaco(diag)}
+            onFix={(diag) => requestFix(diag)}
+            onExplain={(diag) => requestExplanation(diag)}
             isFixing={isFixing}
+            isExplaining={isExplaining}
+            processingId={processingId}
             isOpen={true}
           />
         </div>
       )}
 
-      {/* Diff Preview Modal */}
-      {diffData && (
-        <DiffPreviewModal
-          isOpen={!!diffData}
-          onClose={() => setDiffData(null)}
-          onApply={applyFix}
-          originalCode={diffData.original}
-          modifiedCode={diffData.modified}
-          title={t('editor.ai_suggested_fix')}
-          description={diffData.explanation}
-          fileName={diffData.fileName}
-        />
-      )}
+      {/* Fix Diff Modal (AI Suggestion) */}
+      <FixDiffModal
+        isOpen={!!diffData}
+        onClose={() => setDiffData(null)}
+        onApply={applyFix}
+        original={diffData?.original || ''}
+        modified={diffData?.modified || ''}
+        explanation={diffData?.explanation || ''}
+        fileName={diffData?.fileName || ''}
+      />
+
+      {/* AI Explanation Modal (Better Exceptions Style) */}
+      <AIExplanationModal
+        isOpen={!!explanationData}
+        onClose={() => setExplanationData(null)}
+        onFix={() => {
+          const diag = explanationData?.diagnostic
+          setExplanationData(null)
+          if (diag) requestFix(diag)
+        }}
+        explanation={explanationData?.explanation}
+        diagnostic={explanationData?.diagnostic}
+        isFixing={isFixing}
+      />
     </div>
   )
 }

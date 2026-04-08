@@ -1,5 +1,6 @@
+"use client";
+
 import { useMemo } from 'react'
-import { useEditorStore } from '@/stores/useEditorStore'
 import { useDiagnosticStore } from '@/stores/useDiagnosticStore'
 import { CompilerService } from '@/services/CompilerService'
 import QuickActionButton from './QuickActionButton'
@@ -20,8 +21,7 @@ export default function QuickActionsPanel({
   file,
   onBuildFile,
   onValidateFile,
-  onCompareFile,
-}: QuickActionsPanelProps) {
+  onCompareFile}: QuickActionsPanelProps) {
   const { getDiagnosticsForFile } = useDiagnosticStore()
 
   const diagnostics = useMemo(
@@ -45,31 +45,35 @@ export default function QuickActionsPanel({
       return []
     }
 
-    const baseActions = [
+    const baseActions: {
+      id: string
+      icon: string
+      label: string
+      shortcut?: string
+      variant: 'primary' | 'secondary' | 'danger'
+      onClick: () => void
+    }[] = [
       {
         id: 'build',
         icon: '🔨',
         label: 'Build File',
         shortcut: 'Ctrl+B',
         variant: 'primary' as const,
-        onClick: () => onBuildFile?.(file),
-      },
+        onClick: () => onBuildFile?.(file)},
       {
         id: 'validate',
         icon: '✅',
         label: 'Validate File',
         shortcut: 'Ctrl+Shift+V',
         variant: 'secondary' as const,
-        onClick: () => onValidateFile?.(file),
-      },
+        onClick: () => onValidateFile?.(file)},
       {
         id: 'compare',
         icon: '📋',
         label: 'Compare with JPE',
         shortcut: 'Ctrl+Alt+D',
         variant: 'secondary' as const,
-        onClick: () => onCompareFile?.(file),
-      },
+        onClick: () => onCompareFile?.(file)},
     ]
 
     // Add context-specific actions
@@ -84,10 +88,9 @@ export default function QuickActionsPanel({
           // Open first error location
           const firstError = diagnostics.find((d) => d.severity === 'error')
           if (firstError) {
-            console.log('Navigate to error at line', firstError.line)
+            console.warn('Navigate to error at line', firstError.line)
           }
-        },
-      })
+        }})
     }
 
     // Add file type specific actions
@@ -101,12 +104,11 @@ export default function QuickActionsPanel({
         onClick: async () => {
           try {
             const result = await CompilerService.validateFile(file)
-            console.log('Compiled to JPE:', result)
+            console.warn('Compiled to JPE:', result)
           } catch (error) {
             console.error('Failed to compile:', error)
           }
-        },
-      })
+        }})
     }
 
     return baseActions
@@ -170,7 +172,7 @@ export default function QuickActionsPanel({
 
       {/* File Info */}
       <div className="px-4 pb-4 border-t border-border-subtle pt-4 text-xs text-text-secondary space-y-1">
-        <div>Type: {file.type.toUpperCase()}</div>
+        <div>Type: {file.type?.toUpperCase()}</div>
         <div>Lines: {file.content?.split('\n').length || 0}</div>
         {file.path && <div className="truncate" title={file.path}>Path: {file.path}</div>}
       </div>

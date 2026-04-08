@@ -1,11 +1,13 @@
-import { ProjectPatterns, TuningPattern, EnumPattern, StructuralPattern } from '@/engine/ml/types';
+import { AIServiceFactory } from '@/services/ai/AIServiceFactory';
+import { ProjectPatterns } from '@/engine/ml/types';
 
 export interface PredictionResult {
   token: string;
   confidence: number; // 0-1
-  type: 'enum' | 'tuning' | 'tag' | 'keyword' | 'variable';
+  type: 'enum' | 'tuning' | 'tag' | 'keyword' | 'variable' | 'logic';
   description?: string;
   score?: number;
+  source?: 'heuristic' | 'ai';
 }
 
 export interface CodeContext {
@@ -71,8 +73,25 @@ export class CodePredictor {
   async predict(
     context: CodeContext, 
     patterns: ProjectPatterns | null,
-    limit: number = 5
+    limit: number = 5,
+    enableAI: boolean = false,
+    projectContext?: string
   ): Promise<PredictionResult[]> {
+    const heuristicResults = this.predictHeuristic(context, patterns, limit);
+    
+    if (enableAI && heuristicResults.length < 3) {
+      const aiResults = await this.predictAI(context, projectContext, limit - heuristicResults.length);
+      return this.rankResults([...heuristicResults, ...aiResults], context, limit);
+    }
+    
+    return heuristicResults;
+  }
+
+  private predictHeuristic(
+    context: CodeContext, 
+    patterns: ProjectPatterns | null,
+    limit: number = 5
+  ): PredictionResult[] {
     if (!patterns) return [];
 
     // Check cache
@@ -82,7 +101,7 @@ export class CodePredictor {
     }
 
     const predictions: PredictionResult[] = [];
-    const { fileType, currentTag, lineBefore } = context;
+    const { fileType, currentTag: _currentTag, lineBefore } = context;
     
     // 1. Structural Suggestions (Tag completion)
     if (fileType === 'xml' && lineBefore.trim().endsWith('<')) {
@@ -124,13 +143,48 @@ export class CodePredictor {
       });
     }
 
-    // 4. Context-Specific Ranking
     const results = this.rankResults(predictions, context, limit);
-    
+
     // Update cache
     this.updateCache(cacheKey, results);
-    
+
     return results;
+  }
+
+  /**
+   * AI-powered prediction pass
+   */
+  private async predictAI(
+    context: CodeContext,
+    projectContext?: string,
+    _limit: number = 3
+  ): Promise<PredictionResult[]> {
+    try {
+      const activeService = AIServiceFactory.getActiveService();
+      if (!activeService) return [];
+
+      const result = await AIServiceFactory.getActiveService()?.getPredictiveCompletion(
+        context.beforeCursor + '|' + context.afterCursor,
+        context.fileType === 'jpe' ? 'temp.jpe' : 'temp.xml',
+        context.beforeCursor.length,
+        projectContext
+      );
+
+      if (result && result.success && result.text && result.text.trim().length > 0) {
+        // AI usually returns a single completion string
+        const token = result.text.trim();
+        return [{
+          token,
+          confidence: 0.8,
+          type: 'logic',
+          description: `AI-powered completion (${result.provider || 'Active Service'})`,
+          source: 'ai'
+        }];
+      }
+    } catch (error) {
+      console.warn('[AI:Predict] Prediction failed:', error);
+    }
+    return [];
   }
 
   /**

@@ -1,14 +1,11 @@
 
-import { describe, it, expect, vi } from 'vitest'
 import { CompilerService } from './CompilerService'
 import type { ModFile } from '@/types/index'
 
 describe('CompilerService', () => {
   it('should compile a file successfully', async () => {
     const file: ModFile = {
-      id: 'file-1',
-      name: 'test.xml',
-      path: '/test.xml',
+      id: 'file-1', name: 'test.xml', projectId: 'test-project', path: '/test.xml',
       type: 'xml',
       content: '<I c="Trait" i="trait:test" m="sims4.tuning"><T n="display_name">Test</T></I>',
       isDirty: false,
@@ -22,7 +19,7 @@ describe('CompilerService', () => {
     // we just want to ensure it returns the structure we expect.
     
     // We can spy on translateToJPE to see if it's called
-    const spy = vi.spyOn(CompilerService, 'translateToJPE')
+    const spy = jest.spyOn(CompilerService, 'translateToJPE')
     spy.mockResolvedValue('{"mock": "jpe"}')
 
     const result = await CompilerService.compileFile(file)
@@ -38,9 +35,7 @@ describe('CompilerService', () => {
   it('should compile project (batch) successfully', async () => {
     const files: ModFile[] = [
       {
-        id: 'file-1',
-        name: 'test.xml',
-        path: '/test.xml',
+        id: 'file-1', name: 'test.xml', projectId: 'test-project', path: '/test.xml',
         type: 'xml',
         content: 'content',
         isDirty: false,
@@ -49,7 +44,7 @@ describe('CompilerService', () => {
       }
     ]
 
-    const spy = vi.spyOn(CompilerService, 'compileFile')
+    const spy = jest.spyOn(CompilerService, 'compileFile')
     spy.mockResolvedValue({ success: true, output: '{}', errors: [] })
 
     const result = await CompilerService.compileProject(files)

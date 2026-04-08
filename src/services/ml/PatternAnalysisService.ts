@@ -112,9 +112,16 @@ export class PatternAnalysisService {
         }
       }
 
+      if (!this.worker) {
+        reject(new Error('Failed to create worker'))
+        return
+      }
+
+      const activeWorker = this.worker
+
       // Set timeout
       const timeoutId = setTimeout(() => {
-        this.worker?.terminate()
+        activeWorker.terminate()
         this.worker = null
         reject(new Error(`Analysis timeout after ${timeout}ms`))
       }, timeout)
@@ -125,21 +132,21 @@ export class PatternAnalysisService {
 
         if (type === 'patterns-complete') {
           clearTimeout(timeoutId)
-          this.worker?.removeEventListener('message', handleMessage)
+          activeWorker.removeEventListener('message', handleMessage)
           resolve(result)
         } else if (type === 'patterns-error') {
           clearTimeout(timeoutId)
-          this.worker?.removeEventListener('message', handleMessage)
+          activeWorker.removeEventListener('message', handleMessage)
           reject(new Error(error || 'Analysis failed'))
         } else if (type === 'patterns-progress') {
           console.debug(`[PatternAnalysisService] Progress: ${progress?.toFixed(0)}%`)
         }
       }
 
-      this.worker.addEventListener('message', handleMessage)
+      activeWorker.addEventListener('message', handleMessage)
 
       // Start analysis
-      this.worker.postMessage({
+      activeWorker.postMessage({
         type: 'analyze-patterns',
         payload: {
           files,

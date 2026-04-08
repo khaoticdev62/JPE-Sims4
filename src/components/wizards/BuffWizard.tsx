@@ -1,8 +1,9 @@
+"use client";
+
 import { useState } from 'react'
 import { Dialog } from '@radix-ui/react-dialog'
 import WizardStep from './WizardStep'
 import WizardNavigation from './WizardNavigation'
-import { ProjectService } from '@/services/ProjectService'
 import { useProjectStore } from '@/stores/useProjectStore'
 
 export interface BuffFormData {
@@ -27,8 +28,7 @@ interface BuffWizardProps {
 export default function BuffWizard({
   isOpen,
   onClose,
-  onComplete,
-}: BuffWizardProps) {
+  onComplete}: BuffWizardProps) {
   const [currentStep, setCurrentStep] = useState(0)
   const [isLoading, setIsLoading] = useState(false)
   const [formData, setFormData] = useState<BuffFormData>({
@@ -38,25 +38,25 @@ export default function BuffWizard({
     icon: '0x00000001',
     durationMinutes: 120,
     moodBonus: 10,
-    skillBonus: 0,
-  })
+    skillBonus: 0})
 
   const handleFinish = async () => {
     try {
       setIsLoading(true)
 
-      const { addFile, currentProject } = useProjectStore.getState()
+      const { createFile, currentProject } = useProjectStore.getState()
       if (!currentProject) throw new Error('No active project')
 
       const xml = generateBuffXML(formData)
       const fileName = `buff_${formData.name}.xml`
       const filePath = `${currentProject.rootPath}/${fileName}`
 
-      const file = ProjectService.createFile(filePath, xml, currentProject.id)
+      const file = await createFile(filePath, xml)
       
-      addFile(file)
-      onComplete?.(file)
-      onClose()
+      if (file) {
+        onComplete?.(file)
+        onClose()
+      }
     } catch (error) {
       console.error('Failed to create buff:', error)
     } finally {

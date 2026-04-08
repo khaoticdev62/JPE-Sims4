@@ -1,9 +1,11 @@
+"use client";
+
 import { useState } from 'react'
 import { Dialog } from '@radix-ui/react-dialog'
 import WizardStep from './WizardStep'
 import WizardNavigation from './WizardNavigation'
-import { ProjectService } from '@/services/ProjectService'
 import { useProjectStore } from '@/stores/useProjectStore'
+import type { ModFile } from '@/types/index'
 
 export interface InteractionFormData {
   name: string
@@ -19,7 +21,7 @@ export interface InteractionFormData {
 interface InteractionWizardProps {
   isOpen: boolean
   onClose: () => void
-  onComplete?: (file: any) => void
+  onComplete?: (file: ModFile) => void
 }
 
 const INTERACTION_TYPES = [
@@ -42,8 +44,7 @@ const TARGET_TYPES = [
 export default function InteractionWizard({
   isOpen,
   onClose,
-  onComplete,
-}: InteractionWizardProps) {
+  onComplete}: InteractionWizardProps) {
   const [currentStep, setCurrentStep] = useState(0)
   const [isLoading, setIsLoading] = useState(false)
   const [formData, setFormData] = useState<InteractionFormData>({
@@ -54,8 +55,7 @@ export default function InteractionWizard({
     target: 'TargetedSim',
     immediatePhase: '',
     duration: 'Interaction',
-    priority: 100,
-  })
+    priority: 100})
 
   const handlePrevious = () => {
     setCurrentStep((prev) => Math.max(0, prev - 1))
@@ -69,7 +69,7 @@ export default function InteractionWizard({
     try {
       setIsLoading(true)
 
-      const { addFile, currentProject } = useProjectStore.getState()
+      const { createFile, currentProject } = useProjectStore.getState()
       if (!currentProject) throw new Error('No active project')
 
       // Generate interaction XML
@@ -79,11 +79,12 @@ export default function InteractionWizard({
       const fileName = `interaction_${formData.name}.xml`
       const filePath = `${currentProject.rootPath}/${fileName}`
 
-      const file = ProjectService.createFile(filePath, xml, currentProject.id)
-      
-      addFile(file)
-      onComplete?.(file)
-      onClose()
+      const file = await createFile(filePath, xml)
+
+      if (file) {
+        onComplete?.(file)
+        onClose()
+      }
     } catch (error) {
       console.error('Failed to create interaction:', error)
     } finally {

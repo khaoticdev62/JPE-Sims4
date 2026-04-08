@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useEffect } from 'react'
 import ExplanationSection from './ExplanationSection'
 import type { ModFile } from '@/types/index'

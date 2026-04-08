@@ -32,13 +32,13 @@ export class SmartAutocompleteService {
     const baseCompletions = this.getBaseCompletions(context)
 
     // Get learned patterns for this context
-    const patterns = PatternStore.loadPatterns('default')
-    if (!patterns) {
+    const _patterns = PatternStore.loadPatterns('default')
+    if (!_patterns) {
       return baseCompletions
     }
 
     // Merge and score completions
-    const merged = this.mergeCompletions(baseCompletions, patterns, context)
+    const merged = this.mergeCompletions(baseCompletions, _patterns, context)
 
     // Sort by confidence and frequency
     return merged
@@ -253,7 +253,7 @@ export class SmartAutocompleteService {
   static scoreCompletion(
     completion: Completion,
     prefix: string,
-    patterns: any
+    _patterns: unknown
   ): number {
     let score = completion.confidence * 100
 

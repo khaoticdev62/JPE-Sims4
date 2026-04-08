@@ -1,5 +1,6 @@
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { persist, createJSONStorage } from 'zustand/middleware'
+import { safeStorage } from '@/utils/storage'
 import { EditorAction } from '@/services/input/types'
 
 interface ControllerState {
@@ -79,6 +80,7 @@ export const useControllerStore = create<ControllerState>()(
     }),
     {
       name: 'jpe-controller-settings',
+      storage: createJSONStorage(() => safeStorage),
     }
   )
 )

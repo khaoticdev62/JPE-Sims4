@@ -10,8 +10,8 @@
  * - Resource Data: Raw or compressed file data
  */
 
-import type { PackageData, PackageResource, PackageParseResult, ResourceId } from './types/package'
-import { formatResourceId, DBPF_RESOURCE_TYPES } from './types/package'
+import type { PackageData, PackageResource, PackageParseResult} from './types/package'
+import { formatResourceId, DBPF_RESOURCE_TYPES, decompressZLIB } from './types/package'
 
 /**
  * Parses DBPF package files
@@ -88,8 +88,7 @@ export class PackageParser {
           size: resourceSize,
           compressedSize,
           flags,
-          isCompressed: compressedSize > 0 && compressedSize < resourceSize,
-        })
+          isCompressed: compressedSize > 0 && compressedSize < resourceSize})
 
         offset += 24
       }
@@ -105,9 +104,7 @@ export class PackageParser {
           resourceCount: resources.length,
           fileSize: buffer.byteLength,
           indexOffset,
-          parseTime,
-        },
-      }
+          parseTime}}
     } catch (error) {
       console.error('Package parse error:', error)
       return null
@@ -115,13 +112,71 @@ export class PackageParser {
   }
 
   /**
+   * Parse static header and index from separate buffers
+   * Essential for memory-efficient processing of huge packages.
+   */
+  static parseOnlyIndex(headerBuffer: ArrayBuffer, indexBuffer: ArrayBuffer): PackageData | null {
+    const startTime = performance.now()
+    try {
+      const headerView = new DataView(headerBuffer)
+      const magic = this.readString(headerBuffer, 0, 4)
+      const majorVersion = headerView.getUint32(4, true)
+      const minorVersion = headerView.getUint32(8, true)
+      
+      const indexView = new DataView(indexBuffer)
+      const resources: PackageResource[] = []
+      let offset = 0
+      
+      // Determine entry size based on total size vs count (if known) or by checking 32-byte alignment
+      const entrySize = (indexBuffer.byteLength % 32 === 0) ? 32 : 24
+      
+      while (offset + entrySize <= indexBuffer.byteLength) {
+        const type = indexView.getUint32(offset, true)
+        const group = indexView.getUint32(offset + 4, true)
+        const instance = this.readBigUint64(indexView, offset + 8)
+        const resourceOffset = indexView.getUint32(offset + 16, true)
+        const resourceSize = indexView.getUint32(offset + 20, true)
+        
+        let compressedSize = 0
+        let flags = 0
+        if (entrySize === 32) {
+          compressedSize = indexView.getUint32(offset + 24, true)
+          flags = indexView.getUint32(offset + 28, true)
+        }
+        
+        resources.push({
+          type, group, instance, 
+          offset: resourceOffset, 
+          size: resourceSize, 
+          compressedSize, flags, 
+          isCompressed: compressedSize > 0 && compressedSize < resourceSize
+        })
+        offset += entrySize
+      }
+
+      return {
+        magic, majorVersion, minorVersion, resources,
+        metadata: {
+          resourceCount: resources.length,
+          fileSize: 0, // Unknown without full file
+          indexOffset: 0,
+          parseTime: performance.now() - startTime
+        }
+      }
+    } catch (e) {
+      console.error('[PackageParser] parseOnlyIndex failed', e)
+      return null
+    }
+  }
+
+  /**
    * Parse package and optionally extract resource data
    */
-  static parseWithResources(
+  static async parseWithResources(
     buffer: ArrayBuffer,
     extractResources: boolean = false,
     resourceFilter?: (resource: PackageResource) => boolean
-  ): PackageParseResult {
+  ): Promise<PackageParseResult> {
     const startTime = performance.now()
     const errors: string[] = []
     const resourceData = new Map<string, ArrayBuffer>()
@@ -135,13 +190,11 @@ export class PackageParser {
           metadata: {
             resourceCount: 0,
             totalSize: buffer.byteLength,
-            parseTime: performance.now() - startTime,
-          },
-        }
+            parseTime: performance.now() - startTime}}
       }
 
       if (extractResources) {
-        const view = new Uint8Array(buffer)
+        const _view = new Uint8Array(buffer)
 
         for (const resource of data.resources) {
           if (resourceFilter && !resourceFilter(resource)) {
@@ -149,12 +202,26 @@ export class PackageParser {
           }
 
           try {
-            if (resource.offset + resource.size > buffer.byteLength) {
-              errors.push(`Resource ${formatResourceId(resource.type, resource.group, resource.instance)} exceeds bounds`)
+            const MAX_RESOURCE_SIZE = 50 * 1024 * 1024 // 50MB Safety Limit
+            
+            if (resource.size > MAX_RESOURCE_SIZE) {
+              errors.push(`Resource too large to extract: ${formatResourceId(resource.type, resource.group, resource.instance)} (${(resource.size / 1024 / 1024).toFixed(1)}MB)`)
               continue
             }
 
-            const resourceBuffer = buffer.slice(resource.offset, resource.offset + resource.size)
+            let resourceBuffer = buffer.slice(resource.offset, resource.offset + resource.size)
+            
+            // Handle decompression if necessary
+            if (resource.isCompressed) {
+              const decompressedData = await decompressZLIB(resourceBuffer, resource.size)
+              if (decompressedData) {
+                resourceBuffer = decompressedData
+              } else {
+                errors.push(`Failed to decompress resource: ${formatResourceId(resource.type, resource.group, resource.instance)}`)
+                continue
+              }
+            }
+
             const id = formatResourceId(resource.type, resource.group, resource.instance)
             resourceData.set(id, resourceBuffer)
           } catch (error) {
@@ -173,9 +240,7 @@ export class PackageParser {
         metadata: {
           resourceCount: data.resources.length,
           totalSize: buffer.byteLength,
-          parseTime,
-        },
-      }
+          parseTime}}
     } catch (error) {
       return {
         success: false,
@@ -183,9 +248,7 @@ export class PackageParser {
         metadata: {
           resourceCount: 0,
           totalSize: buffer.byteLength,
-          parseTime: performance.now() - startTime,
-        },
-      }
+          parseTime: performance.now() - startTime}}
     }
   }
 
@@ -257,6 +320,6 @@ export function parsePackage(buffer: ArrayBuffer): PackageData | null {
 /**
  * Quick helper function to parse package with resources
  */
-export function parsePackageWithResources(buffer: ArrayBuffer): PackageParseResult {
+export async function parsePackageWithResources(buffer: ArrayBuffer): Promise<PackageParseResult> {
   return PackageParser.parseWithResources(buffer, true)
 }

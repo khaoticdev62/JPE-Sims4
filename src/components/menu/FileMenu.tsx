@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useCallback, useEffect } from 'react'
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
 import { useProjectStore } from '@/stores/useProjectStore'
@@ -75,8 +77,9 @@ function FileMenu() {
   }, [handleSave, handleSaveAll])
 
   const handleExit = useCallback(() => {
-    if (window.electron && window.electron.app) {
-      window.electron.app.quit()
+    const win = window as any
+    if (win.electron && win.electron.app) {
+      win.electron.app.quit()
     }
   }, [])
 

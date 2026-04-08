@@ -1,5 +1,5 @@
 import React from 'react'
-import { LayoutSideBySide, LayoutList, ChevronUp, ChevronDown } from 'lucide-react'
+import { Columns2, LayoutList, ChevronUp, ChevronDown } from 'lucide-react'
 
 interface DiffControlsProps {
   viewMode: 'side-by-side' | 'inline'
@@ -34,7 +34,7 @@ export default function DiffControls({
           }`}
           title="Side-by-Side View"
         >
-          <LayoutSideBySide size={16} />
+          <Columns2 size={16} />
         </button>
         <button
           onClick={() => onViewModeChange('inline')}

@@ -3,11 +3,11 @@
  * LRU cache for Claude API responses with TTL support
  */
 
-import LRU from 'lru-cache'
+import { LRUCache } from 'lru-cache'
 import type { CacheConfig, CacheEntry } from './types'
 
 export class ClaudeCache {
-  private cache: LRU<string, CacheEntry<string>>
+  private cache: LRUCache<string, CacheEntry<string>>
   private hits = 0
   private misses = 0
   private ttl: number
@@ -16,7 +16,7 @@ export class ClaudeCache {
     this.ttl = config.ttl
 
     // Create LRU cache with size limit
-    this.cache = new LRU<string, CacheEntry<string>>({
+    this.cache = new LRUCache<string, CacheEntry<string>>({
       max: config.max,
       ttl: config.ttl,
       updateAgeOnGet: false, // Don't update TTL on access

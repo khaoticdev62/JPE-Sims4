@@ -1,0 +1,75 @@
+version: 1
+pack_id: "sims4.domain.aave.v1"
+language: "en-US"
+registers: ["mild", "standard", "heavy"]
+
+entries:
+  - canonical: "moodlet"
+    token_type: "noun"
+    domains: ["generic", "buffs"]
+    aliases:
+      mild: ["moodlet"]
+      standard: ["mood hit"]
+      heavy: ["the vibe"]
+    reversible_key: "moodlet::noun"
+    popularity: 0.6
+
+  - canonical: "career"
+    token_type: "noun"
+    domains: ["generic", "careers"]
+    aliases:
+      mild: ["career"]
+      standard: ["job track"]
+      heavy: ["the grind"]
+    reversible_key: "career::noun"
+    popularity: 0.6
+
+  - canonical: "autonomy"
+    token_type: "noun"
+    domains: ["generic", "interactions"]
+    aliases:
+      mild: ["autonomy"]
+      standard: ["free will"]
+      heavy: ["do-their-own-thing mode"]
+    reversible_key: "autonomy::noun"
+    popularity: 0.55
+
+  - canonical: "relationship"
+    token_type: "noun"
+    domains: ["generic", "tests", "interactions"]
+    aliases:
+      mild: ["relationship"]
+      standard: ["rapport"]
+      heavy: ["how they rockin' with"]
+    reversible_key: "relationship::noun"
+    popularity: 0.55
+
+  - canonical: "give"
+    token_type: "verb"
+    domains: ["generic", "loot", "buffs"]
+    aliases:
+      mild: ["give"]
+      standard: ["hand out"]
+      heavy: ["bless with"]
+    reversible_key: "give::verb"
+    popularity: 0.65
+
+  - canonical: "apply"
+    token_type: "verb"
+    domains: ["generic", "buffs", "traits"]
+    aliases:
+      mild: ["apply"]
+      standard: ["put on"]
+      heavy: ["drop on"]
+    reversible_key: "apply::verb"
+    popularity: 0.65
+
+  - canonical: "cooldown"
+    token_type: "noun"
+    domains: ["generic", "interactions"]
+    aliases:
+      mild: ["cooldown"]
+      standard: ["wait time"]
+      heavy: ["chill time"]
+    reversible_key: "cooldown::noun"
+    popularity: 0.55

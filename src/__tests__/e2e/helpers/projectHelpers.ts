@@ -30,7 +30,7 @@ export class ProjectHelpers {
   /**
    * Create a new project via UI
    */
-  static async createNewProject(page: Page, projectName: string, projectPath: string): Promise<void> {
+  static async createNewProject(page: Page, projectName: string, _projectPath: string): Promise<void> {
     // Click "New Project" button or card
     const newProjectCard = page.locator('[data-testid="new-project-card"]')
     await newProjectCard.click()
@@ -54,7 +54,7 @@ export class ProjectHelpers {
   /**
    * Open a project
    */
-  static async openProject(page: Page, projectPath: string): Promise<void> {
+  static async openProject(page: Page, _projectPath: string): Promise<void> {
     // Navigate to projects page
     await page.click('[data-testid="nav-projects"]')
 
@@ -102,7 +102,7 @@ export class ProjectHelpers {
     try {
       const fixturePath = path.join(__dirname, '../fixtures/sample-xml/valid-tuning.xml')
       return readFileSync(fixturePath, 'utf-8')
-    } catch (error) {
+    } catch (_error) {
       // Return minimal valid XML if fixture not found
       return `<?xml version="1.0" encoding="utf-8"?>
 <Root schemaVersion="0">

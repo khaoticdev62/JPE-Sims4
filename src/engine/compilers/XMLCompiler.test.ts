@@ -29,19 +29,19 @@ describe('XMLCompiler', () => {
     })
 
     it('should compile module with metadata', () => {
-      const module: JPEModule = {
+      const testModule: JPEModule = {
         type: 'document',
         metadata: { version: '1.0', author: 'Test' },
         sections: [],
       }
-      const result = XMLCompiler.compileToXML(module)
+      const result = XMLCompiler.compileToXML(testModule)
       expect(result.success).toBe(true)
       expect(result.output).toContain('version="1.0"')
       expect(result.output).toContain('author="Test"')
     })
 
     it('should compile module with sections', () => {
-      const module: JPEModule = {
+      const testModule: JPEModule = {
         type: 'root',
         metadata: {},
         sections: [
@@ -49,7 +49,7 @@ describe('XMLCompiler', () => {
           { type: 'section2', content: 'content2' },
         ],
       }
-      const result = XMLCompiler.compileToXML(module)
+      const result = XMLCompiler.compileToXML(testModule)
       expect(result.success).toBe(true)
       expect(result.output).toContain('<section1>')
       expect(result.output).toContain('content1')
@@ -58,22 +58,22 @@ describe('XMLCompiler', () => {
     })
 
     it('should handle pretty printing', () => {
-      const module: JPEModule = {
+      const testModule: JPEModule = {
         type: 'root',
         metadata: {},
         sections: [{ type: 'child', content: 'text' }],
       }
-      const result = XMLCompiler.compileToXML(module, true)
+      const result = XMLCompiler.compileToXML(testModule, true)
       expect(result.output).toContain('\n')
     })
 
     it('should escape special characters in attributes', () => {
-      const module: JPEModule = {
+      const testModule: JPEModule = {
         type: 'root',
         metadata: { content: 'text with & and < and > and "quotes"' },
         sections: [],
       }
-      const result = XMLCompiler.compileToXML(module)
+      const result = XMLCompiler.compileToXML(testModule)
       expect(result.output).toContain('&amp;')
       expect(result.output).toContain('&lt;')
       expect(result.output).toContain('&gt;')
@@ -248,7 +248,7 @@ describe('XMLCompiler', () => {
 
   describe('round-trip compilation', () => {
     it('should compile JPEModule to XML with proper structure', () => {
-      const module: JPEModule = {
+      const testModule: JPEModule = {
         type: 'document',
         metadata: { version: '1.0' },
         sections: [
@@ -256,7 +256,7 @@ describe('XMLCompiler', () => {
           { type: 'body', content: 'Body Content' },
         ],
       }
-      const result = XMLCompiler.compileToXML(module)
+      const result = XMLCompiler.compileToXML(testModule)
       expect(result.success).toBe(true)
       expect(result.output).toContain('<?xml')
       expect(result.output).toContain('<document')

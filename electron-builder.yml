@@ -1,0 +1,68 @@
+appId: com.jperebel.studio
+productName: JPE Studio
+directories:
+  output: release
+  buildResources: build
+
+files:
+  - from: .
+    filter:
+      - dist/**/*
+      - dist-electron/**/*
+      - public/**/*
+      - package.json
+
+extraResources:
+  - from: public/assets
+    to: assets
+    filter:
+      - "**/*"
+
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+  icon: public/icon.ico
+  artifactName: "${productName}-${version}-Setup.${ext}"
+
+nsis:
+  oneClick: false
+  perMachine: true
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: JPE Studio
+  installerIcon: public/icon.ico
+  uninstallerIcon: public/icon.ico
+
+mac:
+  target:
+    - target: dmg
+      arch:
+        - x64
+        - arm64
+  icon: public/icon.icns
+  category: public.app-category.developer-tools
+  darkModeSupport: true
+  hardenedRuntime: true
+  gatekeeperAssess: false
+  entitlements: build/entitlements.mac.plist
+  entitlementsInherit: build/entitlements.mac.plist
+
+linux:
+  target:
+    - target: AppImage
+      arch:
+        - x64
+  icon: public/icon.png
+  category: Development
+  desktop:
+    Name: JPE Studio
+    Comment: Sims 4 Mod Translator & Editor
+    Keywords: "mod;sims4;translation;editor"
+
+publish:
+  provider: github
+  releaseType: release
+  vPrefixedTagName: true

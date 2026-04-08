@@ -13,55 +13,24 @@ The JPE Mod Translator uses a comprehensive design system with complete integrat
 
 ## Token System Architecture
 
-### Tokens Source: `src/design-system/tokens.json`
+### Canonical Source: `src/components/robust/jpe-theme.ts`
 
-All design values come from a single source of truth:
+JPE Studio uses a single object-based source of truth (`T`) that powers both the component logic (Monaco themes, status bars, etc.) and the global CSS layer.
 
-```json
-{
-  "colors": {
-    "background-primary": "#000000",
-    "background-secondary": "#121212",
-    "background-tertiary": "#1C1C1E",
-    "text-primary": "#FFFFFF",
-    "text-secondary": "#8E8E93",
-    "accent-primary": "#0A84FF",
-    "accent-focus": "#007AFF",
-    "border-subtle": "#38383A",
-    "state-error": "#FF453A",
-    "state-success": "#32D74B",
-    "state-warning": "#FF9F0A"
-  },
-  "typography": { ... },
-  "spacing": { ... }
+```typescript
+export const T = {
+  bg: "#0a0c10",
+  cyan: "#63B3ED",
+  mono: "'JetBrains Mono', 'Fira Code', monospace",
+  // ... all design units
 }
 ```
 
-### Tailwind Configuration: `tailwind.config.js`
+### Synthesis Bridge: `src/app/globals.css`
 
-Tokens are automatically imported into Tailwind:
+The `T` tokens are synchronized with CSS Custom Properties in the global stylesheet, which are then consumed by Tailwind CSS via `tailwind.config.ts`.
 
-```javascript
-import tokens from './src/design-system/tokens.json'
-
-export default {
-  theme: {
-    extend: {
-      colors: {
-        'bg-primary': tokens.colors['background-primary'],
-        'bg-secondary': tokens.colors['background-secondary'],
-        'text-primary': tokens.colors['text-primary'],
-        'accent-primary': tokens.colors['accent-primary'],
-        'state-error': tokens.colors['state-error'],
-        // ... all tokens mapped
-      },
-      fontFamily: { ... },
-      spacing: { ... },
-      fontSize: { ... }
-    }
-  }
-}
-```
+---
 
 ---
 
@@ -73,7 +42,7 @@ All editor components use the design token system:
 
 | Component | Status | Implementation |
 |-----------|--------|-----------------|
-| **MonacoEditor.tsx** | ✅ | Imports tokens.json, applies to Monaco theme |
+| **MonacoEditor.tsx** | ✅ | Imports T from jpe-theme.ts, applies to Monaco theme |
 | **EditorToolbar.tsx** | ✅ | Tailwind classes: `bg-bg-secondary`, `text-text-primary` |
 | **SearchReplace.tsx** | ✅ | Tailwind classes for all UI elements |
 | **DiagnosticsPanel.tsx** | ✅ | Severity colors via tokens: error, warning, info |
@@ -105,20 +74,20 @@ The Monaco Editor is fully wired to use design tokens:
 ### Token-Mapped Theme Rules
 
 ```typescript
-// Syntax highlighting colors from tokens
+// Syntax highlighting colors from T tokens
 rules: [
-  { token: 'keyword', foreground: tokens.colors['accent-primary'].replace('#', '') },
-  { token: 'string', foreground: tokens.colors['state-success'].replace('#', '') },
-  { token: 'comment', foreground: tokens.colors['text-secondary'].replace('#', '') },
+  { token: 'keyword', foreground: T.cyan.replace('#', '') },
+  { token: 'string', foreground: T.emerald.replace('#', '') },
+  { token: 'comment', foreground: T.textSecondary.replace('#', '') },
 ]
 
-// Editor UI colors from tokens
+// Editor UI colors from T tokens
 colors: {
-  'editor.background': tokens.colors['background-primary'],
-  'editor.foreground': tokens.colors['text-primary'],
-  'editor.lineNumbersColumn.background': tokens.colors['background-secondary'],
-  'editorError.foreground': tokens.colors['state-error'],
-  'editorWarning.foreground': tokens.colors['state-warning'],
+  'editor.background': T.bg,
+  'editor.foreground': T.textPrimary,
+  'editor.lineNumbersColumn.background': T.bgDeep,
+  'editorError.foreground': T.rose,
+  'editorWarning.foreground': T.amber,
 }
 ```
 
@@ -200,16 +169,16 @@ All components follow the token naming convention:
 ## Verification Checklist
 
 ### Design Token System
-- ✅ tokens.json exists with all design values
-- ✅ tailwind.config.js imports and maps all tokens
+- ✅ jpe-theme.ts exists as canonical source of truth
+- ✅ globals.css maps T tokens to CSS variables
+- ✅ tailwind.config.ts consumes CSS variables
 - ✅ No hardcoded hex colors in any component (verified)
-- ✅ All RGB colors stored in tokens.json
 
 ### Component Implementation
 - ✅ All editor components use Tailwind token classes
 - ✅ All layout components use Tailwind token classes
 - ✅ All common components use Tailwind token classes
-- ✅ Monaco Editor imports and uses tokens.json
+- ✅ Monaco Editor imports and uses T from jpe-theme.ts
 
 ### Editor Integration
 - ✅ Syntax highlighting uses tokens
@@ -229,17 +198,17 @@ All components follow the token naming convention:
 
 ### To Change a Color
 
-1. Edit `src/design-system/tokens.json`:
-   ```json
-   "accent-primary": "#0A84FF"  // Change this
+1. Edit `src/components/robust/jpe-theme.ts`:
+   ```typescript
+   export const T = {
+     cyan: "#63B3ED", // Change this
+   }
    ```
 
 2. Colors update automatically in:
-   - All Tailwind classes
-   - Monaco Editor theme
-   - All components
-
-3. No component code changes needed!
+    - All high-fidelity components (Monaco, Status Bar)
+    - CSS layers (via globals.css synchronization)
+    - Tailwind classes
 
 ### Example: Change Primary Accent Color
 
@@ -264,7 +233,7 @@ All components automatically update:
 
 ### Design Tokens Alignment
 All Figma designs follow the token values:
-- Colors match exactly to tokens.json
+- Colors match exactly to jpe-theme.ts
 - Typography matches font specifications
 - Spacing aligns with spacing scale
 
@@ -276,22 +245,17 @@ All Figma designs follow the token values:
 
 ```typescript
 // ✅ CORRECT: Using Tailwind token classes
-<div className="bg-bg-secondary text-text-primary border-border-subtle">
+<div className="bg-bg-panel text-text-primary border-border">
   Content
 </div>
 
-// ✅ CORRECT: Importing tokens in logic
-import tokens from '@design-system/tokens.json'
-const color = tokens.colors['accent-primary']
+// ✅ CORRECT: Importing T tokens in logic
+import { T } from '@/components/robust/jpe-theme'
+const color = T.cyan
 
-// ❌ WRONG: Hardcoded colors (not used anywhere)
+// ❌ WRONG: Hardcoded colors
 <div style={{ background: '#121212' }}>
   This is wrong!
-</div>
-
-// ❌ WRONG: Unknown Tailwind classes
-<div className="bg-blue-500">
-  This won't work
 </div>
 ```
 
@@ -299,14 +263,10 @@ const color = tokens.colors['accent-primary']
 
 ## Files Modified for Wiring
 
-### Latest Changes (Dec 27, 2025)
-- `src/components/editor/MonacoEditor.tsx` - Added token imports, integrated Monaco theme with tokens
-- `src/design-system/DESIGN_SYSTEM_WIRING.md` - This documentation
-
-### Previous Implementation
-- `tailwind.config.js` - Configured to use tokens.json
-- `src/design-system/tokens.json` - Created with all design values
-- All component files - Use Tailwind token classes
+### Latest Changes (April 2026)
+- `src/components/robust/jpe-theme.ts` - Consolidated all design tokens
+- `src/app/globals.css` - Synchronized fonts and colors to CSS variables
+- `src/design-system/tokens.json` - DELETED (Deprecated)
 
 ---
 
@@ -329,11 +289,11 @@ When creating new components:
 
 ## Summary
 
-✅ **Design system fully wired and operational**
-✅ **All components using token system**
+✅ **Design system fully consolidated via T (jpe-theme.ts)**
+✅ **All components using singular source of truth**
 ✅ **No hardcoded values**
-✅ **Monaco Editor integrated with tokens**
-✅ **Centralized control point (tokens.json)**
+✅ **Monaco Editor integrated with T tokens**
+✅ **Centralized control point (jpe-theme.ts)**
 
 The JPE Mod Translator has a production-ready design system that ensures visual consistency and makes global design changes trivial.
 

@@ -1,10 +1,14 @@
+"use client";
+
 /**
  * Analytics Dashboard
  * Displays comprehensive usage statistics and insights
  */
 
 import { useState, useEffect } from 'react'
-import { AnalyticsService } from '@services/analytics/AnalyticsService'
+import { AnalyticsService } from '@/services/analytics/AnalyticsService'
+import { useActivityStore } from '@/stores/useActivityStore'
+import { useProjectStore } from '@/stores/useProjectStore'
 
 export default function AnalyticsDashboard() {
   const [usage, setUsage] = useState<any>(null)
@@ -21,10 +25,13 @@ export default function AnalyticsDashboard() {
     setLoading(true)
 
     try {
-      const usageStats = AnalyticsService.calculateUsageStats()
+      const { activities } = useActivityStore.getState()
+      const { currentProject } = useProjectStore.getState()
+
+      const usageStats = AnalyticsService.calculateUsageStats(activities)
       const perfMetrics = AnalyticsService.calculatePerformanceMetrics()
-      const complexityMetrics = AnalyticsService.calculateProjectComplexity()
-      const activityTrend = AnalyticsService.calculateActivityTrend()
+      const complexityMetrics = AnalyticsService.calculateProjectComplexity(currentProject)
+      const activityTrend = AnalyticsService.calculateActivityTrend(activities)
 
       setUsage(usageStats)
       setPerformance(perfMetrics)
@@ -171,18 +178,18 @@ export default function AnalyticsDashboard() {
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-text-secondary">Complexity Score</span>
                   <span className="text-sm font-semibold text-text-primary">
-                    {complexity['complexity Score']}/100
+                    {complexity.complexityScore}/100
                   </span>
                 </div>
                 <div className="w-full h-2 bg-background-tertiary rounded-full overflow-hidden">
                   <div
                     className="h-full rounded-full"
                     style={{
-                      width: `${complexity['complexity Score']}%`,
+                      width: `${complexity.complexityScore}%`,
                       backgroundColor:
-                        complexity['complexity Score'] > 70
+                        complexity.complexityScore > 70
                           ? '#E12D39'
-                          : complexity['complexity Score'] > 40
+                          : complexity.complexityScore > 40
                             ? '#F5A623'
                             : '#2E8540',
                     }}

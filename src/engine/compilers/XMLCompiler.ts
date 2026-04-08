@@ -88,9 +88,10 @@ export class XMLCompiler {
   }
 
   /**
-   * Build an XML attribute string from metadata object
+   * Build an XML attribute string from metadata object.
+   * @internal Used specifically by the CompilerService and internal element conversions.
    */
-  private static buildAttributeString(metadata: Record<string, any>): string {
+  public static buildAttributeString(metadata: Record<string, any>): string {
     const attributes: string[] = []
 
     for (const [key, value] of Object.entries(metadata)) {
@@ -129,9 +130,10 @@ export class XMLCompiler {
   }
 
   /**
-   * Convert a single element to XML string
+   * Convert a single element to XML string.
+   * @internal Used for high-fidelity round-trip reconstruction of Sims 4 elements.
    */
-  private static elementToXMLString(
+  public static elementToXMLString(
     element: any,
     prettyPrint: boolean,
     indentLevel: number

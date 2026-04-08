@@ -1,0 +1,102 @@
+{
+  "version": "1.0.0",
+  "lastUpdated": "2026-04-03",
+  "sections": [
+    {
+      "id": "intro",
+      "title": "Welcome to JPE Studio",
+      "content": "JPE stands for **Just Plain English** – a simple, readable syntax for creating The Sims 4 mods without complex XML or programming knowledge. Instead of fighting with tags, you write sentences that describe what your mod does.",
+      "items": [
+        {
+          "id": "why-jpe",
+          "title": "Why use JPE?",
+          "content": "JPE is designed to be **Human-Readable**, **Beginner-Friendly**, and **Industrial-Scale Ready**. It minimizes errors by using a clear, hierarchical structure (indentation) and plain English keywords."
+        },
+        {
+          "id": "getting-started",
+          "title": "Your First Mod",
+          "content": "Create a `.jpe` file and define an interaction. For example:\n\n```jpe\nMy First Interaction\n  description: \"Hello World\"\n  tests:\n    - actor is adult\n```\nBuild it (Ctrl+B) and JPE Studio handles the rest.",
+          "playground": "My First Interaction\n  description: \"Hello World\"\n  tests:\n    - actor is adult"
+        }
+      ]
+    },
+    {
+      "id": "syntax",
+      "title": "JPE Syntax Basics",
+      "content": "The foundation of JPE is **Indentation**. Like the game itself, JPE has a clear hierarchy.",
+      "items": [
+        {
+          "id": "indentation",
+          "title": "Indentation (2 Spaces)",
+          "content": "Hierarchy is shown by indenting exactly **2 spaces**. Parent properties contain children.\n\n```jpe\nParent\n  Child Property: Value\n  Nested Group:\n    Grandchild: Value\n```"
+        },
+        {
+          "id": "data-types",
+          "title": "Data Types",
+          "content": "- **Strings**: `\"Like this\"` (use quotes for spaces)\n- **Numbers**: `100` or `0.75`\n- **Lists**: Use `-` for multiple items (e.g., tests or effects)."
+        }
+      ]
+    },
+    {
+      "id": "core-concepts",
+      "title": "Core Concepts",
+      "content": "Mods are built from four primary blocks: Interactions, Buffs, Traits, and Tests.",
+      "items": [
+        {
+          "id": "interactions",
+          "title": "Interactions (Actions)",
+          "content": "Interactions are what Sims *do*. They have descriptions, types, and conditions.\n\n```jpe\nGreet Sim\n  type: social\n  duration: 10\n```",
+          "playground": "Greet Sim\n  type: social\n  duration: 10\n  tests:\n    - actor is happy"
+        },
+        {
+          "id": "buffs",
+          "title": "Buffs (Moodlets)",
+          "content": "Temporary emotional effects. They have intensity and duration.\n\n```jpe\nFeeling Fine\n  mood_type: positive\n  intensity: 2\n  duration: 240\n```"
+        },
+        {
+          "id": "tests",
+          "title": "Tests (Conditions)",
+          "content": "Tests determine if an action can happen. Examples: `actor is adult`, `actor has cooking skill >= 5`."
+        }
+      ]
+    },
+    {
+      "id": "pro-utilities",
+      "title": "Industrial Pro Utilities",
+      "content": "For professional modders managing massive libraries, JPE Studio includes high-fidelity binary tools.",
+      "items": [
+        {
+          "id": "stream-writer",
+          "title": "Industrial Stream Writer",
+          "content": "When updating massive mods (>1GB), JPE Studio uses a sequential binary stream writer. This ensures **zero memory crashes** by reconstructing files chunk-by-chunk instead of loading the whole file into RAM.",
+          "context": "utilities/update"
+        },
+        {
+          "id": "collision-hashing",
+          "title": "Size-Collision Optimization",
+          "content": "The Mods Cleanup utility is optimized for industrial speed. It only hashes files if they share the exact same byte-size, reducing disk IO by **90%** on standard mod folders.",
+          "context": "utilities/cleanup"
+        },
+        {
+          "id": "manifest-patching",
+          "title": "One-Click Manifest Update",
+          "content": "You can patch mod version numbers and metadata directly in the binary without needing the original source XML or re-exporting from external tools.",
+          "context": "utilities/manifest"
+        }
+      ]
+    },
+    {
+      "id": "advanced",
+      "title": "Advanced Techniques",
+      "content": "Mastering complex mod logic and conditional chains.",
+      "items": [
+        {
+          "id": "conditional-nesting",
+          "title": "Advanced Conditional Nesting",
+          "content": "You can nest tests to create complex logic trees. A Sims 4 interaction can require multiple age, skill, and mood conditions simultaneously.\n\n```jpe\nMaster Chef Kiss\n  tests:\n    - actor cooking skill >= 10\n    - actor is inspired\n    - target is food lover\n```",
+          "playground": "Master Chef Kiss\n  tests:\n    - actor cooking skill >= 10\n    - actor is inspired\n    - target is food lover"
+        }
+      ]
+    }
+  ]
+}

@@ -5,7 +5,7 @@ import {
   Code2, Languages, Network, Rocket,
   Sparkles, FileCode, Globe, CheckCircle2,
   Activity, Cpu, Clock, TrendingUp, Zap,
-  Shield, Braces, type LucideIcon,
+  Shield, Braces, Palette, type LucideIcon,
 } from "lucide-react";
 import { T } from "./robust/jpe-theme";
 import type { WorkspaceMode } from "./robust/jpe-theme";
@@ -83,7 +83,14 @@ export function DashboardView({ onNavigate }: { onNavigate: (mode: WorkspaceMode
     };
   }, [onNavigate]);
 
-  const recentFiles = useMemo(() => {
+  const recentFilesDisplay = useMemo(() => {
+    if (activities.length === 0) {
+      return [
+        { name: "spectral_core_manifest.jpe", status: 'ready', time: "BOOT", icon: FileCode, color: T.cyan },
+        { name: "logic_gate_runner.ts", status: 'ready', time: "BOOT", icon: Braces, color: T.violetBright },
+        { name: "ui_glow_engine.css", status: 'ready', time: "READY", icon: Palette, color: T.emerald },
+      ];
+    }
     return activities
       .filter(a => a.type === 'modified' || a.type === 'added')
       .slice(0, 5)
@@ -96,7 +103,14 @@ export function DashboardView({ onNavigate }: { onNavigate: (mode: WorkspaceMode
       }));
   }, [activities]);
 
-  const activityLog = useMemo(() => {
+  const activityLogDisplay = useMemo(() => {
+    if (activities.length === 0) {
+      return [
+        { text: "CORE_SYSTEM: Layer 1 Initialization Complete", color: T.emerald, time: "BOOT", icon: CheckCircle2 },
+        { text: "NEURAL_LINK: Establishing secure channel...", color: T.cyan, time: "SYNC", icon: Zap },
+        { text: "SPECTRAL_UI: Loading shaders and glows", color: T.violet, time: "READY", icon: Sparkles },
+      ];
+    }
     return activities.slice(0, 6).map(a => {
       const iconMap: Record<string, LucideIcon> = {
         created: CheckCircle2,
@@ -178,25 +192,41 @@ export function DashboardView({ onNavigate }: { onNavigate: (mode: WorkspaceMode
 
         {/* Hero Content */}
         <div className="relative z-10 flex flex-col justify-end h-full px-8 pb-8">
-          <div className="flex items-center gap-4 mb-3">
-            <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 0.5, ease: easing.outStandard }}
-              className="w-14 h-14 rounded-2xl flex items-center justify-center"
-              style={{
-                background: `linear-gradient(135deg, ${T.cyan}, ${T.violet})`,
-                boxShadow: `0 0 30px rgba(99,179,237,0.3)`,
-                border: "1px solid rgba(255,255,255,0.2)"
-              }}
-            >
-              <Braces size={28} color="#fff" strokeWidth={2.5} />
-            </motion.div>
-            <div>
-              <Eyebrow color={T.cyanBright}>INDUSTRIAL ENGINE v4.2.0</Eyebrow>
-              <h1 style={{ fontSize: 32, fontWeight: 950, fontFamily: T.display, color: T.textPrimary, letterSpacing: "-0.02em", lineHeight: 1 }}>
-                {currentProject ? currentProject.name : "KHAOTIC DEV STUDIO"}
-              </h1>
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-4">
+              <motion.div
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 0.5, ease: easing.outStandard }}
+                className="w-14 h-14 rounded-2xl flex items-center justify-center"
+                style={{
+                  background: `linear-gradient(135deg, ${T.cyan}, ${T.violet})`,
+                  boxShadow: `0 0 30px rgba(99,179,237,0.3)`,
+                  border: "1px solid rgba(255,255,255,0.2)"
+                }}
+              >
+                <Braces size={28} color="#fff" strokeWidth={2.5} />
+              </motion.div>
+              <div>
+                <Eyebrow color={T.cyanBright}>INDUSTRIAL ENGINE v4.2.0</Eyebrow>
+                <h1 style={{ fontSize: 32, fontWeight: 950, fontFamily: T.display, color: T.textPrimary, letterSpacing: "-0.02em", lineHeight: 1 }}>
+                  {currentProject ? currentProject.name : "KHAOTIC DEV STUDIO"}
+                </h1>
+              </div>
+            </div>
+
+            {/* Industrial Status Badges */}
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-emerald/30 bg-emerald/5">
+                <div className="w-2 h-2 rounded-full bg-emerald animate-pulse" style={{ boxShadow: `0 0 8px ${T.emerald}` }} />
+                <span style={{ fontSize: 9, fontFamily: T.mono, color: T.emerald, fontWeight: 700, letterSpacing: "0.1em" }}>SYSTEM NOMINAL</span>
+              </div>
+              {currentProject && (
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-cyan/30 bg-cyan/5">
+                  <div className="w-2 h-2 rounded-full bg-cyan animate-pulse" style={{ boxShadow: `0 0 8px ${T.cyan}` }} />
+                  <span style={{ fontSize: 9, fontFamily: T.mono, color: T.cyan, fontWeight: 700, letterSpacing: "0.1em" }}>PROJECT ACTIVE</span>
+                </div>
+              )}
             </div>
           </div>
           
@@ -250,8 +280,8 @@ export function DashboardView({ onNavigate }: { onNavigate: (mode: WorkspaceMode
                   )}
 
                   <div className="flex flex-col h-full relative z-10">
-                    <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-3" style={{ background: `${action.color}15`, border: `1px solid ${action.color}30` }}>
-                      <action.icon size={18} color={action.color} />
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-3 group-hover:spectral-pulse" style={{ background: `${action.color}15`, border: `1px solid ${action.color}30` }}>
+                      <action.icon size={18} color={action.color} className="group-hover:scale-110 transition-transform duration-300" />
                     </div>
                     <div style={{ fontSize: 13, fontWeight: 800, color: T.textPrimary }}>{action.label}</div>
                     <div style={{ fontSize: 10, color: T.textMuted }}>{action.desc}</div>
@@ -262,12 +292,12 @@ export function DashboardView({ onNavigate }: { onNavigate: (mode: WorkspaceMode
         </div>
 
         {/* Project Health */}
-        <div className="col-span-12 lg:col-span-4">
+        <div className="col-span-12 lg:col-span-4 translate-y-[-10px]">
           <div className="flex items-center gap-2 mb-4">
             <Activity size={14} color={T.emerald} />
             <Eyebrow color={T.textPrimary}>L2D TELEMETRY</Eyebrow>
           </div>
-          <JpeCard className="p-5 space-y-4">
+          <JpeCard className="p-5 space-y-4 hover:glow-border-cyan transition-all duration-300">
             {(() => {
               const files = currentProject?.files ?? [];
               const totalFiles = files.length;
@@ -287,14 +317,14 @@ export function DashboardView({ onNavigate }: { onNavigate: (mode: WorkspaceMode
               <div key={i}>
                 <div className="flex items-center justify-between mb-1.5">
                   <span style={{ fontSize: 10, fontWeight: 700, color: T.textSecondary, fontFamily: T.mono }}>{item.label}</span>
-                  <span style={{ fontSize: 10, fontWeight: 800, color: item.color, fontFamily: T.mono }}>{item.pct}%</span>
+                  <span className="spectral-pulse" style={{ fontSize: 10, fontWeight: 800, color: item.color, fontFamily: T.mono }}>{item.pct}%</span>
                 </div>
                 <JpeProgressBar value={item.pct} color={item.color} height={5} />
               </div>
             ))}
             <div className="pt-2">
-               <div style={{ fontSize: 10, color: T.textMuted, lineHeight: 1.5, background: "rgba(0,0,0,0.2)", padding: 8, borderRadius: 8 }}>
-                  Real-time synchronization active. All components monitored via KDBS pipeline.
+               <div style={{ fontSize: 10, color: T.textMuted, lineHeight: 1.5, background: "rgba(0,0,0,0.2)", padding: 8, borderRadius: 8, border: "1px solid rgba(255,255,255,0.05)" }}>
+                  <span className="text-cyan font-bold mr-1">REAL-TIME:</span> Synchronization active. All components monitored via KDBS pipeline.
                </div>
             </div>
           </JpeCard>
@@ -303,47 +333,45 @@ export function DashboardView({ onNavigate }: { onNavigate: (mode: WorkspaceMode
         {/* Recent Data Blocks */}
         <div className="col-span-12 md:col-span-6 lg:col-span-4">
            <JpeCard title="RECENT_RESOURCES" icon={Clock} headerAction={
-              <button onClick={() => onNavigate("code")} className="text-[10px] text-cyan font-bold bg-transparent border-none outline-none">EXPLORE</button>
-           }>
+              <button onClick={() => onNavigate("code")} className="text-[10px] text-cyan font-bold bg-transparent border-none outline-none hover:text-cyanBright transition-colors cursor-pointer">EXPLORE</button>
+           } className="hover:glow-border-cyan transition-all">
               <div className="space-y-1">
-                {recentFiles.length > 0 ? recentFiles.map((f, i) => (
+                {recentFilesDisplay.map((f, i) => (
                   <button key={i} onClick={() => onNavigate("code")} className="w-full flex items-center gap-3 px-3 py-2 hover:bg-white/5 rounded-lg transition-colors group bg-transparent border-none text-left">
-                     <f.icon size={13} color={f.color} />
+                     <f.icon size={13} color={f.color} className="group-hover:rotate-12 transition-transform" />
                      <span className="flex-1 truncate text-[11px] text-text-secondary group-hover:text-text-primary">{f.name}</span>
                      <span style={{ fontSize: 9, fontFamily: T.mono, color: T.textMuted }}>{f.time}</span>
                   </button>
-                )) : (
-                  <div className="py-8 text-center text-text-muted text-[11px]">No recent data blocks detected.</div>
-                )}
+                ))}
               </div>
            </JpeCard>
         </div>
 
         {/* Performance & Charts */}
         <div className="col-span-12 md:col-span-6 lg:col-span-4">
-           <JpeCard title="CORE_LOAD" icon={Cpu}>
+           <JpeCard title="CORE_LOAD" icon={Cpu} className="hover:glow-border-cyan transition-all">
               <CoreLoadChart data={perfData} />
               <div className="flex items-center justify-between mt-3 px-2">
-                 <div className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full" style={{ background: T.cyan }} /><span style={{ fontSize: 9, color: T.textMuted }}>8-THREAD CPU</span></div>
+                 <div className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-cyan spectral-pulse" /><span style={{ fontSize: 9, color: T.textMuted }}>8-THREAD CPU</span></div>
                  <div style={{ fontSize: 10, fontFamily: T.mono, fontWeight: 700, color: T.cyan }}>0.01ms LATENCY</div>
               </div>
            </JpeCard>
         </div>
 
         <div className="col-span-12 md:col-span-12 lg:col-span-4">
-           <JpeCard title="REGIONAL_DIST" icon={Globe}>
+           <JpeCard title="REGIONAL_DIST" icon={Globe} className="hover:glow-border-cyan transition-all">
               <RegionalDistChart data={coverageData} />
            </JpeCard>
         </div>
 
         {/* Activity Feed */}
         <div className="col-span-12">
-           <JpeCard title="SYSTEM_LOG" icon={TrendingUp}>
+           <JpeCard title="SYSTEM_LOG" icon={TrendingUp} className="hover:glow-border-cyan transition-all">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-1">
-                 {activityLog.map((a, i) => (
-                    <div key={i} className="flex items-center gap-3 px-3 py-2 border-b border-white/5 last:border-0">
-                       <a.icon size={12} color={a.color} />
-                       <span className="flex-1 text-[11px] text-text-secondary truncate">{a.text}</span>
+                 {activityLogDisplay.map((a, i) => (
+                    <div key={i} className="flex items-center gap-3 px-3 py-2 border-b border-white/5 last:border-0 group hover:bg-white/[0.02] transition-colors">
+                       <a.icon size={12} color={a.color} className="group-hover:scale-125 transition-transform" />
+                       <span className="flex-1 text-[11px] text-text-secondary truncate group-hover:text-text-primary">{a.text}</span>
                        <span style={{ fontSize: 9, fontFamily: T.mono, color: T.textDim }}>{a.time}</span>
                     </div>
                  ))}

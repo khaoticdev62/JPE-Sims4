@@ -28,7 +28,7 @@ interface PaletteCommand {
   description?: string;
 }
 
-type CommandCategory = "translation" | "build" | "navigation" | "search" | "analysis" | "debug" | "editor" | "general" | "creation";
+type CommandCategory = "translation" | "build" | "navigation" | "search" | "analysis" | "debug" | "editor" | "general" | "creation" | "ai";
 
 interface CommandPaletteProps {
   isOpen: boolean;
@@ -86,6 +86,7 @@ const categoryMeta: Record<CommandCategory, { label: string; color: string }> = 
   editor: { label: "Editor", color: T.cyanBright },
   general: { label: "General", color: T.textTertiary },
   creation: { label: "Creation", color: T.emerald },
+  ai: { label: "AI Tools", color: T.violetBright },
 };
 
 /* ═══ FUZZY MATCH ═══ */
@@ -142,7 +143,7 @@ export function CommandPalette({ isOpen, onClose, onSwitchMode, currentMode: _cu
   const [selectedIdx, setSelectedIdx] = useState(0);
   const [executedAction, setExecutedAction] = useState<string | null>(null);
   const [recentIds, setRecentIds] = useState<string[]>([]);
-  const { setBuffWizardOpen, setInteractionWizardOpen, setTraitWizardOpen } = useUIStore();
+  const { setBuffWizardOpen, setInteractionWizardOpen, setTraitWizardOpen, setPromptToJPEOpen, setHelpCenterOpen } = useUIStore();
 
   // Multi-mode detection: ">", "@", ":" prefixes
   const isCommandMode = query.startsWith(">");
@@ -227,8 +228,14 @@ export function CommandPalette({ isOpen, onClose, onSwitchMode, currentMode: _cu
       { id: "cr-buff", icon: Zap, label: "Create: New Buff Mod", shortcut: "Alt+B", color: T.emerald, category: "creation", action: () => { setBuffWizardOpen(true); onClose(); }, description: "Launch the AI-assisted Buff Creation Wizard" },
       { id: "cr-interaction", icon: Zap, label: "Create: New Interaction", shortcut: "Alt+I", color: T.emerald, category: "creation", action: () => { setInteractionWizardOpen(true); onClose(); }, description: "Launch the AI-assisted Interaction Wizard" },
       { id: "cr-trait", icon: Zap, label: "Create: New Trait", shortcut: "Alt+T", color: T.emerald, category: "creation", action: () => { setTraitWizardOpen(true); onClose(); }, description: "Launch the AI-assisted Trait Wizard" },
+
+      // AI Tools
+      { id: "ai-prompt-to-jpe", icon: Sparkles, label: "AI: Prompt to JPE", shortcut: "Ctrl+Shift+J", color: T.violetBright, category: "ai", action: () => { setPromptToJPEOpen(true); onClose(); }, description: "Generate JPE code from natural language description" },
+
+      // Help
+      { id: "help-center", icon: BookOpen, label: "Help: Open Help Center", shortcut: "F1", color: T.cyan, category: "general", action: () => { setHelpCenterOpen(true); onClose(); }, description: "Browse documentation, tutorials, and community resources" },
     ];
-  }, [onSwitchMode, setBuffWizardOpen, setInteractionWizardOpen, setTraitWizardOpen, onClose]);
+  }, [onSwitchMode, setBuffWizardOpen, setInteractionWizardOpen, setTraitWizardOpen, setPromptToJPEOpen, setHelpCenterOpen, onClose]);
 
   /* ═══ FILTER & SORT ═══ */
   const filteredItems = useMemo(() => {

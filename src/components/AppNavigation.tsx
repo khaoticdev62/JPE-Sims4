@@ -44,7 +44,7 @@ function NavItem({ icon, label, active = false, onClick, testId }: NavItemProps)
       )}
 
       <span className="shrink-0 w-5 h-5 relative z-10 transition-transform group-hover:scale-110">
-        {iconElement && React.cloneElement(iconElement as React.ReactElement<any>, {
+        {iconElement && React.cloneElement(iconElement as React.ReactElement<{ color?: string; strokeWidth?: number; style?: React.CSSProperties }>, {
           color: active ? T.cyanBright : "currentColor",
           strokeWidth: active ? 2.5 : 2,
           style: active ? { filter: `drop-shadow(0 0 8px ${T.cyan}80)` } : {}
@@ -76,6 +76,12 @@ interface AppNavigationProps {
 }
 
 export function AppNavigation({ activeItem = "home", onNavigate, className }: AppNavigationProps) {
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const navItems = [
     { id: "dashboard", label: "HOME DASHBOARD", icon: <Home className="w-5 h-5" /> },
     { id: "projects", label: "PROJECTS EXPLORER", icon: <FolderOpen className="w-5 h-5" /> },
@@ -85,6 +91,33 @@ export function AppNavigation({ activeItem = "home", onNavigate, className }: Ap
     { id: "playground", label: "JPE PLAYGROUND", icon: <Gamepad2 className="w-5 h-5" /> },
     { id: "settings", label: "APP SETTINGS", icon: <Settings className="w-5 h-5" /> },
   ];
+
+  // Fix hydration mismatch: Render skeleton during SSR, full nav after mount
+  if (!mounted) {
+    return (
+      <nav
+        data-testid="app-navigation-placeholder"
+        className={cn("w-64 h-full border-r flex flex-col", className)}
+        style={{ background: T.bgPanel, borderColor: T.border }}
+        aria-hidden="true"
+      >
+        <div className="px-6 py-8 mb-2">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-xl" style={{ background: 'rgba(99,179,237,0.2)' }} />
+            <div>
+              <div className="h-4 w-24 rounded" style={{ background: 'rgba(255,255,255,0.1)' }} />
+              <div className="h-2 w-16 rounded mt-1" style={{ background: 'rgba(255,255,255,0.05)' }} />
+            </div>
+          </div>
+        </div>
+        <div className="flex flex-col gap-1 px-3">
+          {navItems.map((item) => (
+            <div key={item.id} className="h-12 rounded-xl" style={{ background: 'rgba(255,255,255,0.02)' }} />
+          ))}
+        </div>
+      </nav>
+    );
+  }
 
   return (
     <nav

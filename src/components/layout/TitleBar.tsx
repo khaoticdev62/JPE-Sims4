@@ -94,9 +94,11 @@ function TitleBarComponent() {
   }, [handleCompile, setImmersionMode])
 
   return (
-    <div className="h-12 flex items-center px-4 w-full select-none" style={{ background: T.bgElevated, borderBottom: `1px solid ${T.border}` }}>
-      {/* Menu Bar */}
-      <MenuBar />
+    <div className="h-12 flex items-center px-4 w-full select-none title-bar-drag" style={{ background: T.bgElevated, borderBottom: `1px solid ${T.border}` }}>
+      {/* Menu Bar (Non-Draggable) */}
+      <div className="no-drag">
+        <MenuBar />
+      </div>
 
       {/* JPE Logo & Project Name */}
       <div className="flex items-center gap-3 px-4 border-l border-white/5 ml-2 h-6" data-testid="title-bar-logo">
@@ -111,8 +113,8 @@ function TitleBarComponent() {
 
       <div className="flex-1" />
 
-      {/* Industrial Controls */}
-      <div className="flex items-center gap-6">
+      {/* Industrial Controls (Non-Draggable) */}
+      <div className="flex items-center gap-6 no-drag">
         {isIndexingMods && (
           <div className="flex items-center gap-2 px-2 py-0.5 rounded-full border border-cyan/20 bg-cyan/5 animate-pulse">
             <div className="w-1.5 h-1.5 rounded-full bg-cyan shadow-[0_0_5px_rgba(99,179,237,0.8)]" />
@@ -158,8 +160,8 @@ function TitleBarComponent() {
            </button>
         </div>
 
-        {/* Global Immersion Context */}
-        <div className="flex bg-black/40 rounded-lg p-0.5 border border-white/5">
+        {/* Global Immersion Context (Non-Draggable) */}
+        <div className="flex bg-black/40 rounded-lg p-0.5 border border-white/5 no-drag">
             {['normal', 'zen', 'focus'].map((mode) => (
               <button
                 key={mode}

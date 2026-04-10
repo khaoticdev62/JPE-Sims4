@@ -9,6 +9,10 @@ test.describe('E2E: Create Project Flow', () => {
     // 1. Programmatically dismiss onboarding tour via localStorage
     await context.addInitScript(() => {
       window.localStorage.setItem('jpe_onboarding_seen', 'true')
+      window.localStorage.setItem('jpe-splash-dismissed', 'true')
+      window.localStorage.setItem('jpe-ui-store', JSON.stringify({
+        state: { hasCompletedTour: true }
+      }))
     })
 
     // 2. Navigate to the studio
@@ -40,7 +44,7 @@ test.describe('E2E: Create Project Flow', () => {
 
     // 4. Verify navigation to Studio/Editor
     // Spectral UI uses a different layout, verify the three-pane exists
-    const editorLayout = page.locator('[data-testid="editor-three-pane"]')
+    const editorLayout = page.locator('[data-testid="editor-main-viewport"]')
     await expect(editorLayout).toBeVisible({ timeout: 10000 })
     
     // 5. Verify project name in explorer or header

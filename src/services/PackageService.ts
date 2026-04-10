@@ -89,16 +89,18 @@ export class PackageService {
    * Uses existing package metadata to avoid re-parsing the index.
    */
   static async extractResourceFast(
-    packagePath: string, 
-    resource: PackageResource, 
+    packagePath: string,
+    resource: PackageResource,
     buffer: ArrayBuffer
   ): Promise<ArrayBuffer | null> {
     try {
-      let resourceBuffer = buffer.slice(resource.offset, resource.offset + resource.size)
-      
+      // Handle compressed size (high bit set indicates compression)
+      const actualSize = resource.size & 0x7FFFFFFF;
+      let resourceBuffer = buffer.slice(resource.offset, resource.offset + actualSize)
+
       if (resource.isCompressed) {
         const { decompressZLIB } = await import('@/engine/parsers/types/package')
-        const decompressed = await decompressZLIB(resourceBuffer, resource.size)
+        const decompressed = await decompressZLIB(resourceBuffer, actualSize)
         if (decompressed) {
           resourceBuffer = decompressed
         }
@@ -171,8 +173,8 @@ export class PackageService {
    * High-fidelity binary packing for Sims 4 production bundles.
    */
   static async createPackage(resources: PackageOutputResource[]): Promise<ArrayBuffer> {
-    const HEADER_SIZE = 96;
-    const INDEX_ENTRY_SIZE = 32; // Type(4), Group(4), InstanceHi(4), InstanceLo(4), Offset(4), Size(4), SizeUncomp(4), Flags(2), Unknown(2)
+    const HEADER_SIZE = 64; // DBPF v2 header with padding to avoid overwrite
+    const INDEX_ENTRY_SIZE = 24; // Type(4), Group(4), Instance(8), Offset(4), Size(4)
 
     // 1. Compress resources and calculate offsets
     let currentOffset = HEADER_SIZE;
@@ -194,11 +196,11 @@ export class PackageService {
         ...res,
         finalContent,
         offset: currentOffset,
-        size: finalContent.length,
+        size: isCompressed ? finalContent.length : uncompressedSize,
         uncompressedSize,
         isCompressed
       };
-      
+
       currentOffset += finalContent.length;
       return entry;
     });
@@ -210,16 +212,13 @@ export class PackageService {
     const buffer = new ArrayBuffer(totalSize);
     const view = new DataView(buffer);
 
-    // 2. Write Header (96 bytes)
+    // 2. Write Header (32 bytes for standard DBPF v2)
     view.setUint32(0, 0x44425046, false); // 'DBPF'
     view.setUint32(4, 2, true); // Major version 2
     view.setUint32(8, 1, true); // Minor version 1
-    // ... [Bytes 12-35 reserved/zero]
-    view.setUint32(36, packedEntries.length, true); // Index count
-    view.setUint32(40, indexOffset, true); // Index offset
-    view.setUint32(44, indexSize, true); // Index size
-    // ... [Bytes 48-95 reserved/version-specific]
-    view.setUint32(56, 3, true); // Index version (3 for S4)
+    // Bytes 12-31: reserved/zero
+    view.setUint32(32, indexOffset, true); // Index offset
+    view.setUint32(36, indexSize, true); // Index size
 
     // 3. Write Resource Chunks
     const uint8 = new Uint8Array(buffer);
@@ -227,23 +226,22 @@ export class PackageService {
       uint8.set(entry.finalContent, entry.offset);
     });
 
-    // 4. Write Index Table
+    // 4. Write Index Table (24 bytes per entry to match PackageParser)
     let currentEntryOffset = indexOffset;
     packedEntries.forEach(entry => {
       view.setUint32(currentEntryOffset, entry.type, true);
       view.setUint32(currentEntryOffset + 4, entry.group, true);
-      
+
       // Instance is 64-bit (Hi/Lo)
       const inst = BigInt(entry.instance);
       view.setUint32(currentEntryOffset + 8, Number(inst >> 32n), true); // Hi
       view.setUint32(currentEntryOffset + 12, Number(inst & 0xFFFFFFFFn), true); // Lo
-      
+
       view.setUint32(currentEntryOffset + 16, entry.offset, true);
-      view.setUint32(currentEntryOffset + 20, entry.size | 0x80000000, true); // Set compression bit if needed (Sims 4 convention varies, often use flags)
-      view.setUint32(currentEntryOffset + 24, entry.uncompressedSize, true);
-      view.setUint16(currentEntryOffset + 28, entry.isCompressed ? 0xFFFF : 0x0000, true); // Flags (0xFFFF = compressed)
-      view.setUint16(currentEntryOffset + 30, 0x0001, true); // Constant
-      
+      // Sims 4 DBPF: size field contains compressed size (with high bit set if compressed)
+      const sizeField = entry.isCompressed ? (entry.size | 0x80000000) >>> 0 : entry.uncompressedSize;
+      view.setUint32(currentEntryOffset + 20, sizeField, true);
+
       currentEntryOffset += INDEX_ENTRY_SIZE;
     });
 

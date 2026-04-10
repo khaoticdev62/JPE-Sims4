@@ -48,25 +48,40 @@ export class QwenService extends BaseAIService {
     }
 
     try {
-      const response = await this.performRequest<any>('chat', () => axios.post(
-        '/api/qwen/chat',
-        {
+      let response: any
+      if (this.isElectron) {
+        response = await this.callNativeBridge<any>('qwen', 'post', '/api/qwen/chat', {
           model: this.model,
           messages: messages.map(m => ({
             role: m.role,
             content: m.content
-          }))},
-        {
-          headers: {
-            'Authorization': apiKey ? `Bearer ${apiKey}` : '',
-            'Content-Type': 'application/json'
+          }))
+        }, {
+          'Authorization': apiKey ? `Bearer ${apiKey}` : '',
+          'Content-Type': 'application/json'
+        })
+      } else {
+        response = await this.performRequest<any>('chat', () => axios.post(
+          '/api/qwen/chat',
+          {
+            model: this.model,
+            messages: messages.map(m => ({
+              role: m.role,
+              content: m.content
+            }))
+          },
+          {
+            headers: {
+              'Authorization': apiKey ? `Bearer ${apiKey}` : '',
+              'Content-Type': 'application/json'
+            }
           }
-        }
-      ), messages.map(m => m.content).join(' '), false)
+        ), messages.map(m => m.content).join(' '), false)
+      }
 
       const data = response.data
-      if (!data.success || !data.text) {
-        throw new Error(data.error || 'Chat failed')
+      if (!data?.success || !data?.text) {
+        throw new Error(data?.error || 'Chat failed')
       }
 
       if (data.usage?.totalTokens) {

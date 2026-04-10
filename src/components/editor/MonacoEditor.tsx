@@ -18,7 +18,8 @@
 import { useEffect, useRef, useState, useId } from 'react'
 import { T } from '@/components/robust/jpe-theme'
 import { sensoryService } from '@/services/editor/SensoryService'
-import type { editor, IDisposable, languages, Position, CancellationToken } from 'monaco-editor'
+import type { editor, IDisposable, Position, CancellationToken, languages } from 'monaco-editor'
+import * as monaco from 'monaco-editor'
 import { MonacoCompletionItem } from '@/types'
 import { registerJpeCompletionProvider } from '@/services/autocomplete/JpeCompletionProvider'
 type Editor = editor.IStandaloneCodeEditor

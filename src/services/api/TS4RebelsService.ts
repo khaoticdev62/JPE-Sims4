@@ -44,11 +44,10 @@ export class TS4RebelsService {
    */
   static async login(username: string, password: string): Promise<TS4RebelsBridgeResponse<{ ok: boolean; cookies: Record<string, string>; diagnostics: any[] }>> {
     try {
-      const response = await fetch('/api/ts4rebels', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'login', username, password })});
-      return await response.json();
+      if (typeof window !== 'undefined' && window.electron?.ts4rebels) {
+        return await window.electron.ts4rebels.invoke('login', { username, password })
+      }
+      throw new Error('Native TS4Rebels bridge not available');
     } catch (error: any) {
       return {
         success: false,
@@ -64,11 +63,14 @@ export class TS4RebelsService {
    */
   static async listForum(forumId: number = 59, page: number = 1, cookies?: string): Promise<TS4RebelsBridgeResponse<{ topics: TS4RebelsTopicSummary[] }>> {
     try {
-      const headers: Record<string, string> = {};
-      if (cookies) headers['x-ts4rebels-cookies'] = cookies;
-      const params = new URLSearchParams({ forum: String(forumId), page: String(page) });
-      const response = await fetch(`/api/ts4rebels?${params.toString()}`, { headers });
-      return await response.json();
+      if (typeof window !== 'undefined' && window.electron?.ts4rebels) {
+        return await window.electron.ts4rebels.invoke('forum', { 
+          forum: String(forumId), 
+          page: String(page),
+          cookies: cookies || ''
+        })
+      }
+      throw new Error('Native TS4Rebels bridge not available');
     } catch (error: any) {
       return {
         success: false,
@@ -83,11 +85,14 @@ export class TS4RebelsService {
    */
   static async getTopic(topicId: number, page: number = 1, cookies?: string): Promise<TS4RebelsBridgeResponse<{ posts: TS4RebelsPost[] }>> {
     try {
-      const headers: Record<string, string> = {};
-      if (cookies) headers['x-ts4rebels-cookies'] = cookies;
-      const params = new URLSearchParams({ topic: String(topicId), page: String(page) });
-      const response = await fetch(`/api/ts4rebels?${params.toString()}`, { headers });
-      return await response.json();
+      if (typeof window !== 'undefined' && window.electron?.ts4rebels) {
+        return await window.electron.ts4rebels.invoke('topic', { 
+          topic: String(topicId), 
+          page: String(page),
+          cookies: cookies || ''
+        })
+      }
+      throw new Error('Native TS4Rebels bridge not available');
     } catch (error: any) {
       return {
         success: false,

@@ -58,6 +58,21 @@ const electronAPI = {
   shell: {
     installContextMenu: () => ipcRenderer.invoke('shell:installContextMenu'),
   },
+  ts4rebels: {
+    invoke: (action: string, params: Record<string, string>) => 
+      ipcRenderer.invoke('ts4rebels:invoke', action, params),
+  },
+  transform: {
+    run: (source: string, fileName: string) => 
+      ipcRenderer.invoke('transform:run', source, fileName),
+  },
+  ai: {
+    invoke: (provider: string, method: string, params: any) => 
+      ipcRenderer.invoke('ai:invoke', provider, method, params),
+  },
+  scarlet: {
+    fetch: () => ipcRenderer.invoke('scarlet:fetch'),
+  },
 
   // Event listeners (main → renderer)
   on: (channel: string, callback: (...args: unknown[]) => void) => {

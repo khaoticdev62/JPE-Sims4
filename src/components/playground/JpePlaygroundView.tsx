@@ -42,7 +42,7 @@ LOG "Interaction started"
   };
 
   return (
-    <div className="flex flex-col h-full bg-bgDeep text-textPrimary overflow-hidden font-sans">
+    <div data-testid="playground-view" className="flex-1 w-full flex flex-col h-full bg-bgDeep text-textPrimary overflow-hidden font-sans">
       {/* Top Header / Toolbar */}
       <header className="h-14 border-b border-border bg-bgSurface/60 backdrop-blur-xl flex items-center justify-between px-6 z-20">
         <div className="flex items-center gap-4">
@@ -159,7 +159,7 @@ LOG "Interaction started"
                  ].map(tab => (
                    <button
                      key={tab.id}
-                     onClick={() => setActiveTab(tab.id as any)}
+                     onClick={() => setActiveTab(tab.id as 'console' | 'world' | 'triggers')}
                      className={cn(
                        "flex-1 flex items-center justify-center gap-2 py-2 rounded-md text-[10px] font-bold uppercase tracking-widest transition-all",
                        activeTab === tab.id ? "bg-cyan/10 text-cyan border border-cyan/20" : "text-textTertiary hover:bg-white/5"

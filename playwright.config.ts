@@ -28,9 +28,11 @@ export default defineConfig({
 
   // Browser configuration
   use: {
-    baseURL: 'http://localhost:3000', // Matches unified dev server port
+    baseURL: 'http://localhost:3000',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
+    actionTimeout: 15000,
+    navigationTimeout: 30000,
   },
 
   // Web server for local development and CI

@@ -7,7 +7,7 @@ directories:
 files:
   - from: .
     filter:
-      - dist/**/*
+      - out/**/*
       - dist-electron/**/*
       - public/**/*
       - package.json
@@ -15,6 +15,10 @@ files:
 extraResources:
   - from: public/assets
     to: assets
+    filter:
+      - "**/*"
+  - from: scripts
+    to: scripts
     filter:
       - "**/*"
 

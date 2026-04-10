@@ -1,123 +1,193 @@
 "use client";
-import React, { useState } from 'react';
-import { useProjectStore } from '@/stores/useProjectStore';
-import { FolderOpen, Plus, Clock, FileText, ChevronRight, Star, Search, Filter, MoreVertical } from 'lucide-react';
-import { T } from "./robust/jpe-theme";
-import { JpeButton, JpeCard } from "./jpe-design-system";
-import { StaggerList, StaggerItem } from "./jpe-motion";
 
-interface ProjectsPageProps {
-  onNavigate?: (view: string) => void
+import React, { useState, useMemo } from 'react';
+import { T } from '@/components/robust/jpe-theme';
+import { 
+  Plus, FolderOpen, Search, Clock, 
+  CheckCircle2, 
+  Terminal
+} from 'lucide-react';
+import { motion, StaggerList, StaggerItem } from '@/components/jpe-motion';
+import { JpeButton, JpeCard, JpeStatusBadge } from '@/components/jpe-design-system';
+import { useProjectStore } from '@/stores/useProjectStore';
+
+interface Project {
+  id: string;
+  name: string;
+  lastOpened: string;
+  type: 'script' | 'object' | 'tuning';
+  status: 'active' | 'archived';
+  progress: number;
 }
 
-export function ProjectsPage({ onNavigate }: ProjectsPageProps) {
-  const { recentProjects } = useProjectStore();
+export function ProjectsPage({ onNavigate }: { onNavigate?: (target: string) => void }) {
   const [searchQuery, setSearchQuery] = useState("");
+  
+  const { recentProjects } = useProjectStore();
+  
+  const projects = useMemo(() => {
+    return recentProjects.map((p: any) => ({
+      id: p.id,
+      name: p.name,
+      lastOpened: new Date(p.updatedAt).toLocaleDateString(),
+      type: 'script' as const,
+      status: 'active' as const,
+      progress: 0
+    }));
+  }, [recentProjects]);
 
-  const filteredProjects = recentProjects.filter(p => 
-    p.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredProjects = useMemo(() => {
+    return projects.filter((p: Project) => p.name.toLowerCase().includes(searchQuery.toLowerCase()));
+  }, [projects, searchQuery]);
 
   return (
-    <div data-testid="projects-root" className="flex flex-col h-full overflow-y-auto custom-scrollbar" style={{ background: T.bg }}>
+    <div data-testid="projects-root" className="flex-1 overflow-y-auto bg-bgDeep custom-scrollbar relative">
+      {/* Cinematic Overlays */}
+      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-cyan/5 blur-[120px] rounded-full pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-violet/5 blur-[120px] rounded-full pointer-events-none" />
       
-      {/* ── SPECTRAL HEADER ── */}
-      <div className="px-8 py-10 border-b relative overflow-hidden flex-shrink-0" style={{ borderColor: T.border, background: T.bgPanel }}>
-        <div className="relative z-10">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <FolderOpen size={14} color={T.cyan} />
-                <span style={{ fontSize: 10, fontWeight: 800, fontFamily: T.mono, color: T.textSecondary, letterSpacing: "0.1em" }}>PROJECT_EXPLORER</span>
-              </div>
-              <h1 style={{ fontSize: 28, fontWeight: 900, fontFamily: T.display, color: T.textPrimary, letterSpacing: "-0.02em" }}>
-                Workspace Resources
-              </h1>
-            </div>
-            <JpeButton variant="primary" size="lg" icon={Plus} data-testid="create-new-project-btn" onClick={() => onNavigate?.('new_project')}>
-              CREATE NEW PROJECT
-            </JpeButton>
+      <div className="max-w-7xl mx-auto p-10 relative z-10">
+        <header className="mb-12">
+          <div className="flex items-center gap-4 mb-2">
+            <div className="w-2 h-8 bg-cyan rounded-full shadow-[0_0_15px_rgba(99,179,237,0.5)]" />
+            <h1 style={{ fontSize: 32, fontWeight: 950, fontFamily: T.display, color: T.textPrimary }} className="uppercase italic tracking-tighter">
+              Project Vault
+            </h1>
           </div>
+          <p className="text-textMuted uppercase tracking-[0.3em] text-[10px] font-black pl-6">
+            Active Workspace Traces & Archives
+          </p>
+        </header>
 
-          <div className="flex items-center gap-4">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <input 
-                type="text" 
-                placeholder="Search local projects..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full h-10 pl-10 pr-4 rounded-xl outline-none transition-all"
-                style={{ 
-                  background: T.bgInput, 
-                  border: `1px solid ${T.border}`, 
-                  color: T.textPrimary,
-                  fontSize: 13
-                }}
-              />
-            </div>
-            <JpeButton variant="secondary" icon={Filter}>Filters</JpeButton>
-            <JpeButton variant="secondary" icon={MoreVertical} />
+        <div className="flex flex-col md:flex-row gap-4 mb-10 items-center justify-between">
+          <div className="relative w-full md:w-96 group">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-textMuted group-focus-within:text-cyan transition-colors" size={16} />
+            <input 
+              type="text"
+              placeholder="SEARCH_VAULT..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-white/5 border border-border rounded-xl py-3 pl-12 pr-4 text-sm font-mono outline-none focus:border-cyan/50 focus:ring-1 focus:ring-cyan/30 transition-all placeholder:text-textMuted/30"
+            />
           </div>
-        </div>
-        
-        {/* Animated Background Decor */}
-        <div className="absolute top-0 right-0 w-64 h-64 opacity-10 pointer-events-none" 
-          style={{ background: `radial-gradient(circle at center, ${T.violet} 0%, transparent 70%)`, filter: "blur(40px)" }} />
-      </div>
-
-      {/* ── PROJECTS GRID ── */}
-      <div className="p-8">
-        <StaggerList className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {filteredProjects.map((project, idx) => (
-            <StaggerItem key={project.id}>
-              <JpeCard onClick={() => onNavigate?.('code')}>
-                <div className="flex items-start justify-between mb-4">
-                  <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: `${T.cyan}10`, border: `1px solid ${T.cyan}30` }}>
-                    <FileText size={20} color={T.cyan} />
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Star size={12} color={T.amber} fill={idx === 0 ? T.amber : "none"} />
-                    <span style={{ fontSize: 10, fontFamily: T.mono, color: T.textMuted }}>v{project.metadata?.version || '1.0.0'}</span>
-                  </div>
-                </div>
-
-                <h3 style={{ fontSize: 15, fontWeight: 700, color: T.textPrimary, marginBottom: 4 }}>{project.name}</h3>
-                <p style={{ fontSize: 11, color: T.textSecondary, marginBottom: 16, height: 32, overflow: "hidden" }}>
-                  {project.metadata?.description || "No description provided for this workspace."}
-                </p>
-
-                <div className="flex items-center justify-between pt-4 border-t" style={{ borderColor: T.borderSubtle }}>
-                  <div className="flex items-center gap-1.5 text-muted-foreground">
-                    <Clock size={12} />
-                    <span style={{ fontSize: 10 }}>2h ago</span>
-                  </div>
-                  <div className="flex items-center gap-1" style={{ color: T.cyan, fontSize: 10, fontWeight: 700 }}>
-                    OPEN <ChevronRight size={12} />
-                  </div>
-                </div>
-              </JpeCard>
-            </StaggerItem>
-          ))}
           
-          {/* Create New Placeholder */}
-          <StaggerItem>
-            <div 
-              className="h-full min-h-[180px] rounded-2xl border-2 border-dashed border-border/40 hover:border-primary/40 transition-all flex flex-col items-center justify-center cursor-pointer group"
-              onClick={() => onNavigate?.('new_project')}
-            >
-              <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                <Plus size={18} className="text-muted-foreground" />
-              </div>
-              <span className="text-sm font-semibold text-muted-foreground">Initialize New</span>
-            </div>
-          </StaggerItem>
-        </StaggerList>
+          <JpeButton variant="spectral" icon={Plus} onClick={() => onNavigate?.('new_project')}>
+            NEW_INITIALIZATION
+          </JpeButton>
+        </div>
 
-        {filteredProjects.length === 0 && searchQuery && (
-          <div className="text-center py-20">
-            <div className="text-muted-foreground mb-4">No projects matching "{searchQuery}"</div>
-            <JpeButton variant="ghost" onClick={() => setSearchQuery("")}>Clear Search</JpeButton>
+        {filteredProjects.length > 0 ? (
+          <StaggerList className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredProjects.map((project: Project) => (
+              <StaggerItem key={project.id}>
+                <JpeCard 
+                  title={project.name} 
+                  data-testid={`project-card-${project.id}`}
+                  className="group hover:scale-[1.02] transition-transform duration-300"
+                >
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center text-[10px] font-mono text-textMuted uppercase tracking-tight">
+                      <div className="flex items-center gap-1.5">
+                        <Clock size={12} />
+                        {project.lastOpened}
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <CheckCircle2 size={12} className="text-cyan" />
+                        {project.progress}% SYNC
+                      </div>
+                    </div>
+                    
+                    <div className="h-1 bg-white/5 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-cyan transition-all duration-1000 shadow-[0_0_8px_rgba(99,179,237,0.5)]" 
+                        style={{ width: `${project.progress}%` }} 
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between pt-2">
+                      <JpeStatusBadge 
+                        label={project.type} 
+                        status={project.status === 'active' ? 'ok' : 'idle'} 
+                        compact 
+                      />
+                      <JpeButton 
+                        variant="ghost" 
+                        size="xs" 
+                        icon={Terminal} 
+                        className="text-[10px] font-black uppercase"
+                        onClick={() => onNavigate?.('code')}
+                      >
+                        Open_Node
+                      </JpeButton>
+                    </div>
+                  </div>
+                </JpeCard>
+              </StaggerItem>
+            ))}
+          </StaggerList>
+        ) : !searchQuery ? (
+          /* PREMIUM EMPTY STATE */
+          <div className="flex flex-col items-center justify-center py-32 text-center">
+            <div className="relative mb-8 group">
+              <div className="absolute inset-0 bg-cyan/20 blur-[80px] rounded-full animate-pulse group-hover:bg-cyan/40 transition-colors duration-700" />
+              <div className="relative w-32 h-32 rounded-3xl border-2 border-dashed border-cyan/40 flex items-center justify-center bg-bgPanel/40 backdrop-blur-xl group-hover:border-cyan transition-all duration-500 shadow-[0_0_20px_rgba(34,211,238,0.1)]">
+                 <FolderOpen size={48} className="text-cyan/30 group-hover:text-cyan transition-all duration-500 transform group-hover:scale-110 group-hover:drop-shadow-[0_0_15px_rgba(34,211,238,0.5)]" />
+                 
+                 {/* Internal Scanline Effect for Icon */}
+                 <div className="absolute inset-4 opacity-10 pointer-events-none overflow-hidden rounded-xl">
+                    <div className="w-full h-full bg-gradient-to-b from-transparent via-cyan/50 to-transparent animate-pulse" style={{ backgroundSize: '100% 2px' }} />
+                 </div>
+
+                 <motion.div
+                    animate={{ y: [0, -4, 0], scale: [1, 1.1, 1] }}
+                    transition={{ repeat: Infinity, duration: 2 }}
+                    className="absolute -bottom-2 -right-2 text-cyan drop-shadow-[0_0_15px_rgba(34,211,238,0.6)] bg-bgDeep rounded-full p-1 border border-cyan/20"
+                 >
+                   <Plus size={32} strokeWidth={3} />
+                 </motion.div>
+              </div>
+            </div>
+
+            <h2 style={{ fontSize: 24, fontWeight: 950, fontFamily: T.display, color: T.textPrimary, marginBottom: 12 }} className="uppercase italic tracking-tighter">
+              No project traces detected
+            </h2>
+            <p style={{ fontSize: 13, color: T.textSecondary, maxWidth: 420, marginBottom: 32, lineHeight: 1.6 }} className="font-medium">
+              Your workspace is currently a clean slate. Initialize your first project to begin the industrial translation sequence and establish archive parity.
+            </p>
+
+            <div className="flex gap-4">
+              <JpeButton variant="spectral" size="lg" icon={Plus} onClick={() => onNavigate?.('new_project')}>
+                INITIALIZE_FIRST_PROJECT
+              </JpeButton>
+              <JpeButton variant="ghost" size="lg" icon={FolderOpen} onClick={() => onNavigate?.('code')}>
+                OPEN_EXISTING
+              </JpeButton>
+            </div>
+
+            <div className="mt-12 flex items-center gap-6 text-[10px] font-mono text-textMuted uppercase tracking-widest">
+              <div className="flex items-center gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-cyan/40 animate-pulse" />
+                <span>Ready to Initialize</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-violet/40" />
+                <span>0 Archives</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald/40" />
+                <span>Clean Slate</span>
+              </div>
+            </div>
+          </div>
+        ) : (
+          /* SEARCH EMPTY STATE */
+          <div className="flex flex-col items-center justify-center py-24 text-center">
+            <div className="text-textMuted mb-6 italic font-mono text-xs uppercase tracking-[0.2em]">
+              No entries found matching "{searchQuery}"
+            </div>
+            <JpeButton variant="ghost" size="sm" onClick={() => setSearchQuery("")}>
+               WIPE_SEARCH_QUERY
+            </JpeButton>
           </div>
         )}
       </div>

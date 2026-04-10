@@ -1,238 +1,217 @@
 "use client";
-import * as React from "react";
-import { useManualStore} from "@/stores/useManualStore";
-import { usePlaygroundStore } from "@/stores/usePlaygroundStore";
-import { useUIStore } from "@/stores/useUIStore";
-import {
-  BookOpen, Search, Copy, Play,
-  GraduationCap, Globe, Info
-} from "lucide-react";
-import { cn } from "../ui/utils";
-import { motion, AnimatePresence } from "../jpe-motion";
-import ReactMarkdown from "react-markdown";
+
+import React, { useState, useEffect } from 'react';
+import { 
+  Search, BookOpen, ChevronRight, 
+  Play, ArrowLeft, History, Bookmark, Share2,
+  RefreshCw, Sparkles, Terminal
+} from 'lucide-react';
+import { T } from '@/components/robust/jpe-theme';
+import { motion, AnimatePresence } from '@/components/jpe-motion';
+import { useManualStore } from '@/stores/useManualStore';
+import { cn } from '@/components/ui/utils';
+import { JpeButton, JpeCard, JpeStatusBadge, JpeStatusDot } from '@/components/jpe-design-system';
+import { hub } from '@/services/HubService';
 
 export function JpeManualView() {
-  const { 
-    activeSectionId, activeItemId, setActiveSection, setActiveItem, 
-    searchQuery, setSearchQuery, getFilteredSections 
+  const {
+    sections,
+    activeItemId,
+    setActiveSection,
+    setActiveItem,
+    searchQuery,
+    setSearchQuery
   } = useManualStore();
-  
-  const { setPlaygroundCode } = usePlaygroundStore();
-  const { setWorkspaceMode } = useUIStore();
-  
-  const filteredSections = getFilteredSections();
-  const activeSection = filteredSections.find(s => s.id === activeSectionId) || filteredSections[0];
-  
-  const handleTryInPlayground = (code: string) => {
-    setPlaygroundCode(code);
-    setWorkspaceMode('playground');
-  };
 
-  const handleCopy = (code: string) => {
-    navigator.clipboard.writeText(code);
-    // Simple toast would go here
-  };
+  const [loading, setLoading] = useState(true);
+
+  // Map old property names to new ones for compatibility
+  const categories = sections;
+  const activeArticle = activeItemId;
+  const setActiveCategory = setActiveSection;
+  const setActiveArticle = setActiveItem;
+
+  useEffect(() => {
+    // Simulate loading internal docs
+    const timer = setTimeout(() => setLoading(false), 600);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const filteredCategories = categories.filter(c =>
+    c.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    c.items.some(item => item.title.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
+
+  const currentArticle = categories
+    .flatMap(c => c.items)
+    .find(a => a.id === activeArticle);
 
   return (
-    <div className="flex w-full h-full bg-bgDeep text-textPrimary overflow-hidden font-sans border border-border/50 rounded-xl m-4 shadow-2xl relative">
-      {/* Background Cinematic Gradients */}
-      <div className="absolute top-0 right-0 w-1/2 h-full opacity-20 pointer-events-none -z-10 bg-[radial-gradient(circle_at_70%_20%,_#63B3ED33_0%,_transparent_70%)]" />
-      <div className="absolute bottom-0 left-0 w-1/2 h-full opacity-10 pointer-events-none -z-10 bg-[radial-gradient(circle_at_20%_80%,_#8B5CF633_0%,_transparent_70%)]" />
-
-      {/* Manual Sidebar */}
-      <aside className="w-80 border-r border-border bg-bgSurface/40 backdrop-blur-xl flex flex-col z-20">
-        <div className="p-6 border-b border-border">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="p-2.5 rounded-xl bg-cyan/10 border border-cyan/20">
-               <GraduationCap className="w-6 h-6 text-cyanBright" />
-            </div>
-            <div>
-              <h2 className="text-sm font-black tracking-[0.2em] uppercase italic text-white">The Manual</h2>
-              <p className="text-[10px] text-textMuted font-mono uppercase tracking-tighter">Just Plain English</p>
-            </div>
+    <div className="flex-1 flex flex-col bg-bgDeep overflow-hidden relative">
+      <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: T.noiseSvg }} />
+      
+      {/* Global Module Header */}
+      <header className="h-14 border-b border-border bg-bgSurface/60 backdrop-blur-xl flex items-center justify-between px-6 z-20" style={{ borderColor: T.border }}>
+        <div className="flex items-center gap-4">
+          <button 
+            onClick={() => hub.navigate('dashboard')}
+            className="p-2 hover:bg-white/5 rounded-full text-textTertiary hover:text-white transition-all mr-2"
+            title="Return to Dashboard"
+            data-testid="return-to-dashboard"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <div className="p-2 rounded-lg bg-cyan/10 border border-cyan/20">
+            <BookOpen className="w-5 h-5 text-cyan" />
           </div>
-
-          <div className="relative group">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-textTertiary group-focus-within:text-cyan transition-colors" />
-            <input 
-              type="text" 
-              placeholder="Search Knowledge Base..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-black/40 border border-border rounded-lg py-2 pl-10 pr-4 text-xs font-medium focus:outline-none focus:border-cyan/50 focus:ring-1 focus:ring-cyan/20 transition-all placeholder:text-textTertiary"
-            />
+          <div>
+            <h1 className="text-sm font-black tracking-widest text-white uppercase italic">JPE_MANUAL_VAULT</h1>
+            <div className="flex items-center gap-2 mt-0.5">
+               <JpeStatusDot status="ok" size={3} />
+               <span className="text-[9px] text-textTertiary font-mono tracking-tighter opacity-70 uppercase">DOCUMENTATION_SERVER: ONLINE</span>
+            </div>
           </div>
         </div>
 
-        <nav className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-1">
-          {filteredSections.map((section) => (
-            <div key={section.id} className="space-y-1">
-              <button
-                onClick={() => setActiveSection(section.id)}
-                className={cn(
-                  "w-full flex items-center justify-between px-4 py-2.5 rounded-lg text-left transition-all duration-300",
-                  activeSectionId === section.id 
-                    ? "bg-white/5 text-cyanBright shadow-sm" 
-                    : "text-textSecondary hover:bg-white/5 hover:text-textPrimary"
-                )}
-              >
-                <div className="flex items-center gap-3">
-                  <BookOpen className={cn("w-4 h-4", activeSectionId === section.id ? "text-cyan" : "text-textTertiary")} />
-                  <span className="text-xs font-bold uppercase tracking-wide">{section.title}</span>
+        <div className="flex items-center gap-3">
+           <div className="relative group">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-textMuted group-focus-within:text-cyan transition-colors" />
+              <input 
+                type="text" 
+                placeholder="SEARCH_DIRECTIVES..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="bg-bgInput/50 border border-border rounded-full py-1.5 pl-9 pr-4 text-[10px] font-mono w-64 focus:w-80 transition-all outline-none focus:border-cyan/40 text-white"
+              />
+           </div>
+           <div className="h-6 w-px bg-border mx-2" />
+           <JpeButton variant="secondary" size="sm" icon={History} />
+           <JpeButton variant="secondary" size="sm" icon={Bookmark} />
+        </div>
+      </header>
+
+      <div className="flex-1 flex overflow-hidden">
+        {/* Sidebar Navigation */}
+        <aside className="w-80 border-r border-border bg-bgPanel/30 backdrop-blur-md flex flex-col z-10" style={{ borderColor: T.border }}>
+          <div className="p-6 overflow-y-auto custom-scrollbar flex-1">
+            {filteredCategories.map((cat) => (
+              <div key={cat.id} className="mb-8">
+                <div className="flex items-center gap-2 mb-4 px-2">
+                  <Sparkles size={12} className="text-cyan/60" />
+                  <h3 className="text-[10px] font-black text-textMuted uppercase tracking-[0.2em]">{cat.title}</h3>
                 </div>
-                {activeSectionId === section.id && (
-                  <motion.div layoutId="active-indicator" className="w-1 h-4 bg-cyan rounded-full" />
-                )}
-              </button>
 
-              <AnimatePresence>
-                {activeSectionId === section.id && (
-                  <motion.div 
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    className="overflow-hidden pl-11 pr-2 pb-2 space-y-1"
-                  >
-                    {section.items.map(item => (
-                      <button
-                        key={item.id}
-                        onClick={() => setActiveItem(item.id)}
-                        className={cn(
-                          "w-full text-left py-1 text-[11px] transition-colors rounded px-2",
-                          activeItemId === item.id 
-                            ? "bg-cyan/10 text-cyanBright font-semibold border-l-2 border-cyan pl-2" 
-                            : "text-textMuted hover:text-cyan"
-                        )}
-                      >
-                        {item.title}
-                      </button>
-                    ))}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          ))}
-        </nav>
-      </aside>
-
-      {/* Content Area */}
-      <main className="flex-1 overflow-y-auto custom-scrollbar bg-bgDeep/50 z-10 flex flex-col">
-        {activeSection ? (
-          <div className="max-w-4xl w-full mx-auto p-12 space-y-12 h-fit mb-24">
-            {/* Section Header */}
-            <header>
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan/10 border border-cyan/20 text-[10px] font-bold text-cyan uppercase tracking-widest mb-4">
-                 <Globe className="w-3 h-3" /> JPE Core Reference
-              </div>
-              <h1 className="text-4xl font-black text-white italic tracking-tight uppercase leading-none">
-                 {activeSection.title}
-              </h1>
-              <div className="mt-6 text-lg text-textSecondary leading-relaxed font-medium bg-white/2 overflow-hidden rounded-xl border border-white/5 p-6 backdrop-blur-sm">
-                 <div className="prose prose-invert max-w-none prose-sm">
-                   <ReactMarkdown>
-                     {activeSection.content}
-                   </ReactMarkdown>
-                 </div>
-              </div>
-            </header>
-
-            {/* Articles List */}
-            <div className="space-y-8">
-              {activeSection.items.map((item, idx) => (
-                <motion.article 
-                  key={item.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.1 }}
-                  className={cn(
-                    "group p-8 rounded-2xl bg-bgSurface/40 border border-border/50 hover:border-cyan/30 transition-all duration-500",
-                    activeItemId === item.id && "ring-2 ring-cyan/50 border-cyan/50 bg-bgSurface/60 shadow-2xl shadow-cyan/10"
-                  )}
-                  id={`manual-item-${item.id}`}
-                >
-                  <div className="flex items-start justify-between gap-6 mb-6">
-                    <div className="flex-1">
-                       <h3 className="text-xl font-bold text-white mb-2 group-hover:text-cyan transition-colors tracking-tight uppercase italic">{item.title}</h3>
-                       <div className="text-sm text-textSecondary leading-relaxed">
-                          <div className="prose prose-invert prose-p:leading-relaxed prose-code:text-cyan prose-code:bg-cyan/10 prose-code:px-1 prose-code:rounded">
-                            <ReactMarkdown>
-                              {item.content}
-                            </ReactMarkdown>
-                          </div>
-                       </div>
-                    </div>
-                    {item.playground && (
-                      <div className="shrink-0 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                         <button 
-                           onClick={() => handleTryInPlayground(item.playground!)}
-                           className="flex items-center gap-2 px-4 py-2 rounded-lg bg-cyan text-black font-bold text-[10px] tracking-widest uppercase hover:bg-cyanBright transition-all shadow-lg active:scale-95"
-                         >
-                            <Play className="w-3 h-3 fill-current" /> Try Logic
-                         </button>
-                         <button 
-                           onClick={() => handleCopy(item.playground!)}
-                           className="flex items-center justify-center p-2 rounded-lg bg-white/5 border border-white/10 hover:border-white/20 text-textSecondary transition-all"
-                           title="Copy JPE Source"
-                         >
-                            <Copy className="w-4 h-4" />
-                         </button>
+                <div className="space-y-1">
+                  {cat.items.map((art) => (
+                    <button
+                      key={art.id}
+                      onClick={() => {
+                        setActiveCategory(cat.id);
+                        setActiveArticle(art.id);
+                      }}
+                      className={cn(
+                        "w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition-all group",
+                        activeArticle === art.id 
+                          ? "bg-cyan/10 border border-cyan/20 shadow-[0_0_15px_rgba(99,179,237,0.1)]" 
+                          : "hover:bg-white/5 border border-transparent"
+                      )}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={cn(
+                          "w-1.5 h-1.5 rounded-full transition-all",
+                          activeArticle === art.id ? "bg-cyan scale-125 shadow-[0_0_8px_rgba(99,179,237,0.8)]" : "bg-textMuted/30 group-hover:bg-textMuted"
+                        )} />
+                        <span className={cn(
+                          "text-[11px] font-bold tracking-tight transition-colors",
+                          activeArticle === art.id ? "text-white" : "text-textSecondary group-hover:text-textPrimary"
+                        )}>
+                          {art.title.toUpperCase()}
+                        </span>
                       </div>
-                    )}
+                      {activeArticle === art.id && <ChevronRight size={10} className="text-cyan" />}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="p-6 border-t border-border bg-bgPanel/40" style={{ borderColor: T.border }}>
+             <JpeCard padding={12} className="bg-cyan/5 border-cyan/10">
+                <div className="flex items-center gap-3">
+                   <div className="p-2 rounded-lg bg-cyan/20">
+                      <Sparkles size={14} className="text-cyan" />
+                   </div>
+                   <div>
+                      <p className="text-[10px] font-black text-white italic uppercase">Spectral Guide</p>
+                      <p className="text-[8px] font-mono text-cyan/60">AI_ASSIST_ENABLED</p>
+                   </div>
+                </div>
+             </JpeCard>
+          </div>
+        </aside>
+
+        {/* Content Area */}
+        <main className="flex-1 overflow-y-auto custom-scrollbar bg-bgDeep/30 z-0 relative">
+          <AnimatePresence mode="wait">
+            {loading ? (
+              <motion.div 
+                key="loader"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="h-full flex flex-col items-center justify-center gap-4"
+              >
+                <RefreshCw size={24} className="text-cyan animate-spin" />
+                <span className="text-[10px] font-mono tracking-widest text-textMuted uppercase">Syncing Directives...</span>
+              </motion.div>
+            ) : currentArticle ? (
+              <motion.div
+                key={currentArticle.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="max-w-4xl mx-auto px-12 py-16"
+              >
+                <div className="flex items-center gap-3 mb-4">
+                  <JpeStatusBadge status="ok" label="VERIFIED_SOURCE" compact />
+                  <span className="text-[10px] font-mono text-textMuted">LAST_UPDATED: 2024.04.08</span>
+                </div>
+                
+                <h2 className="text-4xl font-black text-white mb-8 tracking-tighter italic" style={{ fontFamily: T.display }}>
+                  {currentArticle.title.toUpperCase()}
+                </h2>
+
+                <div className="prose prose-invert max-w-none">
+                  <p className="text-textSecondary leading-relaxed text-lg mb-8 font-medium italic">
+                    {currentArticle.content}
+                  </p>
+
+                  <div className="grid gap-6 mt-12">
+                     <JpeCard title="TECHNICAL_DETAILS" icon={Terminal} glass>
+                        <div className="space-y-4 font-mono text-[11px] text-textSecondary">
+                           <p className="border-l-2 border-cyan/30 pl-4 py-1">SOURCE_PATH: /kernel/runtime/exec.jpe</p>
+                           <p className="border-l-2 border-violet/30 pl-4 py-1">PERMISSIONS: LEVEL_4_OR_HIGHER</p>
+                           <p className="border-l-2 border-emerald/30 pl-4 py-1">LATENCY_IMPACT: &lt; 2MS</p>
+                        </div>
+                     </JpeCard>
+
+                     <div className="grid grid-cols-2 gap-4">
+                        <JpeButton variant="spectral" icon={Play}>EXECUTE_REPL</JpeButton>
+                        <JpeButton variant="secondary" icon={Share2}>EXPORT_DIAGRAM</JpeButton>
+                     </div>
                   </div>
-
-                  {item.playground && (
-                    <div className="relative rounded-xl overflow-hidden border border-white/5 bg-black/60 font-mono text-[11px] p-4 group">
-                       <div className="absolute top-2 right-2 flex items-center gap-2 px-2 py-1 rounded bg-black/50 border border-white/10 text-[8px] font-bold text-textMuted uppercase">
-                          <Braces className="w-2.5 h-2.5" /> JPE Snippet
-                       </div>
-                       <pre className="text-emerald-400">
-                         {item.playground}
-                       </pre>
-                    </div>
-                  )}
-
-                  {item.context && (
-                    <div className="mt-4 flex items-center gap-2 text-[9px] font-bold text-cyan/70 uppercase tracking-widest">
-                       <Info className="w-3 h-3" /> Context: {item.context}
-                    </div>
-                  )}
-                </motion.article>
-              ))}
-            </div>
-          </div>
-        ) : (
-          <div className="flex-1 flex flex-col items-center justify-center text-textMuted gap-4 p-20 text-center">
-             <div className="w-16 h-16 rounded-3xl bg-white/5 border border-white/10 flex items-center justify-center animate-pulse">
-                <Search className="w-8 h-8 opacity-20" />
-             </div>
-             <div>
-               <h3 className="text-white font-bold uppercase tracking-widest">No Topics Found</h3>
-               <p className="text-xs mt-1">Try adjusting your search query to find industrial JPE insights.</p>
-             </div>
-          </div>
-        )}
-      </main>
+                </div>
+              </motion.div>
+            ) : (
+              <div className="h-full flex flex-col items-center justify-center text-center p-12 opacity-30">
+                <BookOpen size={64} className="mb-6" />
+                <h2 className="text-xl font-black uppercase tracking-widest italic">Node Selection Required</h2>
+                <p className="font-mono text-[11px] mt-2">Select a documentation fragment from the left terminal to begin decryption</p>
+              </div>
+            )}
+          </AnimatePresence>
+        </main>
+      </div>
     </div>
-  );
-}
-
-// Re-using Braces icon since it's common in IDEs
-function Braces({ className, size = 16 }: { className?: string, size?: number }) {
-  return (
-    <svg 
-      xmlns="http://www.w3.org/2000/svg" 
-      width={size} 
-      height={size} 
-      viewBox="0 0 24 24" 
-      fill="none" 
-      stroke="currentColor" 
-      strokeWidth="2" 
-      strokeLinecap="round" 
-      strokeLinejoin="round" 
-      className={className}
-    >
-      <path d="m8 19-5-5 5-5" />
-      <path d="m16 5 5 5-5 5" />
-    </svg>
   );
 }

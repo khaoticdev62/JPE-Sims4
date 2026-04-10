@@ -10,7 +10,10 @@ import {
 } from 'electron'
 import path from 'path'
 import fs from 'fs'
+import os from 'os'
+import axios from 'axios'
 import { spawn, exec, ChildProcess } from 'child_process'
+import { createHash } from 'crypto'
 import { LiveMonitor } from './services/main/LiveMonitor'
 
 // Auto-updater (only in production — check after app ready to avoid require issues)
@@ -85,7 +88,11 @@ const createWindow = (url: string) => {
     },
   })
 
-  mainWindow.loadURL(url)
+  if (isDev) {
+    mainWindow.loadURL('http://localhost:3000')
+  } else {
+    mainWindow.loadFile(path.join(__dirname, '../out/index.html'))
+  }
 
   mainWindow.once('ready-to-show', () => {
     mainWindow?.show()
@@ -116,34 +123,11 @@ const createWindow = (url: string) => {
   })
 }
 
-// ─── Start Next.js Server (Production) ────────────────────────────────────────
-const startNextServer = (): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    // In production, spawn `next start` from the app's bundled resources
-    const appPath = app.isPackaged
-      ? path.join(process.resourcesPath, 'app')
-      : process.cwd()
-
-    nextServer = spawn(
-      process.platform === 'win32' ? 'npx.cmd' : 'npx',
-      ['next', 'start', '--port', String(NEXT_SERVER_PORT)],
-      {
-        cwd: appPath,
-        env: { ...process.env, NODE_ENV: 'production' },
-        stdio: 'inherit',
-      },
-    )
-
-    nextServer.on('error', (err) => {
-      console.error('Failed to start Next.js server:', err)
-      reject(err)
-    })
-
-    // Wait for server to start
-    setTimeout(() => {
-      resolve(`http://localhost:${NEXT_SERVER_PORT}`)
-    }, 3000)
-  })
+// ─── Native Resource Resolution ──────────────────────────────────────────────
+const getEnginePath = (relativePath: string): string => {
+  return app.isPackaged
+    ? path.join(process.resourcesPath, relativePath)
+    : path.join(process.cwd(), relativePath)
 }
 
 // ─── System Tray ─────────────────────────────────────────────────────────────
@@ -662,8 +646,310 @@ ipcMain.handle('sims4:deployBridge', async (_event, pythonSource: string) => {
   }
 })
 
-// === OS SHELL INTEGRATION (NEW — Story 6.4) ===
-ipcMain.handle('shell:installContextMenu', async () => {
+// === TS4Rebels NATIVE BRIDGE (NEW — Story 7.1) ===
+// Production-hardened: timeout, sanitization, env-based credentials
+ipcMain.handle('ts4rebels:invoke', async (_event, action: string, params: Record<string, string>) => {
+  return new Promise((resolve) => {
+    const pythonCmd = process.platform === 'win32' ? 'python' : 'python3'
+    
+    // Resolve CLI path correctly for both dev and packaged modes
+    const cliPath = app.isPackaged
+      ? path.join(process.resourcesPath, 'cli.py')
+      : path.join(process.cwd(), 'cli.py')
+
+    // Input sanitization helper
+    const sanitize = (s: unknown, maxLen = 256): string => {
+      if (typeof s !== 'string') throw new Error('Invalid parameter type')
+      if (s.length === 0) throw new Error('Parameter cannot be empty')
+      if (s.length > maxLen) throw new Error(`Parameter exceeds max length (${maxLen})`)
+      if (s.startsWith('--') || s.startsWith('-')) throw new Error('Invalid parameter format')
+      return s
+    }
+
+    // Validate action
+    if (!['login', 'forum', 'topic'].includes(action)) {
+      resolve({ success: false, error: 'Invalid TS4Rebels action' })
+      return
+    }
+
+    // Base arguments
+    const args = [cliPath, 'ts4rebels', '--enable-network']
+
+    // Add session cookies if provided (base64 encoded JSON) with size limit
+    if (params.cookies) {
+      if (params.cookies.length > 65536) {
+        resolve({ success: false, error: 'Cookies parameter too large' })
+        return
+      }
+      try {
+        const decodedCookies = Buffer.from(params.cookies, 'base64').toString('utf-8')
+        args.push('--cookies', decodedCookies)
+      } catch (e) {
+        console.warn('[TS4Rebels Main] Failed to decode cookies')
+      }
+    }
+
+    // Environment variables for credentials (more secure than CLI args)
+    const childEnv: NodeJS.ProcessEnv = {
+      ...process.env,
+      PYTHONIOENCODING: 'utf-8',
+    }
+
+    // Action handling with sanitization
+    try {
+      if (action === 'login') {
+        // Use env vars for credentials (not CLI args)
+        childEnv.JPE_TS4REBELS_USER = sanitize(params.username, 256)
+        childEnv.JPE_TS4REBELS_PASS = sanitize(params.password, 512)
+        args.push('login')
+      } else if (params.forum) {
+        args.push('forum', sanitize(params.forum, 64), '--page', sanitize(params.page || '1', 10))
+      } else if (params.topic) {
+        args.push('topic', sanitize(params.topic, 64), '--page', sanitize(params.page || '1', 10))
+      } else {
+        resolve({ success: false, error: 'Invalid TS4Rebels action or missing parameters' })
+        return
+      }
+    } catch (err) {
+      resolve({ success: false, error: err instanceof Error ? err.message : 'Parameter validation failed' })
+      return
+    }
+
+    console.log(`[TS4Rebels Main] Executing: ${pythonCmd} ${args.join(' ')}`)
+
+    const child = spawn(pythonCmd, args, {
+      env: childEnv,
+      cwd: process.cwd(),
+    })
+
+    let stdout = ''
+    let stderr = ''
+
+    child.stdout.on('data', (data) => { stdout += data.toString() })
+    child.stderr.on('data', (data) => { stderr += data.toString() })
+
+    // Timeout: 60 seconds for network operations (generous for slow connections)
+    const timeout = setTimeout(() => {
+      if (!child.killed) {
+        console.warn('[TS4Rebels Main] Process timeout - killing child')
+        child.kill('SIGTERM')
+        // Force kill after 5s grace period
+        setTimeout(() => {
+          if (!child.killed) child.kill('SIGKILL')
+        }, 5000)
+      }
+    }, 60000)
+
+    child.on('close', (code) => {
+      clearTimeout(timeout)
+      try {
+        if (code === 0) {
+          resolve({ success: true, data: JSON.parse(stdout) })
+        } else {
+          resolve({ success: false, error: stderr || `Process exited with code ${code}` })
+        }
+      } catch (err) {
+        resolve({ success: false, error: `Parse error: ${String(err)}`, raw: stdout })
+      }
+    })
+
+    child.on('error', (err) => {
+      clearTimeout(timeout)
+      resolve({ success: false, error: err instanceof Error ? err.message : String(err) })
+    })
+  })
+})
+
+// === NATIVE TRANSFORM ENGINE (NEW — Ported from /api/transform) ===
+ipcMain.handle('transform:run', async (_event, source: string, fileName: string) => {
+  const start = performance.now()
+  console.log('[IPC:transform:run] Starting industrial synthesis...')
+  const tempDir = path.join(os.tmpdir(), `jpe-native-transform-${Date.now()}-${Math.random().toString(36).slice(2)}`)
+  const inputFile = path.join(tempDir, fileName || 'input.jpe')
+  const outputFile = path.join(tempDir, 'output.xml')
+
+  try {
+    await fs.promises.mkdir(tempDir, { recursive: true })
+    await fs.promises.writeFile(inputFile, source, 'utf-8')
+
+    const pythonCmd = process.platform === 'win32' ? 'python' : 'python3'
+    const engineScript = getEnginePath('scripts/transform_jpe.py')
+
+    return new Promise((resolve) => {
+      const args = [engineScript, inputFile, '-o', outputFile]
+      const proc = spawn(pythonCmd, args, {
+        stdio: ['pipe', 'pipe', 'pipe'],
+        env: { ...process.env, PYTHONIOENCODING: 'utf-8' },
+        cwd: process.cwd(),
+      })
+
+      let stdout = ''
+      let stderr = ''
+
+      proc.stdout.on('data', (data) => { stdout += data.toString() })
+      proc.stderr.on('data', (data) => { stderr += data.toString() })
+
+      const timeout = setTimeout(() => {
+        if (!proc.killed) proc.kill('SIGKILL')
+      }, 30000)
+
+      proc.on('close', async (code) => {
+        clearTimeout(timeout)
+        const duration = (performance.now() - start).toFixed(2)
+        console.log(`[IPC:transform:run] Completed in ${duration}ms`)
+        
+        try {
+          if (code === 0) {
+            const xml = await fs.promises.readFile(outputFile, 'utf-8')
+            resolve({ success: true, xml, duration, errors: parseStderr(stderr) })
+          } else {
+            resolve({ success: false, error: stderr || `Exit code ${code}`, duration, errors: parseStderr(stderr) })
+          }
+        } catch (err) {
+          resolve({ success: false, error: `Output error: ${err}`, duration })
+        } finally {
+          // Cleanup
+          try {
+            await fs.promises.unlink(inputFile).catch(() => {})
+            await fs.promises.unlink(outputFile).catch(() => {})
+            await fs.promises.rm(tempDir, { recursive: true, force: true }).catch(() => {})
+          } catch (e) {
+            console.warn('[Transform Main] Cleanup failed:', e)
+          }
+        }
+      })
+
+      proc.on('error', (err) => {
+        clearTimeout(timeout)
+        resolve({ success: false, error: err.message, duration: (performance.now() - start).toFixed(2) })
+      })
+    })
+  } catch (err) {
+    return { success: false, error: String(err), duration: (performance.now() - start).toFixed(2) }
+  }
+})
+
+function parseStderr(stderr: string) {
+  const errors: any[] = []
+  if (!stderr.trim()) return errors
+  
+  stderr.split('\n').forEach(line => {
+    const trimmed = line.trim()
+    if (!trimmed) return
+    const match = trimmed.match(/^Line\s+(\d+):\s*(.*?):\s*(.*)/i)
+    if (match) {
+      errors.push({ line: parseInt(match[1]), severity: match[2].toLowerCase(), message: match[3] })
+    } else {
+      errors.push({ message: trimmed, severity: 'error' })
+    }
+  })
+  return errors
+}
+
+// === NATIVE AI BRIDGE (IMPROVED) ===
+ipcMain.handle('ai:invoke', async (_event, provider: string, method: string, params: any) => {
+  const start = performance.now()
+  console.log(`[IPC:ai:invoke] Routing to ${provider}...`)
+  const { url, headers, data, key } = params
+  
+  console.log(`[AI Main] Native Bridge: ${provider}:${method} -> ${url}`)
+
+  try {
+    // We handle the network request here in the Main process
+    // This bypasses any CORS issues in the renderer and centralizes security
+    const response = await axios({
+      method: method.toUpperCase() || 'POST',
+      url,
+      headers: {
+        ...headers,
+        // If the key is passed we can ensure it's used correctly
+        // In the future, we can pull keys from OS Keychain here instead of passing them
+      },
+      data,
+      timeout: 30000,
+    })
+
+    const duration = (performance.now() - start).toFixed(2)
+    console.log(`[IPC:ai:invoke] ${provider} responded in ${duration}ms`)
+
+    return {
+      success: true,
+      data: response.data,
+      status: response.status,
+    }
+  } catch (error: any) {
+    console.error(`[AI Main] Native request failed for ${provider}:`, error.message)
+    return {
+      success: false,
+      error: error.response?.data || error.message,
+      status: error.response?.status,
+    }
+  }
+})
+
+// === NATIVE SCARLET SCRAPER (NEW — Ported from /api/scarlet) ===
+ipcMain.handle('scarlet:fetch', async () => {
+  const start = performance.now()
+  console.log('[IPC:scarlet:fetch] Initializing 2-stage handshake...')
+  const userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+  
+  try {
+    // 1. Fetch page for nonce
+    const pageResponse = await axios.get('https://scarletsrealm.com/the-mod-list-sfw-only-edition/', {
+      headers: { 'User-Agent': userAgent }
+    })
+    
+    const html = pageResponse.data
+    const nonceMatch = html.match(/"nonce":"([a-zA-Z0-9]+)"/)
+    if (!nonceMatch) throw new Error('Structure Change: Could not find nonce on Scarlet Realm.')
+    const nonce = nonceMatch[1]
+
+    // 2. AJAX data fetch
+    const params = new URLSearchParams()
+    params.append('action', 'mlc_get_data')
+    params.append('nonce', nonce)
+    params.append('table_id', '3')
+
+    const apiResponse = await axios.post('https://scarletsrealm.com/wp-admin/admin-ajax.php', params, {
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'User-Agent': userAgent
+      }
+    })
+
+    const data = apiResponse.data
+    if (!data || !data.data) throw new Error('Malformed response from Scarlet')
+
+    // 3. Transform
+    const rows = data.data.rows || []
+    const mods = rows.map((row: any[], index: number) => ({
+      id: `scarlet-${index}`,
+      name: row[1] || 'Unknown Mod',
+      creator: row[2] || 'Unknown Creator',
+      status: mapScarletStatus(row[4]),
+      version: row[5] || 'Unknown',
+      notes: row[7] || '',
+      category: row[11] || ''
+    }))
+
+    const duration = (performance.now() - start).toFixed(2)
+    console.log(`[IPC:scarlet:fetch] Completed in ${duration}ms`)
+
+    return { success: true, count: mods.length, mods, performance: { totalTime: duration } }
+  } catch (err: any) {
+    console.error('[Scarlet Main] Fetch failed:', err.message)
+    return { success: false, error: err.message }
+  }
+})
+
+function mapScarletStatus(rawStatus: string): string {
+  const s = rawStatus?.toLowerCase() || ''
+  if (s.includes('fine') || s.includes('working') || s.includes('clear')) return 'Fine'
+  if (s.includes('updated')) return 'Updated'
+  if (s.includes('broken')) return 'Broken'
+  if (s.includes('n/a')) return 'N/A'
+  return 'Unknown'
+}
   if (process.platform !== 'win32') {
     return { success: false, error: 'Context menu integration only supported on Windows' }
   }
@@ -742,12 +1028,11 @@ app.on('ready', async () => {
 
   try {
     if (isDev) {
-      // In dev mode, connect to the running Next.js dev server
+      // In dev mode, we assume the Next.js server is already running
       createWindow('http://localhost:3000')
     } else {
-      // In production, start the Next.js standalone server
-      const url = await startNextServer()
-      createWindow(url)
+      // In production, we load directly from the static 'out' directory
+      createWindow('') // window.loadFile handles the path in the refactored version
 
       // Set up auto-updater events
       if (autoUpdater) {
@@ -802,11 +1087,7 @@ app.on('ready', async () => {
 })
 
 app.on('before-quit', () => {
-  // Kill the Next.js server when the app quits
-  if (nextServer) {
-    nextServer.kill()
-    nextServer = null
-  }
+  // Logic for cleanup if needed
 })
 
 app.on('window-all-closed', () => {
@@ -817,8 +1098,11 @@ app.on('window-all-closed', () => {
 
 app.on('activate', async () => {
   if (mainWindow === null) {
-    const url = isDev ? 'http://localhost:3000' : await startNextServer()
-    createWindow(url)
+    if (isDev) {
+      createWindow('http://localhost:3000')
+    } else {
+      createWindow('')
+    }
   }
 })
 

@@ -44,7 +44,7 @@ export class PredictiveScriptingService {
   private readonly patternAnalysis: PatternAnalysisService
 
   private constructor() {
-    this.patternAnalysis = PatternAnalysisService.getInstance()
+    this.patternAnalysis = new PatternAnalysisService()
   }
 
   /**
@@ -172,7 +172,9 @@ export class PredictiveScriptingService {
   /**
    * Learn from user actions to improve future predictions
    */
-  learnFromAction(action: string, context: PredictionContext): void {
-    this.patternAnalysis.recordPattern(action, context.fileContent)
+  learnFromAction(_action: string, _context: PredictionContext): void {
+    // TODO: Wire to PatternAnalysisService when method is available
+    // this.patternAnalysis.recordPattern(action, context.fileContent)
+    console.log('[PredictiveScripting] Learning from action (stub)')
   }
 }

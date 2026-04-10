@@ -45,12 +45,22 @@ export default function EditorLayout({ onNavigate }: EditorLayoutProps = {}) {
   const pathname = usePathname()
   const [inputMethod, setInputMethod] = useState<'physical' | 'virtual'>('physical')
   const [showKeyboard, setShowKeyboard] = useState(false)
-  const [showSplash, setShowSplash] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return !localStorage.getItem('jpe-splash-dismissed')
+  // Fix hydration hazard: Initialize showSplash to false, only set true after mount
+  const [showSplash, setShowSplash] = useState(false)
+  const [isClient, setIsClient] = useState(false)
+
+  // Fix hydration hazard: Only access localStorage after mount
+  useEffect(() => {
+    setIsClient(true)
+    try {
+      const dismissed = localStorage.getItem('jpe-splash-dismissed')
+      if (!dismissed) {
+        setShowSplash(true)
+      }
+    } catch {
+      // localStorage may be unavailable
     }
-    return true
-  })
+  }, [])
   
   const { workspaceMode, showDiagnostics, immersionMode, setImmersionMode, setWorkspaceMode } = useUIStore()
   const { diagnostics } = useDiagnosticStore()
@@ -60,17 +70,29 @@ export default function EditorLayout({ onNavigate }: EditorLayoutProps = {}) {
   const { closeAllTabs } = useEditorStore()
   const { clearDiagnostics } = useDiagnosticStore()
 
-  // ── URL-TO-STATE SYNCHRONIZATION ──
+  // ── URL-TO-STATE SYNCHRONIZATION (Fix redirect loop) ──
   useEffect(() => {
-    if (pathname === '/studio' && workspaceMode === 'dashboard') {
-       // Deep link into the studio should trigger industrial coding mode
-       setWorkspaceMode('code')
-    } else if (pathname === '/manual' && workspaceMode !== 'manual') {
-       setWorkspaceMode('manual')
-    } else if (pathname === '/' && workspaceMode !== 'dashboard') {
-       setWorkspaceMode('dashboard')
+    if (!isClient) return // Prevent running during hydration
+
+    const isStudioPath = pathname === '/studio'
+    const isManualPath = pathname === '/manual'
+    const isRootPath = pathname === '/'
+    const isInternalNav = typeof window !== 'undefined' && window.sessionStorage.getItem('jpe-internal-nav')
+
+    // Only redirect on initial mount or external navigation
+    if (isStudioPath && workspaceMode === 'dashboard' && !isInternalNav) {
+      setWorkspaceMode('code')
+    } else if (isManualPath && workspaceMode !== 'manual') {
+      setWorkspaceMode('manual')
+    } else if (isRootPath && workspaceMode !== 'dashboard') {
+      setWorkspaceMode('dashboard')
     }
-  }, [pathname, workspaceMode, setWorkspaceMode])
+
+    // Clear internal nav flag after processing
+    if (isInternalNav) {
+      window.sessionStorage.removeItem('jpe-internal-nav')
+    }
+  }, [pathname, workspaceMode, setWorkspaceMode, isClient])
 
   useEffect(() => {
     setImmersionMode(focusMode ? 'zen' : 'normal')
@@ -89,6 +111,14 @@ export default function EditorLayout({ onNavigate }: EditorLayoutProps = {}) {
       setIsBuildModalOpen(true)
       return
     }
+    
+    // Mark as internal navigation to prevent automatic 'code' mode redirect if going to dashboard
+    if (item === 'dashboard') {
+      window.sessionStorage.setItem('jpe-internal-nav', 'true')
+    } else {
+      window.sessionStorage.removeItem('jpe-internal-nav')
+    }
+
     hub.navigate(item as WorkspaceMode)
     onNavigate?.(item)
   }
@@ -104,13 +134,14 @@ export default function EditorLayout({ onNavigate }: EditorLayoutProps = {}) {
   }, [currentProject?.id, closeAllTabs, clearDiagnostics])
 
   const isPlayground = workspaceMode === 'playground'
-  const isZenOrPlayground = immersionMode === 'zen' || isPlayground
+  const isDeepMode = isPlayground || workspaceMode === 'manual' || workspaceMode === 'rebels'
+  const isZenOrDeep = immersionMode === 'zen' || isDeepMode
 
   return (
     <div data-testid="app-root" className="h-screen w-screen flex overflow-hidden" style={{ background: T.bg }}>
       {showSplash && <SplashScreen onDismiss={handleSplashDismiss} />}
 
-      {!isZenOrPlayground && (
+      {!isZenOrDeep && (
         <AppNavigation activeItem={workspaceMode} onNavigate={handleNavigate} />
       )}
 
@@ -159,7 +190,7 @@ interface TitleSectionProps {
 
 function TitleSection({ inputMethod, setInputMethod, showKeyboard, setShowKeyboard }: TitleSectionProps) {
   return (
-    <div className="flex justify-between items-center bg-bg-secondary pr-4 shrink-0 border-b border-white/5 h-12">
+    <div className="flex justify-between items-center bg-background-secondary pr-4 shrink-0 border-b border-white/5 h-12">
       <TitleBar />
       <div className="flex items-center gap-4">
         <InputMethodSelector 

@@ -1,18 +1,15 @@
 "use client";
 
 import { useState } from 'react'
-import { AppNavigation } from '@/components/AppNavigation'
-import { Settings as SettingsIcon, Moon, Sun, FileText, Bell, HardDrive, RefreshCw, Loader2 } from 'lucide-react'
+import { Settings as SettingsIcon, Moon, Sun, FileText, Bell, HardDrive, RefreshCw, Loader2, Sparkles, Eye } from 'lucide-react'
 import { useUIStore } from '@/stores/useUIStore'
+import { toggleHighContrastTheme } from '@/themes/high-contrast'
 import { useSymbolStore } from '@/stores/useSymbolStore'
 import { FileService } from '@/services/FileService'
 import { ModIndexingService } from '@/services/ModIndexingService'
+import MasterSensorySlider from '@/components/settings/MasterSensorySlider'
 
-interface SettingsPageProps {
-  onNavigate?: (view: string) => void
-}
-
-export function SettingsPage({ onNavigate }: SettingsPageProps) {
+export function SettingsPage() {
   const { modsFolderPath, setModsFolderPath } = useUIStore()
   const { 
     isIndexingMods, 
@@ -21,21 +18,12 @@ export function SettingsPage({ onNavigate }: SettingsPageProps) {
     externalStblKeys 
   } = useSymbolStore()
   
-  const [activeNav, setActiveNav] = useState('settings')
   const [darkMode, setDarkMode] = useState(true)
   const [notifications, setNotifications] = useState(true)
   const [autoSave, setAutoSave] = useState(true)
 
-  const handleNavigate = (item: string) => {
-    setActiveNav(item)
-    onNavigate?.(item)
-  }
-
   return (
-    <div className="flex h-screen bg-background-primary">
-      {/* Sidebar Navigation */}
-      <AppNavigation activeItem={activeNav} onNavigate={handleNavigate} />
-
+    <div className="flex-1 w-full flex bg-background-primary overflow-hidden">
       {/* Main Content Area */}
       <div className="flex-1 overflow-auto">
         <div className="max-w-[1200px] mx-auto px-8 py-8 space-y-10">
@@ -78,6 +66,27 @@ export function SettingsPage({ onNavigate }: SettingsPageProps) {
                     className={`absolute top-1 w-4 h-4 bg-text-primary rounded-full transition-transform ${
                       darkMode ? 'translate-x-6' : 'translate-x-1'
                     }`}
+                  />
+                </button>
+              </div>
+
+              {/* High Contrast Mode Toggle */}
+              <div className="flex items-center justify-between pt-4 border-t border-border-subtle">
+                <div className="flex items-center gap-3">
+                  <Eye className="w-5 h-5 text-accent-secondary" />
+                  <div>
+                    <h3 className="text-text-primary font-medium">High Contrast Mode</h3>
+                    <p className="text-text-secondary text-sm">WCAG AAA compliant theme for maximum readability</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => toggleHighContrastTheme()}
+                  className="relative w-12 h-6 rounded-full bg-background-tertiary hover:bg-accent-secondary/30 transition-colors"
+                  aria-label="Toggle high contrast mode"
+                  role="switch"
+                >
+                  <div
+                    className="absolute top-1 w-4 h-4 bg-text-primary rounded-full transition-transform translate-x-1"
                   />
                 </button>
               </div>
@@ -156,14 +165,14 @@ export function SettingsPage({ onNavigate }: SettingsPageProps) {
                         ModIndexingService.indexModsFolder(path)
                       }
                     }}
-                    className="px-4 py-2 bg-accent-primary hover:bg-accent-secondary text-text-primary rounded-md text-sm font-medium transition-colors"
+                    className="px-4 py-2 bg-accent-primary hover:bg-accent-primary/80 hover:glow-cyan-sm text-background-primary rounded-md text-sm font-bold transition-all active:scale-95"
                   >
-                    Browse
+                    SELECT FOLDER
                   </button>
                 </div>
                 
                 <div className="bg-background-tertiary border border-border-subtle rounded px-4 py-2 font-mono text-xs text-text-secondary truncate">
-                  {modsFolderPath || 'Not semi-configured. Please select your Mods folder.'}
+                  {modsFolderPath || 'PATH_NOT_ESTABLISHED: Manual selection required.'}
                 </div>
               </div>
 
@@ -228,6 +237,16 @@ export function SettingsPage({ onNavigate }: SettingsPageProps) {
                 </button>
               </div>
             </div>
+          </section>
+
+          {/* Sensory Studio */}
+          <section className="space-y-6">
+            <div className="flex items-center gap-3 mb-6">
+              <Sparkles className="w-6 h-6 text-accent-primary" />
+              <h2 className="text-xl font-semibold text-text-primary">Sensory Studio</h2>
+            </div>
+
+            <MasterSensorySlider />
           </section>
 
           {/* About Section */}

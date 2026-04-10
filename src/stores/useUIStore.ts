@@ -58,6 +58,32 @@ interface UIState {
   setInteractionWizardOpen: (open: boolean) => void
   isTraitWizardOpen: boolean
   setTraitWizardOpen: (open: boolean) => void
+
+  // AI Tools (Story 6.2)
+  isPromptToJPEOpen: boolean
+  setPromptToJPEOpen: (open: boolean) => void
+
+  // Help Center (Story 5.2)
+  isHelpCenterOpen: boolean
+  setHelpCenterOpen: (open: boolean) => void
+
+  // Sensory Studio (Epic 10)
+  audioEnabled: boolean
+  setAudioEnabled: (enabled: boolean) => void
+  hapticEnabled: boolean
+  setHapticEnabled: (enabled: boolean) => void
+  visualEnabled: boolean
+  setVisualEnabled: (enabled: boolean) => void
+  masterSensoryVolume: number
+  setMasterSensoryVolume: (volume: number) => void
+
+  // Batch STBL Editor
+  isBatchSTBLOpen: boolean
+  setBatchSTBLOpen: (open: boolean) => void
+
+  // Mod Publishing
+  isPublishModOpen: boolean
+  setPublishModOpen: (open: boolean) => void
 }
 
 export const useUIStore = create<UIState>()(
@@ -167,6 +193,32 @@ export const useUIStore = create<UIState>()(
         setInteractionWizardOpen: (open) => set({ isInteractionWizardOpen: open }),
         isTraitWizardOpen: false,
         setTraitWizardOpen: (open) => set({ isTraitWizardOpen: open }),
+
+        // AI Tools (Story 6.2)
+        isPromptToJPEOpen: false,
+        setPromptToJPEOpen: (open) => set({ isPromptToJPEOpen: open }),
+
+        // Help Center (Story 5.2)
+        isHelpCenterOpen: false,
+        setHelpCenterOpen: (open) => set({ isHelpCenterOpen: open }),
+
+        // Sensory Studio (Epic 10)
+        audioEnabled: true,
+        setAudioEnabled: (enabled) => set({ audioEnabled: enabled }),
+        hapticEnabled: true,
+        setHapticEnabled: (enabled) => set({ hapticEnabled: enabled }),
+        visualEnabled: true,
+        setVisualEnabled: (enabled) => set({ visualEnabled: enabled }),
+        masterSensoryVolume: 50,
+        setMasterSensoryVolume: (volume) => set({ masterSensoryVolume: volume }),
+
+        // Batch STBL Editor
+        isBatchSTBLOpen: false,
+        setBatchSTBLOpen: (open) => set({ isBatchSTBLOpen: open }),
+
+        // Mod Publishing
+        isPublishModOpen: false,
+        setPublishModOpen: (open) => set({ isPublishModOpen: open }),
       }),
       {
         name: 'jpe-ui-store',

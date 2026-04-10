@@ -31,6 +31,10 @@ export abstract class BaseAIService {
   protected useProxy = true
   protected apiBaseUrl = '/api'
 
+  protected get isElectron() {
+    return typeof window !== 'undefined' && !!window.electron
+  }
+
   constructor(cacheConfig: CacheConfig = { max: 100, ttl: 24 * 60 * 60 * 1000 }) {
     this.cache = new AICache(cacheConfig)
     this.rateLimiter = new RateLimiterMemory({
@@ -152,6 +156,39 @@ export abstract class BaseAIService {
     } catch (error) {
       console.error(`[AI:${label}] Failed after retries:`, error)
       throw error
+    }
+  }
+
+  /**
+   * Unified Native Bridge Caller (NEW)
+   * Calls the Electron Main process to execute AI requests without CORS or network restrictions.
+   */
+  protected async callNativeBridge<T>(
+    provider: string,
+    method: string,
+    url: string,
+    data?: any,
+    headers: Record<string, string> = {}
+  ): Promise<{ success: boolean; data: T; error?: string }> {
+    if (!this.isElectron) {
+      throw new Error('callNativeBridge called outside of Electron environment')
+    }
+
+    try {
+      const response = await window.electron.ai.invoke(provider, method, {
+        url,
+        data,
+        headers
+      })
+
+      if (!response.success) {
+        throw new Error(response.error || `${provider} IPC call failed`)
+      }
+
+      return { success: true, data: response.data as T }
+    } catch (error: any) {
+      console.error(`[AI:NativeBridge:${provider}] Failed:`, error)
+      return { success: false, data: null as any, error: error.message }
     }
   }
 

@@ -17,7 +17,7 @@ jest.mock('@/components/file-tree/FileTree', () => {
         <button data-testid="file-1" onClick={() => onOpenFile({ id: 'file-1', name: 'test.xml', type: 'xml' })}>
           test.xml
         </button>
-        <button data-testid="file-2" onClick={() => onOpenFile({ id: 'file-2', name: 'mod.jpe', type: 'jpe' })}>
+        <button data-testid="file-2" onClick={() => onOpenFile({ id: 'file-2', name: 'mod.jpe', type: 'jpe', path: '/path/mod.jpe', content: '', isDirty: false, size: 200, lastModified: Date.now(), projectId: 'proj-1' })}>
           mod.jpe
         </button>
       </div>

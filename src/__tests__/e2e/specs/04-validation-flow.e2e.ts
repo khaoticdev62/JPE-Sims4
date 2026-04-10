@@ -1,7 +1,17 @@
 import { test, expect } from '@playwright/test'
 
 test.describe('E2E: Real-Time Validation Flow', () => {
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({ context, page }) => {
+    // Inject localStorage to skip tutorial globally for all tests
+    await context.addInitScript(() => {
+      window.localStorage.setItem('jpe_onboarding_seen', 'true')
+      window.localStorage.setItem('jpe-splash-dismissed', 'true')
+      window.localStorage.setItem('jpe-ui-store', JSON.stringify({
+        version: 0,
+        state: { hasCompletedTour: true, workspaceMode: 'dashboard' }
+      }))
+    })
+
     // Navigate to the studio
     await page.goto('/studio', { waitUntil: 'domcontentloaded' })
 
@@ -20,35 +30,33 @@ test.describe('E2E: Real-Time Validation Flow', () => {
   })
 
   test('should navigate to studio view', async ({ page }) => {
-    // Click studio nav
-    await page.locator('[data-testid="nav-studio"]').click()
-    await page.waitForTimeout(500)
-
-    // Studio layout should be visible
-    const editorLayout = page.locator('[data-testid="editor-three-pane"]')
-    const isVisible = await editorLayout.isVisible().catch(() => false)
-
-    expect(isVisible).toBe(true)
+    // Click studio nav and wait for it to be stable
+    const navCode = page.locator('[data-testid="nav-code"]')
+    await navCode.waitFor({ state: 'visible' })
+    await navCode.click()
+    
+    // Explicitly wait for the workspace mode to change and layout items to appear
+    const viewport = page.locator('[data-testid="editor-main-viewport"]')
+    await expect(viewport).toBeVisible({ timeout: 15000 })
   })
 
   test('should display editor layout', async ({ page }) => {
     // Go to studio
-    await page.locator('[data-testid="nav-studio"]').click()
+    await page.locator('[data-testid="nav-code"]').click()
     await page.waitForTimeout(500)
 
     // Check for three-pane layout
-    const threePane = page.locator('[data-testid="editor-three-pane"]')
-    const isVisible = await threePane.isVisible().catch(() => false)
-
-    expect(isVisible).toBe(true)
+    const threePane = page.locator('[data-testid="editor-main-viewport"]')
+    await expect(threePane).toBeVisible({ timeout: 10000 })
   })
 
   test('should display editor pane', async ({ page }) => {
     // Go to studio
-    await page.locator('[data-testid="nav-studio"]').click()
-    await page.waitForTimeout(500)
-
-    // Editor pane should exist
+    const navCode = page.locator('[data-testid="nav-code"]')
+    await navCode.waitFor({ state: 'visible' })
+    await navCode.click()
+    
+    await page.waitForSelector('[data-testid="editor-pane"]', { timeout: 10000 })
     const editorPane = page.locator('[data-testid="editor-pane"]')
     const isVisible = await editorPane.isVisible().catch(() => false)
 
@@ -57,7 +65,7 @@ test.describe('E2E: Real-Time Validation Flow', () => {
 
   test('should show Monaco editor when files open', async ({ page }) => {
     // Navigate to studio
-    await page.locator('[data-testid="nav-studio"]').click()
+    await page.locator('[data-testid="nav-code"]').click()
     await page.waitForTimeout(500)
 
     // Monaco editor might be visible if files are open
@@ -73,7 +81,7 @@ test.describe('E2E: Real-Time Validation Flow', () => {
     await page.locator('[data-testid="nav-dashboard"]').click()
     await page.waitForTimeout(300)
 
-    await page.locator('[data-testid="nav-studio"]').click()
+    await page.locator('[data-testid="nav-code"]').click()
     await page.waitForTimeout(300)
 
     await page.locator('[data-testid="nav-projects"]').click()
@@ -89,7 +97,7 @@ test.describe('E2E: Real-Time Validation Flow', () => {
     const initialCount = await page.locator('[data-testid*="project-card"]').count()
 
     // Navigate away and back
-    await page.locator('[data-testid="nav-studio"]').click()
+    await page.locator('[data-testid="nav-code"]').click()
     await page.waitForTimeout(300)
 
     await page.locator('[data-testid="nav-dashboard"]').click()
@@ -112,11 +120,12 @@ test.describe('E2E: Real-Time Validation Flow', () => {
   })
 
   test('should respond to click events', async ({ page }) => {
-    // Check for clickable elements
+    // Navigate to projects to see some actual content
+    await page.locator('[data-testid="nav-projects"]').click()
+    
+    // Check for nav items
     const navItems = page.locator('[data-testid*="nav-"]')
     const count = await navItems.count()
-
-    // Should have multiple navigation items
     expect(count).toBeGreaterThan(0)
 
     // Click first nav item

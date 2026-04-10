@@ -46,24 +46,36 @@ export class GeminiService extends BaseAIService {
       return { success: false, error: 'Gemini API not configured.', cached: false, timestamp: Date.now() }
     }
 
+
     try {
-      const response = await this.performRequest<any>('chat', () => axios.post(
-        `${this.apiBaseUrl}/gemini/chat`,
-        {
+      let response: any
+      if (this.isElectron) {
+        response = await this.callNativeBridge<any>('gemini', 'post', `${this.apiBaseUrl}/gemini/chat`, {
           model: this.model,
           messages: messages.map(m => ({ role: m.role, content: m.content }))
-        },
-        {
-          headers: {
-            'Authorization': `Bearer ${apiKey}`,
-            'Content-Type': 'application/json'
+        }, {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json'
+        })
+      } else {
+        response = await this.performRequest<any>('chat', () => axios.post(
+          `${this.apiBaseUrl}/gemini/chat`,
+          {
+            model: this.model,
+            messages: messages.map(m => ({ role: m.role, content: m.content }))
+          },
+          {
+            headers: {
+              'Authorization': `Bearer ${apiKey}`,
+              'Content-Type': 'application/json'
+            }
           }
-        }
-      ), messages.map(m => m.content).join(' '), false)
+        ), messages.map(m => m.content).join(' '), false)
+      }
 
       const data = response.data
-      if (!data.success || !data.text) {
-        throw new Error(data.error || 'Chat failed')
+      if (!data?.success || !data?.text) {
+        throw new Error(data?.error || 'Chat failed')
       }
 
       if (data.usage?.totalTokens) {
@@ -77,10 +89,10 @@ export class GeminiService extends BaseAIService {
         timestamp: Date.now() 
       }
     } catch (error: any) {
-      const message = axios.isAxiosError(error) ? error.response?.data?.error?.message : 'Chat failed'
+      const message = error.response?.data?.error?.message || error.message || 'Chat failed'
       return { 
         success: false, 
-        error: message || 'Chat failed', 
+        error: message, 
         cached: false, 
         timestamp: Date.now() 
       }
@@ -106,8 +118,7 @@ export class GeminiService extends BaseAIService {
       }
     }
 
-    try {
-      const prompt = `Summarize this Sims 4 JPE mod file.
+    const prompt = `Summarize this Sims 4 JPE mod file.
 File: ${fileName}
 Content:
 ${fileContent.substring(0, 3000)}
@@ -117,16 +128,25 @@ Provide:
 2. **Key Fields**: Major tunable parameters.
 3. **Effects**: Gameplay impact.`
 
-      const response = await this.performRequest('explain', () => axios.post(
-        `https://generativelanguage.googleapis.com/v1beta/models/${this.model}:generateContent?key=${apiKey}`,
-        { contents: [{ role: 'user', parts: [{ text: prompt }] }] }
-      ), prompt)
-
-      if (response.data.usageMetadata?.totalTokenCount) {
-        this.usageStats.totalTokensUsed += response.data.usageMetadata.totalTokenCount
+    try {
+      let response: any
+      if (this.isElectron) {
+        response = await this.callNativeBridge<any>('gemini', 'post', `https://generativelanguage.googleapis.com/v1beta/models/${this.model}:generateContent?key=${apiKey}`, {
+          contents: [{ role: 'user', parts: [{ text: prompt }] }]
+        })
+      } else {
+        response = await this.performRequest('explain', () => axios.post(
+          `https://generativelanguage.googleapis.com/v1beta/models/${this.model}:generateContent?key=${apiKey}`,
+          { contents: [{ role: 'user', parts: [{ text: prompt }] }] }
+        ), prompt)
       }
 
-      const text = response.data.candidates[0].content.parts[0].text
+      const resData = response.data
+      if (resData.usageMetadata?.totalTokenCount) {
+        this.usageStats.totalTokensUsed += resData.usageMetadata.totalTokenCount
+      }
+
+      const text = resData.candidates[0].content.parts[0].text
       this.cache.set(cacheKey, text)
 
       return {
@@ -136,10 +156,10 @@ Provide:
         timestamp: Date.now(),
       }
     } catch (error: unknown) {
-      const message = axios.isAxiosError(error) ? error.response?.data?.error?.message : 'API call failed'
+      const message = (error as any).response?.data?.error?.message || (error as any).message || 'API call failed'
       return { 
         success: false, 
-        error: message || 'API call failed', 
+        error: message, 
         cached: false, 
         timestamp: Date.now() 
       }
@@ -167,19 +187,31 @@ ${fileContent}
 
 Return ONLY a JSON object with "fixedCode" and "explanation".`
 
-      const response = await this.performRequest('fix', () => axios.post(
-        `https://generativelanguage.googleapis.com/v1beta/models/${this.model}:generateContent?key=${apiKey}`,
-        {
-          contents: [{ role: 'user', parts: [{ text: prompt }] }],
-          generationConfig: { responseMimeType: 'application/json' }
-        }
-      ), prompt)
-
-      if (response.data.usageMetadata?.totalTokenCount) {
-        this.usageStats.totalTokensUsed += response.data.usageMetadata.totalTokenCount
+      let response: any
+      if (this.isElectron) {
+        response = await this.callNativeBridge<any>('gemini', 'post', 
+          `https://generativelanguage.googleapis.com/v1beta/models/${this.model}:generateContent?key=${apiKey}`,
+          {
+            contents: [{ role: 'user', parts: [{ text: prompt }] }],
+            generationConfig: { responseMimeType: 'application/json' }
+          }
+        )
+      } else {
+        response = await this.performRequest('fix', () => axios.post(
+          `https://generativelanguage.googleapis.com/v1beta/models/${this.model}:generateContent?key=${apiKey}`,
+          {
+            contents: [{ role: 'user', parts: [{ text: prompt }] }],
+            generationConfig: { responseMimeType: 'application/json' }
+          }
+        ), prompt)
       }
 
-      const result = JSON.parse(response.data.candidates[0].content.parts[0].text)
+      const resData = response.data
+      if (resData.usageMetadata?.totalTokenCount) {
+        this.usageStats.totalTokensUsed += resData.usageMetadata.totalTokenCount
+      }
+
+      const result = JSON.parse(resData.candidates[0].content.parts[0].text)
       return { 
         success: true, 
         fixedCode: result.fixedCode, 
@@ -188,10 +220,10 @@ Return ONLY a JSON object with "fixedCode" and "explanation".`
         timestamp: Date.now() 
       }
     } catch (error: unknown) {
-      const message = axios.isAxiosError(error) ? error.response?.data?.error?.message : 'API call failed'
+      const message = (error as any).response?.data?.error?.message || (error as any).message || 'API call failed'
       return { 
         success: false, 
-        error: message || 'API call failed', 
+        error: message, 
         cached: false, 
         timestamp: Date.now() 
       }
@@ -210,19 +242,31 @@ ${JSON.stringify(map, null, 2)}
 
 Return ONLY a JSON object with "diagnostics": [ { "fileId", "line", "column", "severity", "message", "code" } ]`
 
-      const response = await this.performRequest('conflicts', () => axios.post(
-        `https://generativelanguage.googleapis.com/v1beta/models/${this.model}:generateContent?key=${apiKey}`,
-        {
-          contents: [{ role: 'user', parts: [{ text: prompt }] }],
-          generationConfig: { responseMimeType: 'application/json' }
-        }
-      ), JSON.stringify(map), false)
-
-      if (response.data.usageMetadata?.totalTokenCount) {
-        this.usageStats.totalTokensUsed += response.data.usageMetadata.totalTokenCount
+      let response: any
+      if (this.isElectron) {
+        response = await this.callNativeBridge<any>('gemini', 'post', 
+          `https://generativelanguage.googleapis.com/v1beta/models/${this.model}:generateContent?key=${apiKey}`,
+          {
+            contents: [{ role: 'user', parts: [{ text: prompt }] }],
+            generationConfig: { responseMimeType: 'application/json' }
+          }
+        )
+      } else {
+        response = await this.performRequest('conflicts', () => axios.post(
+          `https://generativelanguage.googleapis.com/v1beta/models/${this.model}:generateContent?key=${apiKey}`,
+          {
+            contents: [{ role: 'user', parts: [{ text: prompt }] }],
+            generationConfig: { responseMimeType: 'application/json' }
+          }
+        ), JSON.stringify(map), false)
       }
 
-      const result = JSON.parse(response.data.candidates[0].content.parts[0].text)
+      const resData = response.data
+      if (resData.usageMetadata?.totalTokenCount) {
+        this.usageStats.totalTokensUsed += resData.usageMetadata.totalTokenCount
+      }
+
+      const result = JSON.parse(resData.candidates[0].content.parts[0].text)
       return { success: true, diagnostics: result.diagnostics, cached: false, timestamp: Date.now() }
     } catch (_error: unknown) {
       return { success: false, error: 'Conflict analysis failed', cached: false, timestamp: Date.now() }
@@ -241,19 +285,31 @@ ${logContent}
 
 Return ONLY a JSON object with "report": { "explanation", "rootCause", "suggestedJpeFix" }`
 
-      const response = await this.performRequest('exception', () => axios.post(
-        `https://generativelanguage.googleapis.com/v1beta/models/${this.model}:generateContent?key=${apiKey}`,
-        {
-          contents: [{ role: 'user', parts: [{ text: prompt }] }],
-          generationConfig: { responseMimeType: 'application/json' }
-        }
-      ), logContent, false)
-
-      if (response.data.usageMetadata?.totalTokenCount) {
-        this.usageStats.totalTokensUsed += response.data.usageMetadata.totalTokenCount
+      let response: any
+      if (this.isElectron) {
+        response = await this.callNativeBridge<any>('gemini', 'post', 
+          `https://generativelanguage.googleapis.com/v1beta/models/${this.model}:generateContent?key=${apiKey}`,
+          {
+            contents: [{ role: 'user', parts: [{ text: prompt }] }],
+            generationConfig: { responseMimeType: 'application/json' }
+          }
+        )
+      } else {
+        response = await this.performRequest('exception', () => axios.post(
+          `https://generativelanguage.googleapis.com/v1beta/models/${this.model}:generateContent?key=${apiKey}`,
+          {
+            contents: [{ role: 'user', parts: [{ text: prompt }] }],
+            generationConfig: { responseMimeType: 'application/json' }
+          }
+        ), logContent, false)
       }
 
-      const result = JSON.parse(response.data.candidates[0].content.parts[0].text)
+      const resData = response.data
+      if (resData.usageMetadata?.totalTokenCount) {
+        this.usageStats.totalTokensUsed += resData.usageMetadata.totalTokenCount
+      }
+
+      const result = JSON.parse(resData.candidates[0].content.parts[0].text)
       return { success: true, report: result.report, cached: false, timestamp: Date.now() }
     } catch (_error: unknown) {
       return { success: false, error: 'Exception analysis failed', cached: false, timestamp: Date.now() }

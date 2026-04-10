@@ -7,6 +7,10 @@ import { OnboardingTour } from "@/components/OnboardingTour"
 import BuffWizard from "@/components/wizards/BuffWizard"
 import InteractionWizard from "@/components/wizards/InteractionWizard"
 import TraitWizard from "@/components/wizards/TraitWizard"
+import PromptToJPEDialog from "@/components/ai/PromptToJPEDialog"
+import HelpCenter from "@/components/help/HelpCenter"
+import BatchSTBLEditor from "@/components/editor/BatchSTBLEditor"
+import ModPublishDialog from "@/components/modals/ModPublishDialog"
 import { useEffect } from "react"
 import { TutorialEngine } from "@/services/tutorial/TutorialEngine"
 
@@ -15,8 +19,8 @@ import { TutorialEngine } from "@/services/tutorial/TutorialEngine"
  * Ensures they are only rendered on the client and wired to the UI store.
  */
 export function GlobalTools() {
-  const { 
-    isCommandPaletteOpen, 
+  const {
+    isCommandPaletteOpen,
     setCommandPaletteOpen,
     isTourOpen,
     setTourOpen,
@@ -28,6 +32,14 @@ export function GlobalTools() {
     setInteractionWizardOpen,
     isTraitWizardOpen,
     setTraitWizardOpen,
+    isPromptToJPEOpen,
+    setPromptToJPEOpen,
+    isHelpCenterOpen,
+    setHelpCenterOpen,
+    isBatchSTBLOpen,
+    setBatchSTBLOpen,
+    isPublishModOpen,
+    setPublishModOpen,
     isTutorialActive,
     setTutorialActive,
     setTutorialStep
@@ -37,7 +49,7 @@ export function GlobalTools() {
 
   useEffect(() => {
     setMounted(true)
-    
+
     // Auto-open tour if not completed
     if (!hasCompletedTour) {
       setTourOpen(true)
@@ -61,28 +73,46 @@ export function GlobalTools() {
 
   return (
     <>
-      <CommandPalette 
-        isOpen={isCommandPaletteOpen} 
-        onClose={() => setCommandPaletteOpen(false)} 
+      <CommandPalette
+        isOpen={isCommandPaletteOpen}
+        onClose={() => setCommandPaletteOpen(false)}
       />
-      <OnboardingTour 
-        isOpen={isTourOpen} 
+      <OnboardingTour
+        isOpen={isTourOpen}
         onClose={() => {
           setTourOpen(false)
           setHasCompletedTour(true)
-        }} 
+        }}
       />
-      <BuffWizard 
-        isOpen={isBuffWizardOpen} 
-        onClose={() => setBuffWizardOpen(false)} 
+      <BuffWizard
+        isOpen={isBuffWizardOpen}
+        onClose={() => setBuffWizardOpen(false)}
       />
-      <InteractionWizard 
-        isOpen={isInteractionWizardOpen} 
-        onClose={() => setInteractionWizardOpen(false)} 
+      <InteractionWizard
+        isOpen={isInteractionWizardOpen}
+        onClose={() => setInteractionWizardOpen(false)}
       />
-      <TraitWizard 
-        isOpen={isTraitWizardOpen} 
-        onClose={() => setTraitWizardOpen(false)} 
+      <TraitWizard
+        isOpen={isTraitWizardOpen}
+        onClose={() => setTraitWizardOpen(false)}
+      />
+      <PromptToJPEDialog
+        isOpen={isPromptToJPEOpen}
+        onClose={() => setPromptToJPEOpen(false)}
+      />
+      <HelpCenter
+        isOpen={isHelpCenterOpen}
+        onClose={() => setHelpCenterOpen(false)}
+      />
+      <BatchSTBLEditor
+        isOpen={isBatchSTBLOpen}
+        onClose={() => setBatchSTBLOpen(false)}
+      />
+      <ModPublishDialog
+        isOpen={isPublishModOpen}
+        onClose={() => setPublishModOpen(false)}
+        projectName="My Mod"
+        packageBuffer={undefined}
       />
     </>
   )

@@ -70,12 +70,17 @@ export class ModCompatibilityService {
    */
   static async fetchScarletModList(): Promise<ModCompatibilityStatus[]> {
     try {
-      const response = await fetch('/api/scarlet');
-      const data = await response.json();
-      if (data.success && data.mods) {
-        return data.mods;
+      const isElectron = typeof window !== 'undefined' && !!window.electron;
+      
+      if (isElectron) {
+        const data = await window.electron.scarlet.fetch();
+        if (data.success && data.mods) {
+          return data.mods;
+        }
+        throw new Error(data.error || 'Failed to fetch live Scarlet data');
       }
-      throw new Error(data.error || 'Failed to fetch live Scarlet data');
+
+      throw new Error('Native Scarlet bridge not available');
     } catch (error) {
       console.warn('[ModCompatibilityService] Failed to fetch live data, using fallback.', error);
       // Fallback to minimal known popular mods if live fetch fails

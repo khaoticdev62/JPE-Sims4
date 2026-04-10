@@ -150,11 +150,11 @@ export class MisspelledKeywordStrategy implements FixStrategy {
     )
   }
 
-  suggest(diagnostic: Diagnostic, context: FixContext): FixSuggestion[] {
+  suggest(diagnostic: Diagnostic, _context: FixContext): FixSuggestion[] {
     const suggestions: FixSuggestion[] = []
 
     // Extract the problematic word from the error message
-    const match = diagnostic.message.match(/['"`]?(\w+)['"`]?/)
+    const match = diagnostic.message.match(/['"`]([\w]+)['"`]/)
     if (!match) return suggestions
 
     const typo = match[1]
@@ -167,10 +167,10 @@ export class MisspelledKeywordStrategy implements FixStrategy {
         description: `Replace "${typo}" with "${word}"`,
         confidence,
         range: {
-          startLine: diagnostic.startLine,
-          startColumn: diagnostic.startColumn,
-          endLine: diagnostic.endLine || diagnostic.startLine,
-          endColumn: diagnostic.endColumn || diagnostic.startColumn + typo.length,
+          startLine: diagnostic.line,
+          startColumn: diagnostic.column,
+          endLine: diagnostic.endLine || diagnostic.line,
+          endColumn: diagnostic.endColumn || diagnostic.column + typo.length,
         },
         replacementText: word,
         category: FixCategory.TYPO,
@@ -237,7 +237,7 @@ export class InvalidReferenceStrategy implements FixStrategy {
     }
 
     // Extract the undefined reference name
-    const match = diagnostic.message.match(/['"`]?(\w+)['"`]?/)
+    const match = diagnostic.message.match(/['"`]([\w]+)['"`]/)
     if (!match) return []
 
     const undefinedRef = match[1]
@@ -247,10 +247,10 @@ export class InvalidReferenceStrategy implements FixStrategy {
       description: `Use "${word}" instead of "${undefinedRef}"`,
       confidence: Math.max(0.3, 1 - distance * 0.2),
       range: {
-        startLine: diagnostic.startLine,
-        startColumn: diagnostic.startColumn,
-        endLine: diagnostic.endLine || diagnostic.startLine,
-        endColumn: diagnostic.endColumn || diagnostic.startColumn + undefinedRef.length,
+        startLine: diagnostic.line,
+        startColumn: diagnostic.column,
+        endLine: diagnostic.endLine || diagnostic.line,
+        endColumn: diagnostic.endColumn || diagnostic.column + undefinedRef.length,
       },
       replacementText: word,
       category: FixCategory.INVALID_REFERENCE,
@@ -274,10 +274,10 @@ export class MissingQuoteStrategy implements FixStrategy {
   }
 
   suggest(diagnostic: Diagnostic, context: FixContext): FixSuggestion[] {
-    const line = context.document.split('\n')[diagnostic.startLine - 1] || ''
+    const lineStr = context.document.split('\n')[diagnostic.line - 1] || ''
 
     // Find the opening quote
-    const lastQuote = line.lastIndexOf('"', diagnostic.startColumn - 1)
+    const lastQuote = lineStr.lastIndexOf('"', diagnostic.column - 1)
     if (lastQuote === -1) return []
 
     return [
@@ -285,10 +285,10 @@ export class MissingQuoteStrategy implements FixStrategy {
         description: 'Add closing quote',
         confidence: 0.9,
         range: {
-          startLine: diagnostic.startLine,
-          startColumn: line.length,
-          endLine: diagnostic.startLine,
-          endColumn: line.length,
+          startLine: diagnostic.line,
+          startColumn: lineStr.length,
+          endLine: diagnostic.line,
+          endColumn: lineStr.length,
         },
         replacementText: '"',
         category: FixCategory.SYNTAX_ERROR,
@@ -318,10 +318,10 @@ export class MissingColonStrategy implements FixStrategy {
         description: 'Insert missing colon',
         confidence: 0.85,
         range: {
-          startLine: diagnostic.startLine,
-          startColumn: diagnostic.startColumn,
-          endLine: diagnostic.startLine,
-          endColumn: diagnostic.startColumn,
+          startLine: diagnostic.line,
+          startColumn: diagnostic.column,
+          endLine: diagnostic.line,
+          endColumn: diagnostic.column,
         },
         replacementText: ': ',
         category: FixCategory.SYNTAX_ERROR,

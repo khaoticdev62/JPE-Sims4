@@ -598,6 +598,23 @@ export class CompilerService {
   }> {
     const startTime = Date.now()
 
+    // ─── NATIVE ELECTRON BRIDGE ───
+    if (typeof window !== 'undefined' && window.electron?.transform) {
+      try {
+        const result = await window.electron.transform.run(jpeSource, fileName)
+        return {
+          success: result.success,
+          xml: result.xml,
+          errors: result.errors || [],
+          duration: result.duration || (Date.now() - startTime),
+        }
+      } catch (error) {
+        console.error('[CompilerService] Native transform failed:', error)
+        // Fall back to API if native fails for some reason
+      }
+    }
+
+    // ─── WEB API FALLBACK ───
     try {
       const response = await fetch('/api/transform', {
         method: 'POST',
@@ -651,24 +668,42 @@ export class CompilerService {
     backupPath?: string
   }> {
     const startTime = Date.now()
+    const isElectron = typeof window !== 'undefined' && !!window.electron
 
     try {
-      // Read input file
-      const response = await fetch('/api/files/read', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ path: inputPath }),
-      })
-
-      if (!response.ok) {
-        return {
-          success: false,
-          errors: [{ message: `Failed to read input file: ${inputPath}` }],
-          duration: Date.now() - startTime,
+      // 1. Read input file
+      let content = ''
+      if (isElectron) {
+        // Use native FileService (IPC)
+        const { FileService } = await import('./FileService')
+        const readResult = await FileService.readFile(inputPath)
+        if (!readResult.success || !readResult.content) {
+          return {
+            success: false,
+            errors: [{ message: readResult.error || `Failed to read input file: ${inputPath}` }],
+            duration: Date.now() - startTime,
+          }
         }
+        content = readResult.content
+      } else {
+        // Fallback to legacy API
+        const response = await fetch('/api/files/read', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ path: inputPath }),
+        })
+
+        if (!response.ok) {
+          return {
+            success: false,
+            errors: [{ message: `Failed to read input file: ${inputPath}` }],
+            duration: Date.now() - startTime,
+          }
+        }
+        const data = await response.json()
+        content = data.content
       }
 
-      const { content } = await response.json()
       if (!content) {
         return {
           success: false,
@@ -677,7 +712,7 @@ export class CompilerService {
         }
       }
 
-      // Transform via Python engine
+      // 2. Transform via Python engine (will use native IPC bridge internally now)
       const transformResult = await this.compileWithPython(content, fileName || inputPath.split('/').pop() || 'input.jpe')
 
       if (!transformResult.success) {
@@ -688,18 +723,32 @@ export class CompilerService {
         }
       }
 
-      // Write output
-      const writeResponse = await fetch('/api/files/write', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ path: outputPath, content: transformResult.xml }),
-      })
+      // 3. Write output
+      if (isElectron) {
+        // Use native FileService (IPC)
+        const { FileService } = await import('./FileService')
+        const writeResult = await FileService.writeFile(outputPath, transformResult.xml!)
+        if (!writeResult.success) {
+          return {
+            success: false,
+            errors: [{ message: writeResult.error || `Failed to write output file: ${outputPath}` }],
+            duration: Date.now() - startTime,
+          }
+        }
+      } else {
+        // Fallback to legacy API
+        const writeResponse = await fetch('/api/files/write', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ path: outputPath, content: transformResult.xml }),
+        })
 
-      if (!writeResponse.ok) {
-        return {
-          success: false,
-          errors: [{ message: `Failed to write output file: ${outputPath}` }],
-          duration: Date.now() - startTime,
+        if (!writeResponse.ok) {
+          return {
+            success: false,
+            errors: [{ message: `Failed to write output file: ${outputPath}` }],
+            duration: Date.now() - startTime,
+          }
         }
       }
 

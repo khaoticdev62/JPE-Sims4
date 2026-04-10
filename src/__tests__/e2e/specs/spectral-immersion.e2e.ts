@@ -16,6 +16,10 @@ test.describe('Spectral Immersive UI', () => {
     // Inject localStorage to skip tutorial globally for all tests
     await context.addInitScript(() => {
       window.localStorage.setItem('jpe_onboarding_seen', 'true')
+      window.localStorage.setItem('jpe-splash-dismissed', 'true')
+      window.localStorage.setItem('jpe-ui-store', JSON.stringify({
+        state: { hasCompletedTour: true }
+      }))
     })
 
     electronApp = await _electron.launch({

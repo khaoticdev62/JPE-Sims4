@@ -9,6 +9,10 @@ test.describe('E2E: Open Project Flow', () => {
     // 1. Programmatically dismiss onboarding tour via localStorage
     await context.addInitScript(() => {
       window.localStorage.setItem('jpe_onboarding_seen', 'true')
+      window.localStorage.setItem('jpe-splash-dismissed', 'true')
+      window.localStorage.setItem('jpe-ui-store', JSON.stringify({
+        state: { hasCompletedTour: true }
+      }))
     })
 
     // 2. Navigate to the studio
@@ -32,7 +36,7 @@ test.describe('E2E: Open Project Flow', () => {
     await projectCard.click()
 
     // 2. Verify navigation to Editor
-    const editorLayout = page.locator('[data-testid="editor-three-pane"]')
+    const editorLayout = page.locator('[data-testid="editor-main-viewport"]')
     await expect(editorLayout).toBeVisible({ timeout: 10000 })
 
     // 3. Verify project name in editor context
@@ -47,11 +51,11 @@ test.describe('E2E: Open Project Flow', () => {
      const projectCard = page.locator('[data-testid*="project-card"]:not([data-testid="new-project-card"])').first()
      if (await projectCard.isVisible()) {
        await projectCard.click()
-       await page.waitForSelector('[data-testid="editor-three-pane"]')
+       await page.waitForSelector('[data-testid="editor-main-viewport"]')
        
        // Verify sidebar nav items
        await expect(page.locator('[data-testid="nav-dashboard"]')).toBeVisible()
-       await expect(page.locator('[data-testid="nav-studio"]')).toBeVisible()
+       await expect(page.locator('[data-testid="nav-code"]')).toBeVisible()
        await expect(page.locator('[data-testid="nav-projects"]')).toBeVisible()
      }
   })

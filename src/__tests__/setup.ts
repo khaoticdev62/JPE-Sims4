@@ -50,3 +50,40 @@ beforeAll(() => {
 afterAll(() => {
   console.error = originalError
 })
+
+// Global Electron Mock for Automated Bridge Audits
+Object.defineProperty(window, 'electron', {
+  value: {
+    transform: {
+      run: vi.fn().mockImplementation(async () => {
+        const start = Date.now()
+        // Simulate local engine latency
+        await new Promise(r => setTimeout(r, 20))
+        return { success: true, xml: '<test></test>', duration: Date.now() - start }
+      })
+    },
+    ai: {
+      invoke: vi.fn().mockImplementation(async (provider) => {
+        const start = Date.now()
+        // Simulate bridge overhead
+        await new Promise(r => setTimeout(r, 50))
+        return { success: true, data: { text: `Mock response for ${provider}` }, performance: { duration: Date.now() - start } }
+      })
+    },
+    scarlet: {
+      fetch: vi.fn().mockImplementation(async () => {
+        const start = Date.now()
+        await new Promise(r => setTimeout(r, 100))
+        return { success: true, mods: [], count: 0, performance: { totalTime: Date.now() - start } }
+      })
+    },
+    ts4rebels: {
+      invoke: vi.fn().mockImplementation(async (action) => {
+        const start = Date.now()
+        await new Promise(r => setTimeout(r, 150))
+        return { success: true, data: { action }, performance: { duration: Date.now() - start } }
+      })
+    }
+  },
+  writable: true
+});

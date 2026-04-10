@@ -139,29 +139,43 @@ export function ProjectSwitcher({ compact = false }: ProjectSwitcherProps) {
       {/* Trigger */}
       <button
         onClick={() => setOpen(p => !p)}
-        className="flex items-center gap-1.5 px-2 py-1 rounded-lg transition-all group"
+        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg transition-all group relative overflow-hidden active:scale-95"
         style={{
-          background: open ? `${activeProject.color}10` : "rgba(255,255,255,0.02)",
-          border: `1px solid ${open ? `${activeProject.color}30` : T.borderSubtle}`,
+          background: open ? `${activeProject.color}15` : "rgba(255,255,255,0.03)",
+          border: `1px solid ${open ? activeProject.color : T.borderSubtle}`,
+          boxShadow: open ? `0 0 15px ${activeProject.color}20` : 'none'
         }}
         onMouseEnter={e => {
-          if (!open) { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.borderColor = T.border; }
+          if (!open) { 
+            e.currentTarget.style.background = `${activeProject.color}08`; 
+            e.currentTarget.style.borderColor = `${activeProject.color}40`;
+            e.currentTarget.style.boxShadow = `0 0 10px ${activeProject.color}15`;
+          }
         }}
         onMouseLeave={e => {
-          if (!open) { e.currentTarget.style.background = "rgba(255,255,255,0.02)"; e.currentTarget.style.borderColor = T.borderSubtle; }
+          if (!open) { 
+            e.currentTarget.style.background = "rgba(255,255,255,0.03)"; 
+            e.currentTarget.style.borderColor = T.borderSubtle;
+            e.currentTarget.style.boxShadow = 'none';
+          }
         }}
         title="Switch project"
       >
-        <div className="w-4 h-4 rounded-md flex items-center justify-center flex-shrink-0" style={{ background: `${activeProject.color}18`, border: `1px solid ${activeProject.color}25` }}>
-          <Braces size={9} color={activeProject.color} />
+        <div className="w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0" style={{ background: `${activeProject.color}20`, border: `1px solid ${activeProject.color}40` }}>
+          <Braces size={11} color={activeProject.color} className="drop-shadow-[0_0_5px_rgba(255,255,255,0.3)]" />
         </div>
         {!compact && (
-          <span style={{ fontSize: 11, fontWeight: 600, color: T.textSecondary, maxWidth: 90, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          <span style={{ fontSize: 11, fontWeight: 800, color: T.textPrimary, maxWidth: 90, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} className="uppercase tracking-tight">
             {activeProject.shortName}
           </span>
         )}
-        <ActiveStatusIcon size={9} color={activeStatus.color} />
-        <ChevronDown size={10} color={T.textMuted} style={{ transform: open ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.18s" }} />
+        <ActiveStatusIcon size={10} color={activeStatus.color} className="animate-pulse" />
+        <ChevronDown size={11} color={T.textMuted} style={{ transform: open ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s cubic-bezier(0.4, 0, 0.2, 1)" }} />
+        
+        {/* Spectral Shine Effect */}
+        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -skew-x-12 translate-x-[-100%] group-hover:translate-x-[200%] transition-transform duration-1000" />
+        </div>
       </button>
 
       {/* Dropdown */}

@@ -17,7 +17,12 @@ describe('EditorStore', () => {
       id: '/mock/path/file.jpe',
       name: 'file.jpe',
       path: '/mock/path/file.jpe',
-      type: 'jpe'
+      type: 'jpe',
+      projectId: 'test-project',
+      isDirty: false,
+      size: 0,
+      lastModified: Date.now(),
+      content: ''
     });
 
     const state = useEditorStore.getState();

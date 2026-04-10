@@ -59,23 +59,34 @@ export class ClaudeService extends BaseAIService {
     this.usageStats.cacheMisses++
 
     try {
-      const response = await this.performRequest<any>('chat', () => axios.post(
-        `${this.apiBaseUrl}/claude/chat`,
-        {
+      let response: any
+      if (this.isElectron) {
+        response = await this.callNativeBridge<any>('claude', 'post', `${this.apiBaseUrl}/claude/chat`, {
           model: this.model,
           messages: messages.map(m => ({ role: m.role, content: m.content }))
-        },
-        {
-          headers: {
-            'x-api-key': apiKey,
-            'Content-Type': 'application/json'
+        }, {
+          'x-api-key': apiKey,
+          'Content-Type': 'application/json'
+        })
+      } else {
+        response = await this.performRequest<any>('chat', () => axios.post(
+          `${this.apiBaseUrl}/claude/chat`,
+          {
+            model: this.model,
+            messages: messages.map(m => ({ role: m.role, content: m.content }))
+          },
+          {
+            headers: {
+              'x-api-key': apiKey,
+              'Content-Type': 'application/json'
+            }
           }
-        }
-      ), messages.map(m => m.content).join(' '), false)
+        ), messages.map(m => m.content).join(' '), false)
+      }
 
       const data = response.data
-      if (!data.success || !data.text) {
-        throw new Error(data.error || 'Claude API request failed')
+      if (!data?.success || !data?.text) {
+        throw new Error(data?.error || 'Claude API request failed')
       }
 
       // Update actual token usage from proxy report

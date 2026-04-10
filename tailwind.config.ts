@@ -80,6 +80,10 @@ const config: Config = {
         bgActive: "var(--jpe-bg-active)",
         "bg-input": "var(--jpe-bg-input)",
         bgInput: "var(--jpe-bg-input)",
+        "background-secondary": "var(--jpe-bg-surface)",
+        "background-tertiary": "var(--jpe-bg-elevated)",
+        "background-app": "var(--jpe-bg)",
+        "background-panel": "var(--jpe-bg-panel)",
 
         cyan: {
           DEFAULT: "var(--jpe-cyan)",

@@ -107,6 +107,7 @@ interface ToolsOverflowMenuProps {
   translationMemoryOpen: boolean;      onToggleTranslationMemory: () => void;
   // Phase 16
   modTemplateOpen: boolean;            onToggleTemplate: () => void;
+  batchSTBLOpen: boolean;              onToggleBatchSTBL: () => void;
   resourceBrowserOpen: boolean;        onToggleResources: () => void;
   // Phase 17
   symbolOutlineOpen: boolean;          onToggleSymbol: () => void;
@@ -188,6 +189,7 @@ export function ToolsOverflowMenu(props: ToolsOverflowMenuProps) {
     { id:"history",       label:"Edit History",         shortcut:"Ctrl+Shift+H", icon:Clock,         color:T.violet,  group:"Collaboration", open:props.historyPanelOpen,      onToggle:()=>{props.onToggleHistory();setOpen(false);}        },
     { id:"resources",     label:"Resource Browser",     shortcut:"Ctrl+Shift+B", icon:Database,      color:T.cyan,    group:"Collaboration", open:props.resourceBrowserOpen,   onToggle:()=>{props.onToggleResources();setOpen(false);}      },
     { id:"template",      label:"Mod Templates",        shortcut:"Ctrl+Shift+W", icon:Wand2,         color:T.amber,   group:"Collaboration", open:props.modTemplateOpen,       onToggle:()=>{props.onToggleTemplate();setOpen(false);}       },
+    { id:"batch-stbl",    label:"Batch STBL Editor",    shortcut:"Ctrl+Shift+E", icon:Languages,     color:T.cyan,    group:"Collaboration", open:props.batchSTBLOpen,         onToggle:()=>{props.onToggleBatchSTBL();setOpen(false);}      },
     { id:"changelog",     label:"What's New",           shortcut:"Ctrl+Shift+C", icon:Sparkles,      color:T.cyan,    group:"Collaboration", open:props.changelogOpen,         onToggle:()=>{props.onToggleChangelog();setOpen(false);}      },
     // Analysis
     { id:"mod-health",    label:"Mod Health",           shortcut:"Ctrl+Shift+Y", icon:BarChart3,     color:T.emerald, group:"Analysis",      open:props.modHealthOpen,         onToggle:()=>{props.onToggleHealth();setOpen(false);}         },

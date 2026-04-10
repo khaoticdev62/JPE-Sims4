@@ -5,6 +5,10 @@ test.describe('E2E: JPE Playground Full-Screen Verification', () => {
     // 1. Programmatically dismiss onboarding tour via localStorage
     await context.addInitScript(() => {
       window.localStorage.setItem('jpe_onboarding_seen', 'true')
+      window.localStorage.setItem('jpe-splash-dismissed', 'true')
+      window.localStorage.setItem('jpe-ui-store', JSON.stringify({
+        state: { hasCompletedTour: true }
+      }))
     })
 
     // 2. Navigate to the studio
@@ -13,19 +17,8 @@ test.describe('E2E: JPE Playground Full-Screen Verification', () => {
     // 3. Wait for app to load
     await page.waitForSelector('[data-testid="app-root"]', { timeout: 15000 })
     
-    // 4. Navigate to Playground mode via Projects page first to ensure a project context exists if needed,
-    // or just use the nav item if available
-    const navPlayground = page.locator('[data-testid="nav-playground"]')
-    if (await navPlayground.isVisible()) {
-      await navPlayground.click()
-    } else {
-      // Navigate to playground via URL if nav is hidden or not yet available
-      await page.goto('/studio', { waitUntil: 'networkidle' })
-      // Trigger mode switch via UI if possible, but for this test we'll assume direct navigation works
-      // or we click the "Playground" action on the dashboard if we add one.
-      // Current Dashboard has "Open Editor" (mode: code).
-      // Let's assume the nav item IS visible on the dashboard/studio root.
-    }
+    // 4. Navigate to Playground mode via the side navigation
+    await page.locator('[data-testid="nav-playground"]').click()
     
     await expect(page.locator('[data-testid="playground-view"]')).toBeVisible({ timeout: 15000 })
   })
@@ -52,7 +45,7 @@ test.describe('E2E: JPE Playground Full-Screen Verification', () => {
   })
 
   test('should navigate back to dashboard via the Return button', async ({ page }) => {
-    const backButton = page.locator('button:has-text("Back to Dashboard")')
+    const backButton = page.locator('button[title="Return to Dashboard"]')
     await expect(backButton).toBeVisible()
     
     await backButton.click()

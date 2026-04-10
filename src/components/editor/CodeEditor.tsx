@@ -12,6 +12,8 @@ import { AIProvider } from "@/services/ai/types"
 import { ModFile } from "@/types/index"
 import { toast } from "sonner"
 import { ExportMenu } from "./ExportMenu"
+import { BatchProcessDialog } from "./BatchProcessDialog"
+import { Layers } from "lucide-react"
 
 const PROVIDER_ICONS = {
   [AIProvider.CLAUDE]: <Brain className="w-3.5 h-3.5 text-orange-400" />,
@@ -32,6 +34,7 @@ export function CodeEditor() {
   } = useEditorStore()
   const { activeProvider } = useAIStore()
   const { getDiagnosticsForFile } = useDiagnosticStore()
+  const [showBatchDialog, setShowBatchDialog] = React.useState(false)
 
   const activeFile = files.find((f: ModFile) => f.id === activeFileId)
   const editorRef = React.useRef<any>(null)
@@ -162,12 +165,23 @@ export function CodeEditor() {
               {activeProvider?.toUpperCase()} FIX
             </button>
             <ExportMenu />
+            <button
+              onClick={() => setShowBatchDialog(true)}
+              className="flex items-center gap-1.5 px-2 py-1.5 rounded-md bg-white/5 hover:bg-white/10 text-jpe-muted hover:text-white text-[10px] font-black uppercase tracking-widest border border-white/10 transition-all shadow-sm"
+              title="Batch Process Multiple Files"
+            >
+              <Layers className="w-3.5 h-3.5 text-emerald-400" />
+              Batch
+            </button>
             <button className="p-1.5 hover:bg-white/10 rounded-md text-jpe-muted hover:text-white transition-all duration-fast ease-in-out shadow-sm">
               <Save className="w-4 h-4" />
             </button>
           </div>
         </div>
       </div>
+
+      {/* Batch Process Dialog */}
+      <BatchProcessDialog isOpen={showBatchDialog} onClose={() => setShowBatchDialog(false)} />
 
       {/* Monaco Editor */}
       <div className="flex-1 min-h-0 bg-[#0A0A0A]">

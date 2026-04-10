@@ -86,11 +86,11 @@ const btnVariantStyles: Record<JpeButtonVariant, { bg: string; border: string; c
 
 export function JpeButton({
   children, variant = "primary", size = "md", icon: Icon, iconRight: IconRight,
-  disabled, loading, onClick, title, className = "",
+  disabled, loading, onClick, title, className = "", testId,
 }: {
   children?: ReactNode; variant?: JpeButtonVariant; size?: JpeButtonSize;
   icon?: LucideIcon; iconRight?: LucideIcon; disabled?: boolean; loading?: boolean;
-  onClick?: () => void; title?: string; className?: string;
+  onClick?: () => void; title?: string; className?: string; testId?: string;
 }) {
   const s = btnSizes[size];
   const v = btnVariantStyles[variant];
@@ -99,6 +99,7 @@ export function JpeButton({
 
   return (
     <button
+      data-testid={testId}
       className={`inline-flex items-center justify-center gap-1.5 rounded-lg transition-all select-none ${className}`}
       style={{
         height: s.h,

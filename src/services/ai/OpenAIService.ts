@@ -50,23 +50,34 @@ export class OpenAIService extends BaseAIService {
     }
 
     try {
-      const response = await this.performRequest<any>('chat', () => axios.post(
-        `${this.apiBaseUrl}/openai/chat`,
-        {
+      let response: any
+      if (this.isElectron) {
+        response = await this.callNativeBridge<any>('openai', 'post', `${this.apiBaseUrl}/openai/chat`, {
           model: this.model,
           messages: messages.map(m => ({ role: m.role, content: m.content }))
-        },
-        {
-          headers: {
-            'Authorization': `Bearer ${apiKey}`,
-            'Content-Type': 'application/json'
+        }, {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json'
+        })
+      } else {
+        response = await this.performRequest<any>('chat', () => axios.post(
+          `${this.apiBaseUrl}/openai/chat`,
+          {
+            model: this.model,
+            messages: messages.map(m => ({ role: m.role, content: m.content }))
+          },
+          {
+            headers: {
+              'Authorization': `Bearer ${apiKey}`,
+              'Content-Type': 'application/json'
+            }
           }
-        }
-      ), messages.map(m => m.content).join(' '), false)
+        ), messages.map(m => m.content).join(' '), false)
+      }
 
       const data = response.data
-      if (!data.success || !data.text) {
-        throw new Error(data.error || 'OpenAI API request failed')
+      if (!data?.success || !data?.text) {
+        throw new Error(data?.error || 'OpenAI API request failed')
       }
 
       if (data.usage?.totalTokens) {

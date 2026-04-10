@@ -9,25 +9,28 @@
 "use client"
 
 import { useState, useCallback } from 'react'
-import { Sparkles, Loader2, Copy, Check, AlertCircle } from 'lucide-react'
+import { Sparkles, Loader2, Copy, Check, AlertCircle, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
 import { AIServiceFactory } from '@/services/ai/AIServiceFactory'
-import type { AIProvider } from '@/types/ai'
+import { AIProvider } from '@/services/ai/types'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from '@/components/ui/dialog'
 
-interface PromptToJPEProps {
+interface PromptToJPEDialogProps {
+  isOpen: boolean
+  onClose: () => void
   onGenerated?: (jpeCode: string) => void
   className?: string
 }
 
-export default function PromptToJPEDialog({ onGenerated, className = '' }: PromptToJPEProps) {
+export default function PromptToJPEDialog({ isOpen, onClose, onGenerated, className = '' }: PromptToJPEDialogProps) {
   const [prompt, setPrompt] = useState('')
   const [generatedJPE, setGeneratedJPE] = useState<string | null>(null)
   const [isGenerating, setIsGenerating] = useState(false)
-  const [selectedProvider, setSelectedProvider] = useState<AIProvider>('openai')
+  const [selectedProvider, setSelectedProvider] = useState<AIProvider>(AIProvider.OPENAI)
   const [error, setError] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
 
@@ -65,7 +68,7 @@ Return ONLY the JPE code, no explanations. Wrap in a code block.`
       ])
 
       // Extract code from response (remove markdown code blocks if present)
-      let jpeCode = response.content
+      let jpeCode = response.text || ''
       const codeBlockMatch = jpeCode.match(/```(?:jpe)?\n([\s\S]*?)```/)
       if (codeBlockMatch) {
         jpeCode = codeBlockMatch[1].trim()
@@ -99,21 +102,22 @@ Return ONLY the JPE code, no explanations. Wrap in a code block.`
   ]
 
   return (
-    <Card className={`w-full ${className}`}>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Sparkles className="w-5 h-5 text-indigo-400" />
-          Prompt to JPE
-        </CardTitle>
-        <CardDescription>
-          Describe what you want in plain English, and AI will generate JPE code
-        </CardDescription>
-      </CardHeader>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Sparkles className="w-5 h-5 text-indigo-400" />
+            Prompt to JPE
+          </DialogTitle>
+          <DialogDescription>
+            Describe what you want in plain English, and AI will generate JPE code
+          </DialogDescription>
+        </DialogHeader>
 
-      <CardContent className="space-y-4">
+        <div className="space-y-4">
         {/* Provider Selection */}
         <div className="flex gap-2">
-          {(['openai', 'claude', 'qwen', 'gemini'] as AIProvider[]).map((provider) => (
+          {([AIProvider.OPENAI, AIProvider.CLAUDE, AIProvider.QWEN, AIProvider.GEMINI] as AIProvider[]).map((provider) => (
             <Button
               key={provider}
               variant={selectedProvider === provider ? 'default' : 'outline'}
@@ -215,7 +219,8 @@ Return ONLY the JPE code, no explanations. Wrap in a code block.`
         <p className="text-xs text-muted-foreground text-center">
           Press <kbd className="px-1.5 py-0.5 bg-slate-800 rounded text-[10px]">Ctrl</kbd> + <kbd className="px-1.5 py-0.5 bg-slate-800 rounded text-[10px]">Enter</kbd> to generate
         </p>
-      </CardContent>
-    </Card>
+        </div>
+      </DialogContent>
+    </Dialog>
   )
 }

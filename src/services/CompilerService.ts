@@ -106,7 +106,7 @@ export class CompilerService {
   /**
    * Parse STBL (string table) binary file
    */
-  static parseSTBL(buffer: ArrayBuffer): { success: boolean; data?: any; error?: string } {
+  static parseSTBL(buffer: ArrayBuffer): { success: boolean; data?: Record<string, unknown>; error?: string } {
     try {
       const result = STBLParser.parse(buffer)
       return { success: true, data: result }
@@ -122,7 +122,7 @@ export class CompilerService {
   /**
    * Parse package (.package) DBPF format
    */
-  static parsePackage(buffer: ArrayBuffer): { success: boolean; data?: any; error?: string } {
+  static parsePackage(buffer: ArrayBuffer): { success: boolean; data?: Record<string, unknown>; error?: string } {
     try {
       const result = PackageParser.parse(buffer)
       return { success: true, data: result }
@@ -141,7 +141,7 @@ export class CompilerService {
   static parseConfig(
     content: string,
     format: 'json' | 'yaml' = 'json'
-  ): { success: boolean; data?: any; error?: string } {
+  ): { success: boolean; data?: Record<string, unknown>; error?: string } {
     try {
       const result = ConfigParser.parse(content, format)
       return { success: true, data: result }
@@ -206,14 +206,14 @@ export class CompilerService {
   /**
    * Format diagnostic input into formatted diagnostics with suggestions
    */
-  static formatDiagnostics(inputs: any[]) {
+  static formatDiagnostics(inputs: Record<string, unknown>[]) {
     return this.diagnosticFormatter.formatDiagnostics(inputs)
   }
 
   /**
    * Create diagnostic report for a file
    */
-  static createDiagnosticReport(file: string, inputs: any[]) {
+  static createDiagnosticReport(file: string, inputs: Record<string, unknown>[]) {
     return this.diagnosticFormatter.createReport(file, inputs)
   }
 

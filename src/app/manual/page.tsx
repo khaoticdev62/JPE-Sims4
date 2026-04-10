@@ -1,8 +1,12 @@
 'use client'
 
 import React from 'react'
-import { JpeManualView } from '@/components/manual/JpeManualView'
+import dynamic from 'next/dynamic'
 import TitleBar from '@/components/layout/TitleBar'
+
+const JpeManualView = dynamic(() => import('@/components/manual/JpeManualView').then(mod => mod.JpeManualView), {
+  ssr: false
+})
 
 export default function ManualPage() {
   return (

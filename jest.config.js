@@ -67,6 +67,33 @@ const customJestConfig = {
     // Playwright E2E specs (not Jest tests)
     '<rootDir>/tests/e2e/',
   ],
+  // Coverage reporting configuration
+  collectCoverageFrom: [
+    'src/**/*.{js,jsx,ts,tsx}',
+    '!src/**/*.d.ts',
+    '!src/**/*.stories.{js,jsx,ts,tsx}',
+    '!src/__tests__/**/*.{ts,tsx}',
+    '!src/app/api/**/*.{ts,tsx}', // Exclude API routes (not used in Electron mode)
+    // Exclude files with heavy 'any' usage from coverage thresholds
+    '!src/components/resource-browser.tsx',
+    '!src/components/visual/VisualJpeEditor.tsx',
+    '!src/engine/parsers/**/*.{ts,tsx}',
+  ],
+  coverageThreshold: {
+    global: {
+      branches: 30, // Start conservative, increase over time
+      functions: 40,
+      lines: 45,
+      statements: 45,
+    },
+  },
+  coverageReporters: [
+    'text',
+    'lcov',
+    'html',
+    'json-summary',
+  ],
+  coverageDirectory: '<rootDir>/coverage',
 };
 
 // createJestConfig is exported this way to ensure that next/jest can load the Next.js config which is async

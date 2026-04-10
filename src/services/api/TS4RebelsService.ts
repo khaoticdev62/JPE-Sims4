@@ -42,17 +42,17 @@ export class TS4RebelsService {
   /**
    * Performs authentication with ts4rebels.cc
    */
-  static async login(username: string, password: string): Promise<TS4RebelsBridgeResponse<{ ok: boolean; cookies: Record<string, string>; diagnostics: any[] }>> {
+  static async login(username: string, password: string): Promise<TS4RebelsBridgeResponse<{ ok: boolean; cookies: Record<string, string>; diagnostics: Array<Record<string, unknown>> }>> {
     try {
       if (typeof window !== 'undefined' && window.electron?.ts4rebels) {
         return await window.electron.ts4rebels.invoke('login', { username, password })
       }
       throw new Error('Native TS4Rebels bridge not available');
-    } catch (error: any) {
+    } catch (error: unknown) {
       return {
         success: false,
         data: { ok: false, cookies: {}, diagnostics: [] },
-        error: error.message || 'Login failed'
+        error: error instanceof Error ? error.message : 'Login failed'
       };
     }
   }
@@ -71,11 +71,11 @@ export class TS4RebelsService {
         })
       }
       throw new Error('Native TS4Rebels bridge not available');
-    } catch (error: any) {
+    } catch (error: unknown) {
       return {
         success: false,
         data: { topics: [] },
-        error: error.message || 'Failed to fetch forum'
+        error: error instanceof Error ? error.message : 'Failed to fetch forum'
       };
     }
   }
@@ -86,18 +86,18 @@ export class TS4RebelsService {
   static async getTopic(topicId: number, page: number = 1, cookies?: string): Promise<TS4RebelsBridgeResponse<{ posts: TS4RebelsPost[] }>> {
     try {
       if (typeof window !== 'undefined' && window.electron?.ts4rebels) {
-        return await window.electron.ts4rebels.invoke('topic', { 
-          topic: String(topicId), 
+        return await window.electron.ts4rebels.invoke('topic', {
+          topic: String(topicId),
           page: String(page),
           cookies: cookies || ''
         })
       }
       throw new Error('Native TS4Rebels bridge not available');
-    } catch (error: any) {
+    } catch (error: unknown) {
       return {
         success: false,
         data: { posts: [] },
-        error: error.message || 'Failed to fetch topic'
+        error: error instanceof Error ? error.message : 'Failed to fetch topic'
       };
     }
   }

@@ -15,15 +15,30 @@ export const PythonEngineStatusIndicator: React.FC = () => {
   const [showTooltip, setShowTooltip] = useState(false)
 
   useEffect(() => {
-    fetch('/api/health')
-      .then((res) => res.json())
-      .then((data: HealthResponse) => {
-        setStatus(data)
-        setLoading(false)
-      })
-      .catch(() => {
-        setLoading(false)
-      })
+    // Native IPC health probe (Zero-Server)
+    if (typeof window !== 'undefined' && window.electron?.transform) {
+      window.electron.transform.run('', '__health_check__.jpe')
+        .then(() => {
+          setStatus({
+            status: 'ok',
+            python: { available: true, version: '3.x', path: 'system' },
+            engine: { ready: true, errors: [] },
+            responseTime: 0,
+          } as HealthResponse)
+          setLoading(false)
+        })
+        .catch(() => {
+          setStatus({
+            status: 'error',
+            python: { available: false, version: '', path: '' },
+            engine: { ready: false, errors: ['Python engine not available'] },
+            responseTime: 0,
+          } as HealthResponse)
+          setLoading(false)
+        })
+    } else {
+      setLoading(false)
+    }
   }, [])
 
   if (loading) {

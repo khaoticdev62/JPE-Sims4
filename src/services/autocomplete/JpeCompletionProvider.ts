@@ -5,7 +5,7 @@
  * to provide intelligent, context-aware autocomplete suggestions.
  */
 
-import type { languages, editor, IDisposable } from 'monaco-editor'
+import { languages, editor, IDisposable, Position } from 'monaco-editor'
 import { SmartAutocompleteService } from '@/services/editor/SmartAutocompleteService'
 import type { Completion } from '@/services/editor/SmartAutocompleteService'
 
@@ -70,7 +70,7 @@ export function registerJpeCompletionProvider(
     triggerCharacters: [' ', ':', '"', '<', 'W', 'D', 'O', 'I', 'C', 'L', 'N'],
     provideCompletionItems: (
       model: editor.ITextModel,
-      position: languages.Position,
+      position: Position,
     ): languages.ProviderResult<languages.CompletionList> => {
       // Get text up to cursor position
       const textUntilPosition = model.getValueInRange({

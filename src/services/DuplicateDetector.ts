@@ -79,7 +79,7 @@ export class DuplicateDetector {
     )
 
     // 4. Build duplicate groups
-    const duplicateGroups = this.buildDuplicateGroups(hashMap)
+    const duplicateGroups = await this.buildDuplicateGroups(hashMap)
 
     // 5. Calculate statistics
     const totalDuplicates = duplicateGroups.reduce(

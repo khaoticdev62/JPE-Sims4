@@ -26,7 +26,7 @@ export class BrowserFileService {
   ): Promise<SaveResult> {
     const { createBackup = true } = options ?? {}
 
-    // Try Electron IPC first
+    // Electron IPC — exclusive path in Zero-Server architecture
     if (typeof window !== 'undefined' && (window as any).electron?.file?.writeFile) {
       try {
         await (window as any).electron.file.writeFile(path, content)
@@ -39,33 +39,9 @@ export class BrowserFileService {
       }
     }
 
-    // Fall back to server-side save
-    try {
-      const response = await fetch('/api/files/save', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ path, content, createBackup }),
-      })
-
-      const result = await response.json()
-
-      if (!response.ok) {
-        return {
-          success: false,
-          error: result.error || 'Server save failed',
-        }
-      }
-
-      return {
-        success: true,
-        size: result.size,
-        backupPath: result.backupPath,
-      }
-    } catch (error) {
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Network save failed',
-      }
+    return {
+      success: false,
+      error: 'File save not available. Ensure JPE Studio is running as a desktop application.',
     }
   }
 

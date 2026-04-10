@@ -52,28 +52,28 @@ export class TransformationService {
    */
   private static async transformWithPython(source: string, fileName?: string): Promise<TransformResult> {
     try {
-      const response = await fetch('/api/transform', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ source, fileName: fileName || 'input.jpe' }),
-      });
+      // Native Electron IPC Bridge (Zero-Server)
+      if (typeof window !== 'undefined' && window.electron?.transform) {
+        const result = await window.electron.transform.run(source, fileName || 'input.jpe');
 
-      const result = await response.json();
+        // Post-process: Validate namespaces and pretty-print
+        const { processedXml, namespaceFixes } = this.postProcessXml(result.xml || '');
 
-      if (!response.ok) {
-        throw new Error(result.error || 'Transformation failed');
+        return {
+          xml: processedXml,
+          errors: result.errors || [],
+          success: result.success,
+          mode: 'python',
+          namespaceFixes,
+          formattingApplied: true,
+        };
       }
 
-      // Post-process: Validate namespaces and pretty-print
-      const { processedXml, namespaceFixes } = this.postProcessXml(result.xml)
-
       return {
-        xml: processedXml,
-        errors: result.errors || [],
-        success: true,
+        xml: '<!-- Transform engine not available -->',
+        errors: [{ message: 'Native transform bridge not available. Ensure JPE Studio is running as a desktop application.' }],
+        success: false,
         mode: 'python',
-        namespaceFixes,
-        formattingApplied: true,
       };
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Transformation failed';

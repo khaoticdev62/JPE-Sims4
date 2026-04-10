@@ -684,7 +684,7 @@ ipcMain.handle('ts4rebels:invoke', async (_event, action: string, params: Record
       try {
         const decodedCookies = Buffer.from(params.cookies, 'base64').toString('utf-8')
         args.push('--cookies', decodedCookies)
-      } catch (e) {
+      } catch (_e) {
         console.warn('[TS4Rebels Main] Failed to decode cookies')
       }
     }
@@ -950,6 +950,9 @@ function mapScarletStatus(rawStatus: string): string {
   if (s.includes('n/a')) return 'N/A'
   return 'Unknown'
 }
+
+// === SHELL CONTEXT MENU (Windows Only) ===
+ipcMain.handle('shell:installContextMenu', async () => {
   if (process.platform !== 'win32') {
     return { success: false, error: 'Context menu integration only supported on Windows' }
   }

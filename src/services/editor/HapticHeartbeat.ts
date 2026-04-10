@@ -97,7 +97,7 @@ export class HapticHeartbeat {
     }
 
     // Fallback to Vibration API (mobile)
-    if (navigator.vibrate) {
+    if (typeof navigator.vibrate === 'function') {
       this.triggerVibration(finalConfig)
       return
     }

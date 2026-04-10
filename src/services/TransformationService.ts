@@ -105,27 +105,24 @@ export class TransformationService {
       return this._pythonAvailable
     }
 
-    try {
-      const response = await fetch('/api/health', {
-        method: 'GET',
-        signal: AbortSignal.timeout(5000),
-      })
-
-      if (!response.ok) {
+    // Check via native transform bridge (Zero-Server)
+    if (typeof window !== 'undefined' && window.electron?.transform) {
+      try {
+        // Lightweight probe: send empty input to verify the engine responds
+        const result = await window.electron.transform.run('', '__health_check__.jpe')
+        this._pythonAvailable = true
+        this._lastPythonCheck = now
+        return true
+      } catch {
         this._pythonAvailable = false
         this._lastPythonCheck = now
         return false
       }
-
-      const data = await response.json()
-      this._pythonAvailable = Boolean(data.python?.available)
-      this._lastPythonCheck = now
-      return this._pythonAvailable!
-    } catch {
-      this._pythonAvailable = false
-      this._lastPythonCheck = now
-      return false
     }
+
+    this._pythonAvailable = false
+    this._lastPythonCheck = now
+    return false
   }
 
   /**
@@ -160,28 +157,18 @@ export class TransformationService {
           await new Promise((resolve) => setTimeout(resolve, delay))
         }
 
-        const response = await fetch('/api/transform', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ source, fileName, force: attempt > 0 }),
-          signal: AbortSignal.timeout(35_000),
-        })
-
-        const result = await response.json()
-
-        // If the server returned 5xx, it might be a transient error — retry
-        if (response.status >= 500 && attempt < MAX_RETRIES) {
-          lastError = { message: result.error || 'Server error', severity: 'error' }
-          continue
+        // Native Electron IPC Bridge (Zero-Server)
+        if (typeof window === 'undefined' || !window.electron?.transform) {
+          throw new Error('Native transform bridge not available')
         }
 
-        // If transform itself failed with a retryable error, retry
+        const result = await window.electron.transform.run(source, fileName)
+
         if (!result.success && attempt < MAX_RETRIES) {
-          const isRetryable =
-            result.errors?.some(
-              (e: TransformError) =>
-                e.code === 'TIMEOUT' || e.message.includes('timed out') || e.message.includes('process')
-            ) ?? false
+          const isRetryable = result.errors?.some(
+            (e: TransformError) =>
+              e.code === 'TIMEOUT' || e.message?.includes('timed out') || e.message?.includes('process')
+          ) ?? false
 
           if (isRetryable) {
             lastError = { message: 'Transient transform error, retrying...', severity: 'error' }

@@ -1,5 +1,10 @@
 appId: com.jperebel.studio
 productName: JPE Studio
+copyright: "Copyright © 2026 KhaoticDev / JPE Rebel"
+
+# Compression for smaller installers
+compression: maximum
+
 directories:
   output: release
   buildResources: build
@@ -9,22 +14,50 @@ files:
     filter:
       - out/**/*
       - dist-electron/**/*
-      - public/**/*
       - package.json
+      # Exclude dev-only files
+      - "!**/*.map"
+      - "!**/node_modules/.cache"
+      - "!src/**"
+      - "!scripts/**"
+      - "!tests/**"
+      - "!_bmad/**"
+      - "!.agent/**"
 
 extraResources:
   - from: public/assets
     to: assets
     filter:
       - "**/*"
-  - from: scripts
-    to: scripts
-    filter:
-      - "**/*"
+  - from: scripts/transform_jpe.py
+    to: scripts/transform_jpe.py
+  - from: cli.py
+    to: cli.py
 
+# ─── File Associations ─────────────────────────────────
+fileAssociations:
+  - ext: jpe
+    name: JPE Mod File
+    description: JPE Studio Mod Translation File
+    role: Editor
+  - ext: package
+    name: Sims 4 Package
+    description: Sims 4 Mod Package
+    role: Viewer
+
+# ─── Protocol Handler ─────────────────────────────────
+protocols:
+  - name: JPE Protocol
+    schemes:
+      - jpe
+
+# ─── Windows ──────────────────────────────────────────
 win:
   target:
     - target: nsis
+      arch:
+        - x64
+    - target: portable
       arch:
         - x64
   icon: public/icon.ico
@@ -32,14 +65,17 @@ win:
 
 nsis:
   oneClick: false
-  perMachine: true
+  perMachine: false
   allowToChangeInstallationDirectory: true
   createDesktopShortcut: true
   createStartMenuShortcut: true
   shortcutName: JPE Studio
   installerIcon: public/icon.ico
   uninstallerIcon: public/icon.ico
+  license: LICENSE
+  runAfterFinish: true
 
+# ─── macOS ────────────────────────────────────────────
 mac:
   target:
     - target: dmg
@@ -54,9 +90,13 @@ mac:
   entitlements: build/entitlements.mac.plist
   entitlementsInherit: build/entitlements.mac.plist
 
+# ─── Linux ────────────────────────────────────────────
 linux:
   target:
     - target: AppImage
+      arch:
+        - x64
+    - target: deb
       arch:
         - x64
   icon: public/icon.png
@@ -65,7 +105,10 @@ linux:
     Name: JPE Studio
     Comment: Sims 4 Mod Translator & Editor
     Keywords: "mod;sims4;translation;editor"
+  mimeTypes:
+    - x-scheme-handler/jpe
 
+# ─── Auto-Updater ─────────────────────────────────────
 publish:
   provider: github
   releaseType: release

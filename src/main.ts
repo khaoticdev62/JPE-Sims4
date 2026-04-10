@@ -7,6 +7,7 @@ import {
   dialog,
   shell,
   Tray,
+  protocol,
 } from 'electron'
 import path from 'path'
 import fs from 'fs'
@@ -18,6 +19,12 @@ import { LiveMonitor } from './services/main/LiveMonitor'
 
 // Auto-updater (only in production — check after app ready to avoid require issues)
 let autoUpdater: typeof import('electron-updater').autoUpdater | null = null
+
+// ─── Protocol Registration ───────────────────────────────────────────────────
+// Must be called before app.ready
+protocol.registerSchemesAsPrivileged([
+  { scheme: 'app', privileges: { standard: true, secure: true, allowServiceWorkers: true, supportFetchAPI: true } }
+])
 
 // ─── Single Instance Lock ────────────────────────────────────────────────────
 const gotTheLock = app.requestSingleInstanceLock()
@@ -89,7 +96,7 @@ const createWindow = (url: string) => {
   if (isDev) {
     mainWindow.loadURL('http://localhost:3000')
   } else {
-    mainWindow.loadFile(path.join(__dirname, '../out/index.html'))
+    mainWindow.loadURL('app://./index.html')
   }
 
   mainWindow.once('ready-to-show', () => {
@@ -649,7 +656,7 @@ ipcMain.handle('sims4:deployBridge', async (_event, pythonSource: string) => {
 ipcMain.handle('ts4rebels:invoke', async (_event, action: string, params: Record<string, string>) => {
   return new Promise((resolve) => {
     const pythonCmd = process.platform === 'win32' ? 'python' : 'python3'
-    
+
     // Resolve CLI path correctly for both dev and packaged modes
     const cliPath = app.isPackaged
       ? path.join(process.resourcesPath, 'cli.py')
@@ -683,7 +690,7 @@ ipcMain.handle('ts4rebels:invoke', async (_event, action: string, params: Record
         const decodedCookies = Buffer.from(params.cookies, 'base64').toString('utf-8')
         args.push('--cookies', decodedCookies)
       } catch (_e) {
-        console.warn('[TS4Rebels Main] Failed to decode cookies')
+        // Silently handle cookie decode failures
       }
     }
 
@@ -713,7 +720,12 @@ ipcMain.handle('ts4rebels:invoke', async (_event, action: string, params: Record
       return
     }
 
-    console.log(`[TS4Rebels Main] Executing: ${pythonCmd} ${args.join(' ')}`)
+    // Safe logging to prevent EPIPE errors
+    try {
+      console.log(`[TS4Rebels Main] Executing: ${pythonCmd} ${args.join(' ')}`)
+    } catch (_e) {
+      // Ignore EPIPE errors from console.log
+    }
 
     const child = spawn(pythonCmd, args, {
       env: childEnv,
@@ -723,13 +735,25 @@ ipcMain.handle('ts4rebels:invoke', async (_event, action: string, params: Record
     let stdout = ''
     let stderr = ''
 
+    // Handle stdio errors to prevent EPIPE
+    child.stdout.on('error', () => {
+      // Ignore stdout errors (EPIPE, etc.)
+    })
+    child.stderr.on('error', () => {
+      // Ignore stderr errors (EPIPE, etc.)
+    })
+
     child.stdout.on('data', (data) => { stdout += data.toString() })
     child.stderr.on('data', (data) => { stderr += data.toString() })
 
     // Timeout: 60 seconds for network operations (generous for slow connections)
     const timeout = setTimeout(() => {
       if (!child.killed) {
-        console.warn('[TS4Rebels Main] Process timeout - killing child')
+        try {
+          console.warn('[TS4Rebels Main] Process timeout - killing child')
+        } catch (_e) {
+          // Ignore EPIPE
+        }
         child.kill('SIGTERM')
         // Force kill after 5s grace period
         setTimeout(() => {
@@ -1040,6 +1064,36 @@ function getIconPath(): string {
 
 // ─── App Lifecycle ───────────────────────────────────────────────────────────
 app.on('ready', async () => {
+  // Register custom protocol to serve static files from 'out' directory
+  if (!isDev) {
+    protocol.registerFileProtocol('app', (request, callback) => {
+      // Robust URL extraction: remove app:// and then remove leading slashes
+      let url = request.url.replace(/^app:\/\//, '')
+      
+      // Remove leading slashes/dots so it becomes relative to out/
+      url = url.replace(/^[./]+/, '')
+
+      // Clean up the path (remove query params etc)
+      url = url.split('?')[0].split('#')[0]
+
+      let filePath = path.join(__dirname, '../out', url)
+
+      // If it looks like a directory or doesn't have an extension, try index.html
+      // This handles trailingSlash: true routing
+      if (!path.extname(filePath) || filePath.endsWith('/') || filePath.endsWith('\\')) {
+        // If it was just a directory name, make sure we append index.html
+        if (filePath.endsWith('/') || filePath.endsWith('\\')) {
+           filePath = path.join(filePath, 'index.html')
+        } else {
+           // It might be app://studio which needs to be out/studio/index.html
+           filePath = path.join(filePath, 'index.html')
+        }
+      }
+
+      callback({ path: path.normalize(filePath) })
+    })
+  }
+
   Menu.setApplicationMenu(buildAppMenu())
 
   // Initialize auto-updater (production only)

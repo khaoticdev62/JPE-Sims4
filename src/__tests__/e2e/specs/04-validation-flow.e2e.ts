@@ -2,13 +2,29 @@ import { test, expect } from '@playwright/test'
 
 test.describe('E2E: Real-Time Validation Flow', () => {
   test.beforeEach(async ({ context, page }) => {
-    // Inject localStorage to skip tutorial globally for all tests
+    // Inject localStorage to skip tutorial and onboarding globally for all tests
     await context.addInitScript(() => {
       window.localStorage.setItem('jpe_onboarding_seen', 'true')
       window.localStorage.setItem('jpe-splash-dismissed', 'true')
+      // Set Zustand UI store to mark tour as completed
       window.localStorage.setItem('jpe-ui-store', JSON.stringify({
-        version: 0,
-        state: { hasCompletedTour: true, workspaceMode: 'dashboard' }
+        state: {
+          hasCompletedTour: true,
+          isTourOpen: false,
+          isTutorialActive: false,
+          workspaceMode: 'dashboard',
+          sidebarCollapsed: false,
+          rightPanelCollapsed: false,
+          showDiagnostics: true,
+          fontSize: 13,
+          showLineNumbers: true,
+          rightPanelTab: 'diagnostics',
+          sidebarTab: 'explorer',
+          focusedPane: 'editor',
+          immersionMode: 'normal',
+          theme: 'dark'
+        },
+        version: 0
       }))
     })
 
@@ -17,6 +33,9 @@ test.describe('E2E: Real-Time Validation Flow', () => {
 
     // Wait for app to load
     await page.waitForSelector('[data-testid="app-root"]', { timeout: 10000 })
+    
+    // Additional wait to ensure any delayed modals are not rendered
+    await page.waitForTimeout(500)
   })
 
   test('should display app on load', async ({ page }) => {

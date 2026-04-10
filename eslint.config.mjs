@@ -45,8 +45,9 @@ export default tseslint.config(
       'no-console': ['warn', { allow: ['warn', 'error', 'log', 'info', 'debug'] }],
       'react/no-unescaped-entities': 'off',
       'react/jsx-no-comment-textnodes': 'off',
-      'react-hooks/rules-of-hooks': 'off',
-      'react-hooks/exhaustive-deps': 'off',
+      // Re-enable critical React hooks rules for code quality
+      'react-hooks/rules-of-hooks': 'warn',
+      'react-hooks/exhaustive-deps': 'warn',
       'react/display-name': 'off',
     },
   },

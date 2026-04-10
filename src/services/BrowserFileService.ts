@@ -1,10 +1,8 @@
 /**
  * BrowserFileService — Browser-compatible file save utility.
  *
- * Uses the server-side /api/files/save route when in browser context.
- * Falls back to Electron IPC when running in Electron environment.
- *
- * This allows the web app to save files without requiring Electron.
+ * Uses the Electron IPC bridge to write files to disk in the
+ * Zero-Server desktop architecture.
  */
 
 export interface SaveResult {
@@ -16,16 +14,13 @@ export interface SaveResult {
 
 export class BrowserFileService {
   /**
-   * Save content to file.
-   * Uses Electron IPC if available, otherwise falls back to server API.
+   * Save content to file via native Electron IPC.
    */
   static async saveFile(
     path: string,
     content: string,
-    options?: { createBackup?: boolean }
+    _options?: { createBackup?: boolean }
   ): Promise<SaveResult> {
-    const { createBackup = true } = options ?? {}
-
     // Electron IPC — exclusive path in Zero-Server architecture
     if (typeof window !== 'undefined' && (window as any).electron?.file?.writeFile) {
       try {

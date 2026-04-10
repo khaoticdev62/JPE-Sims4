@@ -12,7 +12,7 @@ import path from 'path'
 import fs from 'fs'
 import os from 'os'
 import axios from 'axios'
-import { spawn, exec, ChildProcess } from 'child_process'
+import { spawn, exec } from 'child_process'
 import { createHash } from 'crypto'
 import { LiveMonitor } from './services/main/LiveMonitor'
 
@@ -63,10 +63,8 @@ function handleDeepLink(url: string) {
 // ─── Globals ─────────────────────────────────────────────────────────────────
 let mainWindow: BrowserWindow | null = null
 let tray: Tray | null = null
-let nextServer: ChildProcess | null = null
 let liveMonitor: LiveMonitor | null = null
 const isDev = process.env.NODE_ENV === 'development'
-const NEXT_SERVER_PORT = 3000
 
 // ─── Window Creation ────────────────────────────────────────────────────────
 const createWindow = (url: string) => {
@@ -756,6 +754,34 @@ ipcMain.handle('ts4rebels:invoke', async (_event, action: string, params: Record
     child.on('error', (err) => {
       clearTimeout(timeout)
       resolve({ success: false, error: err instanceof Error ? err.message : String(err) })
+    })
+  })
+})
+
+// === PYTHON HEALTH CHECK (lightweight — no temp files, no transform) ===
+ipcMain.handle('transform:health', async () => {
+  const pythonCmd = process.platform === 'win32' ? 'python' : 'python3'
+  return new Promise((resolve) => {
+    const proc = spawn(pythonCmd, ['--version'], {
+      stdio: ['pipe', 'pipe', 'pipe'],
+      timeout: 5000,
+    })
+    let stdout = ''
+    proc.stdout.on('data', (data) => { stdout += data.toString() })
+    proc.on('close', (code) => {
+      if (code === 0) {
+        const versionMatch = stdout.match(/Python\s+(\d+\.\d+\.\d+)/)
+        resolve({
+          available: true,
+          version: versionMatch ? versionMatch[1] : stdout.trim(),
+          path: pythonCmd,
+        })
+      } else {
+        resolve({ available: false, version: '', path: '' })
+      }
+    })
+    proc.on('error', () => {
+      resolve({ available: false, version: '', path: '' })
     })
   })
 })

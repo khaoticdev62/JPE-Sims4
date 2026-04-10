@@ -16,6 +16,9 @@
  * - NEXT_PUBLIC_TRANSFORM_MODE='typescript'
  */
 
+import { XMLPrettyPrinter } from '@/engine/compilers/XMLPrettyPrinter'
+import { XMLNamespaceValidator } from '@/engine/validation/XMLNamespaceValidator'
+
 interface TransformError {
   message: string
   line?: number
@@ -105,14 +108,13 @@ export class TransformationService {
       return this._pythonAvailable
     }
 
-    // Check via native transform bridge (Zero-Server)
-    if (typeof window !== 'undefined' && window.electron?.transform) {
+    // Check via lightweight native health probe (Zero-Server)
+    if (typeof window !== 'undefined' && window.electron?.transform?.health) {
       try {
-        // Lightweight probe: send empty input to verify the engine responds
-        const result = await window.electron.transform.run('', '__health_check__.jpe')
-        this._pythonAvailable = true
+        const health = await window.electron.transform.health()
+        this._pythonAvailable = Boolean(health?.available)
         this._lastPythonCheck = now
-        return true
+        return this._pythonAvailable
       } catch {
         this._pythonAvailable = false
         this._lastPythonCheck = now
@@ -191,14 +193,17 @@ export class TransformationService {
           }
         }
 
+        // Post-process: validate namespaces and pretty-print
+        const { processedXml, namespaceFixes } = this.postProcessXml(result.xml || '')
+
         return {
-          xml: result.xml,
+          xml: processedXml,
           errors: result.errors || [],
           success: result.success,
           mode: 'python',
           duration: Date.now() - startTime,
           inputSize: source.length,
-          outputSize: (result.xml || '').length,
+          outputSize: processedXml.length,
           retryCount: attempt,
         }
       } catch (error) {
@@ -396,5 +401,38 @@ export class TransformationService {
   static resetPythonCheck(): void {
     this._pythonAvailable = null
     this._lastPythonCheck = 0
+  }
+
+  /**
+   * Post-process XML output: validate namespaces and pretty-print.
+   * Migrated from the legacy transformation-service.ts.
+   */
+  private static postProcessXml(xml: string): { processedXml: string; namespaceFixes: string[] } {
+    const namespaceFixes: string[] = []
+
+    // Step 1: Validate and fix namespaces
+    try {
+      const nsValidator = new XMLNamespaceValidator()
+      const validation = nsValidator.validate(xml)
+
+      let processedXml = xml
+      if (validation.fixedXml) {
+        processedXml = validation.fixedXml
+        namespaceFixes.push(...validation.fixesApplied)
+      }
+
+      // Step 2: Pretty-print with 2-space indentation
+      const printer = new XMLPrettyPrinter({
+        indentSize: 2,
+        maxLineLength: 0, // No wrapping by default
+      })
+      const formatResult = printer.format(processedXml)
+      processedXml = formatResult.formatted
+
+      return { processedXml, namespaceFixes }
+    } catch {
+      // If post-processing fails, return raw XML rather than breaking
+      return { processedXml: xml, namespaceFixes: [] }
+    }
   }
 }

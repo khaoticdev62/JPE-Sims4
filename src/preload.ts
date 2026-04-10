@@ -65,6 +65,7 @@ const electronAPI = {
   transform: {
     run: (source: string, fileName: string) => 
       ipcRenderer.invoke('transform:run', source, fileName),
+    health: () => ipcRenderer.invoke('transform:health'),
   },
   ai: {
     invoke: (provider: string, method: string, params: any) => 

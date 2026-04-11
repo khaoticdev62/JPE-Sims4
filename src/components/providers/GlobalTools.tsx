@@ -50,8 +50,15 @@ export function GlobalTools() {
   useEffect(() => {
     setMounted(true)
 
-    // Auto-open tour if not completed
-    if (!hasCompletedTour) {
+    // Auto-open tour if not completed and not explicitly disabled
+    const isDev = process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test';
+    const skipTour = typeof window !== 'undefined' && 
+      (window.location.search.includes('skipTour') || 
+       window.localStorage.getItem('jpe-skip-onboarding') === 'true' ||
+       process.env.NEXT_PUBLIC_SKIP_ONBOARDING === 'true' ||
+       isDev);
+
+    if (!hasCompletedTour && !skipTour) {
       setTourOpen(true)
       setTutorialActive(true)
       setTutorialStep(0)

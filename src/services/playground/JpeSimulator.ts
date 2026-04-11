@@ -4,7 +4,7 @@ import { sensory } from "@/services/SensoryService";
 
 export type SimulatorEvent = {
   type: string;
-  payload?: any;
+  payload?: Record<string, unknown>;
 };
 
 class JpeSimulator {

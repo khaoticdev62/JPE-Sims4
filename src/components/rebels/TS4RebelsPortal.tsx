@@ -207,7 +207,8 @@ export function TS4RebelsPortal() {
         handleFetchForum(forumId, cookiesB64);
       }
     } else {
-      const msg = res.data.diagnostics?.[0]?.message || res.error || 'Authentication failed';
+      const diagMsg = res.data.diagnostics?.[0]?.message;
+      const msg = typeof diagMsg === 'string' ? diagMsg : res.error || 'Authentication failed';
       throw new Error(msg);
     }
   };

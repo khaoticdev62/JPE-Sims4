@@ -3,6 +3,21 @@
  * Reactive audio and haptic feedback engine for the "Living Brand" experience.
  */
 
+interface WebkitWindow extends Window {
+  webkitAudioContext: typeof AudioContext;
+}
+
+interface VibrationActuator {
+  playEffect(type: "dual-rumble", options: {
+    startDelay: number;
+    duration: number;
+    weakMagnitude: number;
+    strongMagnitude: number;
+  }): Promise<void>;
+}
+
+// Using global ElectronIPC from types/electron.d.ts for IPC-based sensory triggers
+
 class SensoryService {
   private static instance: SensoryService;
   private audioCtx: AudioContext | null = null;
@@ -19,7 +34,10 @@ class SensoryService {
 
   private initAudio() {
     if (!this.audioCtx && typeof window !== "undefined") {
-      this.audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const AudioCtx = window.AudioContext || (window as unknown as WebkitWindow).webkitAudioContext;
+      if (AudioCtx) {
+        this.audioCtx = new AudioCtx();
+      }
     }
   }
 
@@ -177,8 +195,9 @@ class SensoryService {
     if (typeof navigator !== "undefined" && navigator.getGamepads) {
       const gamepads = navigator.getGamepads();
       for (const gp of gamepads) {
-        if (gp?.vibrationActuator) {
-          (gp.vibrationActuator as any).playEffect("dual-rumble", {
+        const extendedGp = gp as any;
+        if (extendedGp?.vibrationActuator) {
+          extendedGp.vibrationActuator.playEffect("dual-rumble", {
             startDelay: 0,
             duration: duration,
             weakMagnitude: intensity,

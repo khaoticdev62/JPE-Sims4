@@ -6,7 +6,7 @@ copyright: "Copyright © 2026 KhaoticDev / JPE Rebel"
 compression: maximum
 
 directories:
-  output: release
+  output: release-dist
   buildResources: build
 
 files:
@@ -25,10 +25,6 @@ files:
       - "!.agent/**"
 
 extraResources:
-  - from: public/assets
-    to: assets
-    filter:
-      - "**/*"
   - from: scripts/transform_jpe.py
     to: scripts/transform_jpe.py
   - from: cli.py

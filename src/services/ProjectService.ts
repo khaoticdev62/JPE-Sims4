@@ -5,8 +5,15 @@
 
 import { FileService } from './FileService'
 import { BrowserFileService } from './BrowserFileService'
-import type { Project, ModFile } from '@/types/index'
+import { FileType, Project, ModFile } from '@/types/index'
 import { PythonService } from './PythonService'
+
+interface ProjectMetadata {
+  id: string
+  name: string
+  metadata: Project['metadata']
+  fileCount: number
+}
 
 export class ProjectService {
   /**
@@ -76,7 +83,7 @@ export class ProjectService {
 
       // Try to load project metadata from .jpe-project.json
       const metadataPath = `${projectPath}/.jpe-project.json`
-      let projectMetadata: any = null
+      let projectMetadata: ProjectMetadata | null = null
 
       const metadataExists = await FileService.fileExists(metadataPath)
       if (metadataExists) {
@@ -138,7 +145,7 @@ export class ProjectService {
               projectId: newProject.id,
               name: file.name,
               path: filePath,
-              type: (supportedExtensions as any)[ext] || 'xml',
+              type: (supportedExtensions[ext as keyof typeof supportedExtensions] || 'xml') as FileType,
               content: '', // Lazy load: content is empty initially
               isDirty: false,
               size: 0, // Should be populated by actual stat if possible
@@ -413,7 +420,7 @@ export class ProjectService {
   /**
    * Helper to get file type from extension
    */
-  private static getFileTypeFromExtension(ext: string): any {
+  private static getFileTypeFromExtension(ext: string): FileType {
     const map: Record<string, string> = {
       '.xml': 'xml',
       '.jpe': 'jpe',
@@ -424,6 +431,6 @@ export class ProjectService {
       '.cfg': 'cfg',
       '.package': 'package'
     }
-    return map[ext] || 'xml'
+    return (map[ext] || 'xml') as FileType
   }
 }

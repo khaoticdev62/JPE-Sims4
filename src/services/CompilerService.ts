@@ -20,6 +20,7 @@ import { PackageService, type PackageOutputResource } from '@/services/PackageSe
 import { DBPF_RESOURCE_TYPES } from '@/engine/parsers/types/package'
 import type { ModFile, ValidationResult, Diagnostic } from '@/types/index'
 import type { ASTNode } from '@/engine/jpe'
+import type { DiagnosticInput } from '@/engine/diagnostics/types/diagnostic'
 
 export class CompilerService {
   // Static cache for parsed ASTs
@@ -109,7 +110,8 @@ export class CompilerService {
   static parseSTBL(buffer: ArrayBuffer): { success: boolean; data?: Record<string, unknown>; error?: string } {
     try {
       const result = STBLParser.parse(buffer)
-      return { success: true, data: result }
+      if (!result) throw new Error('Failed to parse STBL: Invalid format or corrupted data')
+      return { success: true, data: result as unknown as Record<string, unknown> }
     } catch (error) {
       console.error('Failed to parse STBL file', error)
       return {
@@ -125,7 +127,8 @@ export class CompilerService {
   static parsePackage(buffer: ArrayBuffer): { success: boolean; data?: Record<string, unknown>; error?: string } {
     try {
       const result = PackageParser.parse(buffer)
-      return { success: true, data: result }
+      if (!result) throw new Error('Failed to parse package: Invalid DBPF header or corrupted data')
+      return { success: true, data: result as unknown as Record<string, unknown> }
     } catch (error) {
       console.error('Failed to parse package file', error)
       return {
@@ -144,7 +147,8 @@ export class CompilerService {
   ): { success: boolean; data?: Record<string, unknown>; error?: string } {
     try {
       const result = ConfigParser.parse(content, format)
-      return { success: true, data: result }
+      if (!result) throw new Error('Failed to parse configuration: Empty or invalid content')
+      return { success: true, data: result as unknown as Record<string, unknown> }
     } catch (error) {
       console.error('Failed to parse config file', error)
       return {
@@ -206,14 +210,14 @@ export class CompilerService {
   /**
    * Format diagnostic input into formatted diagnostics with suggestions
    */
-  static formatDiagnostics(inputs: Record<string, unknown>[]) {
+  static formatDiagnostics(inputs: DiagnosticInput[]) {
     return this.diagnosticFormatter.formatDiagnostics(inputs)
   }
 
   /**
    * Create diagnostic report for a file
    */
-  static createDiagnosticReport(file: string, inputs: Record<string, unknown>[]) {
+  static createDiagnosticReport(file: string, inputs: DiagnosticInput[]) {
     return this.diagnosticFormatter.createReport(file, inputs)
   }
 

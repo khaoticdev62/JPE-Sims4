@@ -72,10 +72,11 @@ export class RoundTripValidator {
 
       return { success: true, jpe, newXml }
 
-    } catch (err: any) {
+    } catch (e) {
+      const message = e instanceof Error ? e.message : 'Unknown validation error'
       return { 
         success: false, 
-        error: `Conversion Error: ${err.message}` 
+        error: `Conversion Error: ${message}` 
       }
     }
   }

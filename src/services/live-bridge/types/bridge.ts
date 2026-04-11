@@ -27,7 +27,7 @@ export interface BridgeMetrics {
 export interface BridgeEvent {
   type: 'HEARTBEAT' | 'LOG' | 'EXCEPTION' | 'TUNING_EXEC' | 'HANDSHAKE'
   timestamp: number
-  payload: any
+  payload: Record<string, unknown>
   severity: 'info' | 'warn' | 'error' | 'critical'
   source?: string
 }

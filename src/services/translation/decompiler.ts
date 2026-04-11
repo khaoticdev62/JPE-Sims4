@@ -1,5 +1,19 @@
 import { XMLParser } from 'fast-xml-parser'
 
+interface XMLNode {
+  I?: any; // The root interaction tag
+  T?: XMLNode | XMLNode[];
+  V?: XMLNode | XMLNode[];
+  L?: XMLNode | XMLNode[];
+  U?: XMLNode;
+  '@_n'?: string;
+  '@_c'?: string;
+  '@_s'?: string;
+  '@_t'?: string;
+  '#text'?: string | number;
+  [key: string]: any;
+}
+
 export class JPEDecompiler {
   private parser: XMLParser
 
@@ -40,7 +54,7 @@ export class JPEDecompiler {
     return jpe.trim()
   }
 
-  private decompileBody(node: any, level: number): string {
+  private decompileBody(node: XMLNode, level: number): string {
     let jpe = ''
     const s = '  '.repeat(level)
 
@@ -73,12 +87,12 @@ export class JPEDecompiler {
     return jpe
   }
 
-  private decompileBlock(node: any, level: number): string {
+  private decompileBlock(node: XMLNode, level: number): string {
     let jpe = ''
     const s = '  '.repeat(level)
     const s1 = '  '.repeat(level + 1)
     
-    const name = node['@_n'] || node['@_t']
+    const name = (node['@_n'] || node['@_t'] || '') as string
     const mappedName = this.unmapBlockName(name)
     
     jpe += `${s}${mappedName}:\n`
@@ -86,8 +100,8 @@ export class JPEDecompiler {
     // Check for nested children in L or V structure
     const body = node.L || node.U || node
     
-    // If it's a test or action list
-    if (body.V || body.T || body.L) {
+    // If it's a test or action list (and body is not an array)
+    if (!Array.isArray(body) && (body.V || body.T || body.L)) {
       // Recursively decompile structure
       const ts = body.T ? (Array.isArray(body.T) ? body.T : [body.T]) : []
       const vs = body.V ? (Array.isArray(body.V) ? body.V : [body.V]) : []
@@ -117,13 +131,16 @@ export class JPEDecompiler {
     return jpe
   }
 
-  private decompileActionTest(node: any): string[] | null {
+  private decompileActionTest(node: XMLNode): string[] | null {
     const t = node['@_t']
     if (t === 'sim_info') return ['is adult']
     
     if (t === 'trait' || t === 'loot') {
       const type = t === 'trait' ? 'trait' : 'loot'
-      const itemsNode = node.U?.L?.T
+      const uNode = Array.isArray(node.U) ? node.U[0] : node.U
+      const lNode = uNode && Array.isArray(uNode.L) ? uNode.L[0] : uNode?.L
+      const itemsNode = lNode && !Array.isArray(lNode) ? lNode.T : undefined
+      
       if (!itemsNode) return [`${type}: Unknown_${type.charAt(0).toUpperCase() + type.slice(1)}`]
       
       const items = Array.isArray(itemsNode) ? itemsNode : [itemsNode]
@@ -141,7 +158,7 @@ export class JPEDecompiler {
     return map[name] || name
   }
 
-  private extractValue(node: any): string {
+  private extractValue(node: XMLNode | string | number): string {
     if (typeof node === 'object' && node !== null) {
       return node['#text']?.toString() || ''
     }

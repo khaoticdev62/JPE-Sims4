@@ -1,17 +1,21 @@
 "use client";
 import React, { useState, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
+import dynamic from 'next/dynamic'
 import TitleBar from './TitleBar'
 import EditorPane from './EditorPane'
 import RightPanel from './RightPanel'
 import { AppNavigation } from '@/components/AppNavigation'
-import { JpePlaygroundView } from "../playground/JpePlaygroundView";
-import { VisualJpeEditor } from "../visual/VisualJpeEditor";
-import { JpeManualView } from "../manual/JpeManualView";
-import { DashboardView } from '@/components/DashboardView'
-import { ProjectsPage } from '@/components/ProjectsPage'
-import { SettingsPage } from '@/components/SettingsPage'
-import { TS4RebelsPortal } from '@/components/rebels/TS4RebelsPortal'
+
+// Code splitting for large view components
+const JpePlaygroundView = dynamic(() => import("../playground/JpePlaygroundView").then(mod => mod.JpePlaygroundView), { ssr: false })
+const VisualJpeEditor = dynamic(() => import("../visual/VisualJpeEditor").then(mod => mod.VisualJpeEditor), { ssr: false })
+const JpeManualView = dynamic(() => import("../manual/JpeManualView").then(mod => mod.JpeManualView), { ssr: false })
+const DashboardView = dynamic(() => import('@/components/DashboardView').then(mod => mod.DashboardView), { ssr: false })
+const ProjectsPage = dynamic(() => import('@/components/ProjectsPage').then(mod => mod.ProjectsPage), { ssr: false })
+const SettingsPage = dynamic(() => import('@/components/SettingsPage').then(mod => mod.SettingsPage), { ssr: false })
+const TS4RebelsPortal = dynamic(() => import('@/components/rebels/TS4RebelsPortal').then(mod => mod.TS4RebelsPortal), { ssr: false })
+
 import { BuildProgressModal } from '@/components/modals/BuildProgressModal'
 import { SplashScreen } from '@/components/SplashScreen'
 import { useUIStore } from '@/stores/useUIStore'

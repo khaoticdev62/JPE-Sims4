@@ -12,6 +12,8 @@ export interface DeploymentResult {
   error?: string;
 }
 
+// Using global ElectronIPC from types/electron.d.ts
+
 class Sims4Service {
   private static instance: Sims4Service;
   private modsPath: string | null = null;
@@ -31,7 +33,8 @@ class Sims4Service {
   public async getModsPath(): Promise<string> {
     if (this.modsPath) return this.modsPath;
 
-    const result = await (window as any).electron.sims4.getModsPath();
+    const electronWindow = window as any; // Global type handles ipc/electron
+    const result = await electronWindow.electron.sims4.getModsPath();
     if (result.success) {
       this.modsPath = result.path;
       return result.path;
@@ -90,7 +93,8 @@ except Exception as e:
 JpeLiveSync.init_sync()`;
 
       // Trigger the main-process bundler
-      const result = await (window as any).electron.sims4.deployBridge(pythonSource);
+      const electronWindow = window as any;
+      const result = await electronWindow.electron.sims4.deployBridge(pythonSource);
       
       if (!result.success) throw new Error(result.error);
 

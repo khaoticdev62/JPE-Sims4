@@ -27,7 +27,10 @@ export default function RootLayout({
           rel="stylesheet" 
         />
       </head>
-      <body className="font-sans min-h-screen bg-background text-foreground antialiased selection:bg-cyan/30 selection:text-white">
+      <body 
+        className="font-sans min-h-screen bg-background text-foreground antialiased selection:bg-cyan/30 selection:text-white"
+        suppressHydrationWarning
+      >
         <ErrorBoundary>
           <AutoSaveProvider>
             <ThemeProvider

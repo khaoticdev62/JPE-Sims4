@@ -44,7 +44,7 @@ export const registerJPELanguage = (monaco: Monaco) => {
   monaco.languages.registerCompletionItemProvider("jpe", {
     provideCompletionItems: (
       model: any,
-      position: any
+      position: { lineNumber: number; column: number }
     ) => {
       const range = {
         startLineNumber: position.lineNumber,
@@ -76,9 +76,9 @@ export const registerJPELanguage = (monaco: Monaco) => {
           range
         }
       ];
-      return { suggestions } as any;
+      return { suggestions };
     },
-  } as any);
+  });
 };
 
 export const registerXMLLanguage = (monaco: Monaco) => {

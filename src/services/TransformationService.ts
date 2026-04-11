@@ -342,10 +342,11 @@ export class TransformationService {
       try {
         const parser = new JPELogicParser(tokens)
         parser.parse()
-      } catch (parseError: any) {
+      } catch (e) {
+        const message = e instanceof Error ? e.message : 'Syntax error in JPE source'
         return {
           xml: '<!-- Transformation failed due to syntax errors -->',
-          errors: [{ message: parseError.message || 'Syntax error in JPE source', line: 1, column: 1, severity: 'error' as const }],
+          errors: [{ message, line: 1, column: 1, severity: 'error' as const }],
           success: false,
           mode: 'typescript',
           duration: Date.now() - startTime,

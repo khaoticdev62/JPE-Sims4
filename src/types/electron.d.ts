@@ -53,10 +53,26 @@ export interface ElectronWindowAPI {
   close: () => Promise<boolean>
 }
 
+export interface ElectronShellAPI {
+  installContextMenu: () => Promise<{ success: boolean; error?: string }>
+}
+
+export interface ElectronSimsAPI {
+  getModsPath: () => Promise<{ success: boolean; path: string }>
+  deployBridge: (source: string) => Promise<{ success: boolean; path?: string; error?: string }>
+}
+
+export interface ElectronSensoryAPI {
+  triggerVibration: (duration: number, intensity: number) => Promise<void>
+}
+
 export interface ElectronIPC {
   file: ElectronFileAPI
   project: ElectronProjectAPI
   window: ElectronWindowAPI
+  shell?: ElectronShellAPI
+  sims4?: ElectronSimsAPI
+  sensory?: ElectronSensoryAPI
   compile: (content: string) => Promise<{ success: boolean; message?: string }>
   compileResult: (result: unknown) => Promise<{ success: boolean }>
   on: (channel: string, callback: (...args: unknown[]) => void) => () => void
@@ -67,6 +83,6 @@ export interface ElectronIPC {
 declare global {
   interface Window {
     ipc: ElectronIPC
-    electron: any // legacy or backup
+    electron: ElectronIPC // aligning legacy with current
   }
 }

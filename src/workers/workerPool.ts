@@ -5,7 +5,7 @@
 
 export interface WorkerTask<T> {
   id: string
-  message: any
+  message: Record<string, unknown>
   resolve: (value: T) => void
   reject: (error: Error) => void
   timeout: NodeJS.Timeout
@@ -54,7 +54,7 @@ export class WorkerPool<T> {
   /**
    * Execute a task using the worker pool
    */
-  async execute<R = T>(message: any, timeout = 30000): Promise<R> {
+  async execute<R = T>(message: Record<string, unknown>, timeout = 30000): Promise<R> {
     return new Promise((resolve, reject) => {
       const taskId = `task-${this.nextTaskId++}`
       const timeoutHandle = setTimeout(() => {
@@ -87,7 +87,7 @@ export class WorkerPool<T> {
     }
   }
 
-  private handleWorkerMessage(data: any): void {
+  private handleWorkerMessage(data: Record<string, any>): void {
     const taskId = data._taskId
     if (!taskId) return
 
@@ -100,7 +100,7 @@ export class WorkerPool<T> {
     if (data.error) {
       task.reject(new Error(data.error))
     } else {
-      task.resolve(data)
+      task.resolve(data as unknown as T)
     }
 
     // Process next queued task

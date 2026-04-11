@@ -147,6 +147,16 @@ export function OnboardingTour({ isOpen, onClose }: { isOpen: boolean; onClose: 
     }
   }, [isOpen, activeIdx]);
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isOpen) {
+        handleSkip();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen]);
+
   const handleNext = () => {
     if (isLastStep) {
       setCompleted(true);

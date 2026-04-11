@@ -13,6 +13,14 @@ interface ValidateMessage {
   }
 }
 
+interface Diagnostic {
+  severity: 'error' | 'warning' | 'info'
+  message: string
+  line: number
+  column: number
+  code: string
+}
+
 interface ValidateResult {
   type: 'validation-complete'
   result: {
@@ -20,7 +28,7 @@ interface ValidateResult {
     valid: boolean
     errorCount: number
     warningCount: number
-    diagnostics: any[]
+    diagnostics: Diagnostic[]
   }
 }
 
@@ -37,9 +45,9 @@ function validateContent(content: string): {
   valid: boolean
   errorCount: number
   warningCount: number
-  diagnostics: any[]
+  diagnostics: Diagnostic[]
 } {
-  const diagnostics: any[] = []
+  const diagnostics: Diagnostic[] = []
   let errorCount = 0
   let warningCount = 0
 

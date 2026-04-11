@@ -16,6 +16,7 @@ import axios from 'axios'
 import { spawn, exec } from 'child_process'
 import { createHash } from 'crypto'
 import { LiveMonitor } from './services/main/LiveMonitor'
+import { PathResolver } from './services/main/PathResolver'
 
 // Auto-updater (only in production — check after app ready to avoid require issues)
 let autoUpdater: typeof import('electron-updater').autoUpdater | null = null
@@ -73,25 +74,45 @@ let tray: Tray | null = null
 let liveMonitor: LiveMonitor | null = null
 const isDev = process.env.NODE_ENV === 'development'
 
+// ─── Environment Detection ──────────────────────────────────────────────────
+const isSteamDeck = (): boolean => {
+  // Check common Steam Deck environmental signatures
+  return (
+    process.env.STEAM_DECK === '1' ||
+    process.env.XDG_CURRENT_DESKTOP === 'gamescope' ||
+    // Heuristic: check specific screen resolution if we have a window already (less reliable early)
+    process.platform === 'linux' && process.env.USER === 'deck'
+  )
+}
+
 // ─── Window Creation ────────────────────────────────────────────────────────
 const createWindow = (url: string) => {
+  const onSteamDeck = isSteamDeck()
+
   mainWindow = new BrowserWindow({
     width: 1400,
     height: 900,
     minWidth: 1000,
     minHeight: 600,
-    frame: false, // Frameless for custom title bar
-    titleBarStyle: 'hiddenInset', // macOS native hidden title bar
+    fullscreen: onSteamDeck,
+    // Start hidden, maximize/fullscreen, then show to prevent flicker
+    show: false,
+    frame: false,
+    titleBarStyle: 'hiddenInset',
     backgroundColor: '#0a0c10',
-    show: false, // Show when ready
-    icon: getIconPath(),
+    icon: PathResolver.getBrandingIconPath(),
     webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
+      preload: PathResolver.getInternalPath('dist-electron', 'preload.js'),
       nodeIntegration: false,
       contextIsolation: true,
       spellcheck: false,
     },
   })
+
+  // Set maximized on desktop immediately after creation
+  if (!onSteamDeck) {
+    mainWindow.maximize()
+  }
 
   if (isDev) {
     mainWindow.loadURL('http://localhost:3000')
@@ -128,17 +149,10 @@ const createWindow = (url: string) => {
   })
 }
 
-// ─── Native Resource Resolution ──────────────────────────────────────────────
-const getEnginePath = (relativePath: string): string => {
-  return app.isPackaged
-    ? path.join(process.resourcesPath, relativePath)
-    : path.join(process.cwd(), relativePath)
-}
-
-// ─── System Tray ─────────────────────────────────────────────────────────────
+// ─── Tray & Resources ────────────────────────────────────────────────────────
 const createTray = () => {
   try {
-    const iconPath = getIconPath()
+    const iconPath = PathResolver.getBrandingIconPath()
     tray = new Tray(iconPath)
     tray.setToolTip('JPE Studio — Sims 4 Mod Translator')
     tray.setContextMenu(buildTrayMenu())
@@ -658,9 +672,7 @@ ipcMain.handle('ts4rebels:invoke', async (_event, action: string, params: Record
     const pythonCmd = process.platform === 'win32' ? 'python' : 'python3'
 
     // Resolve CLI path correctly for both dev and packaged modes
-    const cliPath = app.isPackaged
-      ? path.join(process.resourcesPath, 'cli.py')
-      : path.join(process.cwd(), 'cli.py')
+    const cliPath = PathResolver.getPythonScriptPath('cli.py')
 
     // Input sanitization helper
     const sanitize = (s: unknown, maxLen = 256): string => {
@@ -823,7 +835,7 @@ ipcMain.handle('transform:run', async (_event, source: string, fileName: string)
     await fs.promises.writeFile(inputFile, source, 'utf-8')
 
     const pythonCmd = process.platform === 'win32' ? 'python' : 'python3'
-    const engineScript = getEnginePath('scripts/transform_jpe.py')
+    const engineScript = PathResolver.getPythonScriptPath('scripts/transform_jpe.py')
 
     return new Promise((resolve) => {
       const args = [engineScript, inputFile, '-o', outputFile]
@@ -1008,19 +1020,18 @@ ipcMain.handle('shell:installContextMenu', async () => {
   }
 
   try {
-    // We'll use 'reg.exe' to avoid extra dependencies and maintain industrial stability.
-    // %1 is the file path passed by Windows Explorer.
+    // Resolve app executable path
     const jpePath = app.isPackaged 
-      ? path.join(path.dirname(process.execPath), 'jpe.exe') 
-      : 'jpe'; // In dev, we assume 'jpe' is in the PATH or linked via npm
+      ? process.execPath 
+      : 'jpe'
 
     const commands = [
       // Create the shell entry for all files (*)
       `reg add "HKCU\\Software\\Classes\\*\\shell\\Translate to JPE" /t REG_SZ /v "" /d "Translate to JPE" /f`,
-      `reg add "HKCU\\Software\\Classes\\*\\shell\\Translate to JPE" /t REG_SZ /v "Icon" /d "${getIconPath()}" /f`,
+      `reg add "HKCU\\Software\\Classes\\*\\shell\\Translate to JPE" /t REG_SZ /v "Icon" /d "${PathResolver.getBrandingIconPath()}" /f`,
       `reg add "HKCU\\Software\\Classes\\*\\shell\\Translate to JPE\\command" /t REG_SZ /v "" /d "\\"${jpePath}\\" open \\"%1\\"" /f`,
       
-      // Specifically for .package files as well (ensure dominance)
+      // Specifically for .package files as well
       `reg add "HKCU\\Software\\Classes\\.package\\shell\\Translate to JPE" /t REG_SZ /v "" /d "Translate to JPE" /f`,
       `reg add "HKCU\\Software\\Classes\\.package\\shell\\Translate to JPE\\command" /t REG_SZ /v "" /d "\\"${jpePath}\\" open \\"%1\\"" /f`
     ]
@@ -1040,28 +1051,6 @@ ipcMain.handle('shell:installContextMenu', async () => {
   }
 })
 
-// ─── Utility Functions ───────────────────────────────────────────────────────
-function getIconPath(): string {
-  const iconNames = ['icon.png', 'icon.ico', 'logo.png', 'jpe_logo.png']
-  const possiblePaths = [
-    path.join(__dirname, '../public'),
-    path.join(__dirname, '../assets'),
-    path.join(__dirname, '../core/libs/assets'),
-    path.join(app.getAppPath(), 'public'),
-    path.join(app.getAppPath(), 'assets'),
-  ]
-
-  for (const basePath of possiblePaths) {
-    for (const icon of iconNames) {
-      const fullPath = path.join(basePath, icon)
-      if (fs.existsSync(fullPath)) return fullPath
-    }
-  }
-
-  // Fallback: create a simple default icon
-  return ''
-}
-
 // ─── App Lifecycle ───────────────────────────────────────────────────────────
 app.on('ready', async () => {
   // Register custom protocol to serve static files from 'out' directory
@@ -1076,19 +1065,7 @@ app.on('ready', async () => {
       // Clean up the path (remove query params etc)
       url = url.split('?')[0].split('#')[0]
 
-      let filePath = path.join(__dirname, '../out', url)
-
-      // If it looks like a directory or doesn't have an extension, try index.html
-      // This handles trailingSlash: true routing
-      if (!path.extname(filePath) || filePath.endsWith('/') || filePath.endsWith('\\')) {
-        // If it was just a directory name, make sure we append index.html
-        if (filePath.endsWith('/') || filePath.endsWith('\\')) {
-           filePath = path.join(filePath, 'index.html')
-        } else {
-           // It might be app://studio which needs to be out/studio/index.html
-           filePath = path.join(filePath, 'index.html')
-        }
-      }
+      const filePath = PathResolver.getStaticAssetPath(url)
 
       callback({ path: path.normalize(filePath) })
     })
@@ -1190,4 +1167,4 @@ app.on('activate', async () => {
 })
 
 // ─── Export for testing ──────────────────────────────────────────────────────
-export { buildAppMenu, buildTrayMenu, getIconPath }
+export { buildAppMenu, buildTrayMenu }

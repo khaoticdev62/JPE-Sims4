@@ -11,6 +11,8 @@ export interface ShellResult {
   error?: string;
 }
 
+// Using global ElectronIPC from types/electron.d.ts
+
 class ShellService {
   private static instance: ShellService;
 
@@ -33,7 +35,8 @@ class ShellService {
     try {
       console.log("[JPE-SHELL] Orchestrating OS Registry mutation...");
       
-      const result = await (window as any).electron.shell.installContextMenu();
+      const electronWindow = window as any; // global type handles ipc/electron
+      const result = await electronWindow.electron.shell.installContextMenu();
       
       if (!result.success) {
         throw new Error(result.error || "Registry mutation failed.");

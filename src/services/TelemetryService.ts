@@ -3,7 +3,7 @@ import { sims4 } from "./Sims4Service";
 
 class TelemetryService {
   private static instance: TelemetryService;
-  private intervalId: any | null = null;
+  private intervalId: ReturnType<typeof setInterval> | null = null;
   private isSimulated = true;
 
   private constructor() {}

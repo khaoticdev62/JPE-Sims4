@@ -5,8 +5,6 @@
  * Provides maximum contrast ratio (≥7:1 for normal text, ≥4.5:1 for large text).
  */
 
-import { T } from '@/components/robust/jpe-theme'
-
 /**
  * High Contrast Theme Tokens
  */

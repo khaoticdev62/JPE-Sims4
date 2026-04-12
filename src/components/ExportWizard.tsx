@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
-import { 
-  X, Package, Check, ChevronRight, ChevronLeft, 
-  Settings, Layers, Globe, Download, Sparkles, 
+import {
+  X, Check, ChevronRight, ChevronLeft,
+  Settings, Layers, Globe, Sparkles,
   ShieldCheck, AlertCircle, FileText, Share2, Rocket
 } from "lucide-react";
 import { motion, AnimatePresence } from "./jpe-motion";

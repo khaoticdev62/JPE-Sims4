@@ -7,7 +7,7 @@ interface WebkitWindow extends Window {
   webkitAudioContext: typeof AudioContext;
 }
 
-interface VibrationActuator {
+interface _VibrationActuator {
   playEffect(type: "dual-rumble", options: {
     startDelay: number;
     duration: number;
@@ -189,20 +189,45 @@ class SensoryService {
   }
 
   /**
+   * Trigger complex tactile patterns for unique handheld feedback (Epic 11)
+   */
+  public triggerTactilePattern(type: 'double-tap' | 'bloom' | 'notch' | 'steady') {
+    switch (type) {
+      case 'double-tap':
+        this.triggerHaptic(50, 0.6);
+        setTimeout(() => this.triggerHaptic(50, 0.8), 100);
+        break;
+      case 'bloom':
+        // Slow swell for menu opening
+        this.triggerHaptic(200, 0.3);
+        break;
+      case 'notch':
+        // Sharp high-freq click for UI notches
+        this.triggerHaptic(10, 0.15);
+        break;
+      case 'steady':
+        // Low rumble for background processing
+        this.triggerHaptic(500, 0.1);
+        break;
+    }
+  }
+
+  /**
    * Trigger haptic feedback via Gamepad API
    */
   private async triggerHaptic(duration: number, intensity: number) {
     if (typeof navigator !== "undefined" && navigator.getGamepads) {
       const gamepads = navigator.getGamepads();
       for (const gp of gamepads) {
+        if (!gp) continue;
         const extendedGp = gp as any;
-        if (extendedGp?.vibrationActuator) {
+        if (extendedGp?.vibrationActuator?.playEffect) {
           extendedGp.vibrationActuator.playEffect("dual-rumble", {
             startDelay: 0,
             duration: duration,
             weakMagnitude: intensity,
-            strongMagnitude: intensity,
-          });
+            strongMagnitude: intensity / 2, // Asymmetric rumble for "Unique" feel
+          }).catch(() => {}); // Industrial fail-safe: ignore if actuator busy
         }
       }
     }

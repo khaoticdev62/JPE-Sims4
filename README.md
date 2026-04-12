@@ -1,60 +1,70 @@
-# JPE Studio Editor - Sims 4 Modding IDE
+# JPE Studio 2.1: The Professional Sims 4 Modding Environment
 
-A professional, high-fidelity web IDE for Sims 4 mod developers to write **Just Plain English (JPE)** logic with real-time XML transformations and enterprise-grade AI intelligence.
+![JPE Studio Banner](docs/assets/banner.png)
 
-## 🌟 Features
+### Clarity in every line. Precision in every pulse.
 
-- **🚀 Real-Time JPE-to-XML Transformation**: Instant, debounced preview of your Sims 4 XML code as you type.
-- **🧠 Multi-Model AI Intelligence**: 
-    - **Claude 3.5 Sonnet** (The Gold Standard)
-    - **OpenAI GPT-4o** (Creative Logic)
-    - **Google Gemini 1.5 Pro** (Deep Context)
-    - **Alibaba Qwen-Plus** (Efficient Diagnostic)
-- **🔐 Enterprise-Grade Security**: 
-    - **Server-Side API Routes**: No API keys are exposed to the client by default.
-    - **Hybrid Key Model**: Users can safely override system keys with their own private tokens via LocalStorage for personal rate limits.
-- **🛠️ Professional Modding Toolkit**: 
-    - **Monaco Editor Support**: Full syntax highlighting and custom JPE language registration.
-    - **Smart AI Fixes**: Right-click any error to have the AI suggest and apply the correct Sims 4 logic.
-    - **Mod Analysis**: One-click deep dives into mod purpose and field parameters.
-- **📥 Export Suite**: Export your work as original `.jpe` source or production-ready `.xml`.
-
-## 🛠️ Tech Stack
-
-- **Framework**: Next.js 14+ (App Router)
-- **Language**: TypeScript 5+
-- **Styling**: Tailwind CSS 3.4+
-- **UI Components**: custom premium components + shadcn/ui
-- **State Management**: Zustand
-- **Code Editor**: Monaco Editor (@monaco-editor/react)
-- **AI Backend**: Anthropic SDK, OpenAI SDK, Google Generative AI (HTTP), Alibaba DashScope (HTTP)
-
-## 🚀 Getting Started
-
-### 1. Prerequisites
-- Node.js 18.17+
-- NPM / PNPM
-
-### 2. Environment Configuration
-Create a `.env.local` file in the root directory:
-```env
-# AI Providers (Server-Managed)
-ANTHROPIC_API_KEY=your_claude_key
-OPENAI_API_KEY=your_openai_key
-GOOGLE_API_KEY=your_gemini_key
-DASHSCOPE_API_KEY=your_qwen_key
-```
-
-### 3. Installation & Launch
-```bash
-npm install
-npm run dev
-```
-
-## 🔐 Security & Privacy
-JPE Studio prioritizes developer privacy. 
-- **Zero-Storage Policy**: API keys provided via "Advanced Override" are stored strictly in your browser's LocalStorage and are never sent to our database.
-- **Encrypted Handshake**: Communication between the IDE and the AI endpoints is handled via secure server-managed routes.
+JPE Studio 2.1 is an industrial-grade IDE designed to bridge the gap between complex Sims 4 technical infrastructure and creative intuition. Powered by the **Just Plain English (JPE)** translation engine and the **Spectral** design system, it transforms modding into a high-fidelity, sensory-rich experience.
 
 ---
-*Created for the Sims 4 Modding Community.*
+
+## 🏗️ The Expert's Toolkit (Meet Alex)
+
+> *"When I'm deep in a 50MB script mod, I don't need abstractions—I need transparency. JPE Studio's Workbench mode is my mission control."*
+
+- **Industrial JPE Grammar**: Logic-first modding that strips away the opaque XML to reveal pure, human-readable directives.
+- **Local AI Autonomy**: Fully sandboxed, offline-first intelligence distribution. No cloud dependencies; just raw, local model power.
+- **Shielded Handshake**: Hardware-bound AES-256-GCM vault derivation ensures your modding environment and AI configurations are cryptographically sealed to your device.
+- **Spectral Diagnostics**: Real-time bioluminescent state indicators monitor engine health and integrity with zero-latency feedback.
+
+![Playground Logic](docs/assets/capture/playground.png)
+
+---
+
+## ✨ The Beginner's Bridge (Meet Maya)
+
+> *"I used to be terrified of breaking my game. Now, modding feels like just reading a book. The 'Aha!' moment is real."*
+
+- **The "Aha!" Translation**: Instantly see what a mod does before you touch it. JPE translates complex XML tags into simple English sentences.
+- **Zen Studio HUD**: Reduce technical fatigue with a minimalist interface that strips away the noise, leaving only the glowing path to creativity.
+- **Technical Ignition**: A celebratory, verbose boot sequence that explains exactly what's happening under the hood, making technology feel inclusive, not intimidating.
+- **One-Click Deployment**: JPE-Live bridge synchronizes your work directly with The Sims 4 in real-time.
+
+![Zen Dashboard](docs/assets/capture/dashboard.png)
+
+---
+
+## 🎮 Handheld Studio (Meet Chris)
+
+> *"Modding on a train used to be impossible. Now, my Steam Deck is a fully-fledged modding workstation."*
+
+- **Focus Mode (1280x800)**: Specialized resolution logic that chunky-fies the HUD for the Steam Deck screen.
+- **Chorded Controller Input**: Native controller navigation with haptic telemetry (Steam Input) providing tactile heartbeat status for ingestion and builds.
+- **Low-Energy Synthesis**: Preserves battery life while maintaining the high-fidelity Spectral aesthetic.
+
+![Steam Hero](docs/assets/steam/hero.png)
+
+---
+
+## 🛠️ Industrial Specification
+
+- **Engine**: NEXT.js + Electron (Hardened IPC)
+- **Intelligence**: Local GGUF / Ollama (Sandboxed)
+- **Security**: Hardware-Bound AES-256 Vault
+- **Aesthetic**: Spectral Design System (Teal-Focus)
+- **Platform**: Windows / SteamOS (Steam Deck Native)
+
+---
+
+## 🍱 Steam Deck Library Assets
+
+We've provided high-fidelity custom assets for your Steam Library. Find them in the `docs/assets/steam/` folder.
+
+| Capsule (Vertical) | Library Hero (Wide) |
+| :--- | :--- |
+| ![Capsule](docs/assets/steam/capsule.png) | ![Hero](docs/assets/steam/hero.png) |
+
+---
+
+### **Synthesis Complete.** JPE Studio 2.1 is RC1 Ready.
+建设

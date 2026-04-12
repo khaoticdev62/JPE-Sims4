@@ -131,7 +131,7 @@ export class FixApplier {
     const endCol = Math.min(line.length, fix.range.endColumn - 1)
 
     const before = line.substring(0, startCol)
-    const removed = line.substring(startCol, endCol)
+    const _removed = line.substring(startCol, endCol)
     const after = line.substring(endCol)
 
     // Simple diff format

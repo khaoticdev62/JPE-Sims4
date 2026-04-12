@@ -153,7 +153,7 @@ export class JpeBundlerService {
       }
 
       // 4. Generate metadata sidecar (mod-metadata.json)
-      const metadata = {
+      const _metadata = {
         id: `kh.jpe.${fnv32(project.name).toString(16)}`,
         name: project.name,
         version: "1.0.0",

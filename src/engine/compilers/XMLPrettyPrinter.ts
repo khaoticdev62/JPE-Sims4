@@ -107,7 +107,7 @@ export class XMLPrettyPrinter {
     let indent = 0
     
     // Match all XML tags and text nodes
-    const tagRegex = /(<\?[\w:]+[^\?]*\?>|<\/?[\w:]+(?:\s+[\w:]+(?:\s*=\s*(?:"[^"]*"|'[^']*'))?)*\s*\/?>|<!--[\s\S]*?-->|<!\[CDATA\[[\s\S]*?\]\]>|[^<]+)/g
+    const tagRegex = /(<\?[\w:]+[^?]*\?>|<\/?[\w:]+(?:\s+[\w:]+(?:\s*=\s*(?:"[^"]*"|'[^']*'))?)*\s*\/?>|<!--[\s\S]*?-->|<!\[CDATA\[[\s\S]*?\]\]>|[^<]+)/g
     let match
     
     const tokens: string[] = []

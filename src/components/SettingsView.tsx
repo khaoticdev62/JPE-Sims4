@@ -30,8 +30,9 @@ const sections: SettingSection[] = [
   { id: "theme", label: "Appearance & Wallpaper", icon: Palette, color: T.cyanBright },
   { id: "translation", label: "Translation", icon: Globe, color: T.violet },
   { id: "ai", label: "AI Engine", icon: Sparkles, color: T.violetBright },
+  { id: "security", label: "Security & Privacy", icon: Shield, color: T.emerald },
   { id: "build", label: "Build Pipeline", icon: Rocket, color: T.amber },
-  { id: "analysis", label: "Analysis", icon: Shield, color: T.emerald },
+  { id: "analysis", label: "Analysis", icon: Sparkles, color: T.cyan },
   { id: "data", label: "Data & Storage", icon: Database, color: T.cyanDeep },
   { id: "terminal", label: "Console", icon: Terminal, color: T.rose },
   { id: "keybindings", label: "Keybindings", icon: Keyboard, color: T.amber },
@@ -113,6 +114,17 @@ const wallpaperPresets: { id: WallpaperPreset; label: string; desc: string; grad
 export function SettingsView({ onRestartTutorial }: { onRestartTutorial?: () => void }) {
   const [activeSection, setActiveSection] = useState("general");
   const { settings: global, update: updateGlobal, reset: resetGlobal } = useJpeSettings();
+  const [securityStatus, setSecurityStatus] = useState<{ isShielded: boolean; algorithm: string; provider: string } | null>(null);
+
+  /* Fetch security status */
+  useState(() => {
+    if (typeof window !== 'undefined' && window.electron?.security?.vault) {
+      window.electron.security.vault.status().then(res => {
+        if (res.success) setSecurityStatus(res);
+      });
+    }
+    return undefined;
+  });
   const sidebarW = Math.round(220 / Math.max(global.fontScale, 1));
 
   /* ── Local editor/project settings ── */
@@ -225,6 +237,59 @@ export function SettingsView({ onRestartTutorial }: { onRestartTutorial?: () => 
             <SettingRow label="Context Window" description="Max tokens sent as context to AI">
               <SelectInput value={settings.aiContextSize} onChange={v => update("aiContextSize", v)}
                 options={[{ value: "4000", label: "4K tokens" }, { value: "8000", label: "8K tokens" }, { value: "16000", label: "16K tokens" }, { value: "32000", label: "32K tokens" }]} />
+            </SettingRow>
+          </>
+        );
+      case "security":
+        return (
+          <>
+            <div className="mb-6 p-4 rounded-xl border relative overflow-hidden" style={{ background: T.bgGlass, borderColor: (securityStatus as any)?.isShielded ? `${T.emerald}30` : T.borderSubtle }}>
+              {/* Pulse indicator */}
+              <div className="absolute top-4 right-4 flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full" style={{ 
+                  background: (securityStatus as any)?.isShielded ? T.emerald : T.amber,
+                  boxShadow: `0 0 12px ${(securityStatus as any)?.isShielded ? T.emerald : T.amber}` 
+                }} />
+                <span style={{ fontSize: 10, fontWeight: 700, color: (securityStatus as any)?.isShielded ? T.emerald : T.amber, letterSpacing: '0.05em' }}>
+                  {(securityStatus as any)?.isShielded ? "LIVE SHIELD ACTIVE" : "PROTECTION LIMITED"}
+                </span>
+              </div>
+
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 rounded-lg" style={{ background: (securityStatus as any)?.isShielded ? `${T.emerald}15` : 'rgba(255,255,255,0.05)' }}>
+                  <Shield size={24} color={(securityStatus as any)?.isShielded ? T.emerald : T.textMuted} />
+                </div>
+                <div>
+                  <h3 style={{ fontSize: 14, fontWeight: 700, color: T.textPrimary }}>Industrial AES-256 Vault</h3>
+                  <p style={{ fontSize: 10, color: T.textMuted }}>Hardware-bound cryptographic infrastructure</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-3 rounded-lg" style={{ background: 'rgba(255,255,255,0.03)', border: `1px solid ${T.borderSubtle}` }}>
+                  <div style={{ fontSize: 9, color: T.textDim, marginBottom: 4 }}>ENCRYPTION STANDARD</div>
+                  <div style={{ fontSize: 12, fontFamily: T.mono, fontWeight: 700, color: T.cyan }}>{(securityStatus as any)?.algorithm || 'AES-256-GCM'}</div>
+                </div>
+                <div className="p-3 rounded-lg" style={{ background: 'rgba(255,255,255,0.03)', border: `1px solid ${T.borderSubtle}` }}>
+                  <div style={{ fontSize: 9, color: T.textDim, marginBottom: 4 }}>KEY DERIVATION</div>
+                  <div style={{ fontSize: 11, fontFamily: T.mono, fontWeight: 700, color: T.violet }}>Hardware ID (Sealed)</div>
+                </div>
+              </div>
+
+              <p className="mt-4" style={{ fontSize: 10, color: T.textMuted, lineHeight: 1.5 }}>
+                Your data is encrypted at rest using a machine-specific entropy key. Configuration files copied to other devices will be 
+                unreadable, ensuring industrial-grade local security.
+              </p>
+            </div>
+
+            <SettingRow label="Clear Sensitive Data" description="Wipe all API keys and encrypted preferences">
+              <JpeButton variant="danger" size="sm" onClick={() => {
+                if (confirm("Are you sure? This will wipe all AI keys and local settings.")) {
+                  resetGlobal();
+                }
+              }}>
+                Wipe Vault
+              </JpeButton>
             </SettingRow>
           </>
         );

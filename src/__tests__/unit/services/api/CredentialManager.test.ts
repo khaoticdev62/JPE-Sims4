@@ -16,7 +16,6 @@ jest.mock('@/services/ai/SecurityService', () => ({
 jest.mock('keytar', () => null, { virtual: true })
 
 import { CredentialManager } from '@/services/api/CredentialManager'
-import { SecurityService } from '@/services/ai/SecurityService'
 
 describe('CredentialManager', () => {
   beforeEach(() => {

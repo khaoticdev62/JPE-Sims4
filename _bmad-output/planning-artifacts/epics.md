@@ -679,7 +679,19 @@ So that I don't have to memorize thousands of game hashes.
 **When** I begin typing a reference or tag
 **Then** the AI suggests relevant Sims 4 Tuning IDs or JPE patterns based on the current context
 **And** suggestions appear within 300ms to maintain a fluid typing experience.
+### Story 6.6: Industrial Local AI Distribution & Bundling
 
+As a Power Modder,
+I want to bundle the local LLM engine and all modding dependencies into the application installer,
+so that I can modulate mods entirely offline with zero configuration and maximum privacy.
+
+**Acceptance Criteria:**
+
+**Given** a clean Windows installation
+**When** the JPE Studio Setup is executed
+**Then** the Ollama binaries are placed in the application's local resource folder
+**And** the internal AI service detects and initializes the server on first launch.
+**And** it automatically extracts a core modding model (Qwen 0.5B) for immediate offline use.
 
 ## Epic 9: JPE-Live Synchronization Bridge
 
@@ -800,3 +812,25 @@ So that I can customize the studio to my own sensory preferences.
 **Then** both audio volume and haptic intensity scale proportionally
 **And** the application automatically respects OS "Quiet Mode" or "Focus" settings
 **And** I can toggle individual sensory layers (Audio, Haptics, Pulses) independently.
+
+
+## Epic 11: Handheld & Controller Productivity
+
+Enable a premium, handheld-native development experience through comprehensive controller-centric navigation and coding systems.
+
+### Story 11.1: Comprehensive Controller Coding Capability
+
+As a Handheld Modder (Steam Deck/PC),
+I want to write JPE logic using a controller-native paradigm (Radial Menus and Chords),
+So that I can build mods anywhere with maximum efficiency and zero reliance on a physical keyboard.
+
+**Acceptance Criteria:**
+
+**Given** an active JPE Editor session with a controller connected
+**When** I hold the designated "Logic Trigger" (e.g., LB or Y button)
+**Then** I see the "Spectral Radial Menu" overlay containing JPE keywords (WHEN, DO, ONLY_IF)
+**And** selecting a slice with the analog stick and releasing the trigger inserts the keyword into the editor
+**And** I can navigate AI-powered predictive suggestions using the D-Pad and select them with the A button
+**And** a bioluminescent Focus Indicator highlights the currently editable region for handheld clarity
+**And** the Sensory Service emits a distinct "Haptic Chord" upon successful code block insertion.
+

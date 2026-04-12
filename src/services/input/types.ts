@@ -39,7 +39,9 @@ export type EditorAction =
   | 'manual'
   | 'focus-mode'
   | 'undo'
-  | 'redo';
+  | 'redo'
+  | 'jump-to-definition'
+  | 'quick-fix';
 
 export interface GamepadState {
   [key: string]: boolean | number;

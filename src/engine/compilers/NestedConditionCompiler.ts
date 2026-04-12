@@ -223,7 +223,7 @@ export class NestedConditionCompiler {
     const match = condition.match(/^(\w+)\((.*)\)$/)
 
     if (match) {
-      const [, func, args] = match
+      const [, func, _args] = match
 
       // Map common condition types
       const typeMap: Record<string, string> = {
@@ -260,7 +260,7 @@ export class NestedConditionCompiler {
     const match = action.match(/^(\w+)\((.*)\)$/)
 
     if (match) {
-      const [, func, args] = match
+      const [, func, _args] = match
 
       // Map common action types
       const typeMap: Record<string, string> = {

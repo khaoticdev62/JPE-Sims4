@@ -2,7 +2,6 @@
 
 import { useEffect, useRef } from 'react'
 import { getEditorInstance } from '@/components/editor/MonacoEditor'
-import { useEditorStore } from '@/stores/useEditorStore'
 
 /**
  * useScrollSync

@@ -96,15 +96,30 @@ export class GamepadService {
       if (index === 1) action = 'ignite';      // RB + B
       if (index === 2) action = 'build';       // RB + X
       if (index === 3) action = 'focus-mode';  // RB + Y
+      
+      if (isChord && action) {
+        sensory.triggerTactilePattern('double-tap');
+      }
     } else if (lb) {
       isChord = true;
       if (index === 14) action = 'undo';  // LB + D-Pad Left
       if (index === 15) action = 'redo';  // LB + D-Pad Right
       if (index === 9) action = 'show-settings'; // LB + Start
+      
+      if (isChord && action) {
+        sensory.triggerTactilePattern('notch');
+      }
     } else {
       // Extended Handheld Buttons (L4/R4/L5/R5)
-      if (index === 17 || index === 19) action = 'copilot'; // R4/R5
-      if (index === 16 || index === 18) action = 'manual';  // L4/L5
+      // Standard XInput indices for Steam Deck back paddles
+      if (index === 16) action = 'jump-to-definition'; // L4
+      if (index === 17) action = 'copilot';            // R4
+      if (index === 18) action = 'manual';             // L5
+      if (index === 19) action = 'quick-fix';          // R5
+      
+      if (action) {
+        sensory.triggerTactilePattern('notch');
+      }
       
       // Standard UX Actions
       if (index === 0) action = 'accept';
@@ -116,7 +131,11 @@ export class GamepadService {
     if (action) {
       this.emit(action, { gamepad, button: index, chord: isChord });
       this.emit('action', { gamepad, button: index, chord: isChord, action });
-      sensory.triggerScrub();
+      
+      // Only scrub for non-industrial standard UX actions to avoid haptic mud
+      if (index < 16) {
+        sensory.triggerScrub();
+      }
     }
 
     // Always emit raw button down for standard focus navigation

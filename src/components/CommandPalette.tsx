@@ -2,12 +2,9 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo, type ReactNode } from "react";
 import {
-  Search, Command, Languages, Rocket, Shield, Bug, Sparkles,
-  Database, Network, Package, Settings, Code2, BarChart3,
-  Library, Puzzle, Play, FileCode, Globe, Braces, FileText,
-  Terminal, RefreshCw, Download, Upload, Eye, Folder,
-  GitBranch, GitMerge, Copy, Layers, Hash, Wrench, Zap, Filter,
-  ArrowRight, Clock, LayoutGrid, BookOpen,
+  Search, Command, Package, Code2,
+  FileCode, Globe, Braces, FileText,
+  Hash, Zap, ArrowRight, Clock,
   type LucideIcon,
 } from "lucide-react";
 import { motion, AnimatePresence, easing } from "./jpe-motion";
@@ -138,14 +135,14 @@ function ModeBadge({ children, color, bg, border }: { children: ReactNode; color
 }
 
 /* ═══ MAIN COMPONENT ═══ */
-export function CommandPalette({ isOpen, onClose, onSwitchMode, currentMode: _currentMode }: CommandPaletteProps) {
+export function CommandPalette({ isOpen, onClose, onSwitchMode: _onSwitchMode, currentMode: _currentMode }: CommandPaletteProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const [selectedIdx, setSelectedIdx] = useState(0);
   const [executedAction, setExecutedAction] = useState<string | null>(null);
   const [recentIds, setRecentIds] = useState<string[]>([]);
-  const { setBuffWizardOpen, setInteractionWizardOpen, setTraitWizardOpen, setPromptToJPEOpen, setHelpCenterOpen, commandPaletteQuery } = useUIStore();
+  const { commandPaletteQuery } = useUIStore();
   const [query, setInternalQuery] = useState(commandPaletteQuery);
 
   // Sync internal query with store query when palette opens

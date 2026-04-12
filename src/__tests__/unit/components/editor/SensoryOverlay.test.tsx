@@ -4,7 +4,7 @@
  * Tests for pulse rendering, intensity mapping, and bioluminescent animations.
  */
 
-import { render, screen } from '@testing-library/react'
+import { render } from '@testing-library/react'
 import { SensoryOverlay } from '@/components/editor/SensoryOverlay'
 
 // Mock useUIStore

@@ -21,7 +21,6 @@ jest.mock('@/services/FileService', () => ({
 
 describe('LiveBridgeDeployer', () => {
   const mockModsPath = '/test/mods'
-  const mockScriptPath = '/test/mods/jpe_live_sync.ts4script'
 
   beforeEach(() => {
     jest.clearAllMocks()

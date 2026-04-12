@@ -622,7 +622,26 @@ export class OllamaService extends BaseAIService {
     return OllamaService.instance
   }
 
+  /**
+   * Synchronize configuration with the native bridge.
+   * Detects if using system-wide (11434) or sandboxed (11435) engine.
+   */
+  async syncConfig() {
+    if (this.isElectron) {
+      try {
+        const info = await window.electron.ai.getOllamaInfo()
+        if (info.isRunning) {
+          this.ollamaBaseUrl = info.url
+          console.log(`[OllamaService] Connected to ${info.provider} engine at ${info.url}`)
+        }
+      } catch (_err) {
+        console.warn('[OllamaService] Failed to fetch native Ollama info, using defaults.')
+      }
+    }
+  }
+
   async initialize(): Promise<void> {
+    await this.syncConfig()
     this.initialized = true
   }
 

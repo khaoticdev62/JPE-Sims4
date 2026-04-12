@@ -1,108 +1,93 @@
-# Suggested Commands for JPE Studio Editor Development
+# Suggested Commands for JPE Studio Editor
 
-## Development Server
+## Development
 ```bash
-# Start Next.js development server
+# Web dev server (Next.js)
 npm run dev
 
-# Start Electron development mode (runs Next.js + Electron)
+# Electron dev (Next.js + Electron together)
 npm run electron:dev
 ```
 
 ## Building
 ```bash
-# Build Next.js application (skips linting for speed)
+# Next.js build (skips lint for speed)
 npm run build
 
-# Build Electron application
+# Electron build
 npm run electron:build
 
-# Package Electron app for distribution
-npm run electron:package
-
-# Package for specific platforms
-npm run electron:package:win    # Windows
-npm run electron:package:mac    # macOS
-npm run electron:package:linux  # Linux
+# Platform-specific distribution
+npm run electron:dist:win    # Windows NSIS
+npm run electron:dist:mac    # macOS DMG
+npm run electron:dist:linux  # Linux AppImage
 ```
 
 ## Testing
 ```bash
-# Run Jest unit/integration tests (TypeScript/React)
+# Jest unit/integration tests
 npm test
+npm run test:coverage        # With coverage
+npm run test:integration     # Integration only
 
-# Run integration tests only
-npm run test:integration
-
-# Run Playwright E2E tests
+# Playwright E2E tests
 npm run test:e2e
+npm run test:e2e:ui          # With UI
+npm run test:e2e:headed      # See browser
+npm run test:e2e:report      # HTML report
 
-# Run Playwright E2E tests with UI
-npm run test:e2e:ui
-
-# Run Playwright E2E tests in headed mode
-npm run test:e2e:headed
-
-# Show Playwright test report
-npm run test:e2e:report
-
-# Run Python backend tests
+# Python backend tests
 npm run test:python
-# Or directly with pytest:
-cd tests/python && pytest -v --tb=short
 
-# Run all test suites (unit + integration + e2e)
+# Test fixtures (recent addition)
+npm run test:fixtures
+
+# All tests
 npm run test:all
 ```
 
-## Linting & Formatting
+## Linting & Validation
 ```bash
-# Run ESLint
+# ESLint
 npm run lint
 
-# Format with Prettier (if configured)
+# Fix lint issues
+npx eslint --fix "src/**/*.{ts,tsx}"
+
+# Format with Prettier
 npx prettier --write "src/**/*.{ts,tsx}"
 
-# Fix linting issues automatically
-npx eslint --fix "src/**/*.{ts,tsx}"
+# Round-trip validation
+npm run validate:roundtrip -- <xml_path>
+
+# Decompile XML to JPE
+npm run test:decompile -- <xml_path>
 ```
 
-## Validation & Utilities
+## Git Commands (Windows)
 ```bash
-# Validate roundtrip transformations
-npm run validate:roundtrip
-
-# Run with tsx directly (for TypeScript scripts)
-npx tsx <script-path>
-```
-
-## Git & Version Control
-```bash
-# Standard git commands (Windows compatible)
 git status
 git add .
 git commit -m "message"
-git push
-git pull
-git log --oneline -10
+git push / git pull
+git log --oneline -n 10
+dir /b                    # List files
+type <file>               # View file content
+findstr /C:"pattern"      # Search (like grep)
 ```
 
-## Windows-Specific Notes
-- Use `dir` instead of `ls` (or install Git Bash/WSL for Unix commands)
-- Use `type` instead of `cat` to view files
-- Use `findstr` instead of `grep` (or use Git Bash)
-- Path separator is `\` not `/` in Windows CMD/PowerShell
-- Use `&&` to chain commands in CMD
-- Use `;` to chain commands in PowerShell
-
-## Python/UV Commands
+## Python Commands
 ```bash
-# Install Python dependencies
-uv sync
+uv sync                   # Install dependencies
+uv run jpe-sims4 --help   # Run CLI
+uv run pytest -v          # Run tests
+```
 
-# Run Python scripts
-uv run <script>
-
-# Run Python CLI
-uv run jpe-sims4 --help
+## Rust Commands
+```bash
+cd core
+cargo build               # Build workspace
+cargo build --release     # Release build
+cargo test                # Run tests
+cargo run -- <command>    # Run CLI
 ```

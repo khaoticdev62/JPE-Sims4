@@ -194,7 +194,7 @@ export class TransformationService {
         }
 
         // Post-process: validate namespaces and pretty-print
-        const { processedXml, namespaceFixes } = this.postProcessXml(result.xml || '')
+        const { processedXml, namespaceFixes: _namespaceFixes } = this.postProcessXml(result.xml || '')
 
         return {
           xml: processedXml,

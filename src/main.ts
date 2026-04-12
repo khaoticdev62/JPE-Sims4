@@ -14,9 +14,11 @@ import fs from 'fs'
 import os from 'os'
 import axios from 'axios'
 import { spawn, exec } from 'child_process'
-import { createHash } from 'crypto'
 import { LiveMonitor } from './services/main/LiveMonitor'
 import { PathResolver } from './services/main/PathResolver'
+import { OllamaManager } from './services/main/OllamaManager'
+import { ModelSetupService } from './services/main/ModelSetupService'
+import { SecureStore } from './services/main/SecureStore'
 
 // Auto-updater (only in production — check after app ready to avoid require issues)
 let autoUpdater: typeof import('electron-updater').autoUpdater | null = null
@@ -72,6 +74,7 @@ function handleDeepLink(url: string) {
 let mainWindow: BrowserWindow | null = null
 let tray: Tray | null = null
 let liveMonitor: LiveMonitor | null = null
+let ollamaManager: OllamaManager | null = null
 const isDev = process.env.NODE_ENV === 'development'
 
 // ─── Environment Detection ──────────────────────────────────────────────────
@@ -86,7 +89,7 @@ const isSteamDeck = (): boolean => {
 }
 
 // ─── Window Creation ────────────────────────────────────────────────────────
-const createWindow = (url: string) => {
+const createWindow = (_url: string) => {
   const onSteamDeck = isSteamDeck()
 
   mainWindow = new BrowserWindow({
@@ -583,7 +586,7 @@ ipcMain.handle('project:search', async (_event, dirPath: string, query: string, 
     let regex: RegExp
     try {
       regex = new RegExp(pattern, flags)
-    } catch (e) {
+    } catch (_e) {
       return { success: false, error: 'Invalid regular expression' }
     }
 
@@ -631,7 +634,7 @@ ipcMain.handle('project:search', async (_event, dirPath: string, query: string, 
             matches: fileMatches
           })
         }
-      } catch (err) {
+      } catch (_err) {
         // Skip files that can't be read (e.g. permission denied)
         continue
       }
@@ -655,11 +658,7 @@ ipcMain.handle('project:replaceInFiles', async (_event, dirPath: string, query: 
     let totalReplacements = 0
     
     // First, find all matches (reusing logic or calling internal)
-    const searchResult = await ipcMain.emit('project:search', _event, dirPath, query, options) as any
-    // Wait, ipcMain.emit returns boolean. I need to call the logic directly or helper.
-    // Fixed: calling internal helper or re-implementing briefly for atomicity
-    
-    // For now, I'll re-implement the scan part to avoid IPC emit issues
+    // Note: ipcMain.emit returns boolean, so we re-implement the scan logic directly below
     const files = await fs.promises.readdir(dirPath, { withFileTypes: true, recursive: true })
     const flags = isCase ? 'g' : 'gi'
     let pattern = query
@@ -686,7 +685,7 @@ ipcMain.handle('project:replaceInFiles', async (_event, dirPath: string, query: 
           affectedFiles++
           totalReplacements += matchCount
         }
-      } catch (err) { continue }
+      } catch (_err) { continue }
     }
 
     const duration = (performance.now() - start).toFixed(2)
@@ -795,6 +794,34 @@ ipcMain.handle('sims4:deployBridge', async (_event, pythonSource: string) => {
     await fs.promises.writeFile(targetPath, content)
 
     return { success: true, path: targetPath }
+  } catch (error) {
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
+  }
+})
+
+// === SECURITY VAULT (NEW — AES-256 Shielding) ===
+ipcMain.handle('security:vault:get', async (_event, key: string) => {
+  try {
+    const value = SecureStore.getInstance().get(key)
+    return { success: true, value }
+  } catch (error) {
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
+  }
+})
+
+ipcMain.handle('security:vault:set', async (_event, key: string, value: any) => {
+  try {
+    SecureStore.getInstance().set(key, value)
+    return { success: true }
+  } catch (error) {
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
+  }
+})
+
+ipcMain.handle('security:vault:status', async () => {
+  try {
+    const isShielded = SecureStore.getInstance().isShielded()
+    return { success: true, isShielded, algorithm: 'AES-256-GCM', provider: 'Native Security Engine' }
   } catch (error) {
     return { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
   }
@@ -940,7 +967,9 @@ ipcMain.handle('ts4rebels:invoke', async (_event, action: string, params: Record
       if (publishTempPath) {
         try {
           fs.unlinkSync(publishTempPath)
-        } catch (_e) {}
+        } catch (_e) {
+          // Expected: temp file may not exist if process was killed
+        }
       }
 
       try {
@@ -1012,10 +1041,10 @@ ipcMain.handle('transform:run', async (_event, source: string, fileName: string)
         cwd: process.cwd(),
       })
 
-      let stdout = ''
+      let _stdout = ''
       let stderr = ''
 
-      proc.stdout.on('data', (data) => { stdout += data.toString() })
+      proc.stdout.on('data', (data) => { _stdout += data.toString() })
       proc.stderr.on('data', (data) => { stderr += data.toString() })
 
       const timeout = setTimeout(() => {
@@ -1079,7 +1108,7 @@ function parseStderr(stderr: string) {
 ipcMain.handle('ai:invoke', async (_event, provider: string, method: string, params: any) => {
   const start = performance.now()
   console.log(`[IPC:ai:invoke] Routing to ${provider}...`)
-  const { url, headers, data, key } = params
+  const { url, headers, data, key: _key } = params
   
   console.log(`[AI Main] Native Bridge: ${provider}:${method} -> ${url}`)
 
@@ -1307,6 +1336,18 @@ app.on('ready', async () => {
     app.quit()
   }
 
+  // Initialize Industrial AI Engine
+  try {
+    // 1. Sync models
+    await ModelSetupService.initialize()
+    
+    // 2. Start manager
+    ollamaManager = new OllamaManager()
+    await ollamaManager.initialize()
+  } catch (err) {
+    console.error('[Main] Failed to initialize AI engine:', err)
+  }
+
   // Handle deep links that opened before ready
   if (deepLinkURL) {
     handleDeepLink(deepLinkURL)
@@ -1314,7 +1355,9 @@ app.on('ready', async () => {
 })
 
 app.on('before-quit', () => {
-  // Logic for cleanup if needed
+  // Graceful shutdown of sandboxed AI engine
+  ollamaManager?.stop()
+  liveMonitor?.stop()
 })
 
 app.on('window-all-closed', () => {

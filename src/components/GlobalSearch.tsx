@@ -11,7 +11,7 @@ import { T } from "./robust/jpe-theme";
 import { motion, AnimatePresence, easing } from "./jpe-motion";
 import {
   Search, X, ChevronDown, ChevronRight,
-  FileCode, Braces, FileText, Code2, Sparkles,
+  Braces, FileText, Code2, Sparkles,
   Replace, RotateCcw,
   AlertTriangle, CheckCircle2, Globe,
   Package, File, Loader2,
@@ -20,7 +20,6 @@ import { toast } from "sonner";
 import { searchService, SearchResult } from "@/services/SearchService";
 import { useProjectStore } from "@/stores/useProjectStore";
 import { useEditorStore } from "@/stores/useEditorStore";
-import { ModFile } from "@/types";
 
 const EXT_COLORS: Record<string, string> = {
   xml: T.cyan, json: T.amber, stbl: T.violet, ts4script: T.emerald,
@@ -229,7 +228,7 @@ export function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
     onClose();
   };
 
-  const doReplace = async (filePath: string, lineNum: number) => {
+  const doReplace = async (filePath: string, _lineNum: number) => {
     if (!currentProject?.rootPath) return;
     
     toast.promise(

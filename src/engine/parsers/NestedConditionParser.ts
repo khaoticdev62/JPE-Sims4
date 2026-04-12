@@ -147,7 +147,6 @@ export class NestedConditionParser {
     this.position++
 
     // Parse children until END
-    let childIndex = 0
     while (
       this.position < this.lines.length &&
       !this.lines[this.position].startsWith('END')
@@ -156,7 +155,6 @@ export class NestedConditionParser {
       const child = this.parseNode(depth + 1, childScope)
       if (child) {
         node.children.push(child)
-        childIndex++
       }
     }
 

@@ -7,6 +7,7 @@ import { useSentinelStore } from '@/stores/useSentinelStore';
 import { cn } from '@/utils/cn';
 import type { Diagnostic } from '@/types/index';
 import { PythonEngineStatusIndicator } from '@/components/PythonEngineStatusIndicator';
+import { AIEngineStatus } from '@/components/statusbar/AIEngineStatus';
 import { T } from '@/components/robust/jpe-theme'
 
 export const StatusBar: React.FC = () => {
@@ -95,6 +96,11 @@ export const StatusBar: React.FC = () => {
       </div>
 
       <div className="flex items-center gap-4">
+        {/* AI Engine Status (Story 6.6) */}
+        <AIEngineStatus />
+
+        <div className="w-px h-3 bg-white/10" />
+
         {/* Python Engine Status (Story 1.2) */}
         <PythonEngineStatusIndicator />
 

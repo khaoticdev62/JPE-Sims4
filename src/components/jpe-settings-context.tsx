@@ -55,40 +55,75 @@ export function useScaledPx(basePx: number): number {
 
 const STORAGE_KEY = "jpe-global-settings-v1";
 
-function loadSettings(): JpeSettings {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return defaultSettings;
-    const parsed = JSON.parse(raw) as Partial<JpeSettings>;
-    // Merge with defaults so new keys are always present
-    return { ...defaultSettings, ...parsed };
-  } catch {
-    return defaultSettings;
-  }
-}
 
-function saveSettings(s: JpeSettings) {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(s));
-  } catch { /* ignore QuotaExceededError */ }
-}
+
+
 
 export function JpeSettingsProvider({ children }: { children: ReactNode }) {
-  const [settings, setSettings] = useState<JpeSettings>(loadSettings);
+  const [settings, setSettings] = useState<JpeSettings>(defaultSettings);
+  const [isHydrated, setIsHydrated] = useState(false);
 
-  /* Persist every change */
-  useEffect(() => { saveSettings(settings); }, [settings]);
+  /* Hybrid Hydration: Main Vault + Migration */
+  useEffect(() => {
+    async function hydrate() {
+      if (typeof window === 'undefined' || !window.electron) {
+        setIsHydrated(true);
+        return;
+      }
+
+      try {
+        // 1. Try to load from Main Vault
+        const response = await window.electron.security.vault.get(STORAGE_KEY);
+        let vaultedSettings = response.success ? response.value as JpeSettings : null;
+
+        // 2. Migration Check
+        const legacyRaw = localStorage.getItem(STORAGE_KEY);
+        if (legacyRaw && !vaultedSettings) {
+          console.info("[Security:Migration] Found legacy localStorage settings, promoting to AES-256 vault...");
+          const legacy = JSON.parse(legacyRaw) as JpeSettings;
+          await window.electron.security.vault.set(STORAGE_KEY, legacy);
+          vaultedSettings = legacy;
+          
+          // Clear legacy only after successful vault write
+          localStorage.removeItem(STORAGE_KEY);
+        }
+
+        if (vaultedSettings) {
+          setSettings({ ...defaultSettings, ...vaultedSettings });
+        }
+      } catch (err) {
+        console.error("[Security:Vault] Hydration failed:", err);
+      } finally {
+        setIsHydrated(true);
+      }
+    }
+    hydrate();
+  }, []);
+
+  /* Persist every change to Secure Vault */
+  useEffect(() => {
+    if (isHydrated && typeof window !== 'undefined' && window.electron) {
+      window.electron.security.vault.set(STORAGE_KEY, settings);
+    }
+  }, [settings, isHydrated]);
 
   const update = useCallback(<K extends keyof JpeSettings>(key: K, value: JpeSettings[K]) => {
     setSettings(prev => ({ ...prev, [key]: value }));
   }, []);
 
-  const reset = useCallback(() => {
+  const reset = useCallback(async () => {
     setSettings(defaultSettings);
-    try { localStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ }
+    if (typeof window !== 'undefined' && window.electron) {
+      await window.electron.security.vault.set(STORAGE_KEY, defaultSettings);
+    }
   }, []);
 
-  return <Ctx.Provider value={{ settings, update, reset }}>{children}</Ctx.Provider>;
+  return (
+    <Ctx.Provider value={{ settings, update, reset }}>
+      {/* Prevent flash of default styles during hydration */}
+      {isHydrated ? children : <div style={{ background: '#0a0c10', width: '100vw', height: '100vh' }} />}
+    </Ctx.Provider>
+  );
 }
 
 export { defaultSettings as jpeDefaultSettings };

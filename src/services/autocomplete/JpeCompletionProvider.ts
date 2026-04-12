@@ -57,8 +57,8 @@ function getCompletionDetail(completion: Completion): string {
  */
 export function registerJpeCompletionProvider(
   monaco: typeof import('monaco-editor'),
-  editor: editor.IStandaloneCodeEditor,
-  getModel: () => editor.ITextModel | null,
+  _editor: editor.IStandaloneCodeEditor,
+  _getModel: () => editor.ITextModel | null,
 ): void {
   // Dispose existing provider if any
   if (completionProviderDisposable) {
@@ -73,7 +73,7 @@ export function registerJpeCompletionProvider(
       position: Position,
     ): languages.ProviderResult<languages.CompletionList> => {
       // Get text up to cursor position
-      const textUntilPosition = model.getValueInRange({
+      const _textUntilPosition = model.getValueInRange({
         startLineNumber: 1,
         startColumn: 1,
         endLineNumber: position.lineNumber,

@@ -9,7 +9,6 @@ import { CompilerService } from '@/services/CompilerService';
 import { GeminiService } from '@/services/ai/GeminiService';
 import { ModCompatibilityService } from '@/services/ModCompatibilityService';
 import { TS4RebelsService } from '@/services/api/TS4RebelsService';
-import { AIKeyStore } from '@/services/ai/AIKeyStore';
 
 // Mock dependency to ensure AI services don't skip the bridge call
 jest.mock('@/services/ai/AIKeyStore', () => ({

@@ -179,7 +179,7 @@ export class DuplicateDetector {
     const hashMap = new Map<string, string[]>()
     let processedCount = 0
 
-    for (const [size, paths] of sizeMap.entries()) {
+    for (const [_size, paths] of sizeMap.entries()) {
       // Only hash files with size collisions
       if (paths.length > 1) {
         for (const filePath of paths) {

@@ -74,6 +74,15 @@ const electronAPI = {
   ai: {
     invoke: (provider: string, method: string, params: any) => 
       ipcRenderer.invoke('ai:invoke', provider, method, params),
+    getOllamaInfo: () => ipcRenderer.invoke('ai:ollama:info'),
+    switchOllamaProvider: (type: string) => ipcRenderer.invoke('ai:ollama:switch-provider', type),
+  },
+  security: {
+    vault: {
+      get: (key: string) => ipcRenderer.invoke('security:vault:get', key),
+      set: (key: string, value: any) => ipcRenderer.invoke('security:vault:set', key, value),
+      status: () => ipcRenderer.invoke('security:vault:status'),
+    }
   },
   scarlet: {
     fetch: () => ipcRenderer.invoke('scarlet:fetch'),

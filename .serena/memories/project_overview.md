@@ -1,52 +1,54 @@
 # JPE Studio Editor - Project Overview
 
 ## Purpose
-JPE Studio Editor is a professional, high-fidelity web IDE for Sims 4 mod developers to write **Just Plain English (JPE)** logic with real-time XML transformations and enterprise-grade AI intelligence.
+Professional cyberpunk-themed IDE for Sims 4 mod developers to write Just Plain English (JPE) logic with real-time XML transformations and AI intelligence.
 
-## Key Features
-- Real-Time JPE-to-XML Transformation with instant preview
-- Multi-Model AI Integration (Claude 3.5 Sonnet, OpenAI GPT-4o, Google Gemini 1.5 Pro, Alibaba Qwen-Plus)
-- Enterprise-Grade Security with server-side API routes
-- Monaco Editor with custom JPE language support
-- Smart AI Fixes and Mod Analysis
-- Export to `.jpe` source or `.xml`
-- Electron desktop application support
+## Tech Stack
+- **Frontend**: Next.js 15 (App Router), React 19, TypeScript 5
+- **Styling**: Tailwind CSS 3.4+, shadcn/ui, Radix UI, Framer Motion
+- **State**: Zustand (23 stores), Jotai (atoms)
+- **Editor**: Monaco Editor (@monaco-editor/react)
+- **AI**: Claude 3.5 Sonnet, GPT-4o, Gemini 1.5 Pro, Qwen-Plus, Ollama (local)
+- **Desktop**: Electron 41, electron-builder, electron-updater
+- **Python Backend**: jpe-sims4 package (Python 3.11+, lxml, Pillow, OpenCV)
+- **Rust Core**: 6-crate workspace (jpe_diag, jpe_ir, jpe_xml, jpe_lang, jpe_engine, jpe_cli)
 
 ## Architecture
-- **Frontend**: Next.js 15+ (App Router) with React 18
-- **Language**: TypeScript 5+
-- **Styling**: Tailwind CSS 3.4+ with custom cyberpunk theme
-- **UI Components**: Radix UI + shadcn/ui
-- **State Management**: Zustand and Jotai
-- **Code Editor**: Monaco Editor
-- **Desktop**: Electron 41+ with electron-builder
-- **AI SDKs**: Anthropic, OpenAI, Google Generative AI, DashScope
+```
+src/
+├── app/              # Next.js pages (layout.tsx, page.tsx, studio/, auth/, manual/)
+├── components/       # 200+ React components (ui/, jpe/, editor/, layout/, modals/)
+├── services/         # 70+ service classes (ai/, api/, editor/, translation/, validation/)
+├── stores/           # 23 Zustand stores
+├── hooks/            # 18 custom hooks
+├── engine/           # TypeScript engine (parsers, validators, translators)
+├── cli/              # CLI tools (jpe-cli.ts, validate-roundtrip.ts, decompile-service.ts)
+├── main.ts           # Electron main process
+├── preload.ts        # Electron preload
+└── workers/          # Web workers
 
-## Python Backend
-- **Package**: jpe-sims4 (core engine for translation)
-- **Python Version**: 3.11+
-- **Package Manager**: UV
-- **Dependencies**: requests, lxml, Pillow, opencv-python, watchdog, rich, etc.
-- **Entry Points**: jpe-sims4 (CLI), jpe-studio (Qt app)
+core/                 # Rust core engine (6 crates)
+engine/               # Python engine (parsers, generators, validation)
+tests/                # Python tests (pytest)
+test-fixtures/        # Sample mod projects for testing
+```
 
-## Project Structure
-- `src/` - Frontend TypeScript/React code
-  - `app/` - Next.js app router pages
-  - `components/` - React components
-  - `engine/` - Translation/transformation engine
-  - `services/` - API and AI services
-  - `stores/` - State management (Zustand)
-  - `hooks/` - Custom React hooks
-  - `utils/` - Utility functions
-  - `__tests__/` - Frontend tests
-- `tests/` - Python backend tests
-- `public/` - Static assets
-- `config/` - Configuration files
-- `plugins/` - Plugin system
-- `engine/` - Python engine code
+## Key Features
+- Real-time JPE↔XML transformation with debounced preview
+- Multi-model AI integration (4 cloud + 1 local provider)
+- Server-side API routes (keys never exposed to client)
+- Monaco Editor with custom JPE language registration
+- Export Wizard for .package building
+- STBL string table management with FNV-32a hashing
+- TS4Rebels community integration (IPC-secured)
+- Gamepad/controller support (Steam Deck compatible)
+- Auto-save, live sync, diagnostics panel
 
-## Design System
-- Custom cyberpunk/spectral theme with CSS variables
-- Primary colors: cyan, violet, emerald, rose, amber
-- Dark mode support
-- TailwindCSS with custom tokens
+## Recent Updates (April 2026)
+- Added Ollama local AI support (1,073 lines)
+- Export Wizard component
+- ProjectValidator with parallel processing
+- StblBatchService for multi-locale operations
+- SearchService (Electron IPC-backed)
+- ShortcutService with scope management
+- Test fixtures suite (14 files, 7 categories)

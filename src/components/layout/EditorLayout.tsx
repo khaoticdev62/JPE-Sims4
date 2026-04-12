@@ -31,6 +31,9 @@ import { VirtualKeyboard } from '@/components/input/VirtualKeyboard'
 import { InputMethodSelector } from '@/components/input/InputMethodSelector'
 import { TextInputHandler } from '@/services/input/TextInputHandler'
 import { useGamepadNavigation } from '@/hooks/useGamepadNavigation'
+import { useGamepadCoding } from '@/hooks/useGamepadCoding'
+import { GamepadRadialMenu } from '@/components/controller/GamepadRadialMenu'
+import { HandheldFocusOverlay } from '@/components/layout/HandheldFocusOverlay'
 import { hub } from '@/services/HubService'
 import type { Diagnostic } from '@/types/index'
 import type { WorkspaceMode } from '@/components/robust/jpe-theme'
@@ -71,6 +74,12 @@ export default function EditorLayout({ onNavigate }: EditorLayoutProps = {}) {
   const { diagnostics } = useDiagnosticStore()
   const [isExportWizardOpen, setIsExportWizardOpen] = useState(false)
   const { focusMode } = useGamepadNavigation()
+  
+  // Industrial Gamepad Coding Integration (Epic 11)
+  useGamepadCoding((keyword) => {
+    TextInputHandler.getInstance().insertText(keyword + " ");
+  });
+
   const { currentProject } = useProjectStore()
   const { closeAllTabs } = useEditorStore()
   const { clearDiagnostics } = useDiagnosticStore()
@@ -185,6 +194,10 @@ export default function EditorLayout({ onNavigate }: EditorLayoutProps = {}) {
           isOpen={isExportWizardOpen}
           onClose={() => setIsExportWizardOpen(false)}
         />
+
+        {/* Epic 11: Handheld Overlays */}
+        <HandheldFocusOverlay />
+        <GamepadRadialMenu />
       </div>
     </div>
   )

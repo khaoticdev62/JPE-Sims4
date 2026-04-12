@@ -95,6 +95,12 @@ interface UIState {
   setPublishBuffer: (buffer: ArrayBuffer | undefined) => void
   publishProjectName: string
   setPublishProjectName: (name: string) => void
+
+  // Gamepad Radial (Epic 11)
+  isGamepadRadialOpen: boolean
+  setGamepadRadialOpen: (open: boolean) => void
+  gamepadRadialAngle: number
+  setGamepadRadialAngle: (angle: number) => void
 }
 
 export const useUIStore = create<UIState>()(
@@ -247,6 +253,12 @@ export const useUIStore = create<UIState>()(
         setPublishBuffer: (buffer) => set({ publishBuffer: buffer }),
         publishProjectName: 'My Mod',
         setPublishProjectName: (name) => set({ publishProjectName: name }),
+
+        // Gamepad Radial (Epic 11)
+        isGamepadRadialOpen: false,
+        setGamepadRadialOpen: (open) => set({ isGamepadRadialOpen: open }),
+        gamepadRadialAngle: 0,
+        setGamepadRadialAngle: (angle) => set({ gamepadRadialAngle: angle }),
       }),
       {
         name: 'jpe-ui-store',

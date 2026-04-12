@@ -7,7 +7,6 @@
  * Uses pattern matching and AI to predict what the user wants to write next.
  */
 
-import type { Completion } from '@/services/editor/SmartAutocompleteService'
 import { PatternAnalysisService } from '@/services/ml/PatternAnalysisService'
 
 export interface PredictionContext {

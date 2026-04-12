@@ -152,55 +152,68 @@ async function getKeytar(): Promise<typeof import('keytar') | null> {
 export class CredentialManager {
   private static readonly SERVICE_NAME = 'jpe-mod-translator'
 
-  /**
-   * Save an API key for a specific provider.
-   * Uses keytar (OS keychain) when available; falls back to IndexedDB with AES-GCM encryption.
-   */
   static async saveKey(provider: string, key: string): Promise<void> {
     if (!provider || !key) {
       throw new Error('Provider and key must not be empty')
     }
 
     const account = `ai-key-${provider}`
-    const kt = await getKeytar()
 
+    // 1. Prioritize Native Secure Vault (AES-256 Shielded)
+    if (typeof window !== 'undefined' && window.electron?.security?.vault) {
+      const res = await window.electron.security.vault.set(account, key)
+      if (res.success) {
+        console.debug(`[Credentials] API key for ${provider} saved to Native Shielded Vault`)
+        return
+      }
+    }
+
+    // 2. Secondary: OS keychain via keytar (if available directly)
+    const kt = await getKeytar()
     if (kt) {
       await kt.setPassword(this.SERVICE_NAME, account, key)
       console.debug(`[Credentials] API key for ${provider} saved to OS keychain`)
-    } else {
-      // Browser fallback: encrypt before storing in IndexedDB
-      const encrypted = await SecurityService.encrypt(key)
-      await storeEncryptedIndexedDB(account, encrypted)
-      console.debug(`[Credentials] API key for ${provider} saved to encrypted IndexedDB`)
+      return
     }
+
+    // 3. Fallback: Encrypted IndexedDB (Browser context)
+    const encrypted = await SecurityService.encrypt(key)
+    await storeEncryptedIndexedDB(account, encrypted)
+    console.debug(`[Credentials] API key for ${provider} saved to encrypted IndexedDB`)
   }
 
-  /**
-   * Retrieve an API key for a specific provider.
-   * Tries keytar first, then falls back to IndexedDB decryption.
-   */
   static async getKey(provider: string): Promise<string | null> {
     if (!provider) return null
 
     const account = `ai-key-${provider}`
-    const kt = await getKeytar()
 
+    // 1. Prioritize Native Secure Vault
+    if (typeof window !== 'undefined' && window.electron?.security?.vault) {
+      const res = await window.electron.security.vault.get(account)
+      if (res.success && res.value) {
+        console.debug(`[Credentials] API key for ${provider} retrieved from Native Shielded Vault`)
+        return res.value as string
+      }
+    }
+
+    // 2. Secondary: OS keychain
+    const kt = await getKeytar()
     if (kt) {
       const key = await kt.getPassword(this.SERVICE_NAME, account).catch(() => null)
       if (key) {
         console.debug(`[Credentials] API key for ${provider} retrieved from OS keychain`)
+        return key
       }
-      return key ?? null
     }
 
-    // Browser fallback: decrypt from IndexedDB
+    // 3. Fallback: Decrypt from IndexedDB
     const encrypted = await loadEncryptedIndexedDB(account)
     if (encrypted) {
       const key = await SecurityService.decrypt(encrypted)
       if (key) {
         console.debug(`[Credentials] API key for ${provider} retrieved from encrypted IndexedDB`)
+        return key
       }
-      return key || null
     }
 
     return null

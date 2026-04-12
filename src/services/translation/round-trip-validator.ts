@@ -28,7 +28,7 @@ export class RoundTripValidator {
    */
   private static normalize(val: any): string {
     if (val === null || val === undefined) return ''
-    let s = val.toString().trim()
+    const s = val.toString().trim()
     
     // Check for hex identifiers (common in Sims 4 Tuning)
     if (s.toLowerCase().startsWith('0x')) {

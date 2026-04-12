@@ -1,4 +1,4 @@
-import { SensoryEvent, sensoryService } from './SensoryService'
+import { sensoryService } from './SensoryService'
 
 export enum ShortcutScope {
   GLOBAL = 'global',

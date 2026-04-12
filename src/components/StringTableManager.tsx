@@ -88,7 +88,7 @@ const STATUS_MAP: Record<string,StblStatus> = {
   lot_trait_haunted:"missing", cas_trait_evil_unlock:"ok",
 };
 
-const INITIAL: StblEntry[] = KEYS.map((k,i) => ({
+const _INITIAL: StblEntry[] = KEYS.map((k,i) => ({
   id:`s${i}`, hash:fnv32a(k), keyString:k,
   source:SRC[k]??"", translation:TRANS[k]??"", status:STATUS_MAP[k]??"ok",
 }));
@@ -112,7 +112,7 @@ function Stat({label,value,color}:{label:string;value:number|string;color:string
 
 /* ── Main ── */
 export function StringTableManager({isOpen,onClose}:{isOpen:boolean;onClose:()=>void}) {
-  const { currentProject, updateFile, saveFile } = useProjectStore();
+  const { currentProject, updateFile: _updateFile, saveFile: _saveFile } = useProjectStore();
   const [tab,setTab]           = useState<StblTab>("editor");
   
   // Real Project State
@@ -280,7 +280,7 @@ export function StringTableManager({isOpen,onClose}:{isOpen:boolean;onClose:()=>
       const targets = stblFiles.filter(f => f.id !== activeFileId).map(f => f.id);
       const res = await StblBatchService.syncLocales(currentProject, activeFileId, targets);
       toast.success(`Synced ${res.totalChanges} strings across all locales`);
-    } catch (err) {
+    } catch (_err) {
       toast.error("Sync failed");
     } finally {
       setIsSyncing(false);

@@ -9,7 +9,7 @@ import {
   Loader2, 
   ShieldCheck,
   MoreVertical,
-  XCircle
+  XCircle as _XCircle
 } from 'lucide-react'
 import { useDiagnosticStore } from '@/stores/useDiagnosticStore'
 import { useEditorStore } from '@/stores/useEditorStore'
@@ -19,6 +19,8 @@ import DiagnosticsFilters from './DiagnosticsFilters'
 import DiagnosticsList from './DiagnosticsList'
 import { T } from '../robust/jpe-theme'
 import { cn } from '@/utils/cn'
+import { Activity } from 'lucide-react'
+import LiveDiagnosticsFeed from './LiveDiagnosticsFeed'
 
 /**
  * Industrialized Diagnostics Panel - Story 3.3
@@ -31,8 +33,9 @@ export default function DiagnosticsPanel() {
     diagnostics 
   } = useDiagnosticStore()
   
+  const [activeTab, setActiveTab] = React.useState<'static' | 'live'>('static')
   const { openTab } = useEditorStore()
-  const { isAiScanning, setAiScanning, currentProject: project, saveProject } = useProjectStore()
+  const { isAiScanning, setAiScanning: _setAiScanning, currentProject: project, saveProject } = useProjectStore()
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const filteredDiagnostics = getFilteredDiagnostics()
@@ -44,7 +47,7 @@ export default function DiagnosticsPanel() {
     info: diagnostics.filter(d => d.severity === 'info').length,
   }
 
-  const handleNavigate = (fileId: string, line: number, column: number) => {
+  const handleNavigate = (fileId: string, _line: number, _column: number) => {
     openTab({
       id: `tab-${fileId}`,
       fileId,
@@ -62,7 +65,7 @@ export default function DiagnosticsPanel() {
     await saveProject() // Triggers the scan in useProjectStore
   }
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = (_e: React.ChangeEvent<HTMLInputElement>) => {
     // ... existing file upload logic ...
     toast.info("Log analysis coming soon to industrial diagnostics.")
   }
@@ -75,11 +78,30 @@ export default function DiagnosticsPanel() {
         style={{ borderColor: T.borderSubtle }}
       >
         <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-white italic">Problems</h2>
-            <span className="flex items-center justify-center min-w-[18px] h-[18px] px-1 bg-white/10 rounded-full text-[9px] font-mono text-white/50">
-              {diagnostics.length}
-            </span>
+          <div className="flex items-center">
+            <button 
+              onClick={() => setActiveTab('static')}
+              className={cn(
+                "flex items-center gap-2 px-3 h-10 transition-all border-b-2",
+                activeTab === 'static' ? "border-white bg-white/5 opacity-100" : "border-transparent opacity-40 hover:opacity-100"
+              )}
+            >
+              <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-white italic">Problems</h2>
+              <span className="flex items-center justify-center min-w-[14px] h-[14px] px-1 bg-white/10 rounded-full text-[8px] font-mono text-white/50">
+                {diagnostics.length}
+              </span>
+            </button>
+
+            <button 
+              onClick={() => setActiveTab('live')}
+              className={cn(
+                "flex items-center gap-2 px-3 h-10 transition-all border-b-2",
+                activeTab === 'live' ? "border-cyan bg-cyan/5 opacity-100" : "border-transparent opacity-40 hover:opacity-100"
+              )}
+            >
+              <Activity size={10} className={activeTab === 'live' ? "text-cyan" : "text-white"} />
+              <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-white italic">Live Link</h2>
+            </button>
           </div>
 
           <div className="w-px h-3 bg-white/10" />
@@ -153,14 +175,20 @@ export default function DiagnosticsPanel() {
       </div>
 
       {/* ── FILTERS BAR ── */}
-      <DiagnosticsFilters />
+      {activeTab === 'static' && <DiagnosticsFilters />}
 
-      {/* ── DIAGNOSTICS LIST ── */}
-      <div className="flex-1 overflow-y-auto scrollbar-hide bg-black/10">
-        <DiagnosticsList 
-          diagnostics={filteredDiagnostics}
-          onNavigate={handleNavigate}
-        />
+      {/* ── DIAGNOSTICS CONTENT ── */}
+      <div className="flex-1 overflow-hidden bg-black/10">
+        {activeTab === 'static' ? (
+          <div className="h-full overflow-y-auto scrollbar-hide">
+            <DiagnosticsList 
+              diagnostics={filteredDiagnostics}
+              onNavigate={handleNavigate}
+            />
+          </div>
+        ) : (
+          <LiveDiagnosticsFeed />
+        )}
       </div>
 
       {/* ── PANEL FOOTER ── */}

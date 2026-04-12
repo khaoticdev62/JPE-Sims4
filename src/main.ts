@@ -19,6 +19,7 @@ import { PathResolver } from './services/main/PathResolver'
 import { OllamaManager } from './services/main/OllamaManager'
 import { ModelSetupService } from './services/main/ModelSetupService'
 import { SecureStore } from './services/main/SecureStore'
+import { LinkServer } from './services/main/LinkServer'
 
 // Auto-updater (only in production — check after app ready to avoid require issues)
 let autoUpdater: typeof import('electron-updater').autoUpdater | null = null
@@ -74,6 +75,7 @@ function handleDeepLink(url: string) {
 let mainWindow: BrowserWindow | null = null
 let tray: Tray | null = null
 let liveMonitor: LiveMonitor | null = null
+let linkServer: LinkServer | null = null
 let ollamaManager: OllamaManager | null = null
 const isDev = process.env.NODE_ENV === 'development'
 
@@ -130,6 +132,10 @@ const createWindow = (_url: string) => {
     if (mainWindow) {
       liveMonitor = new LiveMonitor(mainWindow)
       liveMonitor.start()
+
+      // Initialize Spectral LinkServer (Story 13.1)
+      linkServer = new LinkServer(mainWindow)
+      linkServer.start()
     }
 
     if (isDev && mainWindow) {
@@ -141,6 +147,8 @@ const createWindow = (_url: string) => {
     mainWindow = null
     liveMonitor?.stop()
     liveMonitor = null
+    linkServer?.stop()
+    linkServer = null
   })
 
   // Prevent navigation to external URLs
@@ -794,6 +802,17 @@ ipcMain.handle('sims4:deployBridge', async (_event, pythonSource: string) => {
     await fs.promises.writeFile(targetPath, content)
 
     return { success: true, path: targetPath }
+  } catch (error) {
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
+  }
+})
+
+// === LIVE BRIDGE COMMANDS (NEW — Story 13.1) ===
+ipcMain.handle('bridge:sendCommand', async (_event, type: string, payload: any) => {
+  try {
+    if (!linkServer) throw new Error('Link server not initialized')
+    linkServer.sendCommand(type, payload)
+    return { success: true }
   } catch (error) {
     return { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
   }

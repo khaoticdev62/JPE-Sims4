@@ -15,7 +15,6 @@
 import { useState } from 'react'
 import Button from '@/components/common/Button'
 import { useEditorStore } from '@/stores/useEditorStore'
-import { T } from '@/components/robust/jpe-theme'
 
 interface EditorToolbarProps {
   onSave?: () => void

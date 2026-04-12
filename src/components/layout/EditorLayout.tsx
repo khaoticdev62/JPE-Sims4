@@ -17,7 +17,7 @@ const SettingsPage = dynamic(() => import('@/components/SettingsPage').then(mod 
 const TS4RebelsPortal = dynamic(() => import('@/components/rebels/TS4RebelsPortal').then(mod => mod.TS4RebelsPortal), { ssr: false })
 import { ExportWizard } from '@/components/ExportWizard'
 
-import { BuildProgressModal } from '@/components/BuildProgressModal'
+import { _BuildProgressModal } from '@/components/BuildProgressModal'
 import { SplashScreen } from '@/components/SplashScreen'
 import { useUIStore } from '@/stores/useUIStore'
 import { useDiagnosticStore } from '@/stores/useDiagnosticStore'
@@ -35,7 +35,8 @@ import { useGamepadCoding } from '@/hooks/useGamepadCoding'
 import { GamepadRadialMenu } from '@/components/controller/GamepadRadialMenu'
 import { HandheldFocusOverlay } from '@/components/layout/HandheldFocusOverlay'
 import { hub } from '@/services/HubService'
-import type { Diagnostic } from '@/types/index'
+import { useLinkServer } from '@/hooks/useLinkServer'
+import type { _Diagnostic } from '@/types/index'
 import type { WorkspaceMode } from '@/components/robust/jpe-theme'
 
 import { JpeButton } from '../jpe-design-system'
@@ -79,6 +80,9 @@ export default function EditorLayout({ onNavigate }: EditorLayoutProps = {}) {
   useGamepadCoding((keyword) => {
     TextInputHandler.getInstance().insertText(keyword + " ");
   });
+
+  // Story 13.1: Spectral Link Activation
+  useLinkServer()
 
   const { currentProject } = useProjectStore()
   const { closeAllTabs } = useEditorStore()

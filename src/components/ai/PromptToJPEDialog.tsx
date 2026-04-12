@@ -9,24 +9,22 @@
 "use client"
 
 import { useState, useCallback } from 'react'
-import { Sparkles, Loader2, Copy, Check, AlertCircle, X } from 'lucide-react'
+import { Sparkles, Loader2, Copy, Check, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
 import { AIServiceFactory } from '@/services/ai/AIServiceFactory'
 import { AIProvider } from '@/services/ai/types'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 
 interface PromptToJPEDialogProps {
   isOpen: boolean
   onClose: () => void
   onGenerated?: (jpeCode: string) => void
-  className?: string
 }
 
-export default function PromptToJPEDialog({ isOpen, onClose, onGenerated, className = '' }: PromptToJPEDialogProps) {
+export default function PromptToJPEDialog({ isOpen, onClose, onGenerated }: PromptToJPEDialogProps) {
   const [prompt, setPrompt] = useState('')
   const [generatedJPE, setGeneratedJPE] = useState<string | null>(null)
   const [isGenerating, setIsGenerating] = useState(false)

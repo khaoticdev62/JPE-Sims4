@@ -3,7 +3,7 @@ import { ChevronRight, AlertCircle, AlertTriangle, Info } from 'lucide-react'
 import { motion, AnimatePresence } from '../jpe-motion'
 import type { Diagnostic } from '@/types/index'
 import DiagnosticItem from './DiagnosticItem'
-import { T } from '../robust/jpe-theme'
+import { _T } from '../robust/jpe-theme'
 import { cn } from '@/utils/cn'
 
 interface DiagnosticsListProps {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useUIStore } from '@/stores/useUIStore'
-import { memo, handleKeyDown } from 'react'
+import { memo, _handleKeyDown } from 'react'
 import PreviewPane from '@/components/editor/PreviewPane'
 import { DocumentationPanel } from '@/components/editor/DocumentationPanel'
 import { JpeCopilotPane } from '@/components/copilot/JpeCopilotPane'

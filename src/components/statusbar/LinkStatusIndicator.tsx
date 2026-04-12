@@ -25,7 +25,7 @@ interface LinkStatusIndicatorProps {
   className?: string
 }
 
-const STATUS_COLORS: Record<BridgeStatus, string> = {
+const _STATUS_COLORS: Record<BridgeStatus, string> = {
   disconnected: 'bg-slate-600',
   connecting: 'bg-amber-400',
   connected: 'bg-emerald-400',

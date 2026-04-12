@@ -35,6 +35,11 @@ const electronAPI = {
       ipcRenderer.on('sync:event', listener)
       return () => ipcRenderer.removeListener('sync:event', listener)
     },
+    onStatus: (callback: (data: unknown) => void) => {
+      const listener = (_event: unknown, data: unknown) => callback(data)
+      ipcRenderer.on('sync:status', listener)
+      return () => ipcRenderer.removeListener('sync:status', listener)
+    },
   },
   project: {
     openDirectory: () => ipcRenderer.invoke('project:openDirectory'),
@@ -96,6 +101,7 @@ const electronAPI = {
       'menu:library', 'menu:ai', 'menu:settings', 'menu:manual', 'menu:shortcuts',
       'menu:check-updates', 'menu:about',
       'compile:request', 'tray:compile', 'deep-link',
+      'sync:status', 'sync:event',
     ]
     if (validChannels.includes(channel)) {
       const strippedCallback = (_event: unknown, ...args: unknown[]) => callback(...args)
@@ -109,11 +115,19 @@ const electronAPI = {
       'menu:library', 'menu:ai', 'menu:settings', 'menu:manual', 'menu:shortcuts',
       'menu:check-updates', 'menu:about',
       'compile:request', 'tray:compile', 'deep-link',
+      'sync:status', 'sync:event',
     ]
     if (validChannels.includes(channel)) {
       const strippedCallback = (_event: unknown, ...args: unknown[]) => callback(...args)
       ipcRenderer.removeListener(channel, strippedCallback)
     }
+  },
+  invoke: (channel: string, ...args: unknown[]) => {
+    const validChannels = ['bridge:sendCommand']
+    if (validChannels.includes(channel)) {
+      return ipcRenderer.invoke(channel, ...args)
+    }
+    return Promise.reject(new Error(`Invalid IPC channel: ${channel}`))
   },
   send: (channel: string, ...args: any[]) => ipcRenderer.send(channel, ...args),
 }

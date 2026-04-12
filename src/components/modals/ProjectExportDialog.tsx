@@ -5,7 +5,7 @@ import {
   Loader2, Download, Package, Shield, Settings,
   Zap
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence as _AnimatePresence } from "framer-motion";
 import { cn } from "@/utils/cn";
 import { JpeBundlerService, BuildLog, BuildResult, BuildProgress } from "@/services/JpeBundlerService";
 import { useProjectStore } from "@/stores/useProjectStore";

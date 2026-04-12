@@ -148,7 +148,7 @@ function EditorPaneComponent() {
   }, [activeFile, fileContent, updateFile, saveFile])
 
   // Handle Save All (Ctrl+Shift+S) — saves all dirty files (Story 1.5)
-  const handleSaveAll = useCallback(async () => {
+  const _handleSaveAll = useCallback(async () => {
     const dirtyTabs = tabs.filter((t) => t.isDirty)
     if (dirtyTabs.length === 0) {
       toast.info('No unsaved changes')

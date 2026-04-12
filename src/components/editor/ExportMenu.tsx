@@ -6,7 +6,7 @@ import { useEditorStore } from "@/stores/useEditorStore"
 import { useProjectStore } from "@/stores/useProjectStore"
 import { toast } from "sonner"
 import { cn } from "@/utils/cn"
-import { JpeBundlerService } from "@/services/JpeBundlerService"
+import { _JpeBundlerService } from "@/services/JpeBundlerService"
 import { useUIStore } from "@/stores/useUIStore"
 
 export function ExportMenu() {

@@ -41,7 +41,7 @@ export default function LiveBridgeToggle({ modsPath, className = '' }: LiveBridg
   const [isDeploying, setIsDeploying] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
 
-  const { audioEnabled } = useUIStore()
+  const { audioEnabled: _audioEnabled } = useUIStore()
 
   // Handle toggle
   const handleToggle = async () => {

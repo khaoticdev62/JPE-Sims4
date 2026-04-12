@@ -7,7 +7,7 @@ import {
   CheckCircle2, 
   Terminal
 } from 'lucide-react';
-import { motion, StaggerList, StaggerItem } from '@/components/jpe-motion';
+import { _motion, StaggerList, StaggerItem } from '@/components/jpe-motion';
 import { JpeButton, JpeCard, JpeStatusBadge } from '@/components/jpe-design-system';
 import { useProjectStore } from '@/stores/useProjectStore';
 import { SpectralHologram } from '@/components/jpe-empty-states';

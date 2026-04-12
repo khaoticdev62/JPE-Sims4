@@ -5,9 +5,9 @@ import { useUIStore } from "@/stores/useUIStore"
 import { shortcutService, ShortcutScope } from "@/services/editor/ShortcutService"
 import { useProjectStore } from "@/stores/useProjectStore"
 import { toast } from "sonner"
-import { 
-  Languages, Rocket, Package, Search, Bug, Code2, 
-  BarChart3, Network, GitMerge, LayoutGrid, Sparkles, Settings, Globe
+import {
+  Languages, Rocket, Package, Code2,
+  Network, GitMerge, LayoutGrid, Sparkles, Settings
 } from "lucide-react"
 
 /**

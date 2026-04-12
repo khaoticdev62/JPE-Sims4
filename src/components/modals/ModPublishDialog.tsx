@@ -7,7 +7,7 @@ import { T } from '@/components/robust/jpe-theme';
 import { JpeButton } from '@/components/jpe-design-system';
 import { TS4RebelsService } from '@/services/api/TS4RebelsService';
 import { CredentialManager } from '@/services/api/CredentialManager';
-import { toast } from 'sonner';
+import { _toast } from 'sonner';
 
 interface ModPublishDialogProps {
   isOpen: boolean;

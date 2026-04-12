@@ -17,9 +17,9 @@
 "use client";
 import { useEffect, useRef, useState, useId } from 'react'
 import { T } from '@/components/robust/jpe-theme'
-import { SensoryEvent, sensoryService } from '@/services/editor/SensoryService'
+import { sensoryService } from '@/services/editor/SensoryService'
 import type { editor, IDisposable, Position, CancellationToken, languages } from 'monaco-editor'
-import * as monaco from 'monaco-editor'
+import * as _monaco from 'monaco-editor'
 import { MonacoCompletionItem } from '@/types'
 import { registerJpeCompletionProvider } from '@/services/autocomplete/JpeCompletionProvider'
 import { shortcutService, ShortcutScope } from '@/services/editor/ShortcutService'

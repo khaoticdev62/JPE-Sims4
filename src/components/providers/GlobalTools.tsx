@@ -10,7 +10,6 @@ import TraitWizard from "@/components/wizards/TraitWizard"
 import PromptToJPEDialog from "@/components/ai/PromptToJPEDialog"
 import HelpCenter from "@/components/help/HelpCenter"
 import BatchSTBLEditor from "@/components/editor/BatchSTBLEditor"
-import ModPublishDialog from "@/components/modals/ModPublishDialog"
 import { ProjectExportDialog } from "@/components/modals/ProjectExportDialog"
 import { useEffect } from "react"
 import { TutorialEngine } from "@/services/tutorial/TutorialEngine"
@@ -39,8 +38,8 @@ export function GlobalTools() {
     setHelpCenterOpen,
     isBatchSTBLOpen,
     setBatchSTBLOpen,
-    isPublishModOpen,
-    setPublishModOpen,
+    isPublishModOpen: _isPublishModOpen,
+    setPublishModOpen: _setPublishModOpen,
     isProjectExportOpen,
     setProjectExportOpen,
     isTutorialActive,

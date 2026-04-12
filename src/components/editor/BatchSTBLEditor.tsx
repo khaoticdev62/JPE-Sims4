@@ -1,29 +1,16 @@
 "use client";
 
-import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
+import { toast } from 'sonner';
 import {
-  Search, Replace, Download, Upload, Languages,
+  Search, Replace, Upload, Languages,
   CheckCircle2, AlertCircle, X, Plus, Trash2,
   ArrowLeftRight, FileText, Globe, Save
 } from 'lucide-react';
 import { T } from '@/components/robust/jpe-theme';
 import { motion, AnimatePresence } from '@/components/jpe-motion';
-import { JpeButton, JpeCard, JpeStatusBadge } from '@/components/jpe-design-system';
-import { STBLParser } from '@/engine/parsers/STBLParser';
-import { STBLCompiler } from '@/engine/compilers/STBLCompiler';
-import { BatchSTBLUtility, STBLEntry as UtilityEntry, STBLFile as UtilityFile } from '@/utils/BatchSTBLUtility';
-
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
-
-type STBLEntry = UtilityEntry;
-type STBLFile = UtilityFile;
-
-interface BatchOperation {
-  type: 'find-replace' | 'delete-empty' | 'merge' | 'export';
-  description: string;
-}
+import { JpeButton } from '@/components/jpe-design-system';
+import { BatchSTBLUtility, type STBLEntry as _STBLEntry, type STBLFile } from '@/utils/BatchSTBLUtility';
 
 // ---------------------------------------------------------------------------
 // Language constants
@@ -63,7 +50,7 @@ interface BatchSTBLEditorProps {
 export function BatchSTBLEditor({ isOpen, onClose, initialFiles = [] }: BatchSTBLEditorProps) {
   const [files, setFiles] = useState<STBLFile[]>(initialFiles);
   const [activeFileId, setActiveFileId] = useState<string | null>(null);
-  const [selectedEntries, setSelectedEntries] = useState<Set<string>>(new Set());
+  const [_selectedEntries, _setSelectedEntries] = useState<Set<string>>(new Set());
   const [findQuery, setFindQuery] = useState('');
   const [replaceQuery, setReplaceQuery] = useState('');
   const [isFindReplaceOpen, setIsFindReplaceOpen] = useState(false);
@@ -249,7 +236,7 @@ export function BatchSTBLEditor({ isOpen, onClose, initialFiles = [] }: BatchSTB
     setTimeout(() => setOperationResult(null), 3000);
   }, [activeFileId]);
 
-  const handleExport = useCallback(async () => {
+  const _handleExport = useCallback(async () => {
     if (!activeFile) return;
 
     try {
@@ -501,9 +488,13 @@ export function BatchSTBLEditor({ isOpen, onClose, initialFiles = [] }: BatchSTB
                           {entry.hash}
                         </span>
                         {hasConflict ? (
-                          <AlertCircle size={10} color={T.amber} title="Conflict: Same hash has different values in other languages" />
+                          <span title="Conflict: Same hash has different values in other languages">
+                            <AlertCircle size={10} color={T.amber} />
+                          </span>
                         ) : hasOtherFiles ? (
-                          <CheckCircle2 size={10} color={T.emerald} title="Synced: Same value across other languages" />
+                          <span title="Synced: Same value across other languages">
+                            <CheckCircle2 size={10} color={T.emerald} />
+                          </span>
                         ) : null}
                       </div>
                       <input

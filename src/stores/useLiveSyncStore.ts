@@ -11,6 +11,8 @@ export interface LiveLog {
   timestamp: number;
   severity: "info" | "warn" | "error" | "critical";
   source?: string;
+  traceback?: string;
+  exceptionType?: string;
 }
 
 export interface EngineMetrics {

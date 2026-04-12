@@ -17,7 +17,6 @@ const SettingsPage = dynamic(() => import('@/components/SettingsPage').then(mod 
 const TS4RebelsPortal = dynamic(() => import('@/components/rebels/TS4RebelsPortal').then(mod => mod.TS4RebelsPortal), { ssr: false })
 import { ExportWizard } from '@/components/ExportWizard'
 
-import { _BuildProgressModal } from '@/components/BuildProgressModal'
 import { SplashScreen } from '@/components/SplashScreen'
 import { useUIStore } from '@/stores/useUIStore'
 import { useDiagnosticStore } from '@/stores/useDiagnosticStore'
@@ -36,7 +35,6 @@ import { GamepadRadialMenu } from '@/components/controller/GamepadRadialMenu'
 import { HandheldFocusOverlay } from '@/components/layout/HandheldFocusOverlay'
 import { hub } from '@/services/HubService'
 import { useLinkServer } from '@/hooks/useLinkServer'
-import type { _Diagnostic } from '@/types/index'
 import type { WorkspaceMode } from '@/components/robust/jpe-theme'
 
 import { JpeButton } from '../jpe-design-system'
@@ -72,7 +70,8 @@ export default function EditorLayout({ onNavigate }: EditorLayoutProps = {}) {
   }, [])
   
   const { workspaceMode, showDiagnostics, immersionMode, setImmersionMode, setWorkspaceMode } = useUIStore()
-  const { diagnostics } = useDiagnosticStore()
+  useDiagnosticStore() // Keep hook call if side effects are needed, though here it's likely just state
+
   const [isExportWizardOpen, setIsExportWizardOpen] = useState(false)
   const { focusMode } = useGamepadNavigation()
   
@@ -185,7 +184,6 @@ export default function EditorLayout({ onNavigate }: EditorLayoutProps = {}) {
 
         <DiagnosticsSection 
           showDiagnostics={showDiagnostics}
-          diagnostics={diagnostics}
         />
 
         <VirtualKeyboard 

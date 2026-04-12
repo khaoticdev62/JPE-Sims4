@@ -104,9 +104,9 @@ export class LinkServer {
     }
   }
 
-  private broadcastToRenderer(channel: string, payload: any): void {
+  private broadcastToRenderer(channel: string, ...args: any[]): void {
     if (this.window && !this.window.isDestroyed()) {
-      this.window.webContents.send(channel, payload)
+      this.window.webContents.send(channel, ...args)
     }
   }
 }

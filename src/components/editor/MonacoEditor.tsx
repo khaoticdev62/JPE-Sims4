@@ -23,6 +23,7 @@ import * as _monaco from 'monaco-editor'
 import { MonacoCompletionItem } from '@/types'
 import { registerJpeCompletionProvider } from '@/services/autocomplete/JpeCompletionProvider'
 import { shortcutService, ShortcutScope } from '@/services/editor/ShortcutService'
+import { toast } from "sonner"
 type Editor = editor.IStandaloneCodeEditor
 
 interface MonacoEditorProps {
@@ -454,6 +455,7 @@ export default function MonacoEditor({
   markers = [],
   className = '',
   onCursorChange,
+  id,
 }: MonacoEditorProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const editorRef = useRef<Editor | null>(null)

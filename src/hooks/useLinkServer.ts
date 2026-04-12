@@ -2,16 +2,6 @@ import { useEffect } from 'react'
 import { useLiveSyncStore, LiveLog } from '@/stores/useLiveSyncStore'
 import { v4 as uuidv4 } from 'uuid'
 
-declare global {
-  interface Window {
-    electron: {
-      on: (channel: string, func: (...args: any[]) => void) => void
-      removeListener: (channel: string, func: (...args: any[]) => void) => void
-      invoke: (channel: string, ...args: any[]) => Promise<any>
-    }
-  }
-}
-
 /**
  * useLinkServer (Story 13.1)
  * Reactive hook for handling Spectral Link events in the renderer.
@@ -46,14 +36,12 @@ export function useLinkServer() {
 
     if (!window.electron) return
 
-    window.electron.on('sync:status', handleStatus)
-    window.electron.on('sync:event', handleEvent)
+    const unsubStatus = window.electron.on('sync:status', handleStatus)
+    const unsubEvent = window.electron.on('sync:event', handleEvent)
 
     return () => {
-      if (window.electron) {
-        window.electron.removeListener('sync:status', handleStatus)
-        window.electron.removeListener('sync:event', handleEvent)
-      }
+      if (unsubStatus) unsubStatus()
+      if (unsubEvent) unsubEvent()
     }
   }, [setConnectionStatus, addLog])
 

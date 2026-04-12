@@ -17,6 +17,8 @@ const pathPattern = /([a-zA-Z0-9_\-/]+\.(?:jpe|xml|python|package))/gi
  * RichText - A semantic renderer for JPE Studio's AI outputs.
  */
 export const RichText: React.FC<RichTextProps> = React.memo(({ text, className = '' }) => {
+  const lines = React.useMemo(() => text?.split('\n') || [], [text])
+  
   if (!text) return null
 
   // Combined highlighting function
@@ -49,7 +51,7 @@ export const RichText: React.FC<RichTextProps> = React.memo(({ text, className =
     })
   }
 
-  const lines = React.useMemo(() => text.split('\n'), [text])
+
   
   return (
     <div className={`space-y-1.5 leading-relaxed text-text-primary ${className}`}>

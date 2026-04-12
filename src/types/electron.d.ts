@@ -25,7 +25,7 @@ export interface ProjectResult {
 export interface ElectronFileAPI {
   openFolder: () => Promise<string | null>
   openFile: () => Promise<string[]>
-  saveFile: () => Promise<string | null>
+  saveFile: (defaultPath?: string) => Promise<string | null>
   readFile: (filePath: string) => Promise<FileResult>
   writeFile: (filePath: string, content: string) => Promise<FileResult>
   listDirectory: (dirPath: string) => Promise<FileResult>

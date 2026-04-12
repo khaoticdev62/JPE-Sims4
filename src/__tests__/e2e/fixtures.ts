@@ -4,6 +4,7 @@
  * Provides extended fixtures with component-specific helpers,
  * common setup routines, and reusable test utilities.
  */
+
 import { test as base, expect, type Page, type Locator } from '@playwright/test'
 
 // ---------------------------------------------------------------------------

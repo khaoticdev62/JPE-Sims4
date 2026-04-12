@@ -6,13 +6,15 @@ import { useEditorStore } from "@/stores/useEditorStore"
 import { useProjectStore } from "@/stores/useProjectStore"
 import { toast } from "sonner"
 import { cn } from "@/utils/cn"
-import { _JpeBundlerService } from "@/services/JpeBundlerService"
+import { useBuildStore } from "@/stores/useBuildStore"
 import { useUIStore } from "@/stores/useUIStore"
 
 export function ExportMenu() {
   const { activeFileId, files, previewContent } = useEditorStore()
   const { currentProject } = useProjectStore()
   const { setProjectExportOpen } = useUIStore()
+  const { buildStatus } = useBuildStore()
+  const isBuilding = buildStatus === 'running'
   const [isOpen, setIsOpen] = React.useState(false)
   const activeFile = files.find(f => f.id === activeFileId)
 

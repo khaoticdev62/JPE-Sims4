@@ -197,7 +197,7 @@ export function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
 
   const clampedIdx = Math.max(0, Math.min(selectedIdx, flatItems.length - 1));
 
-  const openMatch = (filePath: string, lineNum: number, ext: string) => {
+  const openMatch = (filePath: string) => {
     if (!currentProject) return;
 
     const fileName = filePath.split(/[/\\]/).pop() || "unknown";
@@ -210,7 +210,6 @@ export function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
         id: existingFile.id,
         fileId: existingFile.id,
         name: existingFile.name,
-        type: existingFile.type,
         isDirty: existingFile.isDirty
       });
     } else {
@@ -220,7 +219,6 @@ export function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
         id: transId,
         fileId: transId,
         name: fileName,
-        type: (ext || 'xml') as any,
         isDirty: false
       });
     }
@@ -542,7 +540,7 @@ export function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
                               background: isSelected ? `${T.cyan}08` : "transparent",
                               borderLeft: isSelected ? `2px solid ${T.cyan}` : "2px solid transparent",
                             }}
-                            onClick={() => { setSelectedIdx(flatPos); openMatch(group.file.path, match.num, group.file.ext); }}
+                            onClick={() => { setSelectedIdx(flatPos); openMatch(group.file.path); }}
                             onMouseEnter={e => { if (!isSelected) e.currentTarget.style.background = T.bgHover; }}
                             onMouseLeave={e => { if (!isSelected) e.currentTarget.style.background = "transparent"; }}
                           >

@@ -6,7 +6,7 @@
  * Based on the JPE Studio Animation Guide
  */
 import { type ReactNode, createContext, useContext, useEffect, useState } from "react";
-import { motion, AnimatePresence, type Transition, type Variants } from "framer-motion";
+import { motion, AnimatePresence, type Variants } from "framer-motion";
 
 /* ═══════════════════════════════════════════════════════════════
    MOTION TOKENS
@@ -57,12 +57,7 @@ export function useReducedMotion() {
   return useContext(ReducedMotionContext);
 }
 
-/** Returns the transition adjusted for reduced motion */
-function _useTransition(t: Transition): Transition {
-  const reduced = useReducedMotion();
-  if (reduced) return { duration: 0.1, ease: "easeOut" };
-  return t;
-}
+
 
 /* ═══════════════════════════════════════════════════════════════
    PANEL EXPANSION — slides in with opacity + subtle scale

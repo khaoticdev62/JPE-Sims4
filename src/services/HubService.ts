@@ -66,6 +66,14 @@ class HubService {
     // Logic for actual ignition would go here (e.g., calling JpeCli)
     console.log("[HubService] Ignition Sequence Initiated...");
   }
+
+  /**
+   * Emit a global event coordinated through the hub.
+   */
+  public emit(event: string, data?: any) {
+    if (typeof window === 'undefined') return;
+    window.dispatchEvent(new CustomEvent(event, { detail: data }));
+  }
 }
 
 export const hub = HubService.getInstance();

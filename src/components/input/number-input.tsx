@@ -15,7 +15,8 @@ export interface NumberInputProps extends Omit<React.InputHTMLAttributes<HTMLInp
 }
 
 export function NumberInput({ label, error, className, id, min, max, step, ...props }: NumberInputProps) {
-  const inputId = id || React.useId();
+  const generatedId = React.useId();
+  const inputId = id || generatedId;
 
   return (
     <div className="space-y-1.5">

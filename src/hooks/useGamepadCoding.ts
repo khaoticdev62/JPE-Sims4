@@ -2,6 +2,7 @@ import { useEffect, useCallback, useRef } from 'react';
 import { useUIStore } from '../stores/useUIStore';
 import { sensory } from '../services/SensoryService';
 import { GamepadService } from '../services/input/GamepadService';
+import { hub } from '../services/HubService';
 
 /**
  * Epic 11: Handheld & Controller Productivity

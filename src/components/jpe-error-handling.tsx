@@ -5,8 +5,8 @@
  */
 
 import { toast } from "sonner";
-import { AlertTriangle, Wifi, Clock } from "lucide-react";
-import { _T } from "./robust/jpe-theme";
+import { AlertTriangle, Wifi, Clock, XCircle } from "lucide-react";
+import { T } from "./robust/jpe-theme";
 
 /* ═══════════════════════════════════════════════════════════════
    ERROR TYPES

@@ -76,6 +76,7 @@ export const useEditorStore = create<EditorState>()(
         tabs: [],
         activeTabId: null,
         editorContent: {},
+        initialContent: {},
         cursorPosition: {},
         files: [],
         activeFileId: null,

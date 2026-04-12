@@ -3,7 +3,7 @@ import * as React from "react";
 import {
   Rocket, X, Terminal, CheckCircle2, AlertCircle,
   Loader2, Download, Package, Shield, Settings,
-  Zap
+  Zap, Globe
 } from "lucide-react";
 import { motion, AnimatePresence as _AnimatePresence } from "framer-motion";
 import { cn } from "@/utils/cn";

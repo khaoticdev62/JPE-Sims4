@@ -26,6 +26,7 @@ export function ExportWizard({ isOpen, onClose }: { isOpen: boolean; onClose: ()
     version: "1.0.0",
     description: "Exported from JPE Studio 2.1",
     tags: ["Translation", "JPE"],
+    locales: [] as string[],
   });
 
   // Resource Selection

@@ -57,9 +57,7 @@ export class OllamaManager {
     }
 
     // 3. Shielded Handshake (Story 6.6)
-    if (this.currentProvider !== OllamaProviderType.NONE) {
-      this.isShielded = await this.verifyShieldedHandshake()
-    }
+    this.isShielded = await this.verifyShieldedHandshake()
   }
 
   /**

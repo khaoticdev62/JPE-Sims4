@@ -5,7 +5,7 @@ const electronAPI = {
     // Dialog operations
     openFolder: () => ipcRenderer.invoke('file:open'),
     openFile: () => ipcRenderer.invoke('file:openFile'),
-    saveFile: () => ipcRenderer.invoke('file:save'),
+    saveFile: (defaultPath?: string) => ipcRenderer.invoke('file:save', defaultPath),
 
     // File system operations (text)
     readFile: (filePath: string) => ipcRenderer.invoke('file:readFile', filePath),
@@ -106,7 +106,9 @@ const electronAPI = {
     if (validChannels.includes(channel)) {
       const strippedCallback = (_event: unknown, ...args: unknown[]) => callback(...args)
       ipcRenderer.on(channel, strippedCallback)
+      return () => ipcRenderer.removeListener(channel, strippedCallback)
     }
+    return () => {}
   },
   off: (channel: string, callback: (...args: unknown[]) => void) => {
     const validChannels = [

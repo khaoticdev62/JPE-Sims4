@@ -496,7 +496,6 @@ function EditorPaneComponent() {
               {/* Story 3.2: Live XML Preview Panel */}
               {showPreview && activeFile.type !== 'package' && activeFile.type !== 'image' && (
                 <LiveXMLPreview 
-                  id="preview-editor"
                   className="w-1/2"
                   content={previewContent}
                   isOutOfDate={previewOutOfDate}

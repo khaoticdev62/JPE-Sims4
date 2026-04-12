@@ -2,10 +2,9 @@
 import { useState, useMemo } from "react";
 import {
   ShieldAlert, ShieldCheck, AlertTriangle, AlertOctagon,
-  Info, ChevronDown, ChevronRight, X, Clock,
+  Info, ChevronDown, X, Clock,
   FileCode, Lock, Eye, Copy, ExternalLink,
-  CheckCircle2, MoreHorizontal, Sparkles,
-  type LucideIcon} from "lucide-react";
+  CheckCircle2, MoreHorizontal, Sparkles} from "lucide-react";
 import { useScaledPx } from "./jpe-settings-context";
 import { toast } from "sonner";
 import { useDiagnosticStore } from "../stores/useDiagnosticStore";
@@ -111,26 +110,7 @@ function LoadMeter({ label, pct, color }: { label: string; pct: number; color: s
   );
 }
 
-/* ═══ SECTION HEADER ═══ */
-function _SectionHeader({ children, icon: Icon, iconColor = T.textTertiary, collapsible = false, defaultOpen = true }: { children: React.ReactNode; icon?: LucideIcon; iconColor?: string; collapsible?: boolean; defaultOpen?: boolean }) {
-  const [open, setOpen] = useState(defaultOpen);
-  return (
-    <div>
-      <div
-        className={`flex items-center gap-1.5 px-3 py-1.5 ${collapsible ? "cursor-pointer" : ""}`}
-        style={{ borderBottom: `1px solid ${T.border}` }}
-        onClick={() => collapsible && setOpen(!open)}
-      >
-        {collapsible && (open ? <ChevronDown size={9} color={T.textMuted} /> : <ChevronRight size={9} color={T.textMuted} />)}
-        {Icon && <Icon size={10} color={iconColor} />}
-        <span style={{ fontSize: 9, fontWeight: 800, color: T.textTertiary, letterSpacing: "0.14em", textTransform: "uppercase" as const, fontFamily: T.sans }}>
-          {children}
-        </span>
-      </div>
-      {collapsible && !open ? null : undefined}
-    </div>
-  );
-}
+
 
 /* ═══ ERROR LIST ITEM ═══ */
 function ErrorItem({ error, isSelected, onSelect }: { error: DiagnosticError; isSelected: boolean; onSelect: () => void }) {

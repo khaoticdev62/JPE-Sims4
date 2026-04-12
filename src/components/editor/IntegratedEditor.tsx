@@ -22,7 +22,7 @@ import { AIExplanationModal } from '../common/AIExplanationModal'
 import { useCodeFix } from '@/hooks/useCodeFix'
 import { t } from '@/constants/locales'
 import { Diagnostic } from '@/types'
-import { revealInMonaco } from '@/utils/editor'
+
 
 interface IntegratedEditorProps {
   value: string
@@ -62,14 +62,11 @@ export default function IntegratedEditor({
 
   const { 
     isFixing, 
-    isExplaining, 
-    processingId, 
     diffData, 
     explanationData, 
     setDiffData, 
     setExplanationData, 
     requestFix, 
-    requestExplanation, 
     applyFix 
   } = useCodeFix()
 
@@ -225,16 +222,7 @@ export default function IntegratedEditor({
       {/* Diagnostics panel (bottom) */}
       {showDiagnostics && (
         <div className="h-48 border-t border-border-subtle overflow-hidden">
-          <DiagnosticsPanel
-            diagnostics={diagnostics}
-            onSelectDiagnostic={(diag) => revealInMonaco(diag)}
-            onFix={(diag) => requestFix(diag)}
-            onExplain={(diag) => requestExplanation(diag)}
-            isFixing={isFixing}
-            isExplaining={isExplaining}
-            processingId={processingId}
-            isOpen={true}
-          />
+          <DiagnosticsPanel />
         </div>
       )}
 

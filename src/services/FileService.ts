@@ -82,9 +82,9 @@ export class FileService {
   /**
    * Save current file
    */
-  static async saveFile(): Promise<any> {
+  static async saveFile(defaultPath?: string): Promise<any> {
     if (typeof window === 'undefined' || !window.electron) return null;
-    return await window.electron.file.saveFile()
+    return await window.electron.file.saveFile(defaultPath)
   }
 
   /**

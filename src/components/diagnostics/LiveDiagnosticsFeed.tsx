@@ -15,7 +15,7 @@ import { useLinkServer } from '@/hooks/useLinkServer'
 import { useCodeFix } from '@/hooks/useCodeFix'
 import { useProjectStore } from '@/stores/useProjectStore'
 import { useEditorStore } from '@/stores/useEditorStore'
-import { _T } from '../robust/jpe-theme'
+
 import { cn } from '@/utils/cn'
 import { toast } from 'sonner'
 

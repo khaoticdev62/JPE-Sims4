@@ -12,10 +12,10 @@ import { _electron, test, expect } from '@playwright/test'
 import path from 'path'
 
 // Electron launch configuration
-const electronAppPath = path.join(__dirname, '..', '..', '..', 'dist-electron', 'main.js')
+const electronAppPath = path.join(__dirname, '..', '..', '..', '..', 'dist-electron', 'main.js')
 const isElectronBuilt = require('fs').existsSync(electronAppPath)
 
-test.describe.skip('Electron Desktop App', () => {
+test.describe('Electron Desktop App', () => {
   // Skip if electron isn't built yet
   test.skip(!isElectronBuilt, 'Electron main process not built — run `npm run electron:build` first')
 
@@ -27,8 +27,8 @@ test.describe.skip('Electron Desktop App', () => {
       args: [electronAppPath],
       env: {
         ...process.env,
-        NODE_ENV: 'development',
-        // Ensure dev server URL is used
+        NODE_ENV: 'production',
+        // Ensure dev server URL is NOT used
       },
       timeout: 30000,
     })

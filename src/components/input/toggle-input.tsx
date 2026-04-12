@@ -25,7 +25,8 @@ export function ToggleInput({
   id,
   className,
 }: ToggleInputProps) {
-  const switchId = id || React.useId();
+  const generatedId = React.useId();
+  const switchId = id || generatedId;
 
   return (
     <div className={cn("flex items-center justify-between gap-4", className)}>

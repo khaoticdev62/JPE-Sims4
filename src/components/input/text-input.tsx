@@ -12,7 +12,8 @@ export interface TextInputProps extends React.InputHTMLAttributes<HTMLInputEleme
 }
 
 export function TextInput({ label, error, className, id, ...props }: TextInputProps) {
-  const inputId = id || React.useId();
+  const generatedId = React.useId();
+  const inputId = id || generatedId;
 
   return (
     <div className="space-y-1.5">

@@ -7,7 +7,7 @@ import { T } from '@/components/robust/jpe-theme';
 import { JpeButton } from '@/components/jpe-design-system';
 import { TS4RebelsService } from '@/services/api/TS4RebelsService';
 import { CredentialManager } from '@/services/api/CredentialManager';
-import { _toast } from 'sonner';
+import { toast } from 'sonner';
 
 interface ModPublishDialogProps {
   isOpen: boolean;
@@ -26,6 +26,7 @@ export function ModPublishDialog({ isOpen, onClose, projectName, packageBuffer }
   const [topicTags, setTopicTags] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [cookies, setCookies] = useState<string>('');
 
   // Load saved credentials on mount
   React.useEffect(() => {
@@ -59,6 +60,7 @@ export function ModPublishDialog({ isOpen, onClose, projectName, packageBuffer }
       const result = await TS4RebelsService.login(username, password);
 
       if (result.success && result.data.ok) {
+        setCookies(JSON.stringify(result.data.cookies));
         // Save credentials if requested
         if (rememberMe) {
           await CredentialManager.saveCredential('ts4rebels-user', username);
@@ -73,6 +75,39 @@ export function ModPublishDialog({ isOpen, onClose, projectName, packageBuffer }
       }
     } catch (err: any) {
       setErrorMessage(err.message || 'Login failed');
+      setStep('error');
+    }
+  };
+  const handlePublish = async () => {
+    if (!packageBuffer) {
+      setErrorMessage('No package buffer available to publish');
+      setStep('error');
+      return;
+    }
+
+    setStep('uploading');
+    setUploadProgress(40);
+
+    try {
+      const result = await TS4RebelsService.publishMod(
+        topicTitle,
+        topicDescription,
+        packageBuffer,
+        `${projectName}.package`,
+        topicTags,
+        cookies
+      );
+
+      if (result.success) {
+        setUploadProgress(100);
+        setStep('success');
+        toast.success('Mod published successfully!');
+      } else {
+        setErrorMessage(result.error || 'Publish failed');
+        setStep('error');
+      }
+    } catch (err: any) {
+      setErrorMessage(err.message || 'Publish failed');
       setStep('error');
     }
   };

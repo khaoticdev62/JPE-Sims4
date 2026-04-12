@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Edge Case: Malformed XML for error handling test -->
+<I n="S4_11111111_trait_Malformed" t="trait">
+  <L n="traits">
+    <U>
+      <T n="display_name">0x12345678</T>
+      <T n="tooltip">0x87654321</T>
+      <!-- Missing closing tag for testing error recovery -->
+      <V t="enabled" n="gender_restrictions">
+        <U n="enabled">
+          <L n="allowed_genders">
+            <E>MALE</E>
+            <E>FEMALE</E>
+          </L>
+        </U>
+      <!-- Intentionally missing </V> and </U> -->
+    </U>
+  </L>
+</I>

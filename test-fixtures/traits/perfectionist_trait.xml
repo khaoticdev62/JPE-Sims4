@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<I n="S4_04B2CEEB_trait_Perfectionist" t="trait">
+  <L n="traits">
+    <U>
+      <T n="display_name">0x9C6D0E3F</T>
+      <T n="tooltip">0x8B7A1F4C</T>
+      <T n="icon" p="InGame/UI/Icons/Traits/icon_perfectionist.png">2f7d0004:00000000:0000000000000002</T>
+      <V t="enabled" n="gender_restrictions">
+        <U n="enabled">
+          <L n="allowed_genders">
+            <E>MALE</E>
+            <E>FEMALE</E>
+          </L>
+        </U>
+      </V>
+      <V t="enabled" n="age_restrictions">
+        <U n="enabled">
+          <L n="allowed_ages">
+            <E>TEEN</E>
+            <E>YOUNGADULT</E>
+            <E>ADULT</E>
+            <E>ELDER</E>
+          </L>
+        </U>
+      </V>
+      <L n="trait_tags">
+        <T>Perfectionist</T>
+        <T>Personality</T>
+        <T>Creative</T>
+      </L>
+      <V t="enabled" n="statistic_tracker">
+        <U n="enabled">
+          <L n="tracked_statistics">
+            <U>
+              <T n="statistic">16088:0x00000000:0x0000000000001234</T>
+              <T n="max_value">100</T>
+            </U>
+          </L>
+        </U>
+      </V>
+    </U>
+  </L>
+</I>

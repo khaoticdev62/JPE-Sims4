@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<I n="S4_034AEECB_trait_Evil" t="trait">
+  <L n="traits">
+    <U>
+      <T n="display_name">0x8B5C9F2A</T>
+      <T n="tooltip">0x7A4D8E1B</T>
+      <T n="icon" p="InGame/UI/Icons/Traits/icon_evil.png">2f7d0004:00000000:0000000000000001</T>
+      <V t="enabled" n="gender_restrictions">
+        <U n="enabled">
+          <L n="allowed_genders">
+            <E>MALE</E>
+            <E>FEMALE</E>
+          </L>
+        </U>
+      </V>
+      <V t="enabled" n="age_restrictions">
+        <U n="enabled">
+          <L n="allowed_ages">
+            <E>TEEN</E>
+            <E>YOUNGADULT</E>
+            <E>ADULT</E>
+            <E>ELDER</E>
+          </L>
+        </U>
+      </V>
+      <L n="trait_tags">
+        <T>Evil</T>
+        <T>Personality</T>
+        <T>Bad</T>
+      </L>
+    </U>
+  </L>
+</I>

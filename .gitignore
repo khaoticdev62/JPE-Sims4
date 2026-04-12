@@ -10,6 +10,9 @@ dist-electron/
 dist-native/
 *.tsbuildinfo
 
+# Keep test fixtures
+!test-fixtures/
+
 # IDE configurations (local only)
 .claude/
 .gemini/

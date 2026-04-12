@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<I n="S4_05C3DFFC_buff_Confident" t="buff">
+  <L n="buffs">
+    <U>
+      <T n="buff_name">0x1A2B3C4D</T>
+      <T n="buff_description">0x2B3C4D5E</T>
+      <T n="icon" p="InGame/UI/Icons/Buffs/icon_confident.png">2f7d0004:00000000:0000000000000010</T>
+      <V t="enabled" n="buff_type">
+        <E>Confident</E>
+      </V>
+      <V t="enabled" n="duration">
+        <U n="enabled">
+          <T n="duration_minutes">120</T>
+        </U>
+      </V>
+      <L n="buff_effects">
+        <U>
+          <T n="skill_boost">Writing</T>
+          <T n="boost_multiplier">1.5</T>
+        </U>
+        <U>
+          <T n="moodlet_modifier">
+            <E>+10</E>
+          </T>
+        </U>
+      </L>
+      <L n="buff_triggers">
+        <U>
+          <T n="trigger_type">OnObjectInteraction</T>
+          <T n="target_object">Mirror</T>
+          <T n="probability">0.25</T>
+        </U>
+      </L>
+    </U>
+  </L>
+</I>

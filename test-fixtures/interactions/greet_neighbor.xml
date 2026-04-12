@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<I n="S4_06D4E0AD_interaction_GreetNeighbor" t="interaction">
+  <L n="interactions">
+    <U>
+      <T n="display_name">0x3C4D5E6F</T>
+      <T n="tooltip">0x4D5E6F7A</T>
+      <T n="icon" p="InGame/UI/Icons/Interactions/icon_greet.png">2f7d0004:00000000:0000000000000020</T>
+      <V t="enabled" n="interaction_type">
+        <E>Social</E>
+      </V>
+      <V t="enabled" n="target_filter">
+        <U n="enabled">
+          <L n="allowed_targets">
+            <E>Sim</E>
+          </L>
+        </U>
+      </V>
+      <L n="interaction_conditions">
+        <U>
+          <T n="condition_type">TestSet</T>
+          <T n="test_set_ref">0x7E8F9A0B</T>
+        </U>
+      </L>
+      <L n="interaction_outcomes">
+        <U>
+          <T n="outcome_type">RelationshipGain</T>
+          <T n="relationship_delta">5</T>
+          <T n="moodlet_reward">0x5E6F7A8B</T>
+        </U>
+      </L>
+      <L n="animation_sets">
+        <U>
+          <T n="animation_type">Social</T>
+          <T n="animation_ref">0x8F9A0B1C</T>
+        </U>
+      </L>
+    </U>
+  </L>
+</I>

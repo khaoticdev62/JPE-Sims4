@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Edge Case: Extremely nested structure -->
+<I n="S4_22222222_trait_Nested" t="trait">
+  <L n="traits">
+    <U>
+      <V t="enabled" n="complex_behavior">
+        <U n="enabled">
+          <L n="nested_conditions">
+            <U>
+              <T n="condition_type">And</T>
+              <L n="sub_conditions">
+                <U>
+                  <T n="condition_type">Or</T>
+                  <L n="sub_conditions">
+                    <U>
+                      <T n="condition_type">Not</T>
+                      <U n="inner_condition">
+                        <T n="condition_type">HasTrait</T>
+                        <T n="trait_ref">0x33333333</T>
+                      </U>
+                    </U>
+                  </L>
+                </U>
+              </L>
+            </U>
+          </L>
+        </U>
+      </V>
+    </U>
+  </L>
+</I>

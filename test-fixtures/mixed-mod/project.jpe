@@ -1,0 +1,29 @@
+# Test Fixture: Complete Mixed Mod Project
+# Tests: Export Wizard, ProjectValidator, SearchService, StblBatchService
+
+[Meta]
+name = "Ultimate Personality Overhaul"
+author = "JPE Test User"
+version = "2.1.0"
+description = "Comprehensive personality trait mod with multi-locale support"
+game_version = "1.108.329.1030"
+locales = ["en_US", "ja_JP", "de_DE", "fr_FR"]
+
+[Files]
+traits/evil.xml
+traits/perfectionist.xml
+traits/creative.xml
+buffs/confident.xml
+buffs/inspired.xml
+interactions/greet.xml
+interactions/insult.xml
+stbl/en_US.stbl
+stbl/ja_JP.stbl
+stbl/de_DE.stbl
+scripts/core_injector.py
+
+[Dependencies]
+None
+
+[Conflicts]
+None

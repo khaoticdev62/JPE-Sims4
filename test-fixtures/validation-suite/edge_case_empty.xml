@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Edge Case: Empty trait for ProjectValidator stress test -->
+<I n="S4_00000000_trait_Empty" t="trait">
+  <L n="traits">
+    <U>
+      <T n="display_name">0xDEADBEEF</T>
+      <T n="tooltip">0xCAFEBABE</T>
+    </U>
+  </L>
+</I>

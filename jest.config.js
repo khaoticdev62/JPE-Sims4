@@ -23,6 +23,9 @@ const customJestConfig = {
     '^@constants/(.*)$': '<rootDir>/src/constants/$1',
   },
   testMatch: ['**/__tests__/**/*.ts?(x)', '**/?(*.)+(spec|test).ts?(x)'],
+  transformIgnorePatterns: [
+    '/node_modules/(?!(lucide-react|@lucide/react|nanoid|clsx|tailwind-merge)/)',
+  ],
   testPathIgnorePatterns: [
     '<rootDir>/src/__tests__/e2e',
     '\\.e2e\\.ts$',

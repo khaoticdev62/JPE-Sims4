@@ -47,7 +47,7 @@ export function JpeManualView() {
     .find(a => a.id === activeArticle);
 
   return (
-    <div className="flex-1 flex flex-col bg-bgDeep overflow-hidden relative">
+    <div data-testid="manual-root" className="flex-1 flex flex-col bg-bgDeep overflow-hidden relative">
       <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: T.noiseSvg }} />
       
       {/* Global Module Header */}

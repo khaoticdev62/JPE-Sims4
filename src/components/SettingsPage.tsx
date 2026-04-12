@@ -23,7 +23,7 @@ export function SettingsPage() {
   const [autoSave, setAutoSave] = useState(true)
 
   return (
-    <div className="flex-1 w-full flex bg-background-primary overflow-hidden">
+    <div data-testid="settings-root" className="flex-1 w-full flex bg-background-primary overflow-hidden">
       {/* Main Content Area */}
       <div className="flex-1 overflow-auto">
         <div className="max-w-[1200px] mx-auto px-8 py-8 space-y-10">

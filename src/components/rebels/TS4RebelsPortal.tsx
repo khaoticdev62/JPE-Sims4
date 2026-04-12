@@ -258,7 +258,7 @@ export function TS4RebelsPortal() {
   const extractedLinks = useMemo(() => TS4RebelsService.extractDownloadLinks(posts), [posts]);
 
   return (
-    <div className="flex-1 flex flex-col bg-bgDeep overflow-hidden relative">
+    <div data-testid="rebels-root" className="flex-1 flex flex-col bg-bgDeep overflow-hidden relative">
       <AnimatePresence>
         {showAuthModal && (
           <AuthModal 

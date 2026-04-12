@@ -17,7 +17,20 @@ export class PathResolver {
    * In Prod: Inside the app.asar
    */
   static getInternalPath(...segments: string[]): string {
-    const basePath = app.getAppPath()
+    let basePath = app.getAppPath()
+    
+    // Industrial Path Correction (Internal Discovery)
+    // When app is launched via `electron dist-electron/main.js` (CLI/E2E), 
+    // getAppPath() resolves to the distribution folder. To find siblings
+    // like 'out' or correctly point to 'dist-electron', we must re-base 
+    // to the project root.
+    if (!app.isPackaged) {
+      const normalizedBase = path.normalize(basePath)
+      if (normalizedBase.endsWith('dist-electron') || normalizedBase.endsWith('dist-electron' + path.sep)) {
+        basePath = path.dirname(normalizedBase)
+      }
+    }
+    
     return path.join(basePath, ...segments)
   }
 

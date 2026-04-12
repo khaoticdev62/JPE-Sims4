@@ -7,7 +7,7 @@
   },
   "scripts": {
     "dev": "next dev",
-    "build": "next build --no-lint",
+    "build": "next build",
     "start": "next start",
     "lint": "next lint",
     "test": "jest",
@@ -76,7 +76,7 @@
     "cmdk": "^1.1.1",
     "d3-interpolate": "^3.0.1",
     "dagre": "^0.8.5",
-    "electron-store": "^11.0.2",
+    "electron-store": "^8.1.0",
     "electron-updater": "^6.8.3",
     "embla-carousel-react": "^8.6.0",
     "fast-xml-parser": "^5.5.9",

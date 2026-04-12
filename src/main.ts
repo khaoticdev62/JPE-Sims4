@@ -530,20 +530,40 @@ ipcMain.handle('project:openDirectory', async () => {
   })
   if (result.canceled || result.filePaths.length === 0) return null
   const dirPath = result.filePaths[0]
-  // Read project structure
+  
+  // Industrial Performance optimization: Filter during discovery
+  // Common exclusion patterns
+  const excludeDirs = ['node_modules', '.next', '.venv', 'dist', 'build', '.git', 'out', '__pycache__', '.jpe_history']
+  
   try {
-    const files = await fs.promises.readdir(dirPath, { withFileTypes: true, recursive: true })
+    const files: any[] = []
+    
+    // Recursive walker with exclusion optimization
+    async function walk(currentPath: string) {
+      const entries = await fs.promises.readdir(currentPath, { withFileTypes: true })
+      for (const entry of entries) {
+        if (excludeDirs.includes(entry.name)) continue
+        
+        const fullPath = path.join(currentPath, entry.name)
+        if (entry.isDirectory()) {
+          await walk(fullPath)
+        } else if (entry.isFile()) {
+          files.push({
+            path: fullPath,
+            name: entry.name,
+            ext: path.extname(entry.name),
+          })
+        }
+      }
+    }
+
+    await walk(dirPath)
+
     return {
       success: true,
       path: dirPath,
       name: path.basename(dirPath),
       files: files
-        .filter((f) => f.isFile())
-        .map((f) => ({
-          path: path.join(f.path || dirPath, f.name),
-          name: f.name,
-          ext: path.extname(f.name),
-        })),
     }
   } catch (error) {
     return { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
@@ -580,17 +600,14 @@ ipcMain.handle('project:search', async (_event, dirPath: string, query: string, 
   
   try {
     const results: any[] = []
-    // Use recursive readdir (Node 18+)
-    const files = await fs.promises.readdir(dirPath, { withFileTypes: true, recursive: true })
-    
+    const excludeDirs = ['node_modules', '.next', '.venv', 'dist', 'build', '.git', 'out', '__pycache__', '.jpe_history']
+    const skipExts = ['package', 'png', 'jpg', 'zip', 'exe', 'bin', 'dll', 'pyc', 'node']
+
+    // 1. Prepare Regex
     const flags = isCase ? 'g' : 'gi'
     let pattern = query
-    if (!isRegex) {
-      pattern = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-    }
-    if (isWord) {
-      pattern = `\\b${pattern}\\b`
-    }
+    if (!isRegex) pattern = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    if (isWord) pattern = `\\b${pattern}\\b`
     
     let regex: RegExp
     try {
@@ -599,54 +616,61 @@ ipcMain.handle('project:search', async (_event, dirPath: string, query: string, 
       return { success: false, error: 'Invalid regular expression' }
     }
 
-    // Common exclusion patterns for industrial speed
-    const excludeDirs = ['node_modules', '.next', '.venv', 'dist', 'build', '.git', 'out']
-    
-    for (const file of files) {
-      if (!file.isFile()) continue
-      
-      // Node 18+ file.path might be missing or relative
-      const relativeParent = file.path || ''
-      const filePath = path.join(dirPath, relativeParent, file.name)
-      
-      // Standardize path for matching
-      const standardizedPath = filePath.replace(/\\/g, '/')
-      
-      // Skip excluded directories
-      if (excludeDirs.some(dir => standardizedPath.includes(`/${dir}/`))) continue
-      
-      const ext = path.extname(file.name).slice(1).toLowerCase()
-      if (extension && ext !== extension.toLowerCase()) continue
-      
-      // Skip binary/large files
-      if (['package', 'png', 'jpg', 'zip', 'exe', 'bin', 'dll'].includes(ext)) continue
-
-      try {
-        const content = await fs.promises.readFile(filePath, 'utf-8')
-        const lines = content.split(/\r?\n/)
-        
-        const fileMatches: any[] = []
-        lines.forEach((text, index) => {
-          regex.lastIndex = 0
-          if (regex.test(text)) {
-            // Include enough context for the snippet
-            fileMatches.push({ num: index + 1, text: text.trim() })
-          }
-        })
-        
-        if (fileMatches.length > 0) {
-          results.push({
-            file: {
-              path: path.relative(dirPath, filePath).replace(/\\/g, '/'),
-              ext,
-            },
-            matches: fileMatches
-          })
+    // 2. Discover files (Fast shallow filter)
+    const filePaths: string[] = []
+    async function collect(currentPath: string) {
+      const entries = await fs.promises.readdir(currentPath, { withFileTypes: true })
+      for (const entry of entries) {
+        if (excludeDirs.includes(entry.name)) continue
+        const fullPath = path.join(currentPath, entry.name)
+        if (entry.isDirectory()) {
+          await collect(fullPath)
+        } else {
+          const ext = path.extname(entry.name).slice(1).toLowerCase()
+          if (extension && ext !== extension.toLowerCase()) continue
+          if (skipExts.includes(ext)) continue
+          filePaths.push(fullPath)
         }
-      } catch (_err) {
-        // Skip files that can't be read (e.g. permission denied)
-        continue
       }
+    }
+    await collect(dirPath)
+
+    // 3. Concurrent Search (Max 20 concurrent readers)
+    const CONCURRENCY = 20
+    for (let i = 0; i < filePaths.length; i += CONCURRENCY) {
+      const chunk = filePaths.slice(i, i + CONCURRENCY)
+      await Promise.all(chunk.map(async (filePath) => {
+        try {
+          const content = await fs.promises.readFile(filePath, 'utf-8')
+          // Quick pre-check
+          regex.lastIndex = 0
+          if (!regex.test(content)) return
+
+          const lines = content.split(/\r?\n/)
+          const fileMatches: any[] = []
+          lines.forEach((text, index) => {
+            regex.lastIndex = 0
+            if (regex.test(text)) {
+              fileMatches.push({ num: index + 1, text: text.trim().substring(0, 200) })
+            }
+          })
+          
+          if (fileMatches.length > 0) {
+            results.push({
+              file: {
+                path: path.relative(dirPath, filePath).replace(/\\/g, '/'),
+                ext: path.extname(filePath).slice(1).toLowerCase()
+              },
+              matches: fileMatches
+            })
+          }
+        } catch (_err) {
+          // Skip unreadable files
+        }
+      }))
+      
+      // Stop if we have too many results to avoid IPC bloat
+      if (results.length > 1000) break
     }
 
     const duration = (performance.now() - start).toFixed(2)

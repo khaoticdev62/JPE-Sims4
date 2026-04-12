@@ -701,7 +701,7 @@ export class OllamaService extends BaseAIService {
 
       let response: any
       if (this.isElectron) {
-        response = await this.callNativeBridge<any>('ollama', 'post', apiUrl, {
+        const bridgeResult = await this.callNativeBridge<any>('ollama', 'post', apiUrl, {
           model: this.model,
           messages: fullMessages.map(m => ({ role: m.role, content: m.content })),
           stream: false,
@@ -711,6 +711,10 @@ export class OllamaService extends BaseAIService {
             top_p: 0.9,
           }
         })
+        if (!bridgeResult.success) {
+          throw new Error(bridgeResult.error)
+        }
+        response = bridgeResult
       } else {
         response = await this.performRequest<any>('chat', () => axios.post(
           apiUrl,

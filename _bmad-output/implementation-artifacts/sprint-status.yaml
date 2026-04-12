@@ -28,6 +28,7 @@ stories:
   7.4: { title: 'Industrial Project Export & Validation', status: done, completed: 2026-04-11 }
   11.1: { title: 'Comprehensive Controller Coding Capability', status: done, completed: 2026-04-12 }
   12.1: { title: 'Global Industrial Presence - GitHub & Branding', status: done, completed: 2026-04-12 }
+  13.1: { title: 'Industrial Live-Link Inbound Bridge', status: backlog }
 
 total_stories: 20 industrial stories
 total_completion: 100.0%

@@ -110,6 +110,7 @@ export class JPELogicParser {
 
     let className: string | undefined
     let instanceId: string | undefined
+    let moduleName: string | undefined
     const properties: (PropertyNode | BlockNode)[] = []
 
     while (this.isPropertyAhead()) {
@@ -119,6 +120,8 @@ export class JPELogicParser {
           className = (prop.value as LiteralNode).value.toString()
         } else if (prop.type === AstNodeType.PROPERTY && prop.name === 'id') {
           instanceId = (prop.value as LiteralNode).value.toString()
+        } else if (prop.type === AstNodeType.PROPERTY && prop.name === 'module') {
+          moduleName = (prop.value as LiteralNode).value.toString()
         } else {
           properties.push(prop)
         }
@@ -130,6 +133,7 @@ export class JPELogicParser {
       name,
       className,
       instanceId,
+      moduleName,
       properties,
       line: startToken.line,
       column: startToken.column

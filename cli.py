@@ -5,6 +5,7 @@ import json
 import os
 import sys
 import shutil
+import subprocess
 from pathlib import Path
 from typing import Iterable
 
@@ -92,6 +93,44 @@ def _cmd_scan(args: argparse.Namespace) -> int:
     return _exit_code_for_diagnostics(
         project.diagnostics, warnings_as_errors=bool(args.warnings_as_errors)
     )
+
+
+def _cmd_decompile(args: argparse.Namespace) -> int:
+    xml_path = Path(args.path).expanduser().resolve()
+    if not xml_path.exists():
+        sys.stderr.write(f"Error: File not found at {xml_path}\n")
+        return 1
+
+    # Quote paths for shell safety
+    quoted_xml_path = f'"{xml_path}"'
+    cmd = ["npx", "tsx", "src/cli/decompile-service.ts", quoted_xml_path]
+    
+    if args.write:
+        write_path = Path(args.write).expanduser().resolve()
+        cmd.append(f'"{write_path}"')
+
+    try:
+        # Run the bridge script
+        result = subprocess.run(
+            " ".join(cmd), # Pass as string since shell=True
+            capture_output=not bool(args.write),
+            text=True,
+            check=False,
+            shell=True # Required for npx on Windows
+        )
+        
+        if result.returncode != 0:
+            sys.stderr.write(f"Decompilation failed:\n{result.stderr}\n")
+            return result.returncode
+            
+        if not args.write:
+            sys.stdout.write(result.stdout)
+        else:
+            sys.stdout.write(f"Decompiled: {args.write}\n")
+        return 0
+    except Exception as e:
+        sys.stderr.write(f"Command failed: {e}\n")
+        return 1
 
 
 def _cmd_extract(args: argparse.Namespace) -> int:
@@ -890,6 +929,62 @@ def _cmd_ts4rebels_analyze_samples(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_ts4rebels_publish(args: argparse.Namespace) -> int:
+    import requests
+    client = _ts4rebels_client_from_args(args)
+    if not bool(getattr(args, "enable_network", False)):
+        payload = {"success": False, "error": "Network is disabled. Pass --enable-network to publish."}
+        sys.stdout.write(json.dumps(payload, indent=2, ensure_ascii=False) + "\n")
+        return 1
+
+    package_path = Path(args.package).expanduser()
+    if not package_path.exists():
+        payload = {"success": False, "error": f"Package file not found: {package_path}"}
+        sys.stdout.write(json.dumps(payload, indent=2, ensure_ascii=False) + "\n")
+        return 1
+
+    cookies = client.get_cookies()
+    headers = {
+        "User-Agent": "JPE-Studio/2.1",
+    }
+
+    # Multipart upload logic
+    try:
+        with open(package_path, "rb") as f:
+            files = {
+                "file": (package_path.name, f, "application/octet-stream")
+            }
+            data = {
+                "title": args.title,
+                "description": args.description,
+                "tags": args.tags or "",
+                "publish_to_vault": "true"
+            }
+            
+            # Using the base_url from the client (e.g., https://ts4rebels.cc/)
+            url = f"{client.base_url.rstrip('/')}/api/v1/vault/publish"
+            
+            response = requests.post(
+                url,
+                data=data,
+                files=files,
+                cookies=cookies,
+                headers=headers,
+                timeout=600 # 10 minute timeout for large uploads
+            )
+            
+            if response.status_code in (200, 201):
+                res = response.json()
+                sys.stdout.write(json.dumps({"success": True, "data": {"topic_id": res.get("topic_id")}}) + "\n")
+                return 0
+            else:
+                sys.stdout.write(json.dumps({"success": False, "error": f"API Error ({response.status_code}): {response.text}"}) + "\n")
+                return 1
+    except Exception as e:
+        sys.stdout.write(json.dumps({"success": False, "error": str(e)}) + "\n")
+        return 1
+
+
 def _cmd_ts4rebels_import(args: argparse.Namespace) -> int:
     project_path = Path(args.project)
     project = load_project(project_path)
@@ -1387,6 +1482,15 @@ def build_parser() -> argparse.ArgumentParser:
     ts4preset.add_argument("--write", help="Write updated project JSON to a new path.")
     ts4preset.set_defaults(func=_cmd_ts4rebels_preset_validation)
 
+    ts4publish = ts4sub.add_parser(
+        "publish", help="Publish a mod package to the TS4Rebels Vault."
+    )
+    ts4publish.add_argument("--title", required=True, help="Topic title.")
+    ts4publish.add_argument("--description", required=True, help="Topic description.")
+    ts4publish.add_argument("--package", required=True, help="Path to the .package file.")
+    ts4publish.add_argument("--tags", help="Comma-separated tags.")
+    ts4publish.set_defaults(func=_cmd_ts4rebels_publish)
+
     ts4harvest = ts4sub.add_parser(
         "harvest-samples",
         help="Copy TS4Rebels JSON/CSV files from local mods into a sample folder.",
@@ -1478,6 +1582,14 @@ def build_parser() -> argparse.ArgumentParser:
         "--dry-run", action="store_true", help="Perform path checks without moving files."
     )
     ignite.set_defaults(func=_cmd_ignite)
+    
+    decompile = sub.add_parser(
+        "decompile",
+        help="Decompile a Sims 4 XML tuning file into JPE (Semantic Layer).",
+    )
+    decompile.add_argument("path", help="Path to the XML tuning file.")
+    decompile.add_argument("--write", help="Write JPE output to a file instead of stdout.")
+    decompile.set_defaults(func=_cmd_decompile)
 
     return parser
 

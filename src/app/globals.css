@@ -159,8 +159,8 @@
 }
 
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 4px;
+  height: 4px;
 }
 
 ::-webkit-scrollbar-track {
@@ -170,15 +170,15 @@
 ::-webkit-scrollbar-thumb {
   background: #00f3ff;
   border-radius: 10px;
-  box-shadow: 0 0 5px rgba(0, 243, 255, 0.5);
+  box-shadow: 0 0 10px rgba(0, 243, 255, 0.4);
 }
 
 ::-webkit-scrollbar-thumb:hover {
   background: #00d8e2;
-  box-shadow: 0 0 8px rgba(0, 243, 255, 0.8);
+  box-shadow: 0 0 15px rgba(0, 243, 255, 0.7);
 }
 
-/* Spectral Scanline Overlay */
+/* Spectral Scanline Overlay — Subtle movement */
 body::after {
   content: "";
   position: fixed;
@@ -194,13 +194,12 @@ body::after {
   background-size: 100% 4px;
   z-index: 99999;
   pointer-events: none;
-  animation: scanline-flicker 0.1s infinite;
+  animation: spectral-scan 10s linear infinite;
 }
 
-@keyframes scanline-flicker {
-  0% { opacity: 0.1; }
-  50% { opacity: 0.08; }
-  100% { opacity: 0.1; }
+@keyframes spectral-scan {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(4px); }
 }
 
 /* Spectral Glow Utilities */
@@ -212,9 +211,23 @@ body::after {
   box-shadow: 0 0 15px rgba(0, 243, 255, 0.5);
 }
 
+.glow-violet-sm {
+  box-shadow: 0 0 8px rgba(139, 92, 246, 0.3);
+}
+
+.glow-violet-md {
+  box-shadow: 0 0 15px rgba(139, 92, 246, 0.5);
+}
+
 .glow-border-cyan {
   border-color: rgba(0, 243, 255, 0.4) !important;
   box-shadow: 0 0 10px rgba(0, 243, 255, 0.2);
+}
+
+.hover\:glow-border-cyan:hover {
+  border-color: rgba(0, 243, 255, 0.6) !important;
+  box-shadow: 0 0 15px rgba(0, 243, 255, 0.3);
+  transition: all 0.3s ease;
 }
 
 .spectral-pulse {
@@ -222,7 +235,7 @@ body::after {
 }
 
 @keyframes spectral-pulse-key {
-  0% { opacity: 0.7; box-shadow: 0 0 5px rgba(0, 243, 255, 0.3); }
-  50% { opacity: 1; box-shadow: 0 0 15px rgba(0, 243, 255, 0.6); }
-  100% { opacity: 0.7; box-shadow: 0 0 5px rgba(0, 243, 255, 0.3); }
+  0% { opacity: 0.7; transform: scale(0.98); }
+  50% { opacity: 1; transform: scale(1.02); }
+  100% { opacity: 0.7; transform: scale(0.98); }
 }

@@ -561,6 +561,141 @@ ipcMain.handle('project:delete', async (_event, filePath: string) => {
   }
 })
 
+ipcMain.handle('project:search', async (_event, dirPath: string, query: string, options: { isRegex: boolean, isCase: boolean, isWord: boolean, extension?: string }) => {
+  const { isRegex, isCase, isWord, extension } = options
+  const start = performance.now()
+  console.log(`[IPC:project:search] Searching for "${query}" in ${dirPath}...`)
+  
+  try {
+    const results: any[] = []
+    // Use recursive readdir (Node 18+)
+    const files = await fs.promises.readdir(dirPath, { withFileTypes: true, recursive: true })
+    
+    const flags = isCase ? 'g' : 'gi'
+    let pattern = query
+    if (!isRegex) {
+      pattern = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    }
+    if (isWord) {
+      pattern = `\\b${pattern}\\b`
+    }
+    
+    let regex: RegExp
+    try {
+      regex = new RegExp(pattern, flags)
+    } catch (e) {
+      return { success: false, error: 'Invalid regular expression' }
+    }
+
+    // Common exclusion patterns for industrial speed
+    const excludeDirs = ['node_modules', '.next', '.venv', 'dist', 'build', '.git', 'out']
+    
+    for (const file of files) {
+      if (!file.isFile()) continue
+      
+      // Node 18+ file.path might be missing or relative
+      const relativeParent = file.path || ''
+      const filePath = path.join(dirPath, relativeParent, file.name)
+      
+      // Standardize path for matching
+      const standardizedPath = filePath.replace(/\\/g, '/')
+      
+      // Skip excluded directories
+      if (excludeDirs.some(dir => standardizedPath.includes(`/${dir}/`))) continue
+      
+      const ext = path.extname(file.name).slice(1).toLowerCase()
+      if (extension && ext !== extension.toLowerCase()) continue
+      
+      // Skip binary/large files
+      if (['package', 'png', 'jpg', 'zip', 'exe', 'bin', 'dll'].includes(ext)) continue
+
+      try {
+        const content = await fs.promises.readFile(filePath, 'utf-8')
+        const lines = content.split(/\r?\n/)
+        
+        const fileMatches: any[] = []
+        lines.forEach((text, index) => {
+          regex.lastIndex = 0
+          if (regex.test(text)) {
+            // Include enough context for the snippet
+            fileMatches.push({ num: index + 1, text: text.trim() })
+          }
+        })
+        
+        if (fileMatches.length > 0) {
+          results.push({
+            file: {
+              path: path.relative(dirPath, filePath).replace(/\\/g, '/'),
+              ext,
+            },
+            matches: fileMatches
+          })
+        }
+      } catch (err) {
+        // Skip files that can't be read (e.g. permission denied)
+        continue
+      }
+    }
+
+    const duration = (performance.now() - start).toFixed(2)
+    console.log(`[IPC:project:search] Completed in ${duration}ms. Found ${results.length} files.`)
+    return { success: true, results, duration }
+  } catch (error) {
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
+  }
+})
+
+ipcMain.handle('project:replaceInFiles', async (_event, dirPath: string, query: string, replacement: string, options: { isRegex: boolean, isCase: boolean, isWord: boolean, extension?: string }) => {
+  const { isRegex, isCase, isWord, extension } = options
+  const start = performance.now()
+  console.log(`[IPC:project:replaceInFiles] Replacing "${query}" with "${replacement}" in ${dirPath}...`)
+  
+  try {
+    let affectedFiles = 0
+    let totalReplacements = 0
+    
+    // First, find all matches (reusing logic or calling internal)
+    const searchResult = await ipcMain.emit('project:search', _event, dirPath, query, options) as any
+    // Wait, ipcMain.emit returns boolean. I need to call the logic directly or helper.
+    // Fixed: calling internal helper or re-implementing briefly for atomicity
+    
+    // For now, I'll re-implement the scan part to avoid IPC emit issues
+    const files = await fs.promises.readdir(dirPath, { withFileTypes: true, recursive: true })
+    const flags = isCase ? 'g' : 'gi'
+    let pattern = query
+    if (!isRegex) pattern = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    if (isWord) pattern = `\\b${pattern}\\b`
+    const regex = new RegExp(pattern, flags)
+    const excludeDirs = ['node_modules', '.next', '.venv', 'dist', 'build', '.git', 'out']
+
+    for (const file of files) {
+      if (!file.isFile()) continue
+      const filePath = path.join(dirPath, file.path || '', file.name)
+      const standardizedPath = filePath.replace(/\\/g, '/')
+      if (excludeDirs.some(dir => standardizedPath.includes(`/${dir}/`))) continue
+      const ext = path.extname(file.name).slice(1).toLowerCase()
+      if (extension && ext !== extension.toLowerCase()) continue
+      if (['package', 'png', 'jpg', 'zip', 'exe', 'bin', 'dll'].includes(ext)) continue
+
+      try {
+        const content = await fs.promises.readFile(filePath, 'utf-8')
+        if (regex.test(content)) {
+          const newContent = content.replace(regex, replacement)
+          const matchCount = (content.match(regex) || []).length
+          await fs.promises.writeFile(filePath, newContent, 'utf-8')
+          affectedFiles++
+          totalReplacements += matchCount
+        }
+      } catch (err) { continue }
+    }
+
+    const duration = (performance.now() - start).toFixed(2)
+    return { success: true, affectedFiles, totalReplacements, duration }
+  } catch (error) {
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
+  }
+})
+
 ipcMain.handle('project:rename', async (_event, oldPath: string, newName: string) => {
   try {
     const parentDir = path.dirname(oldPath)
@@ -684,13 +819,16 @@ ipcMain.handle('ts4rebels:invoke', async (_event, action: string, params: Record
     }
 
     // Validate action
-    if (!['login', 'forum', 'topic'].includes(action)) {
+    if (!['login', 'forum', 'topic', 'publish'].includes(action)) {
       resolve({ success: false, error: 'Invalid TS4Rebels action' })
       return
     }
 
     // Base arguments
     const args = [cliPath, 'ts4rebels', '--enable-network']
+
+    // Temp file tracking (hoisted to avoid ReferenceError on child before spawn)
+    let publishTempPath: string | null = null
 
     // Add session cookies if provided (base64 encoded JSON) with size limit
     if (params.cookies) {
@@ -719,10 +857,31 @@ ipcMain.handle('ts4rebels:invoke', async (_event, action: string, params: Record
         childEnv.JPE_TS4REBELS_USER = sanitize(params.username, 256)
         childEnv.JPE_TS4REBELS_PASS = sanitize(params.password, 512)
         args.push('login')
-      } else if (params.forum) {
+      } else if (action === 'forum') {
         args.push('forum', sanitize(params.forum, 64), '--page', sanitize(params.page || '1', 10))
-      } else if (params.topic) {
+      } else if (action === 'topic') {
         args.push('topic', sanitize(params.topic, 64), '--page', sanitize(params.page || '1', 10))
+      } else if (action === 'publish') {
+        const title = sanitize(params.title, 512)
+        const desc = sanitize(params.description, 4096)
+        const tags = params.tags ? sanitize(params.tags, 512) : ''
+        const packageName = sanitize(params.packageName, 256)
+        
+        // Handle binary data (passed as base64)
+        if (!params.packageBase64) throw new Error('Package data is missing')
+        
+        const tempDir = path.join(os.tmpdir(), 'jpe-studio-publish')
+        if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir, { recursive: true })
+        
+        const tempPath = path.join(tempDir, packageName)
+        const buffer = Buffer.from(params.packageBase64, 'base64')
+        fs.writeFileSync(tempPath, buffer)
+        
+        args.push('publish', '--title', title, '--description', desc, '--package', tempPath)
+        if (tags) args.push('--tags', tags)
+        
+        // Track for cleanup after child exits
+        publishTempPath = tempPath
       } else {
         resolve({ success: false, error: 'Invalid TS4Rebels action or missing parameters' })
         return
@@ -758,7 +917,7 @@ ipcMain.handle('ts4rebels:invoke', async (_event, action: string, params: Record
     child.stdout.on('data', (data) => { stdout += data.toString() })
     child.stderr.on('data', (data) => { stderr += data.toString() })
 
-    // Timeout: 60 seconds for network operations (generous for slow connections)
+    // Timeout: 600 seconds for large uploads (Story 5.6 industrialization)
     const timeout = setTimeout(() => {
       if (!child.killed) {
         try {
@@ -772,10 +931,18 @@ ipcMain.handle('ts4rebels:invoke', async (_event, action: string, params: Record
           if (!child.killed) child.kill('SIGKILL')
         }, 5000)
       }
-    }, 60000)
+    }, 600000)
 
     child.on('close', (code) => {
       clearTimeout(timeout)
+      
+      // Cleanup temp file if exists
+      if (publishTempPath) {
+        try {
+          fs.unlinkSync(publishTempPath)
+        } catch (_e) {}
+      }
+
       try {
         if (code === 0) {
           resolve({ success: true, data: JSON.parse(stdout) })

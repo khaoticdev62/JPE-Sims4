@@ -8,6 +8,7 @@ import { GeminiService } from './GeminiService'
 import { ClaudeService } from './ClaudeService'
 import { OpenAIService } from './OpenAIService'
 import { QwenService } from './QwenService'
+import { OllamaService } from './OllamaService'
 import { BaseAIService } from './BaseAIService'
 
 export class AIServiceFactory {
@@ -23,8 +24,9 @@ export class AIServiceFactory {
       case AIProvider.OPENAI:
         return OpenAIService.getInstance()
       case AIProvider.QWEN:
-      case AIProvider.OLLAMA:
         return QwenService.getInstance()
+      case AIProvider.OLLAMA:
+        return OllamaService.getInstance()
       default:
         return GeminiService.getInstance()
     }

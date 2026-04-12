@@ -1,73 +1,78 @@
-import * as fs from 'fs'
 import * as path from 'path'
-import { RoundTripValidator } from '../services/translation/round-trip-validator'
+import { ProjectValidator } from '../services/validation/ProjectValidator'
 
 /**
  * JPE Studio Round-Trip Validator CLI
- * Usage: npx ts-node src/cli/validate-roundtrip.ts <path_to_xml_or_dir>
+ * Usage: npx tsx src/cli/validate-roundtrip.ts <path_to_xml_or_dir>
  */
 
 async function main() {
   const args = process.argv.slice(2)
   if (args.length === 0) {
-    console.error('Usage: npx ts-node src/cli/validate-roundtrip.ts <path_to_xml_or_dir>')
+    console.error('Usage: npx tsx src/cli/validate-roundtrip.ts <path_to_xml_or_dir>')
+    console.error('Example: npx tsx src/cli/validate-roundtrip.ts ./mods/MyMod')
     process.exit(1)
+  }
+
+  // Detect interactive terminal for color-coded telemetry
+  const isTTY = process.stdout.isTTY
+  const colors = {
+    green: isTTY ? '\x1b[32m' : '',
+    red: isTTY ? '\x1b[31m' : '',
+    cyan: isTTY ? '\x1b[36m' : '',
+    yellow: isTTY ? '\x1b[33m' : '',
+    reset: isTTY ? '\x1b[0m' : ''
   }
 
   const targetPath = path.resolve(args[0])
-  if (!fs.existsSync(targetPath)) {
-    console.error(`Error: Path not found: ${targetPath}`)
+  const validator = new ProjectValidator()
+
+  console.log(`\n🔍 JPE Studio: Round-Trip Validation`)
+  console.log(`Target: ${targetPath}\n`)
+
+  try {
+    const outcome = await validator.validateProject(targetPath)
+    
+    console.log(`${colors.cyan}📡 Scan Complete. Processing ${outcome.totalFiles} tokens...${colors.reset}\n`)
+
+    for (const { filePath, result } of outcome.results) {
+      const filename = path.basename(filePath)
+      if (result.success) {
+        console.log(`  ${colors.green}🟢 [STABLE]${colors.reset} ${filename.padEnd(40)} OK`)
+      } else {
+        console.error(`  ${colors.red}🔴 [FAIL]  ${colors.reset} ${filename.padEnd(40)} NO_MATCH`)
+        console.error(`     └─ Error: ${result.error}`)
+        
+        if (result.diff) {
+          console.log(`\n--- [LOGIC DEVIATION] ---\n${result.diff}\n`)
+        } else if (result.jpe) {
+          console.log(`\n--- [DECOMPILED SOURCE] ---\n${result.jpe}\n`)
+          if (result.newXml) {
+             console.log(`\n--- [RECONSTRUCTED XML] ---\n${result.newXml}\n`)
+          }
+        }
+      }
+    }
+
+    const outcomeColor = outcome.failureCount === 0 ? colors.green : colors.red
+    const outcomeLabel = outcome.failureCount === 0 ? 'NOMINAL' : 'LOGIC_FAULT'
+
+    console.log(`\n💠 ${outcomeColor}VALIDATION_OUTCOME: ${outcomeLabel}${colors.reset}`)
+    console.log(`   TOTAL: ${outcome.totalFiles}`)
+    console.log(`   PASS:  ${outcome.successCount}`)
+    console.log(`   FAIL:  ${outcome.failureCount}\n`)
+
+    if (outcome.failureCount > 0) {
+      console.error(`${colors.yellow}⚠️  Critical Deviation Detected. Round-trip logic integrity compromised.${colors.reset}`)
+      process.exit(1)
+    }
+  } catch (err) {
+    console.error(`${colors.red}🛑 FATAL_LOGIC_ERROR:${colors.reset}`, err instanceof Error ? err.message : err)
     process.exit(1)
   }
-
-  const files = fs.statSync(targetPath).isDirectory()
-    ? fs.readdirSync(targetPath)
-        .filter(f => f.endsWith('.xml'))
-        .map(f => path.join(targetPath, f))
-    : [targetPath]
-
-  console.log(`\n🔍 JPE Studio: Round-Trip Validation\nScanning ${files.length} files...\n`)
-
-  let successCount = 0
-  let failureCount = 0
-
-  for (const file of files) {
-    const filename = path.basename(file)
-    const xml = fs.readFileSync(file, 'utf-8')
-    
-    // Extract namespace from filename if it follows the pattern (Namespace_Interaction.xml)
-    const basename = path.basename(file, '.Interaction.xml').replace('.xml', '')
-    const parts = basename.split('_')
-    const namespace = parts.length > 1 ? parts[0] : undefined
-
-    const result = RoundTripValidator.validate(xml, namespace)
-
-    if (result.success) {
-      console.log(`✅ [MATCH] ${filename}`)
-      successCount++
-    } else {
-      console.error(`❌ [MISMATCH] ${filename}`)
-      console.error(`   Error: ${result.error}`)
-      if (result.jpe) {
-        console.log(`\n--- [DECOMPILED JPE] ---`)
-        console.log(result.jpe)
-      }
-      if (result.newXml) {
-        console.log(`\n--- [RE-GENERATED XML] ---`)
-        console.log(result.newXml)
-      }
-      failureCount++
-    }
-  }
-
-  console.log(`\n---------------------------------`)
-  console.log(`Summary: ${successCount} Passed, ${failureCount} Failed.`)
-  console.log(`---------------------------------\n`)
-
-  if (failureCount > 0) process.exit(1)
 }
 
 main().catch(err => {
-  console.error('Fatal Error:', err)
+  console.error('Fatal Runtime Error:', err)
   process.exit(1)
 })

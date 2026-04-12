@@ -26,6 +26,8 @@ FR6: JPE -> XML Parser (P0)
 FR7: XML -> JPE Reverse Compiler (P0)
 FR8: Multi-tab Editor - React components for editing (P0)
 FR9: Project Explorer - Sidebar with folder structure and file icons (P0)
+| FR11: Search and replace - Pattern matching and global refactoring (P1)
+| FR12: Undo/redo - History management and keyboard interaction (P1)
 FR10: Real-time Validation - Syntax/Semantic check with highlights (P1)
 FR11: Live Preview - Real-time XML transformation and display (P1)
 FR12: In-app Tutorial - Interactive walkthrough (P1)
@@ -197,6 +199,34 @@ So that my workspace feels professional and reduces eye strain.
 **And** typography uses Outfit for UI and Fira Code for code editor
 **And** all transitions/hover effects use a 200ms-400ms ease animation with subtle bioluminescent glows
 **And** the UI emits a "Spectral Pulse" on critical state changes to reinforce the sensory brand.
+
+### Story 1.6: Editor Productivity - Search & Global Replace
+
+As a Modder,
+I want to search for text patterns and perform global replacements across my project,
+So that I can refactor my mod logic efficiently.
+
+**Acceptance Criteria:**
+
+**Given** the Search panel is active (Ctrl+F for file, Ctrl+Shift+F for project)
+**When** I enter a query string or regex pattern
+**Then** I see a real-time list of matches in the sidebar or search pane
+**And** I can preview replacements on a per-match or global basis
+**And** applying a replacement updates all affected files and triggers the validation engine.
+
+### Story 1.7: Editor Productivity - History & Keyboard Controls
+
+As a Modder,
+I want a robust undo/redo system and comprehensive keyboard shortcuts,
+So that I can work at high speed without friction.
+
+**Acceptance Criteria:**
+
+**Given** the Code Editor context
+**When** I perform any destructive action (typing, deletion, refactoring)
+**Then** the action is recorded in a 100-step circular undo buffer
+**And** I can toggle through history using standard `Ctrl+Z` (Undo) and `Ctrl+Y` (Redo)
+**And** all spectral shortcuts defined in the Frontend Spec (Section 5.1) are functional.
 
 
 ## Epic 2: Core JPE Translation & Editing

@@ -1,4 +1,4 @@
-'./HttpClient';
+// TS4Rebels Service — Native IPC Bridge
 
 /**
  * TS4Rebels Service
@@ -39,6 +39,41 @@ export interface TS4RebelsBridgeResponse<T> {
 }
 
 export class TS4RebelsService {
+  /**
+   * Publishes a mod package and metadata to the TS4Rebels Vault.
+   */
+  static async publishMod(
+    title: string,
+    description: string,
+    packageBuffer: ArrayBuffer,
+    packageName: string,
+    tags?: string,
+    cookies?: string
+  ): Promise<TS4RebelsBridgeResponse<{ topic_id: number | null }>> {
+    try {
+      if (typeof window !== 'undefined' && window.electron?.ts4rebels) {
+        // Convert buffer to base64 for IPC transit
+        const base64Data = Buffer.from(packageBuffer).toString('base64');
+
+        return await window.electron.ts4rebels.invoke('publish', {
+          title,
+          description,
+          packageName,
+          packageBase64: base64Data,
+          tags: tags || '',
+          cookies: cookies || ''
+        });
+      }
+      throw new Error('Native TS4Rebels bridge not available');
+    } catch (error: unknown) {
+      return {
+        success: false,
+        data: { topic_id: null },
+        error: error instanceof Error ? error.message : 'Publish failed'
+      };
+    }
+  }
+
   /**
    * Performs authentication with ts4rebels.cc
    */

@@ -19,11 +19,24 @@ export class STBLService {
     const targetLocale = locale.toUpperCase()
     const entries = node.entries.filter(e => e.locale.toUpperCase() === targetLocale)
     
-    // 1. Pre-calculate keys and resolve collisions
+    // Convert AST entries to raw format
+    const rawEntries = entries.map(e => ({
+      key: this.calculateKey(e.text),
+      text: e.text
+    }))
+
+    return this.generateFromEntries(rawEntries)
+  }
+
+  /**
+   * Generates a binary STBL buffer from raw entries (key, text).
+   */
+  static generateFromEntries(entries: Array<{key: number, text: string}>): Buffer {
+    // 1. Resolve collisions (Optional, usually keys are unique if generated correctly)
     const usedKeys = new Set<number>()
     const preparedEntries = entries.map(e => {
       let text = e.text
-      let key = this.calculateKey(text)
+      let key = e.key
       
       // Story 8.3: Hash Collision Mitigation
       while (usedKeys.has(key)) {
@@ -51,7 +64,7 @@ export class STBLService {
     // 3. Allocate: Header + Entry Table + String Data
     const totalSize = HEADER_SIZE + (count * ENTRY_SIZE) + totalStringLength
     
-    // Safety check: Avoid overflow or Node.js Buffer limit exceed
+    // Safety check
     const _bufferModule = require('buffer')
     const _Buffer = _bufferModule.Buffer
     const maxLength = _bufferModule.constants?.MAX_LENGTH ?? _bufferModule.kMaxLength ?? 2147483647 
@@ -62,29 +75,26 @@ export class STBLService {
     
     const buffer = _Buffer.alloc(totalSize)
 
-    // --- Header (18 Bytes) ---
+    // --- Header ---
     buffer.write(STBL_MAGIC, 0, 4, 'ascii')
     buffer.writeUInt16LE(STBL_VERSION, 4)
-    buffer.writeUInt8(0, 6)                  // Compressed (0)
-    buffer.writeUInt32LE(count, 7)           // String Count
-    buffer.fill(0, 11, 13)                   // Reserved (2 bytes)
-    buffer.writeUInt8(0, 13)                 // Reserved (1 byte)
-    buffer.writeUInt32LE(totalStringLength, 14) // Total String Length
+    buffer.writeUInt8(0, 6)
+    buffer.writeUInt32LE(count, 7)
+    buffer.fill(0, 11, 14)                   // Adjusted reserved bytes fill
+    buffer.writeUInt32LE(totalStringLength, 14)
 
     let entryOffset = HEADER_SIZE
     let stringDataOffset = HEADER_SIZE + (count * ENTRY_SIZE)
     
     // --- Body ---
     for (const entry of preparedEntries) {
-      // Entry Table (7 Bytes per entry)
       const relativeOffset = stringDataOffset - (HEADER_SIZE + (count * ENTRY_SIZE))
       buffer.writeUInt32LE(entry.key, entryOffset)
-      buffer.writeUInt8(0, entryOffset + 4)     // Flags
+      buffer.writeUInt8(0, entryOffset + 4)
       buffer.writeUInt16LE(relativeOffset, entryOffset + 5)
       
-      // String Data (UTF-8 Null-Terminated)
       entry.data.copy(buffer, stringDataOffset)
-      buffer.writeUInt8(0, stringDataOffset + entry.data.length) // Termination
+      buffer.writeUInt8(0, stringDataOffset + entry.data.length)
       
       entryOffset += ENTRY_SIZE
       stringDataOffset += entry.data.length + 1
@@ -107,5 +117,46 @@ export class STBLService {
   static formatKey(text: string): string {
     const key = this.calculateKey(text)
     return '0x' + key.toString(16).toUpperCase().padStart(8, '0')
+  }
+
+  /**
+   * Parses a binary STBL buffer into an array of entries.
+   */
+  static parse(buffer: Buffer) {
+    if (buffer.length < HEADER_SIZE) {
+      throw new Error(`Invalid STBL buffer: Too short (${buffer.length} bytes)`)
+    }
+
+    const magic = buffer.toString('ascii', 0, 4)
+    if (magic !== STBL_MAGIC) {
+      throw new Error(`Invalid STBL buffer: Expected magic 'STBL', found '${magic}'`)
+    }
+
+    const version = buffer.readUInt16LE(4)
+    if (version !== STBL_VERSION) {
+      throw new Error(`Unsupported STBL version: ${version}`)
+    }
+
+    const count = buffer.readUInt32LE(7)
+    const stringDataOffset = HEADER_SIZE + (count * ENTRY_SIZE)
+
+    const entries = []
+    for (let i = 0; i < count; i++) {
+      const entryOffset = HEADER_SIZE + (i * ENTRY_SIZE)
+      const key = buffer.readUInt32LE(entryOffset)
+      const relativeOffset = buffer.readUInt16LE(entryOffset + 5)
+
+      // Find string end (null terminator)
+      let length = 0
+      const start = stringDataOffset + relativeOffset
+      while (start + length < buffer.length && buffer[start + length] !== 0) {
+        length++
+      }
+
+      const text = buffer.toString('utf8', start, start + length)
+      entries.push({ key, text })
+    }
+
+    return entries
   }
 }

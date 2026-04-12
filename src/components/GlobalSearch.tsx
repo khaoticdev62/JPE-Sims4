@@ -14,168 +14,13 @@ import {
   FileCode, Braces, FileText, Code2, Sparkles,
   Replace, RotateCcw,
   AlertTriangle, CheckCircle2, Globe,
-  Package, File,
+  Package, File, Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
-
-/* ─── Mock search index ──────────────────────────────────────────── */
-interface IndexLine { num: number; text: string; }
-interface IndexFile { path: string; ext: string; lines: IndexLine[]; }
-
-const EXT_ICON: Record<string, React.ComponentType<{ size: number; color: string }>> = {
-  xml: FileCode, json: Braces, stbl: Globe, ts4script: Code2,
-  jpe: Sparkles, package: Package, md: FileText, default: File,
-};
-
-const SEARCH_INDEX: IndexFile[] = [
-  {
-    path: "src/tuning/S4_034AEECB_trait_Evil.xml", ext: "xml",
-    lines: [
-      { num: 1, text: '<?xml version="1.0" encoding="utf-8"?>' },
-      { num: 2, text: "<TuningRoot>" },
-      { num: 3, text: '  <Instance i="trait" s="Evil" n="trait_Evil">' },
-      { num: 4, text: '    <TunableVariant name="trait_type" type="PERSONALITY">' },
-      { num: 5, text: '      <Tunable name="display_name">0x0A3B4C5D <!-- Evil --></Tunable>' },
-      { num: 6, text: '      <Tunable name="trait_description">0x1F2E3D4C</Tunable>' },
-      { num: 7, text: '      <TunableList name="conflicting_traits">' },
-      { num: 8, text: "        <Tunable>trait_Good</Tunable>" },
-      { num: 9, text: "        <Tunable>trait_Childish</Tunable>" },
-      { num: 10, text: '      <Tunable name="icon" type="ResourceKey">' },
-      { num: 11, text: "        S4_2F7D0004_00000001_Evil_Icon" },
-      { num: 12, text: '      <TunableList name="buffs_on_add">' },
-      { num: 13, text: '          <Tunable name="buff_type">buff_Evil_Aura</Tunable>' },
-      { num: 14, text: '          <Tunable name="buff_reason">0x2A3B4C5D</Tunable>' },
-      { num: 15, text: '      <Tunable name="ages" type="TunableSet">TEEN, YOUNGADULT, ADULT</Tunable>' },
-    ],
-  },
-  {
-    path: "src/tuning/S4_0904DF10_buff_Energized.xml", ext: "xml",
-    lines: [
-      { num: 1, text: '<?xml version="1.0" encoding="utf-8"?>' },
-      { num: 2, text: '  <Instance i="buff" s="Energized" n="buff_Energized">' },
-      { num: 3, text: '    <Tunable name="display_name">0xBEEF4321</Tunable>' },
-      { num: 4, text: '    <Tunable name="buff_description">0xCAFE8765</Tunable>' },
-      { num: 5, text: '    <Tunable name="moodlet_type">ENERGIZED</Tunable>' },
-      { num: 6, text: '    <Tunable name="duration">240</Tunable>' },
-      { num: 7, text: '    <Tunable name="mood_type">ENERGY</Tunable>' },
-      { num: 8, text: '    <TunableList name="buffs_on_add"><Tunable>buff_Energized_Aura</Tunable></TunableList>' },
-    ],
-  },
-  {
-    path: "src/tuning/S4_16CD1E22_interaction_Cook.xml", ext: "xml",
-    lines: [
-      { num: 1, text: '  <Instance i="interaction" s="Cook" n="interaction_Cook">' },
-      { num: 2, text: '    <Tunable name="display_name">0xA1B2C3D4</Tunable>' },
-      { num: 3, text: '    <Tunable name="trait_requirement">trait_Evil</Tunable>' },
-      { num: 4, text: '    <Tunable name="skill_level">5</Tunable>' },
-      { num: 5, text: '    <Tunable name="interaction_category">COOKFOOD</Tunable>' },
-    ],
-  },
-  {
-    path: "src/tuning/S4_E882D22F_recipe_Salad.xml", ext: "xml",
-    lines: [
-      { num: 1, text: '  <Instance i="recipe" s="Salad" n="recipe_Salad">' },
-      { num: 2, text: '    <Tunable name="display_name">0xF00BA5</Tunable>' },
-      { num: 3, text: '    <Tunable name="trait_restriction">trait_Good</Tunable>' },
-      { num: 4, text: '    <Tunable name="ingredients">lettuce, tomato, dressing</Tunable>' },
-    ],
-  },
-  {
-    path: "src/translations/en_US.stbl", ext: "stbl",
-    lines: [
-      { num: 1, text: "0x0A3B4C5D = Evil" },
-      { num: 2, text: "0x1F2E3D4C = These Sims enjoy being mean and causing mayhem." },
-      { num: 3, text: "0xBEEF4321 = Energized" },
-      { num: 4, text: "0xCAFE8765 = This Sim is feeling a surge of energy and drive." },
-      { num: 5, text: "0xA1B2C3D4 = Cook Meal (Evil)" },
-      { num: 6, text: "0xDEAD0000 = Evil Moodlet: Thriving in Chaos" },
-      { num: 7, text: "0x2A3B4C5D = Revelling in causing havoc." },
-      { num: 8, text: "0xF00BA5   = Healthy Garden Salad" },
-    ],
-  },
-  {
-    path: "src/translations/ja_JP.stbl", ext: "stbl",
-    lines: [
-      { num: 1, text: "0x0A3B4C5D = 邪悪" },
-      { num: 2, text: "0x1F2E3D4C = このシムは意地悪で混乱を引き起こすのが好き。" },
-      { num: 3, text: "0xBEEF4321 = 活力" },
-      { num: 4, text: "0xCAFE8765 = エネルギーが溢れている。" },
-    ],
-  },
-  {
-    path: "src/translations/de_DE.stbl", ext: "stbl",
-    lines: [
-      { num: 1, text: "0x0A3B4C5D = Böse" },
-      { num: 2, text: "0x1F2E3D4C = Diese Sims genießen es, gemein zu sein." },
-      { num: 3, text: "0xBEEF4321 = Voller Energie" },
-      { num: 4, text: "0x2A3B4C5D = Schwelgt im Chaos." },
-    ],
-  },
-  {
-    path: "src/scripts/jpe_translator.ts4script", ext: "ts4script",
-    lines: [
-      { num: 1, text: "import sims4.commands as cmds" },
-      { num: 2, text: "import sims4.tuning.tunable as tunable" },
-      { num: 3, text: "TRAIT_EVIL = 'trait_Evil'" },
-      { num: 4, text: "TRAIT_GOOD = 'trait_Good'" },
-      { num: 5, text: "def apply_evil_trait(sim_info):" },
-      { num: 6, text: "    trait_tracker = sim_info.trait_tracker" },
-      { num: 7, text: "    if trait_tracker.has_trait(TRAIT_EVIL):" },
-      { num: 8, text: "        buff_tracker.add_buff('buff_Evil_Aura')" },
-      { num: 9, text: "    return sim_info.get_all_traits()" },
-    ],
-  },
-  {
-    path: "src/scripts/conflict_resolver.ts4script", ext: "ts4script",
-    lines: [
-      { num: 1, text: "def check_trait_conflicts(sim_info):" },
-      { num: 2, text: "    conflicting = ['trait_Good', 'trait_Childish']" },
-      { num: 3, text: "    for trait in sim_info.trait_tracker.get_traits():" },
-      { num: 4, text: "        if trait.trait_name in conflicting:" },
-      { num: 5, text: "            raise TraitConflictError(f'Cannot assign trait_Evil with {trait.trait_name}')" },
-      { num: 6, text: "    return True" },
-    ],
-  },
-  {
-    path: "src/configs/settings.json", ext: "json",
-    lines: [
-      { num: 1, text: '{' },
-      { num: 2, text: '  "sdk_path": "/Applications/Sims4Studio",' },
-      { num: 3, text: '  "game_version": "1.108.365",' },
-      { num: 4, text: '  "locale_default": "en_US",' },
-      { num: 5, text: '  "trait_prefix": "trait_",' },
-      { num: 6, text: '  "buff_prefix": "buff_",' },
-      { num: 7, text: '  "log_level": "INFO"' },
-      { num: 8, text: '}' },
-    ],
-  },
-  {
-    path: "manifest.json", ext: "json",
-    lines: [
-      { num: 1, text: '{' },
-      { num: 2, text: '  "name": "Evil Trait Override",' },
-      { num: 3, text: '  "version": "2.4.1",' },
-      { num: 4, text: '  "author": "JPEStudio User",' },
-      { num: 5, text: '  "game_version": "1.108.365",' },
-      { num: 6, text: '  "tunings": 12,' },
-      { num: 7, text: '  "strings": 48,' },
-      { num: 8, text: '  "dependencies": ["BaseGame", "GetToWork"]' },
-      { num: 9, text: '}' },
-    ],
-  },
-  {
-    path: "src/interactions/hug_friend.jpe", ext: "jpe",
-    lines: [
-      { num: 1, text: "interaction hug_friend {" },
-      { num: 2, text: "  display_name: 0xA1B2C3D4" },
-      { num: 3, text: "  trait_requirement: trait_Evil" },
-      { num: 4, text: "  target_filter: friends_only" },
-      { num: 5, text: "  animation_id: 0xDEADBEEF" },
-      { num: 6, text: "  outcome { buff: buff_Evil_Aura, duration: 60 }" },
-      { num: 7, text: "}" },
-    ],
-  },
-];
+import { searchService, SearchResult } from "@/services/SearchService";
+import { useProjectStore } from "@/stores/useProjectStore";
+import { useEditorStore } from "@/stores/useEditorStore";
+import { ModFile } from "@/types";
 
 const EXT_COLORS: Record<string, string> = {
   xml: T.cyan, json: T.amber, stbl: T.violet, ts4script: T.emerald,
@@ -190,6 +35,16 @@ const FILE_TYPE_OPTIONS = [
   { label: "*.ts4script", value: "ts4script" },
   { label: "*.jpe", value: "jpe" },
 ];
+
+const EXT_ICON: Record<string, any> = {
+  xml: Code2,
+  stbl: FileText,
+  json: Braces,
+  ts4script: Sparkles,
+  jpe: Globe,
+  package: Package,
+  default: File,
+};
 
 /* ─── Highlight match in text ────────────────────────────────────── */
 function HighlightedLine({
@@ -234,6 +89,9 @@ interface GlobalSearchProps {
 
 /* ─── Component ──────────────────────────────────────────────────── */
 export function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
+  const { currentProject } = useProjectStore();
+  const { openTab } = useEditorStore();
+  
   const [query, setQuery] = useState("");
   const [replaceText, setReplaceText] = useState("");
   const [showReplace, setShowReplace] = useState(false);
@@ -244,9 +102,16 @@ export function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
   const [collapsedFiles, setCollapsedFiles] = useState<Set<string>>(new Set());
   const [selectedIdx, setSelectedIdx] = useState(0);
   const [replacedCount, setReplacedCount] = useState(0);
+  
+  /* New State for industrial search */
+  const [results, setResults] = useState<SearchResult[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchDuration, setSearchDuration] = useState("");
+
   const queryRef = useRef<HTMLInputElement>(null);
   const replaceRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   /* Focus on open */
   useEffect(() => {
@@ -268,46 +133,63 @@ export function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
     return () => window.removeEventListener("keydown", h);
   }, [isOpen, onClose]);
 
-  /* Build regex from current options */
-  const buildRegex = useCallback((q: string): RegExp | null => {
-    if (!q) return null;
-    try {
-      const flags = isCase ? "g" : "gi";
-      const pattern = isRegex
-        ? q
-        : isWord
-          ? `\\b${q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`
-          : q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-      return new RegExp(pattern, flags);
-    } catch { return null; }
-  }, [isCase, isWord, isRegex]);
+  /* Search Execution Logic */
+  const performSearch = useCallback(async (q: string) => {
+    if (!q || !currentProject?.rootPath) {
+      setResults([]);
+      setIsSearching(false);
+      return;
+    }
 
-  /* Search results */
-  const results = useMemo(() => {
-    const re = buildRegex(query);
-    if (!re) return [];
-    return SEARCH_INDEX
-      .filter(f => !fileTypeFilter || f.ext === fileTypeFilter)
-      .map(f => {
-        const matches = f.lines
-          .filter(l => re.test(l.text))
-          .map(l => ({ ...l }));
-        re.lastIndex = 0;
-        return { file: f, matches };
-      })
-      .filter(r => r.matches.length > 0);
-  }, [query, buildRegex, fileTypeFilter]);
+    setIsSearching(true);
+    const options = {
+      isRegex,
+      isCase,
+      isWord,
+      extension: fileTypeFilter || undefined
+    };
+
+    const response = await searchService.search(currentProject.rootPath, q, options);
+    
+    if (response.success && response.results) {
+      setResults(response.results);
+      setSearchDuration(response.duration || "");
+    } else if (response.error) {
+      toast.error(`Search error: ${response.error}`);
+    }
+    
+    setIsSearching(false);
+  }, [currentProject?.rootPath, isRegex, isCase, isWord, fileTypeFilter]);
+
+  /* Debounced Search */
+  useEffect(() => {
+    if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+    
+    if (!query) {
+      setResults([]);
+      setIsSearching(false);
+      return;
+    }
+
+    searchTimeoutRef.current = setTimeout(() => {
+      performSearch(query);
+    }, 300);
+
+    return () => {
+      if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+    };
+  }, [query, performSearch]);
 
   const totalMatches = results.reduce((s, r) => s + r.matches.length, 0);
   const totalFiles = results.length;
 
   /* Flat list of all match items for keyboard nav */
   const flatItems = useMemo(() => {
-    const items: { filePath: string; lineNum: number; text: string }[] = [];
+    const items: { filePath: string; lineNum: number; text: string; ext: string }[] = [];
     for (const r of results) {
       if (!collapsedFiles.has(r.file.path)) {
         for (const m of r.matches) {
-          items.push({ filePath: r.file.path, lineNum: m.num, text: m.text });
+          items.push({ filePath: r.file.path, lineNum: m.num, text: m.text, ext: r.file.ext });
         }
       }
     }
@@ -316,18 +198,79 @@ export function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
 
   const clampedIdx = Math.max(0, Math.min(selectedIdx, flatItems.length - 1));
 
-  const openMatch = (filePath: string, lineNum: number) => {
-    toast.success(`Opened ${filePath.split("/").pop()} at line ${lineNum}`);
+  const openMatch = (filePath: string, lineNum: number, ext: string) => {
+    if (!currentProject) return;
+
+    const fileName = filePath.split(/[/\\]/).pop() || "unknown";
+    
+    // Create / find a ModFile object for the tab
+    const existingFile = currentProject.files.find(f => f.path === filePath);
+    
+    if (existingFile) {
+      openTab({
+        id: existingFile.id,
+        fileId: existingFile.id,
+        name: existingFile.name,
+        type: existingFile.type,
+        isDirty: existingFile.isDirty
+      });
+    } else {
+      // Create a transient file object if not found
+      const transId = `file-${Date.now()}`;
+      openTab({
+        id: transId,
+        fileId: transId,
+        name: fileName,
+        type: (ext || 'xml') as any,
+        isDirty: false
+      });
+    }
+
+    onClose();
   };
 
-  const doReplace = (filePath: string, lineNum: number) => {
-    setReplacedCount(p => p + 1);
-    toast.success(`Replaced match in ${filePath.split("/").pop()}:${lineNum}`);
+  const doReplace = async (filePath: string, lineNum: number) => {
+    if (!currentProject?.rootPath) return;
+    
+    toast.promise(
+      searchService.replace(currentProject.rootPath, query, replaceText, {
+        isRegex, isCase, isWord, extension: fileTypeFilter || undefined
+      }),
+      {
+        loading: 'Replacing...',
+        success: (res) => {
+          if (res.success) {
+            setReplacedCount(p => p + (res.totalReplacements || 1));
+            performSearch(query); // Refresh results
+            return `Replaced in ${filePath.split(/[/\\]/).pop()}`;
+          }
+          throw new Error(res.error);
+        },
+        error: (err) => `Replace failed: ${err.message}`
+      }
+    );
   };
 
-  const doReplaceAll = () => {
-    setReplacedCount(totalMatches);
-    toast.success(`Replaced ${totalMatches} occurrence${totalMatches !== 1 ? "s" : ""} across ${totalFiles} file${totalFiles !== 1 ? "s" : ""}`);
+  const doReplaceAll = async () => {
+    if (!currentProject?.rootPath) return;
+
+    toast.promise(
+      searchService.replace(currentProject.rootPath, query, replaceText, {
+        isRegex, isCase, isWord, extension: fileTypeFilter || undefined
+      }),
+      {
+        loading: `Replacing all occurrences of "${query}"...`,
+        success: (res) => {
+          if (res.success) {
+            setReplacedCount(p => p + (res.totalReplacements || 0));
+            performSearch(query); // Refresh results
+            return `Replaced ${res.totalReplacements} occurrences across ${res.affectedFiles} files`;
+          }
+          throw new Error(res.error);
+        },
+        error: (err) => `Replace all failed: ${err.message}`
+      }
+    );
   };
 
   const toggleFileCollapse = (path: string) => {
@@ -427,20 +370,25 @@ export function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
                 <div className="flex-1 flex items-center gap-2 px-3 py-2 rounded-lg relative"
                   style={{ background: T.bgInput, border: `1px solid ${query && totalMatches === 0 ? T.rose : query ? T.borderActive : T.borderSubtle}`, boxShadow: query ? `0 0 10px rgba(99,179,237,0.06)` : "none" }}>
                   <Search size={13} color={query ? T.cyan : T.textMuted} />
-                  <input
-                    ref={queryRef}
-                    value={query}
-                    onChange={e => { setQuery(e.target.value); setSelectedIdx(0); setReplacedCount(0); }}
-                    placeholder="Search across all project files..."
-                    className="flex-1 bg-transparent outline-none"
-                    style={{ fontSize: 13, color: T.textPrimary, fontFamily: T.mono }}
-                    spellCheck={false}
-                  />
-                  {query && (
-                    <button onClick={() => setQuery("")} className="flex-shrink-0 p-0.5 rounded hover:bg-white/10">
-                      <X size={11} color={T.textMuted} />
-                    </button>
-                  )}
+                    <input
+                      ref={queryRef}
+                      value={query}
+                      onChange={e => { setQuery(e.target.value); setSelectedIdx(0); setReplacedCount(0); }}
+                      placeholder="Search across all project files..."
+                      className="flex-1 bg-transparent outline-none"
+                      style={{ fontSize: 13, color: T.textPrimary, fontFamily: T.mono }}
+                      spellCheck={false}
+                    />
+                    {(query || isSearching) && (
+                      <div className="flex items-center gap-2">
+                        {isSearching && <Loader2 size={12} className="animate-spin text-cyan" />}
+                        {query && (
+                          <button onClick={() => setQuery("")} className="flex-shrink-0 p-0.5 rounded hover:bg-white/10">
+                            <X size={11} color={T.textMuted} />
+                          </button>
+                        )}
+                      </div>
+                    )}
                   {RegexStatus === "invalid" && (
                     <span className="flex-shrink-0 px-1.5 py-0 rounded" style={{ fontSize: 9, color: T.rose, background: T.roseDim }}>Invalid regex</span>
                   )}
@@ -588,41 +536,41 @@ export function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
                       const flatPos = flatItems.findIndex(fi => fi.filePath === group.file.path && fi.lineNum === match.num);
                       const isSelected = flatPos === clampedIdx;
                       return (
-                        <div
-                          key={`${group.file.path}-${match.num}`}
-                          className="flex items-center gap-0 px-4 py-1.5 cursor-pointer group transition-colors"
-                          style={{
-                            background: isSelected ? `${T.cyan}08` : "transparent",
-                            borderLeft: isSelected ? `2px solid ${T.cyan}` : "2px solid transparent",
-                          }}
-                          onClick={() => { setSelectedIdx(flatPos); openMatch(group.file.path, match.num); }}
-                          onMouseEnter={e => { if (!isSelected) e.currentTarget.style.background = T.bgHover; }}
-                          onMouseLeave={e => { if (!isSelected) e.currentTarget.style.background = "transparent"; }}
-                        >
-                          {/* Line number */}
-                          <span className="flex-shrink-0 text-right pr-3" style={{ fontSize: 10, fontFamily: T.mono, color: T.textDim, width: 36 }}>
-                            {match.num}
-                          </span>
-                          {/* Content */}
-                          <div className="flex-1 min-w-0 overflow-hidden">
-                            <HighlightedLine
-                              text={match.text.slice(0, 120)}
-                              query={query}
-                              isRegex={isRegex}
-                              isCase={isCase}
-                            />
+                          <div
+                            key={`${group.file.path}-${match.num}`}
+                            className="flex items-center gap-0 px-4 py-1.5 cursor-pointer group transition-colors"
+                            style={{
+                              background: isSelected ? `${T.cyan}08` : "transparent",
+                              borderLeft: isSelected ? `2px solid ${T.cyan}` : "2px solid transparent",
+                            }}
+                            onClick={() => { setSelectedIdx(flatPos); openMatch(group.file.path, match.num, group.file.ext); }}
+                            onMouseEnter={e => { if (!isSelected) e.currentTarget.style.background = T.bgHover; }}
+                            onMouseLeave={e => { if (!isSelected) e.currentTarget.style.background = "transparent"; }}
+                          >
+                            {/* Line number */}
+                            <span className="flex-shrink-0 text-right pr-3" style={{ fontSize: 10, fontFamily: T.mono, color: T.textDim, width: 36 }}>
+                              {match.num}
+                            </span>
+                            {/* Content */}
+                            <div className="flex-1 min-w-0 overflow-hidden">
+                              <HighlightedLine
+                                text={match.text.slice(0, 120)}
+                                query={query}
+                                isRegex={isRegex}
+                                isCase={isCase}
+                              />
+                            </div>
+                            {/* Actions on hover */}
+                            {showReplace && (
+                              <button
+                                className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity px-2 py-0.5 rounded-md ml-2"
+                                style={{ fontSize: 9, fontFamily: T.mono, color: T.violet, background: T.violetDim }}
+                                onClick={ev => { ev.stopPropagation(); doReplace(group.file.path, match.num); }}
+                              >
+                                Replace
+                              </button>
+                            )}
                           </div>
-                          {/* Actions on hover */}
-                          {showReplace && (
-                            <button
-                              className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity px-2 py-0.5 rounded-md ml-2"
-                              style={{ fontSize: 9, fontFamily: T.mono, color: T.violet, background: T.violetDim }}
-                              onClick={ev => { ev.stopPropagation(); doReplace(group.file.path, match.num); }}
-                            >
-                              Replace
-                            </button>
-                          )}
-                        </div>
                       );
                     })}
                   </div>
@@ -641,8 +589,10 @@ export function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
               >
                 <div className="flex items-center gap-3">
                   {totalMatches > 0
-                    ? <><CheckCircle2 size={10} color={T.emerald} /><span style={{ fontSize: 10, fontFamily: T.mono, color: T.textTertiary }}>{totalMatches} matches in {totalFiles} file{totalFiles !== 1 ? "s" : ""}</span></>
-                    : <><AlertTriangle size={10} color={T.amber} /><span style={{ fontSize: 10, fontFamily: T.mono, color: T.textTertiary }}>No matches</span></>
+                    ? <><CheckCircle2 size={10} color={T.emerald} /><span style={{ fontSize: 10, fontFamily: T.mono, color: T.textTertiary }}>{totalMatches} matches in {totalFiles} file{totalFiles !== 1 ? "s" : ""}{searchDuration ? ` (${searchDuration})` : ""}</span></>
+                    : isSearching
+                      ? <><Loader2 size={10} className="animate-spin text-cyan" /><span style={{ fontSize: 10, fontFamily: T.mono, color: T.textTertiary }}>Searching project...</span></>
+                      : <><AlertTriangle size={10} color={T.amber} /><span style={{ fontSize: 10, fontFamily: T.mono, color: T.textTertiary }}>No matches</span></>
                   }
                   {fileTypeFilter && (
                     <><div className="w-px h-3" style={{ background: T.border }} /><span style={{ fontSize: 10, fontFamily: T.mono, color: T.violet }}>*.{fileTypeFilter}</span><button onClick={() => setFileTypeFilter("")} className="ml-1 hover:opacity-70"><X size={9} color={T.violet} /></button></>

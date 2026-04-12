@@ -1,5 +1,6 @@
 import { useCallback } from 'react'
 import { getEditorInstance } from '@/components/editor/MonacoEditor'
+import { sensoryService, SensoryEvent } from '@/services/editor/SensoryService'
 import { toast } from 'sonner'
 
 /**
@@ -10,6 +11,7 @@ export function useEditorActions() {
     const editor = getEditorInstance('current')
     if (editor) {
       editor.trigger('toolbar', 'undo', null)
+      sensoryService.trigger(SensoryEvent.CODE_SCRUB, { intensity: 0.3 })
     }
   }, [])
 
@@ -17,6 +19,7 @@ export function useEditorActions() {
     const editor = getEditorInstance('current')
     if (editor) {
       editor.trigger('toolbar', 'redo', null)
+      sensoryService.trigger(SensoryEvent.CODE_SCRUB, { intensity: 0.3 })
     }
   }, [])
 

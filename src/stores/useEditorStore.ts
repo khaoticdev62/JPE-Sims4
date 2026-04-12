@@ -19,6 +19,7 @@ interface EditorState {
   tabs: EditorTab[]
   activeTabId: string | null
   editorContent: Record<string, string>
+  initialContent: Record<string, string>
   cursorPosition: Record<string, CursorPosition>
   
   // AI Session State
@@ -39,8 +40,12 @@ interface EditorState {
   // Preview State
   previewContent: string
   previewOutOfDate: boolean
+  showPreview: boolean
+  scrollSync: boolean
   setPreviewContent: (content: string) => void
   setPreviewOutOfDate: (outOfDate: boolean) => void
+  togglePreview: () => void
+  toggleScrollSync: () => void
   
   // Actions
   openTab: (tab: EditorTab) => void
@@ -87,8 +92,12 @@ export const useEditorStore = create<EditorState>()(
         },
         previewContent: '',
         previewOutOfDate: false,
+        showPreview: false,
+        scrollSync: true,
         setPreviewContent: (content) => set({ previewContent: content }),
         setPreviewOutOfDate: (outOfDate) => set({ previewOutOfDate: outOfDate }),
+        togglePreview: () => set((state) => ({ showPreview: !state.showPreview })),
+        toggleScrollSync: () => set((state) => ({ scrollSync: !state.scrollSync })),
 
         openTab: (tab) => {
           set((state) => {
@@ -96,9 +105,17 @@ export const useEditorStore = create<EditorState>()(
             if (exists) {
               return { activeTabId: tab.id }
             }
+            
+            // Record initial content if provided (to track dirty state correctly on undo)
+            const initialContent = state.editorContent[tab.id] || ""
+
             return {
               tabs: [...state.tabs, tab],
               activeTabId: tab.id,
+              initialContent: {
+                ...state.initialContent,
+                [tab.id]: initialContent
+              }
             }
           })
         },
@@ -138,12 +155,20 @@ export const useEditorStore = create<EditorState>()(
         },
 
         updateTabContent: (tabId, content) => {
-          set((state) => ({
-            editorContent: {
-              ...state.editorContent,
-              [tabId]: content,
-            },
-          }))
+          set((state) => {
+            const isDirty = state.initialContent[tabId] !== content
+            const updatedTabs = state.tabs.map(tab => 
+              tab.id === tabId ? { ...tab, isDirty } : tab
+            )
+            
+            return {
+              editorContent: {
+                ...state.editorContent,
+                [tabId]: content,
+              },
+              tabs: updatedTabs
+            }
+          })
         },
 
         updateFileContent: (id, content) => {
@@ -153,11 +178,18 @@ export const useEditorStore = create<EditorState>()(
         },
 
         markTabClean: (tabId) => {
-          set((state) => ({
-            tabs: state.tabs.map((tab) =>
-              tab.id === tabId ? { ...tab, isDirty: false } : tab
-            ),
-          }))
+          set((state) => {
+            const currentContent = state.editorContent[tabId] || ""
+            return {
+              tabs: state.tabs.map((tab) =>
+                tab.id === tabId ? { ...tab, isDirty: false } : tab
+              ),
+              initialContent: {
+                ...state.initialContent,
+                [tabId]: currentContent
+              }
+            }
+          })
         },
 
         setCursorPosition: (tabId, line, column) => {

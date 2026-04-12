@@ -31,8 +31,9 @@ interface UIState {
   
   // Command Palette (Story 6.3)
   isCommandPaletteOpen: boolean
-  toggleCommandPalette: () => void
-  setCommandPaletteOpen: (open: boolean) => void
+  commandPaletteQuery: string
+  setCommandPaletteOpen: (open: boolean, query?: string) => void
+  toggleCommandPalette: (query?: string) => void
   
   // Onboarding Tour
   isTourOpen: boolean
@@ -84,6 +85,16 @@ interface UIState {
   // Mod Publishing
   isPublishModOpen: boolean
   setPublishModOpen: (open: boolean) => void
+
+  // Project Export
+  isProjectExportOpen: boolean
+  setProjectExportOpen: (open: boolean) => void
+
+  // Mod Distribution Data
+  publishBuffer: ArrayBuffer | undefined
+  setPublishBuffer: (buffer: ArrayBuffer | undefined) => void
+  publishProjectName: string
+  setPublishProjectName: (name: string) => void
 }
 
 export const useUIStore = create<UIState>()(
@@ -169,8 +180,15 @@ export const useUIStore = create<UIState>()(
         },
 
         isCommandPaletteOpen: false,
-        toggleCommandPalette: () => set((state) => ({ isCommandPaletteOpen: !state.isCommandPaletteOpen })),
-        setCommandPaletteOpen: (open) => set({ isCommandPaletteOpen: open }),
+        commandPaletteQuery: ">",
+        setCommandPaletteOpen: (open, query) => set({ 
+          isCommandPaletteOpen: open, 
+          commandPaletteQuery: query !== undefined ? query : (open ? ">" : "") 
+        }),
+        toggleCommandPalette: (query) => set((state) => ({ 
+          isCommandPaletteOpen: !state.isCommandPaletteOpen,
+          commandPaletteQuery: query !== undefined ? query : (!state.isCommandPaletteOpen ? ">" : "")
+        })),
 
         isTourOpen: false,
         setTourOpen: (open) => set({ isTourOpen: open }),
@@ -219,6 +237,16 @@ export const useUIStore = create<UIState>()(
         // Mod Publishing
         isPublishModOpen: false,
         setPublishModOpen: (open) => set({ isPublishModOpen: open }),
+
+        // Project Export
+        isProjectExportOpen: false,
+        setProjectExportOpen: (open) => set({ isProjectExportOpen: open }),
+
+        // Mod Distribution Data
+        publishBuffer: undefined,
+        setPublishBuffer: (buffer) => set({ publishBuffer: buffer }),
+        publishProjectName: 'My Mod',
+        setPublishProjectName: (name) => set({ publishProjectName: name }),
       }),
       {
         name: 'jpe-ui-store',

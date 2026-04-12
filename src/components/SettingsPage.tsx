@@ -157,7 +157,7 @@ export function SettingsPage() {
                       Location of your Sims 4 Mods directory for cross-mod reference indexing
                     </p>
                   </div>
-                  <button
+                   <button
                     onClick={async () => {
                       const path = await FileService.openFolder()
                       if (path) {
@@ -165,14 +165,15 @@ export function SettingsPage() {
                         ModIndexingService.indexModsFolder(path)
                       }
                     }}
-                    className="px-4 py-2 bg-accent-primary hover:bg-accent-primary/80 hover:glow-cyan-sm text-background-primary rounded-md text-sm font-bold transition-all active:scale-95"
+                    className="px-6 py-2.5 bg-cyan hover:bg-cyanBright text-black rounded-lg text-xs font-black transition-all active:scale-95 shadow-lg shadow-cyan/20 hover:shadow-cyan/40 uppercase tracking-widest"
                   >
-                    SELECT FOLDER
+                    SELECT DIRECTORY
                   </button>
                 </div>
                 
-                <div className="bg-background-tertiary border border-border-subtle rounded px-4 py-2 font-mono text-xs text-text-secondary truncate">
-                  {modsFolderPath || 'PATH_NOT_ESTABLISHED: Manual selection required.'}
+                <div className="bg-black/40 border border-white/5 rounded-lg px-4 py-3 font-mono text-[10px] text-cyan/70 flex items-center gap-2">
+                  <span className="opacity-50 text-white">[{modsFolderPath ? 'PATH_ACTIVE' : 'PATH_MISSING'}]</span>
+                  <span className="truncate">{modsFolderPath || 'SYSTEM_STATUS: Manual selection required for mod indexing.'}</span>
                 </div>
               </div>
 
@@ -180,10 +181,10 @@ export function SettingsPage() {
               <div className="border-t border-border-subtle pt-6 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   {isIndexingMods ? (
-                    <Loader2 className="w-5 h-5 text-accent-primary animate-spin" />
+                    <Loader2 className="w-5 h-5 text-cyan animate-spin" />
                   ) : (
-                    <div className="w-5 h-5 rounded-full bg-state-success/20 flex items-center justify-center">
-                      <div className="w-2 h-2 rounded-full bg-state-success" />
+                    <div className="w-5 h-5 rounded-full bg-emerald/20 flex items-center justify-center border border-emerald/30 shadow-[0_0_10px_rgba(16,185,129,0.2)]">
+                      <div className="w-1.5 h-1.5 rounded-full bg-emerald animate-pulse" />
                     </div>
                   )}
                   <div>

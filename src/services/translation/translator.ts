@@ -84,14 +84,16 @@ export class JPETranslator {
     
     // Story 8.2: Dynamic Class & Module Detection
     let className = node.className || "Interaction"
-    let moduleName = "interactions.base.interaction"
+    let moduleName = node.moduleName || "interactions.base.interaction"
     
-    if (node.name.toLowerCase().includes('social') || className.toLowerCase().includes('social')) {
-      className = className === "Interaction" ? "SocialSuperInteraction" : className
-      moduleName = "interactions.social.social_super_interaction"
-    } else if (className !== "Interaction") {
-      // If a custom class is provided but not social, default to super_interaction unless specified
-      moduleName = "interactions.base.super_interaction"
+    if (!node.moduleName) {
+      if (node.name.toLowerCase().includes('social') || className.toLowerCase().includes('social')) {
+        className = className === "Interaction" ? "SocialSuperInteraction" : className
+        moduleName = "interactions.social.social_super_interaction"
+      } else if (className !== "Interaction") {
+        // If a custom class is provided but not social, default to super_interaction unless specified
+        moduleName = "interactions.base.super_interaction"
+      }
     }
 
     let xml = '<?xml version="1.0" encoding="utf-8"?>\n'

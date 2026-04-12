@@ -19,6 +19,7 @@ import { useActivityStore } from "@/stores/useActivityStore";
 import { useDiagnosticStore } from "@/stores/useDiagnosticStore";
 import { useGamepadNavigation } from "@/hooks/useGamepadNavigation";
 import { JpeCard, JpeProgressBar } from "./jpe-design-system";
+import { SpectralHologram } from "./jpe-empty-states";
 
 // Dynamic Imports to solve 500 ENOENT errors in SSR
 const CoreLoadChart = dynamic(
@@ -45,7 +46,7 @@ const coverageData = [
 
 const quickActions: { label: string; icon: LucideIcon; color: string; mode: WorkspaceMode; desc: string }[] = [
   { label: "Translate Files", icon: Languages, color: T.violet, mode: "translation", desc: "Run AI translation" },
-  { label: "Build Package", icon: Rocket, color: T.amber, mode: "build", desc: "Export .package" },
+  { label: "Build Package", icon: Rocket, color: T.amber, mode: "export", desc: "Production Export" },
   { label: "Scan Conflicts", icon: Shield, color: T.emerald, mode: "conflicts", desc: "Detect issues" },
   { label: "Open Editor", icon: Code2, color: T.cyan, mode: "code", desc: "Code workspace" },
   { label: "View Graph", icon: Network, color: T.cyanDeep, mode: "visual", desc: "Dependency map" },
@@ -109,6 +110,9 @@ export function DashboardView({ onNavigate }: { onNavigate: (mode: WorkspaceMode
         { text: "CORE_SYSTEM: Layer 1 Initialization Complete", color: T.emerald, time: "BOOT", icon: CheckCircle2 },
         { text: "NEURAL_LINK: Establishing secure channel...", color: T.cyan, time: "SYNC", icon: Zap },
         { text: "SPECTRAL_UI: Loading shaders and glows", color: T.violet, time: "READY", icon: Sparkles },
+        { text: "KERNEL: Memory parity check passed", color: T.emerald, time: "BOOT", icon: Shield },
+        { text: "ASSETS: Pre-warming texture buffers", color: T.amber, time: "BOOT", icon: Palette },
+        { text: "UPLINK: Connected to TS4Rebels primary vault", color: T.cyanBright, time: "READY", icon: Globe },
       ];
     }
     return activities.slice(0, 6).map(a => {
@@ -258,20 +262,22 @@ export function DashboardView({ onNavigate }: { onNavigate: (mode: WorkspaceMode
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             {quickActions.map((action, index) => (
-                <button
+                <motion.button
                   key={action.mode}
                   data-testid={`quick-action-${action.mode}`}
                   onClick={() => onNavigate(action.mode)}
-                  className={`group relative overflow-hidden p-6 rounded-2xl border transition-all duration-300 text-left active:scale-95 ${
+                  whileHover={{ scale: 1.03, y: -4 }}
+                  whileTap={{ scale: 0.97 }}
+                  className={`group relative overflow-hidden p-6 rounded-2xl border transition-all duration-300 text-left ${
                     focusedActionIndex === index 
-                      ? 'border-cyan shadow-lg shadow-cyan/20 scale-[1.02] bg-cyan/5' 
-                      : 'border-white/5 bg-white/[0.02] hover:bg-white/[0.04] hover:border-white/10 hover:translate-y-[-2px]'
+                      ? 'border-cyan shadow-lg shadow-cyan/20 bg-cyan/5' 
+                      : 'border-white/5 bg-white/[0.02] hover:bg-white/[0.05] hover:border-cyan/30 hover:shadow-[0_0_20px_rgba(99,179,237,0.1)]'
                   }`}
                 >
                   <div 
                     className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
                     style={{ 
-                      background: `radial-gradient(circle at center, ${action.color}15 0%, transparent 70%)` 
+                      background: `radial-gradient(circle at center, ${action.color}20 0%, transparent 70%)` 
                     }}
                   />
                   
@@ -283,10 +289,10 @@ export function DashboardView({ onNavigate }: { onNavigate: (mode: WorkspaceMode
                     <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-3 group-hover:spectral-pulse" style={{ background: `${action.color}15`, border: `1px solid ${action.color}30` }}>
                       <action.icon size={18} color={action.color} className="group-hover:scale-110 transition-transform duration-300" />
                     </div>
-                    <div style={{ fontSize: 13, fontWeight: 800, color: T.textPrimary }}>{action.label}</div>
+                    <div style={{ fontSize: 13, fontWeight: 800, color: T.textPrimary, fontFamily: T.display }}>{action.label}</div>
                     <div style={{ fontSize: 10, color: T.textMuted }}>{action.desc}</div>
                   </div>
-                </button>
+                </motion.button>
             ))}
           </div>
         </div>
@@ -319,7 +325,9 @@ export function DashboardView({ onNavigate }: { onNavigate: (mode: WorkspaceMode
                   <span style={{ fontSize: 10, fontWeight: 700, color: T.textSecondary, fontFamily: T.mono }}>{item.label}</span>
                   <span className="spectral-pulse" style={{ fontSize: 10, fontWeight: 800, color: item.color, fontFamily: T.mono }}>{item.pct}%</span>
                 </div>
-                <JpeProgressBar value={item.pct} color={item.color} height={5} />
+                <div className="spectral-pulse">
+                  <JpeProgressBar value={item.pct} color={item.color} height={5} />
+                </div>
               </div>
             ))}
             <div className="pt-2">
@@ -334,16 +342,25 @@ export function DashboardView({ onNavigate }: { onNavigate: (mode: WorkspaceMode
         <div className="col-span-12 md:col-span-6 lg:col-span-4">
            <JpeCard title="RECENT_RESOURCES" icon={Clock} headerAction={
               <button onClick={() => onNavigate("code")} className="text-[10px] text-cyan font-bold bg-transparent border-none outline-none hover:text-cyanBright transition-colors cursor-pointer">EXPLORE</button>
-           } className="hover:glow-border-cyan transition-all">
-              <div className="space-y-1">
-                {recentFilesDisplay.map((f, i) => (
-                  <button key={i} onClick={() => onNavigate("code")} className="w-full flex items-center gap-3 px-3 py-2 hover:bg-white/5 rounded-lg transition-colors group bg-transparent border-none text-left">
-                     <f.icon size={13} color={f.color} className="group-hover:rotate-12 transition-transform" />
-                     <span className="flex-1 truncate text-[11px] text-text-secondary group-hover:text-text-primary">{f.name}</span>
-                     <span style={{ fontSize: 9, fontFamily: T.mono, color: T.textMuted }}>{f.time}</span>
-                  </button>
-                ))}
-              </div>
+           } className="hover:glow-border-cyan transition-all min-h-[220px] flex flex-col items-center justify-center">
+              {activities.length > 0 ? (
+                <div className="space-y-1 w-full">
+                  {recentFilesDisplay.map((f, i) => (
+                    <button key={i} onClick={() => onNavigate("code")} className="w-full flex items-center gap-3 px-3 py-2 hover:bg-white/5 rounded-lg transition-colors group bg-transparent border-none text-left">
+                       <f.icon size={13} color={f.color} className="group-hover:rotate-12 transition-transform" />
+                       <span className="flex-1 truncate text-[11px] text-text-secondary group-hover:text-text-primary">{f.name}</span>
+                       <span style={{ fontSize: 9, fontFamily: T.mono, color: T.textMuted }}>{f.time}</span>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <SpectralHologram 
+                  icon={FileCode} 
+                  title="No Recent Files" 
+                  description="Open a project or create a new file to see recent activity."
+                  action={{ label: "Select Project", onClick: () => onNavigate("dashboard") }} 
+                />
+              )}
            </JpeCard>
         </div>
 

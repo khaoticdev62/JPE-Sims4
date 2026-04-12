@@ -49,42 +49,31 @@ export class GeminiService extends BaseAIService {
 
     try {
       let response: any
+      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${this.model}:generateContent?key=${apiKey}`
+      const payload = {
+        contents: messages.map(m => ({ role: m.role === 'assistant' ? 'model' : 'user', parts: [{ text: m.content }] }))
+      }
+
       if (this.isElectron) {
-        response = await this.callNativeBridge<any>('gemini', 'post', `${this.apiBaseUrl}/gemini/chat`, {
-          model: this.model,
-          messages: messages.map(m => ({ role: m.role, content: m.content }))
-        }, {
-          'Authorization': `Bearer ${apiKey}`,
-          'Content-Type': 'application/json'
-        })
+        response = await this.callNativeBridge<any>('gemini', 'post', apiUrl, payload)
       } else {
-        response = await this.performRequest<any>('chat', () => axios.post(
-          `${this.apiBaseUrl}/gemini/chat`,
-          {
-            model: this.model,
-            messages: messages.map(m => ({ role: m.role, content: m.content }))
-          },
-          {
-            headers: {
-              'Authorization': `Bearer ${apiKey}`,
-              'Content-Type': 'application/json'
-            }
-          }
-        ), messages.map(m => m.content).join(' '), false)
+        response = await this.performRequest<any>('chat', () => axios.post(apiUrl, payload),
+          messages.map(m => m.content).join(' '), false)
       }
 
-      const data = response.data
-      if (!data?.success || !data?.text) {
-        throw new Error(data?.error || 'Chat failed')
+      const resData = response.data
+      if (resData?.usageMetadata?.totalTokenCount) {
+        this.usageStats.totalTokensUsed += resData.usageMetadata.totalTokenCount
       }
 
-      if (data.usage?.totalTokens) {
-        this.usageStats.totalTokensUsed += data.usage.totalTokens
+      const text = resData?.candidates?.[0]?.content?.parts?.[0]?.text
+      if (!text) {
+        throw new Error('Empty response from Gemini')
       }
 
       return { 
         success: true, 
-        text: data.text, 
+        text, 
         cached: false, 
         timestamp: Date.now() 
       }

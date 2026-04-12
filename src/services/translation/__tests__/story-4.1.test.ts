@@ -347,8 +347,8 @@ describe('Story 4.1: XML-to-JPE Reverse Compiler - Gap Coverage', () => {
         expect(jpe).toContain('WHEN Greet Neighbor')
         expect(jpe).toContain('SocialSuperInteraction')
         expect(jpe).toContain('is adult')
-        // Note: Known bug - nested loot names not extracted correctly (outputs Unknown_Loot)
         expect(jpe).toContain('effects')
+        expect(jpe).toContain('Loot_Social_Success') // HARDENED ASSERTION
       })
     })
 
@@ -384,9 +384,9 @@ describe('Story 4.1: XML-to-JPE Reverse Compiler - Gap Coverage', () => {
 
         // Should handle nested trait structure
         expect(result).toContain('trait')
-        expect(result).toContain('tests')
-        // Note: Known bug - deeply nested trait names not extracted correctly (outputs Unknown_Trait)
-        // This is tracked for future fix in decompiler trait extraction logic
+        expect(result).toContain('ONLY_IF')
+        expect(result).toContain('Trait_Deep') // HARDENED ASSERTION
+        expect(result).toContain('Trait_Bad') // HARDENED ASSERTION
       })
     })
 

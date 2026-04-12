@@ -11,25 +11,14 @@ import { motion, AnimatePresence } from '@/components/jpe-motion';
 import { JpeButton, JpeCard, JpeStatusBadge } from '@/components/jpe-design-system';
 import { STBLParser } from '@/engine/parsers/STBLParser';
 import { STBLCompiler } from '@/engine/compilers/STBLCompiler';
+import { BatchSTBLUtility, STBLEntry as UtilityEntry, STBLFile as UtilityFile } from '@/utils/BatchSTBLUtility';
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
-interface STBLEntry {
-  hash: string;
-  value: string;
-}
-
-interface STBLFile {
-  id: string;
-  name: string;
-  language: string;
-  entries: STBLEntry[];
-  isDirty: boolean;
-  path?: string;
-  content?: string;
-}
+type STBLEntry = UtilityEntry;
+type STBLFile = UtilityFile;
 
 interface BatchOperation {
   type: 'find-replace' | 'delete-empty' | 'merge' | 'export';
@@ -84,6 +73,9 @@ export function BatchSTBLEditor({ isOpen, onClose, initialFiles = [] }: BatchSTB
   const activeFile = useMemo(() => files.find(f => f.id === activeFileId), [files, activeFileId]);
   const totalEntries = useMemo(() => files.reduce((sum, f) => sum + f.entries.length, 0), [files]);
   const dirtyCount = useMemo(() => files.filter(f => f.isDirty).length, [files]);
+  
+  // Collision detection
+  const collisions = useMemo(() => BatchSTBLUtility.detectCollisions(files), [files]);
 
   // Filtered entries for active file
   const filteredEntries = useMemo(() => {
@@ -184,6 +176,56 @@ export function BatchSTBLEditor({ isOpen, onClose, initialFiles = [] }: BatchSTB
 
     setTimeout(() => setOperationResult(null), 3000);
   }, [findQuery, replaceQuery, activeFileId]);
+
+  const handleImport = useCallback(async () => {
+    try {
+      // In Electron environment, we use the native dialog
+      if (typeof window !== 'undefined' && window.electron?.file) {
+        const result = await window.electron.file.openFile();
+        if (!result || !result.content) return;
+
+        const { name, content, path } = result;
+        const isBinary = name.toLowerCase().endsWith('.stbl');
+        
+        // Strategy: Try to infer language from filename or default to en_US
+        const langMatch = name.match(/([a-z]{2}_[A-Z]{2})/);
+        const language = langMatch ? langMatch[1] : 'en_US';
+
+        let newFile: STBLFile;
+        if (isBinary) {
+          // content is Buffer/ArrayBuffer from IPC
+          newFile = BatchSTBLUtility.parseBinary(content, name, language);
+        } else {
+          // content is string from IPC
+          newFile = BatchSTBLUtility.parseText(content, name, language);
+        }
+
+        newFile.path = path;
+        setFiles(prev => [...prev, newFile]);
+        setActiveFileId(newFile.id);
+        
+        toast.success(`Imported ${name} successfully`);
+      }
+    } catch (error: any) {
+      setOperationResult({
+        success: 0,
+        failed: 1,
+        message: `Import failed: ${error.message}`
+      });
+      setTimeout(() => setOperationResult(null), 3000);
+    }
+  }, []);
+
+  const handleSyncKeys = useCallback(() => {
+    const syncedFiles = BatchSTBLUtility.syncKeys(files);
+    setFiles(syncedFiles);
+    setOperationResult({
+      success: files.length,
+      failed: 0,
+      message: `Synchronized keys across ${files.length} languages.`
+    });
+    setTimeout(() => setOperationResult(null), 3000);
+  }, [files]);
 
   const handleDeleteEmpty = useCallback(() => {
     if (!activeFileId) return;
@@ -363,12 +405,17 @@ export function BatchSTBLEditor({ isOpen, onClose, initialFiles = [] }: BatchSTB
           </div>
 
           {/* Find/Replace Toggle */}
-          <button
-            onClick={() => setIsFindReplaceOpen(!isFindReplaceOpen)}
-            className={`p-2 rounded-lg transition-colors ${isFindReplaceOpen ? 'bg-cyan/10 text-cyan' : 'hover:bg-white/5 text-textMuted'}`}
-          >
-            <ArrowLeftRight size={16} />
-          </button>
+          <div className="flex items-center gap-1">
+            <JpeButton variant="ghost" size="xs" icon={Upload} onClick={handleImport}>
+              Import Files
+            </JpeButton>
+            <button
+              onClick={() => setIsFindReplaceOpen(!isFindReplaceOpen)}
+              className={`p-2 rounded-lg transition-colors ${isFindReplaceOpen ? 'bg-cyan/10 text-cyan' : 'hover:bg-white/5 text-textMuted'}`}
+            >
+              <ArrowLeftRight size={16} />
+            </button>
+          </div>
         </div>
 
         {/* Find/Replace Panel */}
@@ -410,6 +457,9 @@ export function BatchSTBLEditor({ isOpen, onClose, initialFiles = [] }: BatchSTB
                 <JpeButton variant="secondary" size="xs" icon={Trash2} onClick={handleDeleteEmpty}>
                   Delete Empty
                 </JpeButton>
+                <JpeButton variant="ghost" size="xs" icon={Plus} onClick={handleSyncKeys} disabled={files.length < 2}>
+                  Sync Keys
+                </JpeButton>
               </div>
             </motion.div>
           )}
@@ -434,21 +484,37 @@ export function BatchSTBLEditor({ isOpen, onClose, initialFiles = [] }: BatchSTB
 
               {/* Entries */}
               <div className="space-y-1">
-                {filteredEntries.map((entry) => (
-                  <div
-                    key={entry.hash}
-                    className="grid grid-cols-[120px_1fr_80px] gap-3 items-center px-2 py-2 rounded-lg hover:bg-white/5 transition-colors"
-                  >
-                    <span style={{ fontSize: 10, fontFamily: T.mono, color: T.cyan }}>
-                      {entry.hash}
-                    </span>
-                    <input
-                      type="text"
-                      value={entry.value}
-                      onChange={(e) => updateEntry(activeFile.id, entry.hash, e.target.value)}
-                      className="bg-white/5 border border-border rounded-lg px-3 py-1.5 text-[11px] font-mono text-textPrimary outline-none focus:border-cyan/50"
-                    />
-                    <div className="flex items-center gap-1">
+                {filteredEntries.map((entry) => {
+                  const collision = collisions.get(entry.hash.toUpperCase());
+                  const hasConflict = collision?.isConflict;
+                  const hasOtherFiles = (collision?.files.length || 0) > 1;
+
+                  return (
+                    <div
+                      key={entry.hash}
+                      className={`grid grid-cols-[120px_1fr_80px] gap-3 items-center px-2 py-2 rounded-lg transition-colors ${
+                        hasConflict ? 'bg-amber/5 hover:bg-amber/10' : 'hover:bg-white/5'
+                      }`}
+                    >
+                      <div className="flex items-center gap-1.5 overflow-hidden">
+                        <span style={{ fontSize: 10, fontFamily: T.mono, color: hasConflict ? T.amber : T.cyan }}>
+                          {entry.hash}
+                        </span>
+                        {hasConflict ? (
+                          <AlertCircle size={10} color={T.amber} title="Conflict: Same hash has different values in other languages" />
+                        ) : hasOtherFiles ? (
+                          <CheckCircle2 size={10} color={T.emerald} title="Synced: Same value across other languages" />
+                        ) : null}
+                      </div>
+                      <input
+                        type="text"
+                        value={entry.value}
+                        onChange={(e) => updateEntry(activeFile.id, entry.hash, e.target.value)}
+                        className={`bg-white/5 border rounded-lg px-3 py-1.5 text-[11px] font-mono text-textPrimary outline-none focus:border-cyan/50 ${
+                          hasConflict ? 'border-amber/30' : 'border-border'
+                        }`}
+                      />
+                      <div className="flex items-center gap-1">
                       <button
                         onClick={() => addEntry(activeFile.id)}
                         className="p-1.5 hover:bg-white/10 rounded transition-colors"
@@ -464,8 +530,9 @@ export function BatchSTBLEditor({ isOpen, onClose, initialFiles = [] }: BatchSTB
                         <Trash2 size={12} color={T.rose} />
                       </button>
                     </div>
-                  </div>
-                ))}
+                    </div>
+                  );
+                })}
 
                 {filteredEntries.length === 0 && (
                   <div className="flex flex-col items-center justify-center py-16 text-center">

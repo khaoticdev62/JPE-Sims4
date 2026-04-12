@@ -15,8 +15,9 @@ const DashboardView = dynamic(() => import('@/components/DashboardView').then(mo
 const ProjectsPage = dynamic(() => import('@/components/ProjectsPage').then(mod => mod.ProjectsPage), { ssr: false })
 const SettingsPage = dynamic(() => import('@/components/SettingsPage').then(mod => mod.SettingsPage), { ssr: false })
 const TS4RebelsPortal = dynamic(() => import('@/components/rebels/TS4RebelsPortal').then(mod => mod.TS4RebelsPortal), { ssr: false })
+import { ExportWizard } from '@/components/ExportWizard'
 
-import { BuildProgressModal } from '@/components/modals/BuildProgressModal'
+import { BuildProgressModal } from '@/components/BuildProgressModal'
 import { SplashScreen } from '@/components/SplashScreen'
 import { useUIStore } from '@/stores/useUIStore'
 import { useDiagnosticStore } from '@/stores/useDiagnosticStore'
@@ -24,7 +25,7 @@ import { useProjectStore } from '@/stores/useProjectStore'
 import { useEditorStore } from '@/stores/useEditorStore'
 import { useAutoSave } from '@/hooks/useAutoSave'
 import { Sidebar } from '@/components/sidebar/Sidebar'
-import DiagnosticsPanel from '@/components/editor/DiagnosticsPanel'
+import DiagnosticsPanel from '@/components/diagnostics/DiagnosticsPanel'
 import { PredictionOverlay } from '@/components/editor/PredictionOverlay'
 import { VirtualKeyboard } from '@/components/input/VirtualKeyboard'
 import { InputMethodSelector } from '@/components/input/InputMethodSelector'
@@ -68,7 +69,7 @@ export default function EditorLayout({ onNavigate }: EditorLayoutProps = {}) {
   
   const { workspaceMode, showDiagnostics, immersionMode, setImmersionMode, setWorkspaceMode } = useUIStore()
   const { diagnostics } = useDiagnosticStore()
-  const [isBuildModalOpen, setIsBuildModalOpen] = useState(false)
+  const [isExportWizardOpen, setIsExportWizardOpen] = useState(false)
   const { focusMode } = useGamepadNavigation()
   const { currentProject } = useProjectStore()
   const { closeAllTabs } = useEditorStore()
@@ -103,16 +104,20 @@ export default function EditorLayout({ onNavigate }: EditorLayoutProps = {}) {
   }, [focusMode, setImmersionMode])
 
   useEffect(() => {
-    const handleGlobalBuild = () => setIsBuildModalOpen(true)
-    window.addEventListener('jpe:build', handleGlobalBuild)
-    return () => window.removeEventListener('jpe:build', handleGlobalBuild)
+    const handleGlobalExport = () => setIsExportWizardOpen(true)
+    window.addEventListener('jpe:export', handleGlobalExport)
+    window.addEventListener('jpe:build', handleGlobalExport) // Legacy fallback
+    return () => {
+      window.removeEventListener('jpe:export', handleGlobalExport)
+      window.removeEventListener('jpe:build', handleGlobalExport)
+    }
   }, [])
 
   useAutoSave()
 
   const handleNavigate = (item: string) => {
-    if (item === 'build') {
-      setIsBuildModalOpen(true)
+    if (item === 'build' || item === 'export') {
+      setIsExportWizardOpen(true)
       return
     }
     
@@ -176,9 +181,9 @@ export default function EditorLayout({ onNavigate }: EditorLayoutProps = {}) {
           onClose={() => setShowKeyboard(false)}
         />
 
-        <BuildProgressModal
-          isOpen={isBuildModalOpen}
-          onClose={() => setIsBuildModalOpen(false)}
+        <ExportWizard
+          isOpen={isExportWizardOpen}
+          onClose={() => setIsExportWizardOpen(false)}
         />
       </div>
     </div>
@@ -256,19 +261,14 @@ function StudioViewport({ workspaceMode, immersionMode, handleNavigate }: {
   )
 }
 
-function DiagnosticsSection({ showDiagnostics, diagnostics }: {
+function DiagnosticsSection({ showDiagnostics }: {
   showDiagnostics: boolean;
-  diagnostics: Diagnostic[];
 }) {
-  if (!showDiagnostics || diagnostics.length === 0) return null
+  if (!showDiagnostics) return null
   
   return (
-    <div className="h-40 border-t border-border-subtle overflow-hidden flex-shrink-0 bg-bg-panel">
-      <DiagnosticsPanel
-        diagnostics={diagnostics}
-        isOpen={showDiagnostics}
-        className="h-full"
-      />
+    <div className="h-48 border-t border-white/5 overflow-hidden flex-shrink-0 bg-[#0a0a0a] relative">
+      <DiagnosticsPanel />
     </div>
   )
 }

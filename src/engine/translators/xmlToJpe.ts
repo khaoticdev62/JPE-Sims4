@@ -158,11 +158,12 @@ export class XMLToJPETranslator {
 
     const lowerN = n.toLowerCase()
     
-    if (lowerN === 'tests' || lowerN === 'test_globals') return 'ONLY_IF'
+    if (lowerN === 'tests' || lowerN === 'test_globals' || lowerN === 'at_least_one') return 'ONLY_IF'
     if (lowerN === 'outcome' || lowerN === 'outcomes') return 'DO'
     if (lowerN === 'enabled') return 'WHEN'
     if (lowerN === 'interactions') return 'Interactions'
     if (lowerN === 'buffs') return 'Buffs'
+    if (lowerN === 'basic_extras') return 'effects'
 
     return null
   }

@@ -7,12 +7,13 @@ import { useProjectStore } from "@/stores/useProjectStore"
 import { toast } from "sonner"
 import { cn } from "@/utils/cn"
 import { JpeBundlerService } from "@/services/JpeBundlerService"
+import { useUIStore } from "@/stores/useUIStore"
 
 export function ExportMenu() {
   const { activeFileId, files, previewContent } = useEditorStore()
   const { currentProject } = useProjectStore()
+  const { setProjectExportOpen } = useUIStore()
   const [isOpen, setIsOpen] = React.useState(false)
-  const [isBuilding, setIsBuilding] = React.useState(false)
   const activeFile = files.find(f => f.id === activeFileId)
 
   const downloadFile = (content: string | ArrayBuffer, filename: string, mimeType: string) => {
@@ -45,53 +46,9 @@ export function ExportMenu() {
   }
 
   const handleExportPackage = async () => {
-    if (!activeFile || !previewContent) {
-      toast.error('No content to export. Transform JPE to XML first.')
-      return
-    }
-
-    setIsBuilding(true)
-    try {
-      const packageName = activeFile.name.replace('.jpe', '.package')
-      toast.loading(`Building ${packageName}...`)
-
-      // Use JpeBundlerService for industrial packing
-      const projectData = {
-        id: currentProject?.id || 'temp',
-        name: activeFile.name.replace('.jpe', ''),
-        rootPath: currentProject?.rootPath || '',
-        files: [{
-          id: activeFile.id,
-          name: activeFile.name,
-          type: 'jpe' as const,
-          content: activeFile.content,
-          path: activeFile.name,
-          projectId: activeFile.projectId || '',
-          isDirty: activeFile.isDirty || false,
-          size: activeFile.size || 0,
-          lastModified: activeFile.lastModified || Date.now(),
-        }],
-        metadata: currentProject?.metadata || { createdAt: Date.now(), updatedAt: Date.now(), version: '1.0.0' },
-      }
-
-      const result = await JpeBundlerService.buildProject(projectData as any)
-
-      toast.dismiss()
-
-      if (result.success && result.packageBuffer) {
-        downloadFile(result.packageBuffer, packageName, 'application/octet-stream')
-        toast.success(`${packageName} built and downloaded! (${result.logs.length} resources packed)`)
-      } else {
-        const errorMsg = result.logs.find(l => l.level === 'error')?.message || 'Build failed'
-        toast.error(`Build failed: ${errorMsg}`)
-      }
-    } catch (err: any) {
-      toast.dismiss()
-      toast.error(`Package export failed: ${err.message}`)
-    } finally {
-      setIsBuilding(false)
-      setIsOpen(false)
-    }
+    // Single file export now uses the unified dialog too for consistency and progress tracking
+    setProjectExportOpen(true)
+    setIsOpen(false)
   }
 
   const handleExportFullProject = async () => {
@@ -99,56 +56,8 @@ export function ExportMenu() {
       toast.error('No files in project to export.')
       return
     }
-
-    setIsBuilding(true)
-    try {
-      const projectName = currentProject.name || 'jpe-project'
-      const packageName = `${projectName}.package`
-      toast.loading(`Building full project: ${packageName}...`)
-
-      // Prepare all project files for bundling
-      const projectFiles = currentProject.files.map(f => ({
-        id: f.id,
-        name: f.name,
-        type: f.type as 'jpe' | 'xml' | 'stbl' | 'package' | 'py' | 'cfg' | 'json',
-        content: f.content || '',
-        path: f.path || f.name,
-        projectId: f.projectId || currentProject.id,
-        isDirty: f.isDirty || false,
-        size: f.size || 0,
-        lastModified: f.lastModified || Date.now(),
-      }))
-
-      const projectData = {
-        id: currentProject.id,
-        name: projectName,
-        rootPath: currentProject.rootPath || '',
-        files: projectFiles,
-        metadata: currentProject.metadata || {
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-          version: '1.0.0',
-        },
-      }
-
-      const result = await JpeBundlerService.buildProject(projectData as any)
-
-      toast.dismiss()
-
-      if (result.success && result.packageBuffer) {
-        downloadFile(result.packageBuffer, packageName, 'application/octet-stream')
-        toast.success(`Full project exported: ${packageName} (${result.logs.length} resources, ${projectFiles.length} files)`)
-      } else {
-        const errorMsg = result.logs.find(l => l.level === 'error')?.message || 'Build failed'
-        toast.error(`Project export failed: ${errorMsg}`)
-      }
-    } catch (err: any) {
-      toast.dismiss()
-      toast.error(`Full project export failed: ${err.message}`)
-    } finally {
-      setIsBuilding(false)
-      setIsOpen(false)
-    }
+    setProjectExportOpen(true)
+    setIsOpen(false)
   }
 
   const handleExportXMLInjector = () => {
@@ -229,7 +138,7 @@ export function ExportMenu() {
                   <Package className="w-4 h-4 text-cyan-400" />
                 </div>
                 <div>
-                  <p className="font-black italic">{isBuilding ? 'Building...' : 'Export Full Project'}</p>
+                  <p className="font-black italic">Export Full Project</p>
                   <p className="text-[8px] opacity-40">All Files + Metadata</p>
                 </div>
               </button>
@@ -243,7 +152,7 @@ export function ExportMenu() {
                   <Package className="w-4 h-4 text-emerald-400" />
                 </div>
                 <div>
-                  <p className="font-black italic">{isBuilding ? 'Building...' : 'Export .package'}</p>
+                  <p className="font-black italic">Export .package</p>
                   <p className="text-[8px] opacity-40">Sims 4 Production Bundle</p>
                 </div>
               </button>

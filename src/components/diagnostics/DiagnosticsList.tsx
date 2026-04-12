@@ -1,101 +1,125 @@
-"use client";
-
-import { useMemo } from 'react'
+import React, { useMemo, useState } from 'react'
+import { ChevronRight, AlertCircle, AlertTriangle, Info } from 'lucide-react'
+import { motion, AnimatePresence } from '../jpe-motion'
 import type { Diagnostic } from '@/types/index'
 import DiagnosticItem from './DiagnosticItem'
+import { T } from '../robust/jpe-theme'
+import { cn } from '@/utils/cn'
 
 interface DiagnosticsListProps {
   diagnostics: Diagnostic[]
-  groupBy: 'file' | 'severity'
   onNavigate?: (fileId: string, line: number, column: number) => void
 }
 
 /**
- * Grouped list of diagnostics
+ * Categorized list of diagnostics with collapsible sections - Industrialized for Story 3.3
  */
 export default function DiagnosticsList({
   diagnostics,
-  groupBy,
   onNavigate,
 }: DiagnosticsListProps) {
-  const grouped = useMemo(() => {
-    const groups: Record<string, Diagnostic[]> = {}
+  const [collapsedCategories, setCollapsedCategories] = useState<string[]>([])
+
+  const categories = useMemo(() => {
+    const cats: Record<string, Diagnostic[]> = {
+      error: [],
+      warning: [],
+      info: []
+    }
 
     diagnostics.forEach((diag) => {
-      const key = groupBy === 'file' ? diag.fileId : diag.severity
-      if (!groups[key]) {
-        groups[key] = []
+      const severity = diag.severity || 'info'
+      if (cats[severity]) {
+        cats[severity].push(diag)
+      } else {
+        cats.info.push(diag)
       }
-      groups[key].push(diag)
     })
 
-    return groups
-  }, [diagnostics, groupBy])
+    return cats
+  }, [diagnostics])
+
+  const toggleCategory = (cat: string) => {
+    setCollapsedCategories(prev => 
+      prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat]
+    )
+  }
 
   if (diagnostics.length === 0) {
     return (
-      <div className="p-4 text-center text-text-secondary text-sm">
-        No issues found
+      <div className="flex-1 flex flex-col items-center justify-center p-12 text-center opacity-40">
+        <div className="w-16 h-16 rounded-full bg-emerald-500/5 border border-emerald-500/20 flex items-center justify-center mb-4">
+           <span className="text-2xl">🌿</span>
+        </div>
+        <h3 className="text-xs font-black uppercase tracking-[0.2em] text-emerald-500">Zero Criticalities Found</h3>
+        <p className="text-[10px] text-text-muted mt-2 max-w-[200px] leading-relaxed">
+          Your JPE syntax is structurally sound. Ready for industrial synthesis.
+        </p>
       </div>
     )
   }
 
-  const getSeverityColor = (severity: string) => {
-    switch (severity) {
-      case 'error':
-        return 'text-state-error bg-state-error/10'
-      case 'warning':
-        return 'text-state-warning bg-state-warning/10'
-      case 'info':
-        return 'text-state-info bg-state-info/10'
-      default:
-        return 'text-text-secondary'
-    }
-  }
-
-  const getSeverityLabel = (severity: string) => {
-    switch (severity) {
-      case 'error':
-        return '🔴 Errors'
-      case 'warning':
-        return '⚠️ Warnings'
-      case 'info':
-        return 'ℹ️ Info'
-      default:
-        return severity
-    }
-  }
+  const catConfig = {
+    error: { icon: AlertCircle, label: 'Errors', color: 'text-state-error', bg: 'bg-state-error/5', border: 'border-state-error/20' },
+    warning: { icon: AlertTriangle, label: 'Warnings', color: 'text-state-warning', bg: 'bg-state-warning/5', border: 'border-state-warning/20' },
+    info: { icon: Info, label: 'Info', color: 'text-state-info', bg: 'bg-state-info/5', border: 'border-state-info/20' }
+  } as const
 
   return (
-    <div className="space-y-2">
-      {Object.entries(grouped).map(([groupKey, groupDiags]) => {
-        const isFile = groupBy === 'file'
-        const headerText = isFile ? groupKey : getSeverityLabel(groupKey)
-        const headerColor = isFile ? '' : getSeverityColor(groupKey)
+    <div className="space-y-4 pb-8">
+      {(Object.keys(catConfig) as Array<keyof typeof catConfig>).map((catKey) => {
+        const catDiags = categories[catKey]
+        if (catDiags.length === 0) return null
+
+        const config = catConfig[catKey]
+        const isCollapsed = collapsedCategories.includes(catKey)
 
         return (
-          <div key={groupKey}>
-            {/* Group Header */}
-            <div
-              className={`px-4 py-2 text-xs font-semibold sticky top-0 ${headerColor} rounded`}
+          <div key={catKey} className="flex flex-col">
+            {/* ── CATEGORY HEADER ── */}
+            <button
+              onClick={() => toggleCategory(catKey)}
+              className={cn(
+                "flex items-center gap-2 w-full px-3 py-1.5 transition-all outline-none group sticky top-0 z-10 backdrop-blur-md border-y",
+                config.bg, config.border
+              )}
             >
-              <span>{headerText}</span>
-              <span className="ml-auto text-text-secondary float-right">
-                ({groupDiags.length})
+              <ChevronRight 
+                size={12} 
+                className={cn("text-text-muted transition-transform duration-200", !isCollapsed && "rotate-90")} 
+              />
+              <config.icon size={12} className={cn(config.color)} />
+              <span className={cn("text-[10px] font-black uppercase tracking-[0.2em]", config.color)}>
+                {config.label}
               </span>
-            </div>
+              <span className="ml-auto text-[9px] font-mono opacity-50 text-text-primary px-1.5 py-0.5 rounded-full bg-black/20">
+                {catDiags.length}
+              </span>
+            </button>
 
-            {/* Group Items */}
-            <div className="space-y-1 pl-2 border-l border-border-subtle">
-              {groupDiags.map((diag, index) => (
-                <DiagnosticItem
-                  key={`${groupKey}-${index}`}
-                  diagnostic={diag}
-                  fileName={isFile ? diag.fileId.split('/').pop() || diag.fileId : ''}
-                  onNavigate={onNavigate}
-                />
-              ))}
-            </div>
+            {/* ── CATEGORY ITEMS ── */}
+            <AnimatePresence initial={false}>
+              {!isCollapsed && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.2, ease: "easeOut" }}
+                  className="overflow-hidden"
+                >
+                  <div className="divide-y divide-white/[0.03]">
+                    {catDiags.map((diag, idx) => (
+                      <DiagnosticItem
+                        key={diag.id || `${catKey}-${idx}`}
+                        diagnostic={diag}
+                        fileName={diag.fileId.split('/').pop() || diag.fileId}
+                        onNavigate={onNavigate}
+                      />
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         )
       })}

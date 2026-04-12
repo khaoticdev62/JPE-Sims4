@@ -416,6 +416,68 @@ export function EmptySettings() {
   );
 }
 
+export function SpectralHologram({ 
+  icon: Icon, 
+  title, 
+  description, 
+  action 
+}: { 
+  icon: LucideIcon; 
+  title: string; 
+  description: string; 
+  action?: { label: string; onClick: () => void } 
+}) {
+  return (
+    <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
+      <div className="relative mb-6">
+        {/* Hologram Base */}
+        <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-16 h-1 bg-cyan opacity-20 blur-sm rounded-full" />
+        
+        {/* Animated Light Beams */}
+        <motion.div
+          animate={{ 
+            opacity: [0.1, 0.3, 0.1],
+            scaleX: [1, 1.1, 1]
+          }}
+          transition={{ duration: 4, repeat: Infinity }}
+          className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-24 h-32 bg-gradient-to-t from-cyan/20 to-transparent"
+          style={{ clipPath: 'polygon(20% 0%, 80% 0%, 100% 100%, 0% 100%)' }}
+        />
+        
+        {/* Pulsing Icon */}
+        <motion.div
+          animate={{ 
+            y: [0, -8, 0],
+            filter: ["drop-shadow(0 0 5px rgba(0,243,255,0.2))", "drop-shadow(0 0 15px rgba(0,243,255,0.5))", "drop-shadow(0 0 5px rgba(0,243,255,0.2))"]
+          }}
+          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+          className="relative z-10"
+        >
+          <div className="p-4 rounded-2xl bg-cyan/5 border border-cyan/20 backdrop-blur-sm">
+            <Icon size={32} color={T.cyan} strokeWidth={1.5} />
+          </div>
+        </motion.div>
+      </div>
+      
+      <h3 style={{ fontSize: 13, fontWeight: 800, color: T.textPrimary, fontFamily: T.mono, letterSpacing: "0.05em" }} className="mb-1 uppercase">
+        {title}
+      </h3>
+      <p style={{ fontSize: 10, color: T.textMuted, maxWidth: 200, lineHeight: 1.4 }} className="mb-4">
+        {description}
+      </p>
+      
+      {action && (
+        <button
+          onClick={action.onClick}
+          className="px-3 py-1.5 rounded-lg border border-cyan/30 bg-cyan/5 text-[10px] font-bold text-cyan hover:bg-cyan/10 hover:border-cyan transition-all"
+        >
+          {action.label.toUpperCase()}
+        </button>
+      )}
+    </div>
+  );
+}
+
 /* ═══════════════════════════════════════════════════════════════
    LOADING SKELETON STATES
    ═══════════════════════════════════════════════════════════════ */

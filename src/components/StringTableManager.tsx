@@ -5,15 +5,20 @@
    STBL editor: FNV-32a hash generator, inline edit,
    duplicate detector, CSV / XLIFF / JSON import-export.
    ───────────────────────────────────────────────────────────── */
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import {
   X, Hash, Search, Plus, Trash2, Download, Upload,
   Copy, Check, AlertTriangle, FileText, ArrowUpDown,
-  CheckCircle2, XCircle, Globe,
+  CheckCircle2, XCircle, Globe, Settings2, RefreshCw,
+  Layers, ChevronRight,
 } from "lucide-react";
 import { motion, AnimatePresence } from "./jpe-motion";
 import { T } from "./robust/jpe-theme";
 import { toast } from "sonner";
+import { useProjectStore } from "@/stores/useProjectStore";
+import { STBLService } from "@/services/translation/stbl";
+import { StblBatchService } from "@/services/translation/StblBatchService";
+import { FileService } from "@/services/FileService";
 
 /* ── Types ── */
 type StblStatus = "ok" | "missing" | "fuzzy" | "conflict";
@@ -107,8 +112,14 @@ function Stat({label,value,color}:{label:string;value:number|string;color:string
 
 /* ── Main ── */
 export function StringTableManager({isOpen,onClose}:{isOpen:boolean;onClose:()=>void}) {
+  const { currentProject, updateFile, saveFile } = useProjectStore();
   const [tab,setTab]           = useState<StblTab>("editor");
-  const [entries,setEntries]   = useState<StblEntry[]>(INITIAL);
+  
+  // Real Project State
+  const [activeFileId, setActiveFileId] = useState<string | null>(null);
+  const [entries,setEntries]           = useState<StblEntry[]>([]);
+  const [isLoading, setIsLoading]     = useState(false);
+
   const [selected,setSelected] = useState<string|null>(null);
   const [draft,setDraft]       = useState<Partial<StblEntry>|null>(null);
   const [search,setSearch]     = useState("");
@@ -117,6 +128,66 @@ export function StringTableManager({isOpen,onClose}:{isOpen:boolean;onClose:()=>
   const [sortD,setSortD]       = useState<SortDir>("asc");
   const [hashIn,setHashIn]     = useState("");
   const [batch,setBatch]       = useState("");
+
+  // Batch Tools State
+  const [replaceSearch, setReplaceSearch]   = useState("");
+  const [replaceTarget, setReplaceTarget]   = useState("");
+  const [isSyncing, setIsSyncing]           = useState(false);
+
+  // Filter STBL files from project
+  const stblFiles = useMemo(() => 
+    currentProject?.files.filter(f => f.type === 'stbl') ?? [], 
+    [currentProject]
+  );
+
+  // Load selected STBL file
+  useEffect(() => {
+    if (!isOpen || !activeFileId) return;
+    
+    const loadFile = async () => {
+      setIsLoading(true);
+      try {
+        const file = stblFiles.find(f => f.id === activeFileId);
+        if (!file) return;
+
+        let buffer: Buffer | null = null;
+        if (file.content) {
+          buffer = Buffer.from(file.content, 'base64');
+        } else {
+          const ab = await FileService.readFileBuffer(file.path);
+          if (ab) buffer = Buffer.from(ab);
+        }
+
+        if (buffer) {
+          const parsed = STBLService.parse(buffer);
+          setEntries(parsed.map((e, i) => ({
+            id: `e${i}`,
+            hash: `0x${e.key.toString(16).toUpperCase().padStart(8, '0')}`,
+            keyString: `0x${e.key.toString(16).toUpperCase()}`, // Binary STBLs don't store key strings, just hashes
+            source: e.text,
+            translation: "", // Single file mode: source is text
+            status: "ok"
+          })));
+        }
+      } catch (err) {
+        toast.error("Failed to load STBL file");
+        console.error(err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadFile();
+  }, [activeFileId, isOpen, stblFiles]);
+
+  // Initial selection
+  useEffect(() => {
+    if (isOpen && !activeFileId && stblFiles.length > 0) {
+      setActiveFileId(stblFiles[0].id);
+    }
+  }, [isOpen, activeFileId, stblFiles]);
+
+  const activeFile = stblFiles.find(f => f.id === activeFileId);
 
   const selEntry = entries.find(e=>e.id===selected)??null;
 
@@ -145,10 +216,29 @@ export function StringTableManager({isOpen,onClose}:{isOpen:boolean;onClose:()=>
 
   const startEdit = useCallback((e:StblEntry)=>{ setSelected(e.id); setDraft({...e}); },[]);
 
-  const commitEdit = ()=>{
-    if(!draft||!selected) return;
-    setEntries(prev=>prev.map(e=>e.id===selected?{...e,...draft}:e));
-    toast.success("Entry saved"); setDraft(null);
+  const commitEdit = async () => {
+    if(!draft||!selected||!activeFile) return;
+    
+    // Update local state for immediate UI feedback
+    const updatedEntries = entries.map(e=>e.id===selected?{...e,...draft}:e);
+    setEntries(updatedEntries);
+    
+    try {
+      // Re-generate binary buffer and save to project
+      const rawEntries = updatedEntries.map(e => ({
+        key: parseInt(e.hash, 16),
+        text: (e.id === selected) ? (draft.source ?? e.source) : e.source
+      }));
+      
+      const buffer = STBLService.generateFromEntries(rawEntries);
+      await FileService.writeFileBuffer(activeFile.path, buffer.buffer as ArrayBuffer);
+      
+      toast.success("Entry saved and compiled to binary");
+      setDraft(null);
+    } catch (err) {
+      toast.error("Failed to save STBL binary");
+      console.error(err);
+    }
   };
 
   const deleteEntry = (id:string)=>{ setEntries(prev=>prev.filter(e=>e.id!==id)); if(selected===id){setSelected(null);setDraft(null);} toast.success("Entry deleted"); };
@@ -165,8 +255,37 @@ export function StringTableManager({isOpen,onClose}:{isOpen:boolean;onClose:()=>
     {id:"editor",   label:"STBL Editor",          Icon:FileText},
     {id:"hash",     label:"Hash Generator",        Icon:Hash},
     {id:"duplicates",label:`Duplicates (${dups.length})`,Icon:Copy},
-    {id:"io",       label:"Import / Export",       Icon:Download},
+    {id:"io",       label:"Batch & Sync",          Icon:Layers},
   ];
+
+  const handleGlobalReplace = async () => {
+    if (!currentProject || !replaceSearch) {
+      toast.error("Please enter a search term");
+      return;
+    }
+    const res = await StblBatchService.globalSearchAndReplace(currentProject, replaceSearch, replaceTarget);
+    if (res.totalChanges > 0) {
+      toast.success(`Replaced ${res.totalChanges} occurrences across ${res.modifiedFiles.length} files`);
+      // Refresh current project to get updated contents
+      // Wait for project saving or store to realize files changed
+    } else {
+      toast.info("No occurrences found to replace");
+    }
+  };
+
+  const handleSync = async () => {
+    if (!currentProject || !activeFileId) return;
+    setIsSyncing(true);
+    try {
+      const targets = stblFiles.filter(f => f.id !== activeFileId).map(f => f.id);
+      const res = await StblBatchService.syncLocales(currentProject, activeFileId, targets);
+      toast.success(`Synced ${res.totalChanges} strings across all locales`);
+    } catch (err) {
+      toast.error("Sync failed");
+    } finally {
+      setIsSyncing(false);
+    }
+  };
 
   return (
     <AnimatePresence>
@@ -190,7 +309,9 @@ export function StringTableManager({isOpen,onClose}:{isOpen:boolean;onClose:()=>
                 </div>
                 <div>
                   <div style={{fontSize:15,fontWeight:700,color:T.textPrimary,fontFamily:T.display}}>String Table Manager</div>
-                  <div style={{fontSize:10,color:T.textMuted,fontFamily:T.mono}}>{entries.length} entries · locale: es-ES · Evil_Trait_Override.package</div>
+                  <div style={{fontSize:10,color:T.textMuted,fontFamily:T.mono}}>
+                    {entries.length} strings · {activeFile?.name ?? "No file selected"}
+                  </div>
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -233,6 +354,34 @@ export function StringTableManager({isOpen,onClose}:{isOpen:boolean;onClose:()=>
 
             {/* Content */}
             <div className="flex-1 min-h-0 flex overflow-hidden">
+              
+              {/* Sidebar (File List) */}
+              <div className="w-56 flex-shrink-0 flex flex-col" style={{borderRight:`1px solid ${T.border}`, background: "rgba(0,0,0,0.1)"}}>
+                <div className="px-4 py-2 border-b border-white/5 bg-white/5">
+                  <span style={{fontSize:9, fontWeight:700, color:T.textMuted, letterSpacing:"0.08em"}}>PROJECT STBLS</span>
+                </div>
+                <div className="flex-1 overflow-y-auto py-2">
+                  {stblFiles.map(file => {
+                    const active = file.id === activeFileId;
+                    return (
+                      <button key={file.id} onClick={() => setActiveFileId(file.id)}
+                        className="w-full flex items-center gap-2 px-4 py-2 transition-all group"
+                        style={{background: active ? `${T.cyan}10` : "transparent", color: active ? T.cyan : T.textSecondary}}>
+                        <FileText size={12} className={active ? "opacity-100" : "opacity-40 group-hover:opacity-80"} />
+                        <span style={{fontSize:11, textAlign: "left"}} className="truncate flex-1">{file.name}</span>
+                        {active && <ChevronRight size={10} />}
+                      </button>
+                    );
+                   })}
+                   {stblFiles.length === 0 && (
+                     <div className="p-4 text-center">
+                       <span style={{fontSize:10, color:T.textMuted}}>No STBL files in project</span>
+                     </div>
+                   )}
+                </div>
+              </div>
+
+              <div className="flex-1 min-w-0 flex overflow-hidden">
 
               {/* ── EDITOR ── */}
               {tab==="editor" && (
@@ -454,50 +603,102 @@ export function StringTableManager({isOpen,onClose}:{isOpen:boolean;onClose:()=>
                 </div>
               )}
 
-              {/* ── IMPORT / EXPORT ── */}
+              {/* ── BATCH & SYNC ── */}
               {tab==="io" && (
                 <div className="flex-1 p-6 space-y-6 overflow-y-auto">
-                  <div>
-                    <div style={{fontSize:13,fontWeight:700,color:T.textPrimary}}>Import / Export</div>
-                    <div style={{fontSize:11,color:T.textMuted}}>Exchange string tables with translation tools and other Sims 4 editors.</div>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div style={{fontSize:13,fontWeight:700,color:T.textPrimary}}>Batch Operations & Synchronization</div>
+                      <div style={{fontSize:11,color:T.textMuted}}>Manage strings across all locales in the project.</div>
+                    </div>
+                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-white/5 bg-white/5">
+                      <Globe size={12} color={T.cyan}/>
+                      <span style={{fontSize:11, fontWeight:700, color:T.textPrimary}}>{stblFiles.length} Locales Detected</span>
+                    </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    {/* Export */}
-                    {[{dir:"Export",icon:Download},{dir:"Import",icon:Upload}].map(({dir,icon:Icon})=>(
-                      <div key={dir} className="rounded-xl overflow-hidden" style={{border:`1px solid ${T.border}`}}>
-                        <div className="px-4 py-2 flex items-center gap-2" style={{background:T.bgSurface,borderBottom:`1px solid ${T.border}`}}>
-                          <Icon size={12} color={T.textMuted}/>
-                          <span style={{fontSize:10,fontWeight:700,color:T.textMuted,letterSpacing:"0.06em"}}>{dir.toUpperCase()}</span>
-                        </div>
-                        <div className="p-4 space-y-2">
-                          {[
-                            {fmt:"CSV",  color:T.emerald, desc:dir==="Export"?`${entries.length} entries`:"Comma-separated"},
-                            {fmt:"XLIFF",color:T.violet,  desc:dir==="Export"?"Translation eXchange":"XLIFF 2.0 format"},
-                            {fmt:"JSON", color:T.amber,   desc:dir==="Export"?"Machine-readable":"Array format"},
-                            {fmt:"PKG",  color:T.cyan,    desc:dir==="Export"?"Sims 4 binary":"Binary .package"},
-                          ].map(opt=>(
-                            <button key={opt.fmt}
-                              onClick={()=>dir==="Export"
-                                ?toast.success(`${opt.fmt} exported`,{description:`strings_es-ES.${opt.fmt.toLowerCase()}`})
-                                :toast.info(`Import ${opt.fmt}`,{description:"File picker disabled in demo mode"})}
-                              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all"
-                              style={{background:"rgba(255,255,255,0.02)",border:`1px solid ${T.borderSubtle}`}}
-                              onMouseEnter={e=>{e.currentTarget.style.background=T.bgHover;}}
-                              onMouseLeave={e=>{e.currentTarget.style.background="rgba(255,255,255,0.02)";}}>
-                              <span className="flex-shrink-0 px-1.5 py-0.5 rounded" style={{fontSize:9,fontWeight:800,fontFamily:T.mono,color:opt.color,background:`${opt.color}15`}}>{opt.fmt}</span>
-                              <span style={{fontSize:11,color:T.textSecondary,flex:1,textAlign:"left"}}>{dir} as {opt.fmt}</span>
-                              <span style={{fontSize:9,color:T.textDim}}>{opt.desc}</span>
-                              <Icon size={11} color={T.textDim}/>
-                            </button>
-                          ))}
-                        </div>
+
+                  <div className="grid grid-cols-2 gap-6">
+                    {/* Global Search & Replace */}
+                    <div className="flex flex-col rounded-xl overflow-hidden" style={{border:`1px solid ${T.border}`, background: "rgba(0,0,0,0.05)"}}>
+                      <div className="px-4 py-2 flex items-center gap-2" style={{background:T.bgSurface,borderBottom:`1px solid ${T.border}`}}>
+                        <Search size={12} color={T.cyan}/>
+                        <span style={{fontSize:10,fontWeight:700,color:T.textMuted,letterSpacing:"0.06em"}}>GLOBAL SEARCH & REPLACE</span>
                       </div>
-                    ))}
+                      <div className="p-4 space-y-4">
+                        <div className="space-y-1.5">
+                          <label style={{fontSize:9, fontWeight:700, color:T.textMuted}}>FIND</label>
+                          <input value={replaceSearch} onChange={e=>setReplaceSearch(e.target.value)} placeholder="Search text across all files…" 
+                            className="w-full px-3 py-2 rounded-lg outline-none bg-black/20 border border-white/10" style={{fontSize:12, color:T.textPrimary}}/>
+                        </div>
+                        <div className="space-y-1.5">
+                          <label style={{fontSize:9, fontWeight:700, color:T.textMuted}}>REPLACE WITH</label>
+                          <input value={replaceTarget} onChange={e=>setReplaceTarget(e.target.value)} placeholder="New text…" 
+                            className="w-full px-3 py-2 rounded-lg outline-none bg-black/20 border border-white/10" style={{fontSize:12, color:T.textPrimary}}/>
+                        </div>
+                        <button onClick={handleGlobalReplace} className="w-full py-2.5 rounded-lg transition-all flex items-center justify-center gap-2"
+                          style={{background: `${T.cyan}20`, border: `1px solid ${T.cyan}40`, color: T.cyan, fontSize: 12, fontWeight: 700}}>
+                          <RefreshCw size={14} /> Run Global Replace
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Locale Sync */}
+                    <div className="flex flex-col rounded-xl overflow-hidden" style={{border:`1px solid ${T.border}`, background: "rgba(0,0,0,0.05)"}}>
+                      <div className="px-4 py-2 flex items-center gap-2" style={{background:T.bgSurface,borderBottom:`1px solid ${T.border}`}}>
+                        <Globe size={12} color={T.emerald}/>
+                        <span style={{fontSize:10,fontWeight:700,color:T.textMuted,letterSpacing:"0.06em"}}>LOCALE SYNCHRONIZATION</span>
+                      </div>
+                      <div className="p-4 space-y-4">
+                        <div className="p-3 rounded-lg bg-emerald-500/5 border border-emerald-500/10 space-y-2">
+                          <div className="flex items-center gap-2">
+                            <Settings2 size={12} color={T.emerald}/>
+                            <span style={{fontSize:11, color: T.textSecondary}}>Sync active locale strings to all others.</span>
+                          </div>
+                          <div style={{fontSize:10, color: T.textMuted}}>
+                            Source: <span style={{color: T.emerald}}>{activeFile?.name}</span>
+                          </div>
+                        </div>
+                        <p style={{fontSize:11, color: T.textMuted}}>
+                          This will ensure all other STBL files in the project have the same keys as the source. Missing strings in targets will be added from the source.
+                        </p>
+                        <button onClick={handleSync} disabled={isSyncing} className="w-full py-2.5 rounded-lg transition-all flex items-center justify-center gap-2"
+                          style={{background: `${T.emerald}20`, border: `1px solid ${T.emerald}40`, color: T.emerald, fontSize: 12, fontWeight: 700, opacity: isSyncing ? 0.5 : 1}}>
+                          {isSyncing ? <RefreshCw size={14} className="animate-spin" /> : <RefreshCw size={14} />} 
+                          Synchronize All Locales
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Import / Export Fallback */}
+                  <div className="flex items-center justify-center gap-4 py-4" style={{borderTop: `1px solid ${T.border}`}}>
+                    <button className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 hover:bg-white/5 transition-all" style={{fontSize:12, color: T.textSecondary}}>
+                      <Upload size={14} /> Import from CSV / XLIFF
+                    </button>
+                    <button className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 hover:bg-white/5 transition-all" style={{fontSize:12, color: T.textSecondary}}>
+                      <Download size={14} /> Export Project Strings
+                    </button>
                   </div>
                 </div>
               )}
 
             </div>
+          </div>
+
+            {/* Loading Overlay */}
+            <AnimatePresence>
+              {isLoading && (
+                <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}
+                  className="absolute inset-0 z-50 flex items-center justify-center" style={{background:"rgba(0,0,0,0.6)", backdropFilter:"blur(4px)"}}>
+                  <div className="flex flex-col items-center gap-4">
+                    <div className="w-12 h-12 rounded-2xl flex items-center justify-center animate-pulse" style={{background:`linear-gradient(135deg,${T.cyan}40,${T.emerald}40)`, border:`1px solid ${T.cyan}60`}}>
+                      <RefreshCw size={24} color={T.cyan} className="animate-spin" />
+                    </div>
+                    <span style={{fontSize:12, fontWeight:700, color:T.cyan, letterSpacing:"0.1em"}}>DECODING BINARY STBL...</span>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.div>
         </motion.div>
       )}

@@ -9,7 +9,7 @@ import { JPELexer } from '@/services/translation/lexer'
 import { JPELogicParser } from '@/services/translation/parser'
 import { JPETranslator } from '@/services/translation/translator'
 
-const VALIDATION_DEBOUNCE_MS = 300
+const VALIDATION_DEBOUNCE_MS = 200
 
 /**
  * Hook for real-time validation of file content

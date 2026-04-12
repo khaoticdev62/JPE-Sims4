@@ -43,6 +43,10 @@ const electronAPI = {
     rename: (oldPath: string, newName: string) =>
       ipcRenderer.invoke('project:rename', oldPath, newName),
     readFile: (filePath: string) => ipcRenderer.invoke('project:readFile', filePath),
+    search: (dirPath: string, query: string, options: any) =>
+      ipcRenderer.invoke('project:search', dirPath, query, options),
+    replaceInFiles: (dirPath: string, query: string, replacement: string, options: any) =>
+      ipcRenderer.invoke('project:replaceInFiles', dirPath, query, replacement, options),
   },
   window: {
     minimize: () => ipcRenderer.invoke('window:minimize'),

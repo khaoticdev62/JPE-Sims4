@@ -77,45 +77,6 @@ export function ModPublishDialog({ isOpen, onClose, projectName, packageBuffer }
     }
   };
 
-  const handlePublish = async () => {
-    if (!topicTitle) {
-      setErrorMessage('Topic title is required');
-      setStep('error');
-      return;
-    }
-
-    setStep('uploading');
-    setUploadProgress(40);
-
-    try {
-      // Simulate upload progress
-      const progressInterval = setInterval(() => {
-        setUploadProgress(prev => {
-          if (prev >= 90) {
-            clearInterval(progressInterval);
-            return 90;
-          }
-          return prev + 10;
-        });
-      }, 300);
-
-      // In a real implementation, this would call the TS4Rebels API to create a topic and upload the package
-      // For now, we'll simulate the flow with a timeout
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
-      clearInterval(progressInterval);
-      setUploadProgress(100);
-
-      // Simulate success
-      setTimeout(() => {
-        setStep('success');
-        toast.success(`${projectName} published to TS4Rebels!`);
-      }, 500);
-    } catch (err: any) {
-      setErrorMessage(err.message || 'Publishing failed');
-      setStep('error');
-    }
-  };
 
   const handleClose = () => {
     setStep('login');

@@ -10,6 +10,7 @@ import {
 import { motion, StaggerList, StaggerItem } from '@/components/jpe-motion';
 import { JpeButton, JpeCard, JpeStatusBadge } from '@/components/jpe-design-system';
 import { useProjectStore } from '@/stores/useProjectStore';
+import { SpectralHologram } from '@/components/jpe-empty-states';
 
 interface Project {
   id: string;
@@ -127,44 +128,18 @@ export function ProjectsPage({ onNavigate }: { onNavigate?: (target: string) => 
           </StaggerList>
         ) : !searchQuery ? (
           /* PREMIUM EMPTY STATE */
-          <div className="flex flex-col items-center justify-center py-32 text-center">
-            <div className="relative mb-8 group">
-              <div className="absolute inset-0 bg-cyan/20 blur-[80px] rounded-full animate-pulse group-hover:bg-cyan/40 transition-colors duration-700" />
-              <div className="relative w-32 h-32 rounded-3xl border-2 border-dashed border-cyan/40 flex items-center justify-center bg-bgPanel/40 backdrop-blur-xl group-hover:border-cyan transition-all duration-500 shadow-[0_0_20px_rgba(34,211,238,0.1)]">
-                 <FolderOpen size={48} className="text-cyan/30 group-hover:text-cyan transition-all duration-500 transform group-hover:scale-110 group-hover:drop-shadow-[0_0_15px_rgba(34,211,238,0.5)]" />
-                 
-                 {/* Internal Scanline Effect for Icon */}
-                 <div className="absolute inset-4 opacity-10 pointer-events-none overflow-hidden rounded-xl">
-                    <div className="w-full h-full bg-gradient-to-b from-transparent via-cyan/50 to-transparent animate-pulse" style={{ backgroundSize: '100% 2px' }} />
-                 </div>
-
-                 <motion.div
-                    animate={{ y: [0, -4, 0], scale: [1, 1.1, 1] }}
-                    transition={{ repeat: Infinity, duration: 2 }}
-                    className="absolute -bottom-2 -right-2 text-cyan drop-shadow-[0_0_15px_rgba(34,211,238,0.6)] bg-bgDeep rounded-full p-1 border border-cyan/20"
-                 >
-                   <Plus size={32} strokeWidth={3} />
-                 </motion.div>
-              </div>
-            </div>
-
-            <h2 style={{ fontSize: 24, fontWeight: 950, fontFamily: T.display, color: T.textPrimary, marginBottom: 12 }} className="uppercase italic tracking-tighter">
-              No project traces detected
-            </h2>
-            <p style={{ fontSize: 13, color: T.textSecondary, maxWidth: 420, marginBottom: 32, lineHeight: 1.6 }} className="font-medium">
-              Your workspace is currently a clean slate. Initialize your first project to begin the industrial translation sequence and establish archive parity.
-            </p>
-
-            <div className="flex gap-4">
-              <JpeButton variant="spectral" size="lg" icon={Plus} onClick={() => onNavigate?.('new_project')}>
-                INITIALIZE_FIRST_PROJECT
-              </JpeButton>
-              <JpeButton variant="ghost" size="lg" icon={FolderOpen} onClick={() => onNavigate?.('code')}>
-                OPEN_EXISTING
-              </JpeButton>
-            </div>
-
-            <div className="mt-12 flex items-center gap-6 text-[10px] font-mono text-textMuted uppercase tracking-widest">
+          <div className="flex flex-col items-center justify-center py-20">
+            <SpectralHologram 
+              icon={FolderOpen} 
+              title="Project Traces Missing" 
+              description="Your vault is currently empty. Initialize a new project or open an existing archive to begin synchronization."
+              action={{ 
+                label: "Initialize Project", 
+                onClick: () => onNavigate?.('new_project') 
+              }}
+            />
+            
+            <div className="mt-8 flex items-center gap-6 text-[10px] font-mono text-textMuted uppercase tracking-widest opacity-50">
               <div className="flex items-center gap-2">
                 <div className="w-1.5 h-1.5 rounded-full bg-cyan/40 animate-pulse" />
                 <span>Ready to Initialize</span>
@@ -172,10 +147,6 @@ export function ProjectsPage({ onNavigate }: { onNavigate?: (target: string) => 
               <div className="flex items-center gap-2">
                 <div className="w-1.5 h-1.5 rounded-full bg-violet/40" />
                 <span>0 Archives</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald/40" />
-                <span>Clean Slate</span>
               </div>
             </div>
           </div>

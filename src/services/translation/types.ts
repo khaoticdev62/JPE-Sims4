@@ -92,6 +92,7 @@ export interface InteractionNode extends BaseAstNode {
   name: string
   instanceId?: string // Meta: Sims 4 hex ID (e.g. 0x0123)
   className?: string // Meta: the Sims 4 class (e.g. SocialSuperInteraction)
+  moduleName?: string // Meta: the module path (e.g. interactions.base.interaction)
   properties: (PropertyNode | BlockNode)[]
 }
 

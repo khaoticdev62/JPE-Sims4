@@ -51,41 +51,36 @@ export class OpenAIService extends BaseAIService {
 
     try {
       let response: any
+      const apiUrl = 'https://api.openai.com/v1/chat/completions'
+      const payload = {
+        model: this.model,
+        messages: messages.map(m => ({ role: m.role, content: m.content }))
+      }
+      const headers = {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json'
+      }
+
       if (this.isElectron) {
-        response = await this.callNativeBridge<any>('openai', 'post', `${this.apiBaseUrl}/openai/chat`, {
-          model: this.model,
-          messages: messages.map(m => ({ role: m.role, content: m.content }))
-        }, {
-          'Authorization': `Bearer ${apiKey}`,
-          'Content-Type': 'application/json'
-        })
+        response = await this.callNativeBridge<any>('openai', 'post', apiUrl, payload, headers)
       } else {
         response = await this.performRequest<any>('chat', () => axios.post(
-          `${this.apiBaseUrl}/openai/chat`,
-          {
-            model: this.model,
-            messages: messages.map(m => ({ role: m.role, content: m.content }))
-          },
-          {
-            headers: {
-              'Authorization': `Bearer ${apiKey}`,
-              'Content-Type': 'application/json'
-            }
-          }
+          apiUrl, payload, { headers }
         ), messages.map(m => m.content).join(' '), false)
       }
 
       const data = response.data
-      if (!data?.success || !data?.text) {
-        throw new Error(data?.error || 'OpenAI API request failed')
+      const text = data?.choices?.[0]?.message?.content
+      if (!text) {
+        throw new Error(data?.error?.message || 'OpenAI API request failed')
       }
 
-      if (data.usage?.totalTokens) {
-        this.usageStats.totalTokensUsed += data.usage.totalTokens
+      if (data.usage?.total_tokens) {
+        this.usageStats.totalTokensUsed += data.usage.total_tokens
       }
 
-      this.cache.set(cacheKey, data.text)
-      return { success: true, text: data.text, cached: false, timestamp: Date.now() }
+      this.cache.set(cacheKey, text)
+      return { success: true, text, cached: false, timestamp: Date.now() }
     } catch (error: any) {
       console.error('[OpenAIService] Chat Error:', error)
       return { success: false, error: error.message, cached: false, timestamp: Date.now() }
@@ -103,26 +98,24 @@ export class OpenAIService extends BaseAIService {
     }
 
     try {
+      const apiUrl = 'https://api.openai.com/v1/chat/completions'
+      const headers = { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' }
       const response = await this.performRequest<any>('explain', () => axios.post(
-        `${this.apiBaseUrl}/openai/chat`,
+        apiUrl,
         {
           model: this.model,
           messages: [{ role: 'user', content: `Explain this Sims 4 mod file: ${fileName}\n\n${fileContent.substring(0, 4000)}` }]},
-        {
-          headers: {
-            'Authorization': `Bearer ${apiKey}`,
-            'Content-Type': 'application/json'
-          }
-        }
+        { headers }
       ), fileContent, false)
 
       const data = response.data
-      if (!data.success || !data.text) throw new Error(data.error || 'Explanation failed')
+      const text = data?.choices?.[0]?.message?.content
+      if (!text) throw new Error(data?.error?.message || 'Explanation failed')
       
-      if (data.usage?.totalTokens) this.usageStats.totalTokensUsed += data.usage.totalTokens
+      if (data.usage?.total_tokens) this.usageStats.totalTokensUsed += data.usage.total_tokens
 
-      this.cache.set(cacheKey, data.text)
-      return { success: true, explanation: this.parseExplanation(data.text), cached: false, timestamp: Date.now() }
+      this.cache.set(cacheKey, text)
+      return { success: true, explanation: this.parseExplanation(text), cached: false, timestamp: Date.now() }
     } catch (error: any) {
       return { success: false, error: error.message, cached: false, timestamp: Date.now() }
     }
@@ -139,29 +132,27 @@ export class OpenAIService extends BaseAIService {
     const aiPrompt = `Fix the following error in a JPE file: ${fileName}\nError: ${errorMessage}\nContext: ${errorContext}\n\nFull Content:\n${fileContent}\n\nReturn ONLY a JSON object with "fixedCode" and "explanation".`
 
     try {
+      const apiUrl = 'https://api.openai.com/v1/chat/completions'
+      const headers = { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' }
       const response = await this.performRequest<any>('fix', () => axios.post(
-        `${this.apiBaseUrl}/openai/chat`,
+        apiUrl,
         {
           model: this.model,
           messages: [{ role: 'user', content: aiPrompt }],
           response_format: { type: 'json_object' }
         },
-        {
-          headers: {
-            'Authorization': `Bearer ${apiKey}`,
-            'Content-Type': 'application/json'
-          }
-        }
+        { headers }
       ), aiPrompt, false)
 
       const data = response.data
-      if (!data.success || !data.text) throw new Error(data.error || 'Fix suggestion failed')
+      const text = data?.choices?.[0]?.message?.content
+      if (!text) throw new Error(data?.error?.message || 'Fix suggestion failed')
       
-      if (data.usage?.totalTokens) this.usageStats.totalTokensUsed += data.usage.totalTokens
+      if (data.usage?.total_tokens) this.usageStats.totalTokensUsed += data.usage.total_tokens
 
       let result = { fixedCode: '', explanation: { overview: 'Extraction failed', purpose: '', keyFields: [], effects: [], notes: [] } as Explanation }
       try {
-        const parsed = JSON.parse(data.text)
+        const parsed = JSON.parse(text)
         result = {
           fixedCode: parsed.fixedCode || '',
           explanation: { overview: parsed.explanation || '', purpose: '', keyFields: [], effects: [], notes: [] }
@@ -182,24 +173,22 @@ export class OpenAIService extends BaseAIService {
     const prompt = `Analyze these Sims 4 project elements for conflicts:\n${JSON.stringify(map)}\n\nReturn JSON with "diagnostics": [ { fileId, line, column, severity, message, code } ]`
     
     try {
+      const apiUrl = 'https://api.openai.com/v1/chat/completions'
+      const headers = { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' }
       const res = await this.performRequest<any>('conflicts', () => axios.post(
-        `${this.apiBaseUrl}/openai/chat`,
+        apiUrl,
         {
           model: this.model,
           messages: [{ role: 'user', content: prompt }],
           response_format: { type: 'json_object' }
         },
-        {
-          headers: {
-            'Authorization': `Bearer ${apiKey}`,
-            'Content-Type': 'application/json'
-          }
-        }
+        { headers }
       ), prompt, false)
 
       const data = res.data
-      if (!data.success || !data.text) throw new Error(data.error || 'Conflict analysis failed')
-      const result = JSON.parse(data.text)
+      const text = data?.choices?.[0]?.message?.content
+      if (!text) throw new Error(data?.error?.message || 'Conflict analysis failed')
+      const result = JSON.parse(text)
       return { success: true, diagnostics: result.diagnostics, cached: false, timestamp: Date.now() }
     } catch (error: any) {
       return { success: false, error: error.message, cached: false, timestamp: Date.now() }
@@ -212,24 +201,22 @@ export class OpenAIService extends BaseAIService {
     const prompt = `Analyze this Sims 4 exception log and explain it in Plain English for a modder:\n${logContent}\n\nReturn JSON with "report": { "explanation", "rootCause", "suggestedJpeFix" }`
 
     try {
+      const apiUrl = 'https://api.openai.com/v1/chat/completions'
+      const headers = { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' }
       const res = await this.performRequest<any>('exception', () => axios.post(
-        `${this.apiBaseUrl}/openai/chat`,
+        apiUrl,
         {
           model: this.model,
           messages: [{ role: 'user', content: prompt }],
           response_format: { type: 'json_object' }
         },
-        {
-          headers: {
-            'Authorization': `Bearer ${apiKey}`,
-            'Content-Type': 'application/json'
-          }
-        }
+        { headers }
       ), prompt, false)
 
       const data = res.data
-      if (!data.success || !data.text) throw new Error(data.error || 'Exception analysis failed')
-      const result = JSON.parse(data.text)
+      const text = data?.choices?.[0]?.message?.content
+      if (!text) throw new Error(data?.error?.message || 'Exception analysis failed')
+      const result = JSON.parse(text)
       return { success: true, report: result.report || result, cached: false, timestamp: Date.now() }
     } catch (error: any) {
       return { success: false, error: error.message, cached: false, timestamp: Date.now() }

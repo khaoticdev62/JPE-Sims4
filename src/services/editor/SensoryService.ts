@@ -9,6 +9,7 @@ export enum SensoryEvent {
   ERROR_FAIL = 'error-fail',
   ENGINE_LINK = 'engine-link',
   LINK_SEVERED = 'link-severed',
+  HISTORY_STEP = 'history-step',
 }
 
 class SensoryService {
@@ -51,6 +52,13 @@ class SensoryService {
    */
   public onLinkUpdate(connected: boolean): void {
     this.trigger(connected ? SensoryEvent.ENGINE_LINK : SensoryEvent.LINK_SEVERED)
+  }
+
+  /**
+   * Shorthand for "Spectral Pulse" on undo/redo
+   */
+  public onHistoryStep(): void {
+    this.trigger(SensoryEvent.HISTORY_STEP, { intensity: 0.8, color: 'spectral' })
   }
 }
 

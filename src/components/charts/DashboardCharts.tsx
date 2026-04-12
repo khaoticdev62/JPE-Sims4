@@ -17,6 +17,10 @@ export function CoreLoadChart({ data }: { data: any[] }) {
               <stop offset="5%" stopColor={T.cyan} stopOpacity={0.2} />
               <stop offset="95%" stopColor={T.cyan} stopOpacity={0} />
             </linearGradient>
+            <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
           </defs>
           <XAxis dataKey="t" hide />
           <YAxis hide domain={[0, 100]} />
@@ -28,6 +32,7 @@ export function CoreLoadChart({ data }: { data: any[] }) {
             strokeWidth={2} 
             dot={false} 
             isAnimationActive={false} 
+            filter="url(#glow)"
           />
         </AreaChart>
       </SafeChartContainer>

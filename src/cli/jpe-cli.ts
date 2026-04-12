@@ -6,6 +6,8 @@
 
 import { exec } from 'child_process';
 import path from 'path';
+import fs from 'fs';
+import { JPEDecompiler } from '../services/translation/decompiler';
 
 const VERSION = "1.0.0-PROD";
 const args = process.argv.slice(2);
@@ -22,6 +24,7 @@ const showHelp = () => {
       build           Triggers an industrial build for the current project.
       status          Audits the JPE-Live bridge health.
       ignite          Manually triggers the Technical Ignition sequence.
+      decompile <xml> Decompile a Sims 4 XML tuning file into JPE.
       --version       Shows current CLI version.
       --help          Displays this interface.
     `);
@@ -71,6 +74,40 @@ switch (command) {
         const protocolUrl = `jpe://ignite`;
         const opener = process.platform === 'win32' ? 'start' : 'open';
         exec(`${opener} ${protocolUrl}`);
+        break;
+    }
+
+    case 'decompile': {
+        const xmlPath = path.resolve(subArgs[0] || '');
+        if (!xmlPath || !fs.existsSync(xmlPath)) {
+            console.error(`[ERROR] XML file not found: ${xmlPath}`);
+            process.exit(1);
+        }
+
+        try {
+            const stats = fs.statSync(xmlPath);
+            if (stats.size > 20 * 1024 * 1024) { // 20MB Guard
+                console.error(`[ERROR] File too large for decompiler: ${path.basename(xmlPath)} (${(stats.size / 1024 / 1024).toFixed(1)}MB). Max 20MB.`);
+                process.exit(1);
+            }
+
+            console.log(`[JPE-DECOMPILER] Decompiling ${path.basename(xmlPath)}...`);
+            const xml = fs.readFileSync(xmlPath, 'utf8');
+            const decompiler = new JPEDecompiler();
+            const jpe = decompiler.decompile(xml);
+            
+            const writeArgIdx = args.indexOf('--write');
+            if (writeArgIdx !== -1 && args[writeArgIdx + 1]) {
+                const outPath = path.resolve(args[writeArgIdx + 1]);
+                fs.writeFileSync(outPath, jpe, 'utf8');
+                console.log(`[JPE] Success! Decompiled result written to: ${outPath}`);
+            } else {
+                process.stdout.write(jpe);
+            }
+        } catch (error) {
+            console.error(`[ERROR] Decompilation failed: ${error}`);
+            process.exit(1);
+        }
         break;
     }
 

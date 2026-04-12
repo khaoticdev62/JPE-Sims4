@@ -11,6 +11,7 @@ import PromptToJPEDialog from "@/components/ai/PromptToJPEDialog"
 import HelpCenter from "@/components/help/HelpCenter"
 import BatchSTBLEditor from "@/components/editor/BatchSTBLEditor"
 import ModPublishDialog from "@/components/modals/ModPublishDialog"
+import { ProjectExportDialog } from "@/components/modals/ProjectExportDialog"
 import { useEffect } from "react"
 import { TutorialEngine } from "@/services/tutorial/TutorialEngine"
 
@@ -40,6 +41,8 @@ export function GlobalTools() {
     setBatchSTBLOpen,
     isPublishModOpen,
     setPublishModOpen,
+    isProjectExportOpen,
+    setProjectExportOpen,
     isTutorialActive,
     setTutorialActive,
     setTutorialStep
@@ -115,11 +118,9 @@ export function GlobalTools() {
         isOpen={isBatchSTBLOpen}
         onClose={() => setBatchSTBLOpen(false)}
       />
-      <ModPublishDialog
-        isOpen={isPublishModOpen}
-        onClose={() => setPublishModOpen(false)}
-        projectName="My Mod"
-        packageBuffer={undefined}
+      <ProjectExportDialog
+        isOpen={isProjectExportOpen}
+        onClose={() => setProjectExportOpen(false)}
       />
     </>
   )

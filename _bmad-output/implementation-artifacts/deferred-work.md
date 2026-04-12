@@ -12,3 +12,8 @@
 - [Shell][Defer] Stacking Contexts â€” Resolve z-index conflicts between Sidebar and Footer in `main-layout.tsx` (Level: Low).
 - [Service][Defer] AI Context Truncation â€” Increase `QwenService` 3,000 character limit to handle larger JPE/XML translations (Level: Medium).
 - [Engine][Defer] Interaction Base Defaults â€” Refactor `translator.ts` to allow dynamic class selection instead of hardcoded `Interaction` (Level: Low).
+
+## Deferred from: code review of 2-5-high-fidelity-round-trip-validation.md (2026-04-11)
+- [Review][Defer] Terminal Color Compatibility [validate-roundtrip.ts:19] — deferred, pre-existing
+- [Review][Defer] Redundant XML Logic [RoundTripValidator.ts:54] — deferred, pre-existing
+

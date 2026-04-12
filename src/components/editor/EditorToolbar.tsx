@@ -14,6 +14,8 @@
 
 import { useState } from 'react'
 import Button from '@/components/common/Button'
+import { useEditorStore } from '@/stores/useEditorStore'
+import { T } from '@/components/robust/jpe-theme'
 
 interface EditorToolbarProps {
   onSave?: () => void
@@ -58,6 +60,8 @@ export default function EditorToolbar({
     }
   }
 
+  const { showPreview, togglePreview, scrollSync, toggleScrollSync } = useEditorStore()
+
   return (
     <div
       className={`
@@ -71,7 +75,7 @@ export default function EditorToolbar({
         size="sm"
         onClick={onSave}
         disabled={!isDirty || isSaving}
-        title={isDirty ? 'File has unsaved changes' : 'No unsaved changes'}
+        title={isDirty ? 'File has unsaved changes (Ctrl+S)' : 'No unsaved changes (Ctrl+S)'}
       >
         {isSaving ? '💾 Saving...' : '💾 Save'}
       </Button>
@@ -82,7 +86,7 @@ export default function EditorToolbar({
         size="sm"
         onClick={handleCompile}
         disabled={isCompiling}
-        title="Compile JPE to XML"
+        title="Compile JPE to XML (Shift+F5)"
       >
         {isCompiling ? '⚙️ Compiling...' : '⚙️ Compile'}
       </Button>
@@ -114,7 +118,6 @@ export default function EditorToolbar({
       {/* Divider */}
       <div className="w-px h-6 bg-border-subtle" />
 
-      {/* Format button */}
       <Button
         variant="secondary"
         size="sm"
@@ -123,6 +126,33 @@ export default function EditorToolbar({
       >
         ✨ Format
       </Button>
+
+      {/* Divider */}
+      <div className="w-px h-6 bg-border-subtle" />
+
+      {/* Preview Toggle button */}
+      <Button
+        variant={showPreview ? 'primary' : 'secondary'}
+        size="sm"
+        onClick={togglePreview}
+        title="Toggle XML Preview (Ctrl+Alt+P)"
+        className={showPreview ? 'shadow-[0_0_10px_rgba(34,211,238,0.4)]' : ''}
+      >
+        {showPreview ? '👁️ Hide Preview' : '👁️ Show Preview'}
+      </Button>
+
+      {/* Scroll Sync Toggle (only if preview active) */}
+      {showPreview && (
+        <Button
+          variant={scrollSync ? 'primary' : 'secondary'}
+          size="sm"
+          onClick={toggleScrollSync}
+          title={scrollSync ? 'Disable Scroll Sync' : 'Enable Scroll Sync'}
+          className={scrollSync ? 'opacity-100' : 'opacity-60'}
+        >
+          {scrollSync ? '🔗 Synced' : '🔗 Unsynced'}
+        </Button>
+      )}
 
       {/* Compile status message */}
       {showCompileStatus && (

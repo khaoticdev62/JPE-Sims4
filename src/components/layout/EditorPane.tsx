@@ -23,10 +23,14 @@ import WelcomeScreen from '@/components/editor/WelcomeScreen'
 import { PackageService } from '@/services/PackageService'
 import { SensoryOverlay } from '@/components/editor/SensoryOverlay'
 import type { VirtualFile } from '@/services/PackageService'
+import LiveXMLPreview from '@/components/preview/LiveXMLPreview'
+import { useScrollSync } from '@/hooks/useScrollSync'
 
 function EditorPaneComponent() {
-  const { tabs, activeTabId, setActiveTab, closeTab, editorContent, updateTabContent } =
-    useEditorStore()
+  const { 
+    tabs, activeTabId, setActiveTab, closeTab, editorContent, updateTabContent,
+    showPreview, previewContent, previewOutOfDate, scrollSync, togglePreview
+  } = useEditorStore()
   const { getFile, updateFile, currentProject, saveFile } = useProjectStore()
   const { getDiagnosticsForFile } = useDiagnosticStore()
   const { addActivity } = useActivityStore()
@@ -244,12 +248,9 @@ function EditorPaneComponent() {
   const handleContentChange = useCallback((newContent: string) => {
     if (activeTab) {
       updateTabContent(activeTab.id, newContent)
-      if (activeFile) {
-        updateFile(activeFile.id, {
-          isDirty: true})
-      }
+      // isDirty is now handled automatically by useEditorStore.updateTabContent
     }
-  }, [activeTab, activeFile, updateTabContent, updateFile])
+  }, [activeTab, updateTabContent])
 
   const handleTabClick = useCallback((tabId: string) => {
     setActiveTab(tabId)
@@ -259,30 +260,59 @@ function EditorPaneComponent() {
     closeTab(tabId)
   }, [closeTab])
 
-  // Handle keyboard shortcuts (Ctrl+S to save)
+  // Register centralized shortcuts via ShortcutService (Story 1.7)
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0
-      const cmdOrCtrl = isMac ? e.metaKey : e.ctrlKey
+    const { shortcutService, ShortcutScope } = require('@/services/editor/ShortcutService')
+    
+    shortcutService.register({
+      id: 'editor.save',
+      label: 'Save File',
+      keys: ['Control', 's'],
+      scope: ShortcutScope.EDITOR,
+      categoryId: 'file',
+      action: handleSaveFile
+    })
 
-      if (cmdOrCtrl && e.shiftKey && e.key === 'S') {
-        e.preventDefault()
-        handleSaveAll()
-      } else if (cmdOrCtrl && e.key === 's') {
-        e.preventDefault()
-        handleSaveFile()
-      } else if (cmdOrCtrl && e.key === 'f') {
-        e.preventDefault()
-        find()
-      } else if (cmdOrCtrl && e.key === 'h') {
-        e.preventDefault()
-        replace()
-      }
+    shortcutService.register({
+      id: 'editor.find',
+      label: 'Find',
+      keys: ['Control', 'f'],
+      scope: ShortcutScope.EDITOR,
+      categoryId: 'edit',
+      action: find
+    })
+
+    shortcutService.register({
+       id: 'editor.replace',
+       label: 'Replace',
+       keys: ['Control', 'h'],
+       scope: ShortcutScope.EDITOR,
+       categoryId: 'edit',
+       action: replace
+    })
+    
+    shortcutService.register({
+      id: 'editor.togglePreview',
+      label: 'Toggle Live Preview',
+      keys: ['Control', 'Alt', 'p'],
+      scope: ShortcutScope.GLOBAL,
+      categoryId: 'navigation',
+      action: togglePreview
+    })
+
+    // Note: Undo/Redo are registered by MonacoEditor component directly
+    // since they require the editor instance.
+
+    return () => {
+      shortcutService.unregister('editor.save')
+      shortcutService.unregister('editor.find')
+      shortcutService.unregister('editor.replace')
+      shortcutService.unregister('editor.togglePreview')
     }
+  }, [handleSaveFile, find, replace, togglePreview])
 
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [handleSaveFile, handleSaveAll, find, replace])
+  // Story 3.2: Synchronized Scrolling Logic
+  useScrollSync('source-editor', 'preview-editor', showPreview && scrollSync)
 
   return (
     <div data-testid="editor-pane" data-tutorial="editor-pane" className="flex-1 flex flex-col bg-bg-primary overflow-hidden">
@@ -359,106 +389,119 @@ function EditorPaneComponent() {
             </div>
 
             {/* Monaco Editor or Asset List */}
-            <div data-testid="monaco-editor" className="flex-1 overflow-hidden bg-bg-primary">
-              {activeFile.type === 'package' ? (
-                <AssetList
-                  packagePath={activeFile.path}
-                  onOpenResource={(resource) => {
-                    const { openTab } = useEditorStore.getState()
-                    openTab({
-                      id: resource.id,
-                      fileId: resource.id,
-                      name: resource.name,
-                      isDirty: false
-                    })
-                  }}
-                  onExtractResource={async (resource: VirtualFile) => {
-                    try {
+            <div data-testid="monaco-editor" className="flex-1 overflow-hidden bg-bg-primary flex">
+              <div className={`flex-1 relative ${showPreview ? 'border-r border-border-subtle' : ''}`}>
+                {activeFile.type === 'package' ? (
+                  <AssetList
+                    packagePath={activeFile.path}
+                    onOpenResource={(resource) => {
+                      const { openTab } = useEditorStore.getState()
+                      openTab({
+                        id: resource.id,
+                        fileId: resource.id,
+                        name: resource.name,
+                        isDirty: false
+                      })
+                    }}
+                    onExtractResource={async (resource: VirtualFile) => {
+                      try {
+                        const { activePackageBuffer } = useProjectStore.getState()
+                        if (!activePackageBuffer) {
+                          toast.error('Package buffer not loaded')
+                          return
+                        }
+                        const data = await PackageService.extractResourceFast(
+                          activeFile.path,
+                          resource.resource,
+                          activePackageBuffer
+                        )
+                        if (data) {
+                          toast.success(`Extracted: ${resource.name} (${(data.byteLength / 1024).toFixed(1)}KB)`)
+                        } else {
+                          toast.error(`Failed to extract: ${resource.name}`)
+                        }
+                      } catch (error) {
+                        toast.error(`Extract error: ${error instanceof Error ? error.message : 'Unknown error'}`)
+                      }
+                    }}
+                    onExtractAll={async () => {
                       const { activePackageBuffer } = useProjectStore.getState()
                       if (!activePackageBuffer) {
                         toast.error('Package buffer not loaded')
                         return
                       }
-                      const data = await PackageService.extractResourceFast(
-                        activeFile.path,
-                        resource.resource,
-                        activePackageBuffer
-                      )
-                      if (data) {
-                        toast.success(`Extracted: ${resource.name} (${(data.byteLength / 1024).toFixed(1)}KB)`)
+                      const virtualFiles = PackageService.getVirtualFiles(activeFile.path)
+                      let successCount = 0
+                      let failCount = 0
+  
+                      for (const vf of virtualFiles) {
+                        try {
+                          const data = await PackageService.extractResourceFast(
+                            activeFile.path,
+                            vf.resource,
+                            activePackageBuffer
+                          )
+                          if (data) successCount++
+                          else failCount++
+                        } catch {
+                          failCount++
+                        }
+                      }
+  
+                      if (failCount > 0) {
+                        toast.info(`Extracted ${successCount}/${virtualFiles.length} resources (${failCount} failed)`)
                       } else {
-                        toast.error(`Failed to extract: ${resource.name}`)
+                        toast.success(`Extracted all ${successCount} resources`)
                       }
-                    } catch (error) {
-                      toast.error(`Extract error: ${error instanceof Error ? error.message : 'Unknown error'}`)
+                    }}
+                  />
+                ) : activeFile.type === 'image' ? (
+                  <ResourcePreviewer
+                     id={activeFile.id}
+                     name={activeFile.name}
+                     type={activeFile.type}
+                     content={fileContent}
+                     resource={{
+                       type: parseInt(activeFile.id.split('-')[0] || '0', 16),
+                       group: parseInt(activeFile.id.split('-')[1] || '0', 16),
+                       instanceHex: activeFile.id.split('-')[2]?.toUpperCase() || '0',
+                       size: activeFile.size || 0,
+                       isCompressed: false 
+                     }}
+                  />
+                ) : (
+                  <MonacoEditor
+                    id="source-editor"
+                    value={fileContent}
+                    onChange={handleContentChange}
+                    onCursorChange={setCursorLine}
+                    language={
+                      activeFile.type === 'jpe' ? 'jpe' :
+                      (activeFile.type === 'py' || activeFile.type === 'ts4script') ? 'python' :
+                      'xml'
                     }
-                  }}
-                  onExtractAll={async () => {
-                    const { activePackageBuffer } = useProjectStore.getState()
-                    if (!activePackageBuffer) {
-                      toast.error('Package buffer not loaded')
-                      return
-                    }
-                    const virtualFiles = PackageService.getVirtualFiles(activeFile.path)
-                    let successCount = 0
-                    let failCount = 0
+                    theme={theme}
+                    readOnly={false}
+                    markers={fileDiagnostics.map((d) => ({
+                      line: d.line || 1,
+                      column: 1,
+                      severity: d.severity as 'error' | 'warning' | 'info',
+                      message: d.message}))}
+                  />
+                )}
+                {/* Spectral Sensory Overlay (HUD) */}
+                <SensoryOverlay />
+              </div>
 
-                    for (const vf of virtualFiles) {
-                      try {
-                        const data = await PackageService.extractResourceFast(
-                          activeFile.path,
-                          vf.resource,
-                          activePackageBuffer
-                        )
-                        if (data) successCount++
-                        else failCount++
-                      } catch {
-                        failCount++
-                      }
-                    }
-
-                    if (failCount > 0) {
-                      toast.info(`Extracted ${successCount}/${virtualFiles.length} resources (${failCount} failed)`)
-                    } else {
-                      toast.success(`Extracted all ${successCount} resources`)
-                    }
-                  }}
-                />
-              ) : activeFile.type === 'image' ? (
-                <ResourcePreviewer
-                   id={activeFile.id}
-                   name={activeFile.name}
-                   type={activeFile.type}
-                   content={fileContent}
-                   resource={{
-                     type: parseInt(activeFile.id.split('-')[0] || '0', 16),
-                     group: parseInt(activeFile.id.split('-')[1] || '0', 16),
-                     instanceHex: activeFile.id.split('-')[2]?.toUpperCase() || '0',
-                     size: activeFile.size || 0,
-                     isCompressed: false 
-                   }}
-                />
-              ) : (
-                <MonacoEditor
-                  value={fileContent}
-                  onChange={handleContentChange}
-                  onCursorChange={setCursorLine}
-                  language={
-                    activeFile.type === 'jpe' ? 'jpe' :
-                    (activeFile.type === 'py' || activeFile.type === 'ts4script') ? 'python' :
-                    'xml'
-                  }
-                  theme={theme}
-                  readOnly={false}
-                  markers={fileDiagnostics.map((d) => ({
-                    line: d.line || 1,
-                    column: 1,
-                    severity: d.severity as 'error' | 'warning' | 'info',
-                    message: d.message}))}
+              {/* Story 3.2: Live XML Preview Panel */}
+              {showPreview && activeFile.type !== 'package' && activeFile.type !== 'image' && (
+                <LiveXMLPreview 
+                  id="preview-editor"
+                  className="w-1/2"
+                  content={previewContent}
+                  isOutOfDate={previewOutOfDate}
                 />
               )}
-              {/* Spectral Sensory Overlay (HUD) */}
-              <SensoryOverlay />
             </div>
 
             {/* Logical Status Bar (JPE block context + diagnostics) */}

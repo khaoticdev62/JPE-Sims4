@@ -39,6 +39,7 @@ export class JPEDecompiler {
     const name = root['@_n'] || 'Unnamed_Interaction'
     const className = root['@_c']
     const id = root['@_s']
+    const moduleName = root['@_m']
     
     jpe += `WHEN ${name}:\n`
     if (id) {
@@ -46,6 +47,9 @@ export class JPEDecompiler {
     }
     if (className) {
       jpe += `  class: ${className}\n`
+    }
+    if (moduleName) {
+      jpe += `  module: ${moduleName}\n`
     }
 
     // 2. Properties & Blocks
@@ -133,27 +137,70 @@ export class JPEDecompiler {
 
   private decompileActionTest(node: XMLNode): string[] | null {
     const t = node['@_t']
+    if (!t) return null
+
+    // Semantic Mapping for common types
     if (t === 'sim_info') return ['is adult']
     
-    if (t === 'trait' || t === 'loot') {
-      const type = t === 'trait' ? 'trait' : 'loot'
-      const uNode = Array.isArray(node.U) ? node.U[0] : node.U
-      const lNode = uNode && Array.isArray(uNode.L) ? uNode.L[0] : uNode?.L
-      const itemsNode = lNode && !Array.isArray(lNode) ? lNode.T : undefined
+    if (t === 'trait' || t === 'loot' || t === 'buff' || t === 'interaction_category') {
+      const type = t.replace('_category', '')
+      const values = this.findValuesRecursive(node)
       
-      if (!itemsNode) return [`${type}: Unknown_${type.charAt(0).toUpperCase() + type.slice(1)}`]
-      
-      const items = Array.isArray(itemsNode) ? itemsNode : [itemsNode]
-      return items.map(i => `${type}: ${this.unescapeXml(this.extractValue(i))}`)
+      if (values.length === 0) {
+        return [`${type}: Unknown_${type.charAt(0).toUpperCase() + type.slice(1)}`]
+      }
+      return values.map(v => `${type}: ${this.unescapeXml(v)}`)
     }
     return null
   }
 
+  /**
+   * Recursively finds all text values in <T> or <E> nodes within a structure
+   */
+  private findValuesRecursive(node: any): string[] {
+    const values: string[] = []
+    
+    if (node === undefined || node === null) return values
+
+    // If it's a primitive, it's a leaf value (e.g. from <T>value</T>)
+    if (typeof node !== 'object') {
+      values.push(node.toString())
+      return values
+    }
+
+    // If it's an object with #text
+    if (node['#text'] !== undefined && node['#text'] !== null) {
+      values.push(node['#text'].toString())
+    }
+
+    // Traverse children keys that typically contain values or sub-structures
+    const childrenKeys = ['T', 'E', 'U', 'L', 'V']
+    for (const key of childrenKeys) {
+      const children = node[key]
+      if (children !== undefined && children !== null) {
+        if (Array.isArray(children)) {
+          for (const child of children) {
+            values.push(...this.findValuesRecursive(child))
+          }
+        } else {
+          values.push(...this.findValuesRecursive(children))
+        }
+      }
+    }
+
+    return values
+  }
+
   private unmapBlockName(name: string): string {
     const map: Record<string, string> = {
-      'test_globals': 'tests',
+      'test_globals': 'ONLY_IF',
+      'tests': 'ONLY_IF',
       'basic_extras': 'effects',
-      'at_least_one': 'ONLY_IF'
+      'at_least_one': 'ONLY_IF',
+      'outcome': 'DO',
+      'outcomes': 'DO',
+      'interactions': 'Interactions',
+      'buffs': 'Buffs'
     }
     return map[name] || name
   }

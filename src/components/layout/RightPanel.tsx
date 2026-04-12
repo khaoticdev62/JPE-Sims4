@@ -1,37 +1,20 @@
 "use client";
 
-import { useDiagnosticStore } from '@/stores/useDiagnosticStore'
 import { useUIStore } from '@/stores/useUIStore'
-import { useEditorStore } from '@/stores/useEditorStore'
-import { memo, useCallback } from 'react'
+import { memo, handleKeyDown } from 'react'
 import PreviewPane from '@/components/editor/PreviewPane'
-import DiagnosticsPanel from '@/components/editor/DiagnosticsPanel'
-import { revealInMonaco } from '@/utils/editor'
-import { useCodeFix } from '@/hooks/useCodeFix'
-
 import { DocumentationPanel } from '@/components/editor/DocumentationPanel'
 import { JpeCopilotPane } from '@/components/copilot/JpeCopilotPane'
 
 function RightPanelComponent() {
-  const { getFilteredDiagnostics } = useDiagnosticStore()
   const { rightPanelCollapsed, rightPanelTab, setRightPanelTab } = useUIStore()
-  const { activeFileId: _activeFileId } = useEditorStore()
-  const { isFixing, requestFix } = useCodeFix()
-
-  const diagnostics = getFilteredDiagnostics()
-
-  const handleSelectDiagnostic = useCallback((diag: any) => {
-    revealInMonaco(diag)
-  }, [])
 
   if (rightPanelCollapsed) {
-    const tabLabel = rightPanelTab === 'diagnostics' 
-      ? `Diagnostics (${diagnostics.length})` 
-      : rightPanelTab === 'preview' 
-        ? 'XML Preview'
-        : rightPanelTab === 'docs'
-          ? 'Documentation'
-          : 'AI Copilot'
+    const tabLabel = rightPanelTab === 'preview' 
+      ? 'XML Preview'
+      : rightPanelTab === 'docs'
+        ? 'Documentation'
+        : 'AI Copilot'
 
     return (
       <div className="w-12 bg-bg-secondary border-l border-border-subtle flex flex-col items-center py-8 gap-12 cursor-pointer hover:bg-bg-tertiary transition-colors" onClick={() => useUIStore.getState().toggleRightPanel()}>
@@ -43,8 +26,8 @@ function RightPanelComponent() {
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    const tabs: ('diagnostics' | 'preview' | 'docs' | 'copilot')[] = ['diagnostics', 'preview', 'docs', 'copilot']
-    const currentIndex = tabs.indexOf(rightPanelTab)
+    const tabs: ('preview' | 'docs' | 'copilot')[] = ['preview', 'docs', 'copilot']
+    const currentIndex = tabs.indexOf(rightPanelTab as any)
     
     if (e.key === 'ArrowRight') {
       const nextIndex = (currentIndex + 1) % tabs.length
@@ -72,20 +55,6 @@ function RightPanelComponent() {
         aria-label="Panel Navigation"
         onKeyDown={handleKeyDown}
       >
-        <button
-          id="tab-diagnostics"
-          role="tab"
-          aria-selected={rightPanelTab === 'diagnostics'}
-          aria-controls="panel-diagnostics"
-          onClick={() => setRightPanelTab('diagnostics')}
-          className={`flex-1 text-[9px] font-bold uppercase tracking-wider transition-all border-b-2 px-1 focus-ring ${
-            rightPanelTab === 'diagnostics'
-              ? 'border-accent-primary text-text-primary bg-bg-secondary shadow-inner'
-              : 'border-transparent text-text-secondary hover:text-text-primary'
-          }`}
-        >
-          Diag ({diagnostics.length})
-        </button>
         <button
           id="tab-preview"
           role="tab"
@@ -131,20 +100,6 @@ function RightPanelComponent() {
       </div>
 
       <div className="flex-1 flex flex-col overflow-hidden">
-        <div 
-          id="panel-diagnostics" 
-          role="tabpanel" 
-          aria-labelledby="tab-diagnostics" 
-          className={`h-full ${rightPanelTab !== 'diagnostics' ? 'hidden' : ''}`}
-        >
-          <DiagnosticsPanel
-            diagnostics={diagnostics}
-            onSelectDiagnostic={handleSelectDiagnostic}
-            onFix={(diag) => requestFix(diag)}
-            isFixing={isFixing}
-            isOpen={true}
-          />
-        </div>
         <div 
           id="panel-preview" 
           role="tabpanel" 

@@ -1,7 +1,8 @@
 # Story 4.1: XML-to-JPE Reverse Compiler (Decompiler)
 
 **Epic 4: Advanced Modding & Reverse Engineering**
-**Status: ready-for-dev**
+**Status: done**
+**Completed: 2026-04-11**
 
 ## 🎯 Goal
 
@@ -56,3 +57,22 @@ The JPE language is a "Semantic Layer" over Sims 4 XML. While a basic structural
   - Nested Interaction with Outcome
   - Conditional Tests (`ONLY_IF` conversion)
   - FnV-64 Hash Reference matching
+## Tasks / Subtasks
+
+- [x] **Task 1: Core Decompiler Engine Refinement** (AC: 1, 2)
+  - [x] Consolidate `XMLToJPETranslator` and `JPEDecompiler` logic.
+  - [x] Fix nested trait/loot extraction bugs.
+  - [x] Expand keyword rehydration (effects, ONLY_IF, interaction_category).
+- [x] **Task 2: Industrial CLI Implementation** (AC: 1)
+  - [x] Add `decompile` command to `cli.py`.
+  - [x] Implement file I/O for batch decompilation.
+- [x] **Task 3: Fidelity Verification & Test Hardening** (AC: 3)
+  - [x] Update `story-4.1.test.ts` with high-fidelity assertions.
+  - [x] Run round-trip validation tests.
+
+### Review Findings
+
+- [x] [Review][Patch] Potential Shell Injection Risk in decompile command [cli.py:168]
+- [x] [Review][Patch] Memory Exhaustion Risk for Huge XML Files in CLI [src/cli/jpe-cli.ts:403]
+- [x] [Review][Patch] Potential STBL Project-Name Collision Risk [src/services/JpeBundlerService.ts:2145]
+- [x] [Review][Defer] Unicode Terminal Mangle [src/cli/validate-roundtrip.ts:457] ΓÇö deferred, pre-existing

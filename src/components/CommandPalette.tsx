@@ -15,6 +15,7 @@ import { T } from "./robust/jpe-theme";
 import type { WorkspaceMode } from "./robust/jpe-theme";
 import { useFocusTrap, useReturnFocus } from "./jpe-a11y";
 import { useUIStore } from "../stores/useUIStore";
+import { shortcutService } from "@/services/editor/ShortcutService";
 
 /* ═══ TYPES ═══ */
 interface PaletteCommand {
@@ -28,7 +29,7 @@ interface PaletteCommand {
   description?: string;
 }
 
-type CommandCategory = "translation" | "build" | "navigation" | "search" | "analysis" | "debug" | "editor" | "general" | "creation" | "ai";
+type CommandCategory = "translation" | "build" | "navigation" | "search" | "analysis" | "debug" | "editor" | "general" | "creation" | "ai" | "file" | "edit";
 
 interface CommandPaletteProps {
   isOpen: boolean;
@@ -87,6 +88,8 @@ const categoryMeta: Record<CommandCategory, { label: string; color: string }> = 
   general: { label: "General", color: T.textTertiary },
   creation: { label: "Creation", color: T.emerald },
   ai: { label: "AI Tools", color: T.violetBright },
+  file: { label: "File Management", color: T.cyan },
+  edit: { label: "Editor Actions", color: T.cyanBright },
 };
 
 /* ═══ FUZZY MATCH ═══ */
@@ -139,11 +142,25 @@ export function CommandPalette({ isOpen, onClose, onSwitchMode, currentMode: _cu
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
-  const [query, setQuery] = useState("");
   const [selectedIdx, setSelectedIdx] = useState(0);
   const [executedAction, setExecutedAction] = useState<string | null>(null);
   const [recentIds, setRecentIds] = useState<string[]>([]);
-  const { setBuffWizardOpen, setInteractionWizardOpen, setTraitWizardOpen, setPromptToJPEOpen, setHelpCenterOpen } = useUIStore();
+  const { setBuffWizardOpen, setInteractionWizardOpen, setTraitWizardOpen, setPromptToJPEOpen, setHelpCenterOpen, commandPaletteQuery } = useUIStore();
+  const [query, setInternalQuery] = useState(commandPaletteQuery);
+
+  // Sync internal query with store query when palette opens
+  useEffect(() => {
+    if (isOpen) {
+      setInternalQuery(commandPaletteQuery);
+      setSelectedIdx(0);
+    }
+  }, [isOpen, commandPaletteQuery]);
+
+  const setQuery = (q: string) => {
+    setInternalQuery(q);
+    // Note: We don't sync back to store while typing to avoid global re-renders,
+    // only when opening.
+  };
 
   // Multi-mode detection: ">", "@", ":" prefixes
   const isCommandMode = query.startsWith(">");
@@ -155,87 +172,34 @@ export function CommandPalette({ isOpen, onClose, onSwitchMode, currentMode: _cu
     : query.trim();
   const lineNumber = isLineMode ? (searchTerm ? parseInt(searchTerm, 10) : null) : null;
 
-  /* ═══ BUILD COMMANDS ═══ */
+  // Consume commands from ShortcutService (Story 1.7)
   const commands = useMemo<PaletteCommand[]>(() => {
-    const switchMode = (m: WorkspaceMode) => () => onSwitchMode?.(m);
+    const rawShortcuts = shortcutService.getShortcuts();
+    
+    return rawShortcuts.map(s => {
+      // Format keys for display (e.g. 'Control' -> 'Ctrl')
+      const formattedShortcut = s.keys
+        .map(k => {
+          if (k === 'Control') return 'Ctrl';
+          if (k === 'Shift') return '⇧';
+          if (k === 'Alt') return 'Alt';
+          if (k === 'Meta') return '⌘';
+          return k.toUpperCase();
+        })
+        .join("+");
 
-    return [
-      // Translation
-      { id: "tr-translate", icon: Languages, label: "JPE: Translate Current File", shortcut: "Ctrl+Shift+T", color: T.violet, category: "translation", action: switchMode("translation"), description: "Run AI translation on the active tuning file" },
-      { id: "tr-batch", icon: Layers, label: "JPE: Batch Translate All", shortcut: "Ctrl+Shift+Alt+T", color: T.violet, category: "translation", action: switchMode("translation"), description: "Translate all untranslated strings in project" },
-      { id: "tr-suggest", icon: Sparkles, label: "AI: Suggest Translation", shortcut: "Ctrl+Space", color: T.violetBright, category: "translation", description: "Get AI-powered translation suggestion for selected string" },
-      { id: "tr-validate", icon: Shield, label: "JPE: Validate Translations", color: T.violet, category: "translation", description: "Check all translations for accuracy and completeness" },
-      { id: "tr-export-stbl", icon: Download, label: "JPE: Export STBL", color: T.violet, category: "translation", description: "Export string table to .stbl format" },
-      { id: "tr-import-stbl", icon: Upload, label: "JPE: Import STBL", color: T.violet, category: "translation", description: "Import translations from .stbl file" },
-
-      // Build
-      { id: "bd-run", icon: Rocket, label: "Build: Run Pipeline", shortcut: "Ctrl+Shift+B", color: T.amber, category: "build", action: switchMode("build"), description: "Execute the full build pipeline" },
-      { id: "bd-export", icon: Package, label: "Build: Export .package File", shortcut: "Ctrl+E", color: T.amber, category: "build", description: "Export current project as .package" },
-      { id: "bd-clean", icon: RefreshCw, label: "Build: Clean & Rebuild", color: T.amber, category: "build", description: "Clean build cache and rebuild from scratch" },
-      { id: "bd-deploy", icon: Play, label: "Build: Deploy to Mods Folder", color: T.amber, category: "build", description: "Copy built .package to Sims 4 Mods directory" },
-      { id: "bd-hash", icon: Hash, label: "Build: Regenerate Hashes", color: T.amber, category: "build", description: "Recalculate FNV hashes for all string entries" },
-
-      // Navigation
-      { id: "nav-code", icon: Code2, label: "Go to: Code Editor", shortcut: "Ctrl+1", color: T.cyan, category: "navigation", action: switchMode("code") },
-      { id: "nav-trans", icon: Languages, label: "Go to: Translation View", shortcut: "Ctrl+2", color: T.violet, category: "navigation", action: switchMode("translation") },
-      { id: "nav-jpe", icon: BookOpen, label: "Go to: JPE Language Editor", shortcut: "Ctrl+3", color: T.violetBright, category: "navigation", action: switchMode("jpe") },
-      { id: "nav-depgraph", icon: Network, label: "Go to: Dependency Graph", shortcut: "Ctrl+4", color: T.emerald, category: "navigation", action: switchMode("depgraph") },
-      { id: "nav-diff", icon: GitMerge, label: "Go to: Diff Viewer", color: T.violet, category: "navigation", action: switchMode("diff"), description: "Side-by-side XML conflict diff viewer" },
-      { id: "nav-conflicts", icon: GitMerge, label: "Go to: Conflict Resolver", shortcut: "Ctrl+5", color: T.rose, category: "navigation", action: switchMode("conflicts") },
-      { id: "nav-build", icon: Rocket, label: "Go to: Build Pipeline", shortcut: "Ctrl+6", color: T.amber, category: "navigation", action: switchMode("build") },
-      { id: "nav-library", icon: Library, label: "Go to: Mod Library", shortcut: "Ctrl+7", color: T.cyanBright, category: "navigation", action: switchMode("library") },
-      { id: "nav-plugins", icon: Puzzle, label: "Go to: Plugin Marketplace", shortcut: "Ctrl+8", color: T.cyanDeep, category: "navigation", action: switchMode("plugin") },
-      { id: "nav-debug", icon: Bug, label: "Go to: Debug Console", color: T.rose, category: "navigation", action: switchMode("debug") },
-      { id: "nav-datavis", icon: BarChart3, label: "Go to: Analysis Lab", color: T.emerald, category: "navigation", action: switchMode("datavis") },
-      { id: "nav-dashboard", icon: LayoutGrid, label: "Go to: Dashboard", shortcut: "Ctrl+0", color: T.textSecondary, category: "navigation", action: switchMode("dashboard") },
-      { id: "nav-ai", icon: Sparkles, label: "Go to: AI Assistant", color: T.violetBright, category: "navigation", action: switchMode("ai") },
-      { id: "nav-settings", icon: Settings, label: "Go to: Settings", color: T.textTertiary, category: "navigation", action: switchMode("settings") },
-      { id: "nav-vault", icon: Package, label: "Go to: Rebel's Vault", shortcut: "Ctrl+9", color: T.violet, category: "navigation", action: switchMode("vault") },
-      { id: "nav-crystal-forge", icon: Globe, label: "Open Crystal Forge IDE", shortcut: "Ctrl+Shift+F", color: T.violetBright, category: "navigation", action: () => { window.location.href = "/crystal-forge"; }, description: "Launch the Crystal Forge alternate workspace surface" },
-
-      // Search
-      { id: "sr-tuning", icon: Search, label: "Search Tuning Files...", shortcut: "Ctrl+P", color: T.textSecondary, category: "search", description: "Search for tuning files by name" },
-      { id: "sr-string", icon: Filter, label: "Search: Find in String Tables", color: T.textSecondary, category: "search", description: "Search across all STBL entries" },
-      { id: "sr-symbol", icon: Hash, label: "Search: Go to Symbol", shortcut: "Ctrl+Shift+O", color: T.textSecondary, category: "search", description: "Jump to XML element or JPE symbol" },
-      { id: "sr-replace", icon: Wrench, label: "Search: Find and Replace", shortcut: "Ctrl+H", color: T.textSecondary, category: "search", description: "Find and replace across project files" },
-
-      // Analysis
-      { id: "an-conflicts", icon: Shield, label: "Analysis: Scan for Conflicts", shortcut: "Ctrl+Shift+A", color: T.emerald, category: "analysis", action: switchMode("conflicts"), description: "Scan mods for tuning conflicts" },
-      { id: "an-deps", icon: Network, label: "Analysis: Show Dependency Graph", shortcut: "Ctrl+D", color: T.cyanDeep, category: "analysis", action: switchMode("depgraph"), description: "Visualize mod dependency tree" },
-      { id: "an-validate-xml", icon: FileCode, label: "Analysis: Validate XML Schema", color: T.emerald, category: "analysis", description: "Validate tuning XML against EA schema" },
-      { id: "an-perf", icon: Zap, label: "Analysis: Performance Profile", color: T.emerald, category: "analysis", description: "Profile mod performance impact" },
-
-      // Debug
-      { id: "db-breakpoint", icon: Bug, label: "Debug: Toggle Breakpoint", shortcut: "F9", color: T.rose, category: "debug", description: "Set/remove breakpoint on current line" },
-      { id: "db-console", icon: Terminal, label: "Debug: Open Console", shortcut: "Ctrl+`", color: T.rose, category: "debug", action: switchMode("debug") },
-      { id: "db-reload", icon: RefreshCw, label: "Debug: Hot Reload", shortcut: "Ctrl+Shift+R", color: T.rose, category: "debug", description: "Hot-reload modified tuning in game" },
-      { id: "db-inspect", icon: Eye, label: "Debug: Inspect Resource Keys", color: T.rose, category: "debug", description: "Inspect DBPF resource key mappings" },
-
-      // Editor
-      { id: "ed-format", icon: Code2, label: "Editor: Format Document", shortcut: "Alt+Shift+F", color: T.cyanBright, category: "editor", description: "Format the current document" },
-      { id: "ed-fold-all", icon: Layers, label: "Editor: Fold All Regions", shortcut: "Ctrl+K, Ctrl+0", color: T.cyanBright, category: "editor", description: "Collapse all foldable regions" },
-      { id: "ed-copy-path", icon: Copy, label: "Editor: Copy File Path", color: T.cyanBright, category: "editor", description: "Copy the active file's path to clipboard" },
-      { id: "ed-diff", icon: GitBranch, label: "Editor: Compare with Previous", color: T.cyanBright, category: "editor", description: "Diff current file against last commit" },
-      { id: "ed-goto-line", icon: Hash, label: "Editor: Go to Line...", shortcut: "Ctrl+G", color: T.cyanBright, category: "editor", description: "Jump to a specific line number (type :line)" },
-
-      // General
-      { id: "gn-stbl", icon: Database, label: "STBL: Open String Table Editor", shortcut: "Ctrl+Shift+S", color: T.cyan, category: "general", description: "Open the visual STBL editor" },
-      { id: "gn-settings", icon: Settings, label: "Preferences: Open Settings", shortcut: "Ctrl+,", color: T.textTertiary, category: "general", description: "Open JPE Studio settings" },
-      { id: "gn-git", icon: GitBranch, label: "Git: Open Source Control", color: T.textTertiary, category: "general", description: "Open Git source control panel" },
-      { id: "gn-folder", icon: Folder, label: "File: Open Project Folder", color: T.textTertiary, category: "general", description: "Open project in system file explorer" },
-
-      // Creation
-      { id: "cr-buff", icon: Zap, label: "Create: New Buff Mod", shortcut: "Alt+B", color: T.emerald, category: "creation", action: () => { setBuffWizardOpen(true); onClose(); }, description: "Launch the AI-assisted Buff Creation Wizard" },
-      { id: "cr-interaction", icon: Zap, label: "Create: New Interaction", shortcut: "Alt+I", color: T.emerald, category: "creation", action: () => { setInteractionWizardOpen(true); onClose(); }, description: "Launch the AI-assisted Interaction Wizard" },
-      { id: "cr-trait", icon: Zap, label: "Create: New Trait", shortcut: "Alt+T", color: T.emerald, category: "creation", action: () => { setTraitWizardOpen(true); onClose(); }, description: "Launch the AI-assisted Trait Wizard" },
-
-      // AI Tools
-      { id: "ai-prompt-to-jpe", icon: Sparkles, label: "AI: Prompt to JPE", shortcut: "Ctrl+Shift+J", color: T.violetBright, category: "ai", action: () => { setPromptToJPEOpen(true); onClose(); }, description: "Generate JPE code from natural language description" },
-
-      // Help
-      { id: "help-center", icon: BookOpen, label: "Help: Open Help Center", shortcut: "F1", color: T.cyan, category: "general", action: () => { setHelpCenterOpen(true); onClose(); }, description: "Browse documentation, tutorials, and community resources" },
-    ];
-  }, [onSwitchMode, setBuffWizardOpen, setInteractionWizardOpen, setTraitWizardOpen, setPromptToJPEOpen, setHelpCenterOpen, onClose]);
+      return {
+        id: s.id,
+        icon: s.icon || Command,
+        label: s.label,
+        shortcut: formattedShortcut,
+        color: s.color || T.cyan,
+        category: (s.categoryId as CommandCategory) || "general",
+        action: s.action,
+        description: s.description
+      };
+    });
+  }, [isOpen]); // Refresh when palette opens
 
   /* ═══ FILTER & SORT ═══ */
   const filteredItems = useMemo(() => {
@@ -283,15 +247,16 @@ export function CommandPalette({ isOpen, onClose, onSwitchMode, currentMode: _cu
   /* ═══ RESET ON OPEN ═══ */
   useEffect(() => {
     if (isOpen) {
-      setQuery(">");
       setSelectedIdx(0);
       setExecutedAction(null);
       setTimeout(() => {
         if (inputRef.current) {
           inputRef.current.focus();
-          inputRef.current.setSelectionRange(1, 1);
+          // Position cursor at the end or after the prefix
+          const len = query.length;
+          inputRef.current.setSelectionRange(len, len);
         }
-      }, 20);
+      }, 50);
     }
   }, [isOpen]);
 
@@ -388,7 +353,8 @@ export function CommandPalette({ isOpen, onClose, onSwitchMode, currentMode: _cu
       }
     });
     catMap.forEach((items, cat) => {
-      groupedItems.push({ category: categoryMeta[cat].label, color: categoryMeta[cat].color, startIdx: idx, items });
+      const meta = categoryMeta[cat] || { label: cat, color: T.textSecondary };
+      groupedItems.push({ category: meta.label, color: meta.color, startIdx: idx, items });
       idx += items.length;
     });
   }

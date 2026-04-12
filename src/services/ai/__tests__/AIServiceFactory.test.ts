@@ -11,6 +11,7 @@ import { GeminiService } from '@/services/ai/GeminiService'
 import { ClaudeService } from '@/services/ai/ClaudeService'
 import { OpenAIService } from '@/services/ai/OpenAIService'
 import { QwenService } from '@/services/ai/QwenService'
+import { OllamaService } from '@/services/ai/OllamaService'
 
 describe('AIServiceFactory (P1)', () => {
   describe('Provider Service Resolution', () => {
@@ -34,9 +35,9 @@ describe('AIServiceFactory (P1)', () => {
       expect(service).toBeInstanceOf(QwenService)
     })
 
-    it('should return QwenService for OLLAMA provider', () => {
+    it('should return OllamaService for OLLAMA provider', () => {
       const service = AIServiceFactory.getService(AIProvider.OLLAMA)
-      expect(service).toBeInstanceOf(QwenService)
+      expect(service).toBeInstanceOf(OllamaService)
     })
 
     it('should fallback to GeminiService for unknown provider', () => {

@@ -1,6 +1,36 @@
+const React = require('react');
+
 const { webcrypto } = require('node:crypto');
 require('fake-indexeddb/auto');
 require('@testing-library/jest-dom');
+
+/**
+ * Global mock for lucide-react to avoid ESM import issues.
+ * lucide-react ships as ESM-only and breaks Jest's CommonJS transform.
+ * We replace every icon with a simple div placeholder component.
+ */
+jest.mock('lucide-react', () => {
+  return new Proxy(
+    {},
+    {
+      get: (_target, prop) => {
+        const MockIcon = React.forwardRef((props, ref) => {
+          return React.createElement(
+            'div',
+            {
+              ...props,
+              ref,
+              'data-testid': `icon-${String(prop).toLowerCase()}`,
+            },
+            props.children
+          );
+        });
+        MockIcon.displayName = `LucideIcon(${String(prop)})`;
+        return MockIcon;
+      },
+    }
+  );
+});
 
 /**
  * Enforce Web Crypto API polyfill for JSDOM

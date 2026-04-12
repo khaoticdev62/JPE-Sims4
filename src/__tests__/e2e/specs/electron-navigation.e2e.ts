@@ -55,7 +55,8 @@ test.describe('Electron Navigation Flow', () => {
     })
   })
 
-  test.afterEach(async ({}: any, testInfo) => {
+  // eslint-disable-next-line no-empty-pattern
+  test.afterEach(async ({}, testInfo) => {
     if (testInfo.status !== testInfo.expectedStatus) {
       const screenshotPath = path.join(artifactDir, `e2e-failure-${testInfo.title.replace(/\s+/g, '-')}.png`)
       await firstWindow.screenshot({ path: screenshotPath })

@@ -21,6 +21,8 @@ const customJestConfig = {
     '^@types/(.*)$': '<rootDir>/src/types/$1',
     '^@utils/(.*)$': '<rootDir>/src/utils/$1',
     '^@constants/(.*)$': '<rootDir>/src/constants/$1',
+    // Mock monaco-editor (not installed in this environment)
+    '^monaco-editor$': '<rootDir>/src/__mocks__/monaco-editor.js',
   },
   testMatch: ['**/__tests__/**/*.ts?(x)', '**/?(*.)+(spec|test).ts?(x)'],
   transformIgnorePatterns: [

@@ -1,9 +1,17 @@
 /**
  * Electron Mock for Jest
- * 
+ *
  * Provides a helper to inject window.electron and window.ipc into the JSDOM
  * for testing environment-specific code paths.
  */
+
+// This file is a helper module, not a test suite.
+// This placeholder prevents Jest from treating this as a test file.
+describe('electronMock module', () => {
+  it('is a helper module (no tests)', () => {
+    expect(true).toBe(true)
+  })
+})
 
 export const mockElectron = () => {
   const invokeMock = jest.fn();

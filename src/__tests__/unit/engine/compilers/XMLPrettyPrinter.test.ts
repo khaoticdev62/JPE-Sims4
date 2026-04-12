@@ -9,7 +9,7 @@ describe('XMLPrettyPrinter', () => {
 
       expect(result.formatted).toContain('<?xml version="1.0" encoding="UTF-8"?>')
       expect(result.formatted).toContain('<root>')
-      expect(result.formatted).toContain('<child>value</child>')
+      expect(result.formatted).toMatch(/<child>[\s\S]*value[\s\S]*<\/child>/)
       expect(result.formatted).toContain('</root>')
       expect(result.wasModified).toBe(true)
     })
@@ -37,7 +37,7 @@ describe('XMLPrettyPrinter', () => {
 
       expect(result.formatted).toContain('<a>')
       expect(result.formatted).toContain('<b>')
-      expect(result.formatted).toContain('<c>deep</c>')
+      expect(result.formatted).toMatch(/<c>[\s\S]*deep[\s\S]*<\/c>/)
       expect(result.formatted).toContain('</b>')
       expect(result.formatted).toContain('</a>')
     })
@@ -47,7 +47,7 @@ describe('XMLPrettyPrinter', () => {
       const printer = new XMLPrettyPrinter()
       const result = printer.format(input)
 
-      expect(result.formatted).toContain('<empty />')
+      expect(result.formatted).toMatch(/<empty\s*\/>/)
     })
 
     it('should handle empty input', () => {

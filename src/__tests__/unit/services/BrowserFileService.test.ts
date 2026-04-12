@@ -6,10 +6,6 @@
 
 import { BrowserFileService } from '@/services/BrowserFileService'
 
-// Mock fetch
-const mockFetch = jest.fn()
-global.fetch = mockFetch
-
 describe('BrowserFileService', () => {
   beforeEach(() => {
     jest.clearAllMocks()
@@ -18,55 +14,26 @@ describe('BrowserFileService', () => {
   })
 
   describe('saveFile', () => {
-    it('uses server API when not in Electron', async () => {
-      mockFetch.mockResolvedValue({
-        ok: true,
-        json: () => Promise.resolve({ success: true, size: 100 }),
-      })
+    it('succeeds when Electron bridge is available', async () => {
+      const writeFileMock = jest.fn().mockResolvedValue(undefined)
+      ;(window as any).electron = {
+        file: {
+          writeFile: writeFileMock,
+        },
+      }
 
       const result = await BrowserFileService.saveFile('/path/test.xml', '<root />')
 
       expect(result.success).toBe(true)
-      expect(mockFetch).toHaveBeenCalledWith('/api/files/save', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ path: '/path/test.xml', content: '<root />', createBackup: true }),
-      })
+      expect(writeFileMock).toHaveBeenCalledWith('/path/test.xml', '<root />')
     })
 
-    it('creates backup by default', async () => {
-      mockFetch.mockResolvedValue({
-        ok: true,
-        json: () => Promise.resolve({ success: true, backupPath: '/path/test.xml.backup-123' }),
-      })
-
-      const result = await BrowserFileService.saveFile('/path/test.xml', '<root />')
-
-      expect(result.success).toBe(true)
-      expect(result.backupPath).toBe('/path/test.xml.backup-123')
-    })
-
-    it('can disable backup', async () => {
-      mockFetch.mockResolvedValue({
-        ok: true,
-        json: () => Promise.resolve({ success: true }),
-      })
-
-      await BrowserFileService.saveFile('/path/test.xml', '<root />', { createBackup: false })
-
-      expect(mockFetch).toHaveBeenCalledWith(
-        '/api/files/save',
-        expect.objectContaining({
-          body: expect.stringContaining('"createBackup":false'),
-        })
-      )
-    })
-
-    it('returns error when server fails', async () => {
-      mockFetch.mockResolvedValue({
-        ok: false,
-        json: () => Promise.resolve({ error: 'Permission denied' }),
-      })
+    it('returns error when Electron writeFile throws', async () => {
+      ;(window as any).electron = {
+        file: {
+          writeFile: jest.fn().mockRejectedValue(new Error('Permission denied')),
+        },
+      }
 
       const result = await BrowserFileService.saveFile('/path/test.xml', '<root />')
 
@@ -74,18 +41,47 @@ describe('BrowserFileService', () => {
       expect(result.error).toBe('Permission denied')
     })
 
-    it('returns error on network failure', async () => {
-      mockFetch.mockRejectedValue(new Error('Network error'))
+    it('returns error when not in Electron environment', async () => {
+      delete (window as any).electron
 
       const result = await BrowserFileService.saveFile('/path/test.xml', '<root />')
 
       expect(result.success).toBe(false)
-      expect(result.error).toBe('Network error')
+      expect(result.error).toBe(
+        'File save not available. Ensure JPE Studio is running as a desktop application.',
+      )
+    })
+
+    it('passes content and path correctly to Electron', async () => {
+      const writeFileMock = jest.fn().mockResolvedValue(undefined)
+      ;(window as any).electron = {
+        file: {
+          writeFile: writeFileMock,
+        },
+      }
+
+      await BrowserFileService.saveFile('/custom/path.xml', '<custom>content</custom>')
+
+      expect(writeFileMock).toHaveBeenCalledWith('/custom/path.xml', '<custom>content</custom>')
+    })
+
+    it('handles non-Error exceptions gracefully', async () => {
+      ;(window as any).electron = {
+        file: {
+          writeFile: jest.fn().mockRejectedValue('string error'),
+        },
+      }
+
+      const result = await BrowserFileService.saveFile('/path/test.xml', '<root />')
+
+      expect(result.success).toBe(false)
+      expect(result.error).toBe('Electron save failed')
     })
   })
 
   describe('isElectron', () => {
     it('returns false when not in Electron', () => {
+      delete (window as any).electron
       expect(BrowserFileService.isElectron()).toBe(false)
     })
 

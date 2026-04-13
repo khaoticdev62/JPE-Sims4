@@ -53,12 +53,10 @@ export function GlobalTools() {
     setMounted(true)
 
     // Auto-open tour if not completed and not explicitly disabled
-    const isDev = process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test';
-    const skipTour = typeof window !== 'undefined' && 
-      (window.location.search.includes('skipTour') || 
+    const skipTour = typeof window !== 'undefined' &&
+      (window.location.search.includes('skipTour') ||
        window.localStorage.getItem('jpe-skip-onboarding') === 'true' ||
-       process.env.NEXT_PUBLIC_SKIP_ONBOARDING === 'true' ||
-       isDev);
+       process.env.NEXT_PUBLIC_SKIP_ONBOARDING === 'true');
 
     if (!hasCompletedTour && !skipTour) {
       setTourOpen(true)

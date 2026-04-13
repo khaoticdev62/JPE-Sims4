@@ -199,8 +199,13 @@ export const useUIStore = create<UIState>()(
         isTourOpen: false,
         setTourOpen: (open) => set({ isTourOpen: open }),
         toggleTour: () => set((state) => ({ isTourOpen: !state.isTourOpen })),
-        hasCompletedTour: false,
-        setHasCompletedTour: (completed) => set({ hasCompletedTour: completed }),
+        hasCompletedTour: typeof window !== 'undefined' && localStorage.getItem('jpe-onboarding-completed') === 'true',
+        setHasCompletedTour: (completed) => {
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('jpe-onboarding-completed', completed ? 'true' : 'false')
+          }
+          set({ hasCompletedTour: completed })
+        },
 
         tutorialStep: 0,
         isTutorialActive: false,

@@ -26,9 +26,10 @@ function HelpMenu() {
 
   const [_mounted, _setMounted] = React.useState(false)
 
-  const { setTourOpen, setTutorialActive, setTutorialStep } = useUIStore()
+  const { setTourOpen, setTutorialActive, setTutorialStep, setHasCompletedTour } = useUIStore()
 
   const handleRestartTutorial = () => {
+    setHasCompletedTour(false)
     setTutorialStep(0)
     setTutorialActive(true)
     setTourOpen(true)

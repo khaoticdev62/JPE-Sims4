@@ -16,6 +16,7 @@ import { useJpeSettings, type WallpaperPreset } from "./jpe-settings-context";
 import { KeybindingsSection } from "./KeyboardShortcuts";
 import { jpeColorThemes } from "./jpe-themes";
 import { JpeButton } from "./jpe-design-system";
+import { useUIStore } from "@/stores/useUIStore";
 
 interface SettingSection {
   id: string;
@@ -114,6 +115,7 @@ const wallpaperPresets: { id: WallpaperPreset; label: string; desc: string; grad
 export function SettingsView({ onRestartTutorial }: { onRestartTutorial?: () => void }) {
   const [activeSection, setActiveSection] = useState("general");
   const { settings: global, update: updateGlobal, reset: resetGlobal } = useJpeSettings();
+  const { setHasCompletedTour, setTourOpen, setTutorialActive, setTutorialStep } = useUIStore();
   const [securityStatus, setSecurityStatus] = useState<{ isShielded: boolean; algorithm: string; provider: string } | null>(null);
 
   /* Fetch security status */
@@ -190,8 +192,11 @@ export function SettingsView({ onRestartTutorial }: { onRestartTutorial?: () => 
                 size="sm"
                 icon={Sparkles}
                 onClick={() => {
-                  localStorage.removeItem("jpe-onboarding-completed");
-                  onRestartTutorial?.();
+                  setHasCompletedTour(false)
+                  setTutorialStep(0)
+                  setTutorialActive(true)
+                  setTourOpen(true)
+                  onRestartTutorial?.()
                 }}
               >
                 Restart Guide

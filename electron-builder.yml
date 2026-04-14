@@ -24,9 +24,8 @@ files:
       - "!_bmad/**"
       - "!.agent/**"
 
-asar:
-  asarUnpack:
-    - "bin/**"
+asarUnpack:
+  - "bin/**"
 
 extraResources:
   - from: bin/

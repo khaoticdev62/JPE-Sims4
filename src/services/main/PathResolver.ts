@@ -86,18 +86,43 @@ export class PathResolver {
 
   /**
    * Resolves a static asset for the Protocol Handler.
+   * Industrial fix for SPA routing: ensures assets like _next/ are resolved 
+   * from the root even when requested from a deep client-side path.
    */
   static getStaticAssetPath(urlPath: string): string {
-    // 1. Check internal out/ first
-    const internalPath = this.getInternalPath('out', urlPath)
-    if (fs.existsSync(internalPath)) return internalPath
+    let cleanPath = urlPath
 
-    // 2. Check for index.html as fallback for SPA routing
-    if (!path.extname(urlPath)) {
-        const indexHtml = this.getInternalPath('out', urlPath, 'index.html')
-        if (fs.existsSync(indexHtml)) return indexHtml
+    // 1. Root Asset Normalization: strip path prefixes if it looks like a Next.js asset/system path
+    // e.g., 'projects/_next/static/...' -> '_next/static/...'
+    if (cleanPath.includes('_next/') || cleanPath.includes('assets/') || cleanPath.includes('favicon.ico')) {
+        const index = cleanPath.indexOf('_next/')
+        if (index > 0) cleanPath = cleanPath.substring(index)
+        
+        const assetIndex = cleanPath.indexOf('assets/')
+        if (assetIndex > 0) cleanPath = cleanPath.substring(assetIndex)
     }
 
-    return internalPath // Return the internal path as default even if it fails exists check
+    // 2. Initial resolution relative to internal 'out/'
+    const targetPath = this.getInternalPath('out', cleanPath)
+    
+    // 3. If it's a file that exists, return it
+    if (fs.existsSync(targetPath) && fs.statSync(targetPath).isFile()) {
+      return targetPath
+    }
+
+    // 4. Directory check: if it's a directory, look for index.html
+    const indexHtml = path.join(targetPath, 'index.html')
+    if (fs.existsSync(indexHtml)) {
+      return indexHtml
+    }
+
+    // 5. Global SPA Fallback: if no extension, serve the root index.html
+    // This allows the React router to take over while keeping script paths correct.
+    if (!path.extname(cleanPath)) {
+        const rootIndex = this.getInternalPath('out', 'index.html')
+        if (fs.existsSync(rootIndex)) return rootIndex
+    }
+
+    return targetPath 
   }
 }

@@ -11,15 +11,18 @@ import {
 } from 'electron'
 import path from 'path'
 import fs from 'fs'
-import os from 'os'
-import axios from 'axios'
-import { spawn, exec } from 'child_process'
+import { exec } from 'child_process'
 import { LiveMonitor } from './services/main/LiveMonitor'
 import { PathResolver } from './services/main/PathResolver'
 import { OllamaManager } from './services/main/OllamaManager'
 import { ModelSetupService } from './services/main/ModelSetupService'
-import { SecureStore } from './services/main/SecureStore'
 import { LinkServer } from './services/main/LinkServer'
+import { RebelsManager } from './services/main/RebelsManager'
+import { AiManager } from './services/main/AiManager'
+import { ScarletManager } from './services/main/ScarletManager'
+import { SecurityManager } from './services/main/SecurityManager'
+import { Sims4Manager } from './services/main/Sims4Manager'
+import { TransformManager } from './services/main/TransformManager'
 
 // Auto-updater (only in production — check after app ready to avoid require issues)
 let autoUpdater: typeof import('electron-updater').autoUpdater | null = null
@@ -784,498 +787,30 @@ ipcMain.handle('window:close', () => {
   return true
 })
 
-// === COMPILE IPC (NEW — 1 handler) ===
-ipcMain.handle('compile', async (_event, content: string) => {
-  // Forward compile request to renderer process which has the CompilerService
-  // The renderer will handle the actual compilation — this handler acknowledges the request
-  mainWindow?.webContents.send('compile:request', content)
-  return { success: true, message: 'Compile request forwarded to renderer' }
-})
-
-// Listen for compile results from renderer
-ipcMain.handle('compile:result', async (_event, result: unknown) => {
-  // Notify tray or other listeners about compile completion
-  if (tray) {
-    tray.setToolTip(`JPE Studio — Compile ${result instanceof Object && 'success' in result ? (result as Record<string, unknown>).success : 'complete'}`)
-  }
-  return { success: true }
-})
-
 // === SENSORY HUB (NEW — 1 handler) ===
 ipcMain.on('sensory:trigger', (_event, event: string, data?: unknown) => {
   // Low-latency, non-blocking trigger for "Living Brand" sensory feedback
   // Implementation will dispatch to native audio/haptic APIs
   console.log(`[SensoryHub] Triggered: ${event}`, data)
-  
+
   if (event === 'test-latency') {
     mainWindow?.webContents.send('sensory:latency-pong', { timestamp: Date.now() })
   }
 })
 
-// === SIMS 4 ENGINE LINK (NEW — Story 6.2) ===
-ipcMain.handle('sims4:getModsPath', async () => {
-  try {
-    const documentsPath = app.getPath('documents')
-    const modsPath = path.join(documentsPath, 'Electronic Arts', 'The Sims 4', 'Mods')
-    if (fs.existsSync(modsPath)) {
-      return { success: true, path: modsPath }
-    }
-    return { success: false, error: 'Mods folder not found' }
-  } catch (error) {
-    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
-  }
-})
-
-ipcMain.handle('sims4:deployBridge', async (_event, pythonSource: string) => {
-  try {
-    const documentsPath = app.getPath('documents')
-    const modsPath = path.join(documentsPath, 'Electronic Arts', 'The Sims 4', 'Mods')
-    
-    if (!fs.existsSync(modsPath)) {
-      return { success: false, error: 'Mods folder not found' }
-    }
-
-    const bridgeFileName = 'jpe_live_sync.ts4script'
-    const targetPath = path.join(modsPath, bridgeFileName)
-
-    // Using JSZip to create the .ts4script binary on the fly
-    const JSZip = require('jszip')
-    const zip = new JSZip()
-    zip.file('jpe_live_sync.py', pythonSource)
-    
-    const content = await zip.generateAsync({ type: 'nodebuffer' })
-    await fs.promises.writeFile(targetPath, content)
-
-    return { success: true, path: targetPath }
-  } catch (error) {
-    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
-  }
-})
-
-// === LIVE BRIDGE COMMANDS (NEW — Story 13.1) ===
-ipcMain.handle('bridge:sendCommand', async (_event, type: string, payload: any) => {
-  try {
-    if (!linkServer)      return {
-        success: false,
-        error: 'Bridge unavailable in current environment'
-      };
-    linkServer.sendCommand(type, payload)
-    return { success: true }
-  } catch (error) {
-    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
-  }
-})
-
-// === SECURITY VAULT (NEW — AES-256 Shielding) ===
-ipcMain.handle('security:vault:get', async (_event, key: string) => {
-  try {
-    const value = SecureStore.getInstance().get(key)
-    return { success: true, value }
-  } catch (error) {
-    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
-  }
-})
-
-ipcMain.handle('security:vault:set', async (_event, key: string, value: any) => {
-  try {
-    SecureStore.getInstance().set(key, value)
-    return { success: true }
-  } catch (error) {
-    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
-  }
-})
-
-ipcMain.handle('security:vault:status', async () => {
-  try {
-    const isShielded = SecureStore.getInstance().isShielded()
-    return { success: true, isShielded, algorithm: 'AES-256-GCM', provider: 'Native Security Engine' }
-  } catch (error) {
-    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
-  }
-})
-
-// === TS4Rebels NATIVE BRIDGE (NEW — Story 7.1) ===
-// Production-hardened: timeout, sanitization, env-based credentials
-ipcMain.handle('ts4rebels:invoke', async (_event, action: string, params: Record<string, string>) => {
-  return new Promise((resolve) => {
-    const pythonCmd = process.platform === 'win32' ? 'python' : 'python3'
-
-    // Resolve CLI path correctly for both dev and packaged modes
-    const cliPath = PathResolver.getPythonScriptPath('cli.py')
-
-    // Input sanitization helper
-    const sanitize = (s: unknown, maxLen = 256): string => {
-      if (typeof s !== 'string') throw new Error('Invalid parameter type')
-      if (s.length === 0) throw new Error('Parameter cannot be empty')
-      if (s.length > maxLen) throw new Error(`Parameter exceeds max length (${maxLen})`)
-      if (s.startsWith('--') || s.startsWith('-')) throw new Error('Invalid parameter format')
-      return s
-    }
-
-    // Validate action
-    if (!['login', 'forum', 'topic', 'publish'].includes(action)) {
-      resolve({ success: false, error: 'Invalid TS4Rebels action' })
-      return
-    }
-
-    // Base arguments
-    const args = [cliPath, 'ts4rebels', '--enable-network']
-
-    // Temp file tracking (hoisted to avoid ReferenceError on child before spawn)
-    let publishTempPath: string | null = null
-
-    // Add session cookies if provided (base64 encoded JSON) with size limit
-    if (params.cookies) {
-      if (params.cookies.length > 65536) {
-        resolve({ success: false, error: 'Cookies parameter too large' })
-        return
-      }
-      try {
-        const decodedCookies = Buffer.from(params.cookies, 'base64').toString('utf-8')
-        args.push('--cookies', decodedCookies)
-      } catch (_e) {
-        // Silently handle cookie decode failures
-      }
-    }
-
-    // Environment variables for credentials (more secure than CLI args)
-    const childEnv: NodeJS.ProcessEnv = {
-      ...process.env,
-      PYTHONIOENCODING: 'utf-8',
-      PYTHONPATH: PathResolver.getInternalPath('.'), // Ensure Python can find root modules
-    }
-
-    // Action handling with sanitization
-    try {
-      if (action === 'login') {
-        // Use env vars for credentials (not CLI args)
-        childEnv.JPE_TS4REBELS_USER = sanitize(params.username, 256)
-        childEnv.JPE_TS4REBELS_PASS = sanitize(params.password, 512)
-        args.push('login')
-      } else if (action === 'forum') {
-        args.push('forum', sanitize(params.forum, 64), '--page', sanitize(params.page || '1', 10))
-      } else if (action === 'topic') {
-        args.push('topic', sanitize(params.topic, 64), '--page', sanitize(params.page || '1', 10))
-      } else if (action === 'publish') {
-        const title = sanitize(params.title, 512)
-        const desc = sanitize(params.description, 4096)
-        const tags = params.tags ? sanitize(params.tags, 512) : ''
-        const packageName = sanitize(params.packageName, 256)
-        
-        // Handle binary data (passed as base64)
-        if (!params.packageBase64) throw new Error('Package data is missing')
-        
-        const tempDir = path.join(os.tmpdir(), 'jpe-studio-publish')
-        if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir, { recursive: true })
-        
-        const tempPath = path.join(tempDir, packageName)
-        const buffer = Buffer.from(params.packageBase64, 'base64')
-        fs.writeFileSync(tempPath, buffer)
-        
-        args.push('publish', '--title', title, '--description', desc, '--package', tempPath)
-        if (tags) args.push('--tags', tags)
-        
-        // Track for cleanup after child exits
-        publishTempPath = tempPath
-      } else {
-        resolve({ success: false, error: 'Invalid TS4Rebels action or missing parameters' })
-        return
-      }
-    } catch (err) {
-      resolve({ success: false, error: err instanceof Error ? err.message : 'Parameter validation failed' })
-      return
-    }
-
-    // Safe logging to prevent EPIPE errors
-    try {
-      console.log(`[TS4Rebels Main] Executing: ${pythonCmd} ${args.join(' ')}`)
-    } catch (_e) {
-      // Ignore EPIPE errors from console.log
-    }
-
-    const child = spawn(pythonCmd, args, {
-      env: childEnv,
-      cwd: process.cwd(),
-    })
-
-    let stdout = ''
-    let stderr = ''
-
-    // Handle stdio errors to prevent EPIPE
-    child.stdout.on('error', () => {
-      // Ignore stdout errors (EPIPE, etc.)
-    })
-    child.stderr.on('error', () => {
-      // Ignore stderr errors (EPIPE, etc.)
-    })
-
-    child.stdout.on('data', (data) => { stdout += data.toString() })
-    child.stderr.on('data', (data) => { stderr += data.toString() })
-
-    // Timeout: 600 seconds for large uploads (Story 5.6 industrialization)
-    const timeout = setTimeout(() => {
-      if (!child.killed) {
-        try {
-          console.warn('[TS4Rebels Main] Process timeout - killing child')
-        } catch (_e) {
-          // Ignore EPIPE
-        }
-        child.kill('SIGTERM')
-        // Force kill after 5s grace period
-        setTimeout(() => {
-          if (!child.killed) child.kill('SIGKILL')
-        }, 5000)
-      }
-    }, 600000)
-
-    child.on('close', (code) => {
-      clearTimeout(timeout)
-      
-      // Cleanup temp file if exists
-      if (publishTempPath) {
-        try {
-          fs.unlinkSync(publishTempPath)
-        } catch (_e) {
-          // Expected: temp file may not exist if process was killed
-        }
-      }
-
-      try {
-        if (code === 0) {
-          resolve({ success: true, data: JSON.parse(stdout) })
-        } else {
-          resolve({ success: false, error: stderr || `Process exited with code ${code}` })
-        }
-      } catch (err) {
-        resolve({ success: false, error: `Parse error: ${String(err)}`, raw: stdout })
-      }
-    })
-
-    child.on('error', (err) => {
-      clearTimeout(timeout)
-      resolve({ success: false, error: err instanceof Error ? err.message : String(err) })
-    })
-  })
-})
-
-// === PYTHON HEALTH CHECK (lightweight — no temp files, no transform) ===
-ipcMain.handle('transform:health', async () => {
-  const pythonCmd = process.platform === 'win32' ? 'python' : 'python3'
-  return new Promise((resolve) => {
-    const proc = spawn(pythonCmd, ['--version'], {
-      stdio: ['pipe', 'pipe', 'pipe'],
-      timeout: 5000,
-    })
-    let stdout = ''
-    proc.stdout.on('data', (data) => { stdout += data.toString() })
-    proc.on('close', (code) => {
-      if (code === 0) {
-        const versionMatch = stdout.match(/Python\s+(\d+\.\d+\.\d+)/)
-        resolve({
-          available: true,
-          version: versionMatch ? versionMatch[1] : stdout.trim(),
-          path: pythonCmd,
-        })
-      } else {
-        resolve({ available: false, version: '', path: '' })
-      }
-    })
-    proc.on('error', () => {
-      resolve({ available: false, version: '', path: '' })
-    })
-  })
-})
-
-// === NATIVE TRANSFORM ENGINE (NEW — Ported from /api/transform) ===
-ipcMain.handle('transform:run', async (_event, source: string, fileName: string) => {
-  const start = performance.now()
-  console.log('[IPC:transform:run] Starting industrial synthesis...')
-  const tempDir = path.join(os.tmpdir(), `jpe-native-transform-${Date.now()}-${Math.random().toString(36).slice(2)}`)
-  const inputFile = path.join(tempDir, fileName || 'input.jpe')
-  const outputFile = path.join(tempDir, 'output.xml')
-
-  try {
-    await fs.promises.mkdir(tempDir, { recursive: true })
-    await fs.promises.writeFile(inputFile, source, 'utf-8')
-
-    const pythonCmd = process.platform === 'win32' ? 'python' : 'python3'
-    const engineScript = PathResolver.getPythonScriptPath('scripts/transform_jpe.py')
-
-    return new Promise((resolve) => {
-      const args = [engineScript, inputFile, '-o', outputFile]
-      const proc = spawn(pythonCmd, args, {
-        stdio: ['pipe', 'pipe', 'pipe'],
-        env: { ...process.env, PYTHONIOENCODING: 'utf-8' },
-        cwd: process.cwd(),
-      })
-
-      let _stdout = ''
-      let stderr = ''
-
-      proc.stdout.on('data', (data) => { _stdout += data.toString() })
-      proc.stderr.on('data', (data) => { stderr += data.toString() })
-
-      const timeout = setTimeout(() => {
-        if (!proc.killed) proc.kill('SIGKILL')
-      }, 30000)
-
-      proc.on('close', async (code) => {
-        clearTimeout(timeout)
-        const duration = (performance.now() - start).toFixed(2)
-        console.log(`[IPC:transform:run] Completed in ${duration}ms`)
-        
-        try {
-          if (code === 0) {
-            const xml = await fs.promises.readFile(outputFile, 'utf-8')
-            resolve({ success: true, xml, duration, errors: parseStderr(stderr) })
-          } else {
-            resolve({ success: false, error: stderr || `Exit code ${code}`, duration, errors: parseStderr(stderr) })
-          }
-        } catch (err) {
-          resolve({ success: false, error: `Output error: ${err}`, duration })
-        } finally {
-          // Cleanup
-          try {
-            await fs.promises.unlink(inputFile).catch(() => {})
-            await fs.promises.unlink(outputFile).catch(() => {})
-            await fs.promises.rm(tempDir, { recursive: true, force: true }).catch(() => {})
-          } catch (e) {
-            console.warn('[Transform Main] Cleanup failed:', e)
-          }
-        }
-      })
-
-      proc.on('error', (err) => {
-        clearTimeout(timeout)
-        resolve({ success: false, error: err.message, duration: (performance.now() - start).toFixed(2) })
-      })
-    })
-  } catch (err) {
-    return { success: false, error: String(err), duration: (performance.now() - start).toFixed(2) }
-  }
-})
-
-function parseStderr(stderr: string) {
-  const errors: any[] = []
-  if (!stderr.trim()) return errors
-  
-  stderr.split('\n').forEach(line => {
-    const trimmed = line.trim()
-    if (!trimmed) return
-    const match = trimmed.match(/^Line\s+(\d+):\s*(.*?):\s*(.*)/i)
-    if (match) {
-      errors.push({ line: parseInt(match[1]), severity: match[2].toLowerCase(), message: match[3] })
-    } else {
-      errors.push({ message: trimmed, severity: 'error' })
-    }
-  })
-  return errors
-}
-
-// === NATIVE AI BRIDGE (IMPROVED) ===
-ipcMain.handle('ai:invoke', async (_event, provider: string, method: string, params: any) => {
-  const start = performance.now()
-  console.log(`[IPC:ai:invoke] Routing to ${provider}...`)
-  const { url, headers, data, key: _key } = params
-  
-  console.log(`[AI Main] Native Bridge: ${provider}:${method} -> ${url}`)
-
-  try {
-    // We handle the network request here in the Main process
-    // This bypasses any CORS issues in the renderer and centralizes security
-    const response = await axios({
-      method: method.toUpperCase() || 'POST',
-      url,
-      headers: {
-        ...headers,
-        // If the key is passed we can ensure it's used correctly
-        // In the future, we can pull keys from OS Keychain here instead of passing them
-      },
-      data,
-      timeout: 30000,
-    })
-
-    const duration = (performance.now() - start).toFixed(2)
-    console.log(`[IPC:ai:invoke] ${provider} responded in ${duration}ms`)
-
-    return {
-      success: true,
-      data: response.data,
-      status: response.status,
-    }
-  } catch (error: any) {
-    console.error(`[AI Main] Native request failed for ${provider}:`, error.message)
-    return {
-      success: false,
-      error: error.response?.data || error.message,
-      status: error.response?.status,
-    }
-  }
-})
-
-// === NATIVE SCARLET SCRAPER (NEW — Ported from /api/scarlet) ===
-ipcMain.handle('scarlet:fetch', async () => {
-  const start = performance.now()
-  console.log('[IPC:scarlet:fetch] Initializing 2-stage handshake...')
-  const userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-  
-  try {
-    // 1. Fetch page for nonce
-    const pageResponse = await axios.get('https://scarletsrealm.com/the-mod-list-sfw-only-edition/', {
-      headers: { 'User-Agent': userAgent }
-    })
-    
-    const html = pageResponse.data
-    const nonceMatch = html.match(/"nonce":"([a-zA-Z0-9]+)"/)
-    if (!nonceMatch) throw new Error('Structure Change: Could not find nonce on Scarlet Realm.')
-    const nonce = nonceMatch[1]
-
-    // 2. AJAX data fetch
-    const params = new URLSearchParams()
-    params.append('action', 'mlc_get_data')
-    params.append('nonce', nonce)
-    params.append('table_id', '3')
-
-    const apiResponse = await axios.post('https://scarletsrealm.com/wp-admin/admin-ajax.php', params, {
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'User-Agent': userAgent
-      }
-    })
-
-    const data = apiResponse.data
-    if (!data || !data.data) throw new Error('Malformed response from Scarlet')
-
-    // 3. Transform
-    const rows = data.data.rows || []
-    const mods = rows.map((row: any[], index: number) => ({
-      id: `scarlet-${index}`,
-      name: row[1] || 'Unknown Mod',
-      creator: row[2] || 'Unknown Creator',
-      status: mapScarletStatus(row[4]),
-      version: row[5] || 'Unknown',
-      notes: row[7] || '',
-      category: row[11] || ''
-    }))
-
-    const duration = (performance.now() - start).toFixed(2)
-    console.log(`[IPC:scarlet:fetch] Completed in ${duration}ms`)
-
-    return { success: true, count: mods.length, mods, performance: { totalTime: duration } }
-  } catch (err: any) {
-    console.error('[Scarlet Main] Fetch failed:', err.message)
-    return { success: false, error: err.message }
-  }
-})
-
-function mapScarletStatus(rawStatus: string): string {
-  const s = rawStatus?.toLowerCase() || ''
-  if (s.includes('fine') || s.includes('working') || s.includes('clear')) return 'Fine'
-  if (s.includes('updated')) return 'Updated'
-  if (s.includes('broken')) return 'Broken'
-  if (s.includes('n/a')) return 'N/A'
-  return 'Unknown'
-}
+// === MANAGER-SERVICE IPC HANDLERS ===
+// The following IPC channels are handled by Manager services:
+// - sims4:getModsPath, sims4:deployBridge (Sims4Manager)
+// - bridge:sendCommand (Sims4Manager via LinkServer)
+// - security:vault:get, security:vault:set, security:vault:status (SecurityManager)
+// - ts4rebels:invoke (RebelsManager)
+// - transform:health, transform:run (TransformManager)
+// - ai:invoke (AiManager)
+// - scarlet:fetch (ScarletManager)
+// - ai:ollama:info, ai:ollama:switch-provider (OllamaManager)
+//
+// See src/services/main/*Manager.ts for implementations.
+// These handlers are registered during app.whenReady() initialization.
 
 // === SHELL CONTEXT MENU (Windows Only) ===
 ipcMain.handle('shell:installContextMenu', async () => {
@@ -1448,20 +983,30 @@ app.on('ready', async () => {
     app.quit()
   }
 
-  // Initialize Industrial AI Engine (unless in E2E mode to avoid ENOENT errors)
+  // Initialize Industrial AI Engine & All Manager Services (unless in E2E mode)
   if (!process.env.JPE_E2E_MODE) {
     try {
-      // 1. Sync models
+      // 1. Initialize all Manager services (registers IPC handlers)
+      RebelsManager.initialize()
+      AiManager.initialize()
+      ScarletManager.initialize()
+      SecurityManager.initialize()
+      TransformManager.initialize()
+      Sims4Manager.initialize(linkServer || undefined)
+
+      // 2. Sync models
       await ModelSetupService.initialize()
-      
-      // 2. Start manager
+
+      // 3. Start OllamaManager
       ollamaManager = new OllamaManager()
       await ollamaManager.initialize()
+
+      console.log('[Main] All Manager services initialized')
     } catch (err) {
-      console.error('[Main] Failed to initialize AI engine:', err)
+      console.error('[Main] Failed to initialize Manager services:', err)
     }
   } else {
-    console.log('[Main] Skipping AI engine init in E2E Mode')
+    console.log('[Main] Skipping Manager service init in E2E Mode')
   }
 
   // Handle deep links that opened before ready

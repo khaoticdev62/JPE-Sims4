@@ -34,6 +34,8 @@ extraResources:
     to: models/
   - from: scripts/transform_jpe.py
     to: scripts/transform_jpe.py
+  - from: scripts/ts4rebels_cli.py
+    to: scripts/ts4rebels_cli.py
   - from: cli.py
     to: cli.py
 

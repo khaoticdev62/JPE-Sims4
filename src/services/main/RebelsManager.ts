@@ -29,7 +29,8 @@ export class RebelsManager {
   private invokeRebelsCli(action: string, params: Record<string, string>): Promise<any> {
     return new Promise((resolve) => {
       const pythonCmd = process.platform === 'win32' ? 'python' : 'python3';
-      const cliPath = PathResolver.getPythonScriptPath('cli.py');
+      // Use standalone TS4Rebels CLI (no jpe_sims4 dependency)
+      const cliPath = PathResolver.getScriptPath('scripts/ts4rebels_cli.py');
 
       const sanitize = (s: unknown, maxLen = 256): string => {
         if (typeof s !== 'string') throw new Error('Invalid parameter type');
@@ -43,24 +44,22 @@ export class RebelsManager {
         return resolve({ success: false, error: 'Invalid TS4Rebels action' });
       }
 
-      const args = [cliPath, 'ts4rebels', '--enable-network'];
+      // Build command args for standalone ts4rebels_cli.py
+      const args = [cliPath, '--enable-network'];
       let publishTempPath: string | null = null;
       const childEnv: NodeJS.ProcessEnv = {
         ...process.env,
         PYTHONIOENCODING: 'utf-8',
-        PYTHONPATH: PathResolver.getInternalPath('.'),
       };
 
       try {
+        // Pass cookies as CLI argument if provided
         if (params.cookies) {
-           const decodedCookies = Buffer.from(params.cookies, 'base64').toString('utf-8');
-           args.push('--cookies', decodedCookies);
+           args.push('--cookies', params.cookies);
         }
 
         if (action === 'login') {
-          childEnv.JPE_TS4REBELS_USER = sanitize(params.username, 256);
-          childEnv.JPE_TS4REBELS_PASS = sanitize(params.password, 512);
-          args.push('login');
+          args.push('login', '--username', sanitize(params.username, 256), '--password', sanitize(params.password, 512));
         } else if (action === 'forum') {
           args.push('forum', sanitize(params.forum, 64), '--page', sanitize(params.page || '1', 10));
         } else if (action === 'topic') {

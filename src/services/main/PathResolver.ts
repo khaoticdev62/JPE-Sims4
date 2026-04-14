@@ -85,6 +85,17 @@ export class PathResolver {
   }
 
   /**
+   * Resolves a path to the scripts/ directory.
+   * Handles both dev and packaged modes.
+   */
+  static getScriptPath(scriptName: string): string {
+    if (app.isPackaged) {
+      return path.join(process.resourcesPath, scriptName)
+    }
+    return path.join(process.cwd(), scriptName)
+  }
+
+  /**
    * Resolves a static asset for the Protocol Handler.
    * Industrial fix for SPA routing: ensures assets like _next/ are resolved 
    * from the root even when requested from a deep client-side path.

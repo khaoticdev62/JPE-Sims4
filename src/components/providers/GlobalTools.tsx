@@ -19,54 +19,66 @@ import { TutorialEngine } from "@/services/tutorial/TutorialEngine"
  * Ensures they are only rendered on the client and wired to the UI store.
  */
 export function GlobalTools() {
-  const {
-    isCommandPaletteOpen,
-    setCommandPaletteOpen,
-    isTourOpen,
-    setTourOpen,
-    hasCompletedTour,
-    setHasCompletedTour,
-    isBuffWizardOpen,
-    setBuffWizardOpen,
-    isInteractionWizardOpen,
-    setInteractionWizardOpen,
-    isTraitWizardOpen,
-    setTraitWizardOpen,
-    isPromptToJPEOpen,
-    setPromptToJPEOpen,
-    isHelpCenterOpen,
-    setHelpCenterOpen,
-    isBatchSTBLOpen,
-    setBatchSTBLOpen,
-    isPublishModOpen: _isPublishModOpen,
-    setPublishModOpen: _setPublishModOpen,
-    isProjectExportOpen,
-    setProjectExportOpen,
-    isTutorialActive,
-    setTutorialActive,
-    setTutorialStep
-  } = useUIStore()
+  const isCommandPaletteOpen = useUIStore(state => state.isCommandPaletteOpen)
+  const setCommandPaletteOpen = useUIStore(state => state.setCommandPaletteOpen)
+  const isBuffWizardOpen = useUIStore(state => state.isBuffWizardOpen)
+  const setBuffWizardOpen = useUIStore(state => state.setBuffWizardOpen)
+  const isInteractionWizardOpen = useUIStore(state => state.isInteractionWizardOpen)
+  const setInteractionWizardOpen = useUIStore(state => state.setInteractionWizardOpen)
+  const isTraitWizardOpen = useUIStore(state => state.isTraitWizardOpen)
+  const setTraitWizardOpen = useUIStore(state => state.setTraitWizardOpen)
+  const isPromptToJPEOpen = useUIStore(state => state.isPromptToJPEOpen)
+  const setPromptToJPEOpen = useUIStore(state => state.setPromptToJPEOpen)
+  const isHelpCenterOpen = useUIStore(state => state.isHelpCenterOpen)
+  const setHelpCenterOpen = useUIStore(state => state.setHelpCenterOpen)
+  const isBatchSTBLOpen = useUIStore(state => state.isBatchSTBLOpen)
+  const setBatchSTBLOpen = useUIStore(state => state.setBatchSTBLOpen)
+  const isProjectExportOpen = useUIStore(state => state.isProjectExportOpen)
+  const setProjectExportOpen = useUIStore(state => state.setProjectExportOpen)
+
+  const isTourOpen = useUIStore(state => state.isTourOpen)
+  const setTourOpen = useUIStore(state => state.setTourOpen)
+  const hasCompletedTour = useUIStore(state => state.hasCompletedTour)
+  const setHasCompletedTour = useUIStore(state => state.setHasCompletedTour)
+  const setTutorialActive = useUIStore(state => state.setTutorialActive)
+  const setTutorialStep = useUIStore(state => state.setTutorialStep)
+  const isTutorialActive = useUIStore(state => state.isTutorialActive)
+  const showDiagnostics = useUIStore(state => state.showDiagnostics)
+
+  const isE2EMode = typeof window !== 'undefined' && ((window as any).JPE_E2E_MODE === '1' || window.localStorage?.getItem('jpe-e2e-mode') === 'true')
 
   const [mounted, setMounted] = React.useState(false)
 
+  const skipTour = React.useMemo(() => {
+    return typeof window !== 'undefined' &&
+      (window.location.search.includes('skipTour') ||
+       window.localStorage?.getItem('jpe-skip-onboarding') === 'true' ||
+       process.env.NEXT_PUBLIC_SKIP_ONBOARDING === 'true');
+  }, []);
+
+  React.useEffect(() => {
+    if (showDiagnostics) {
+      // sensory.triggerStatus('diagnostic_resolved'); // Fixed: This method does not exist in SensoryService
+      if (typeof window !== 'undefined' && (window as any).sensory?.triggerNotification) {
+        (window as any).sensory.triggerNotification();
+      }
+    }
+  }, [showDiagnostics]);
+
   useEffect(() => {
+    if (isE2EMode) return
     setMounted(true)
 
-    // Auto-open tour if not completed and not explicitly disabled
-    const skipTour = typeof window !== 'undefined' &&
-      (window.location.search.includes('skipTour') ||
-       window.localStorage.getItem('jpe-skip-onboarding') === 'true' ||
-       process.env.NEXT_PUBLIC_SKIP_ONBOARDING === 'true');
-
-    if (!hasCompletedTour && !skipTour) {
+    if (!hasCompletedTour && !skipTour && !isTourOpen) {
       setTourOpen(true)
       setTutorialActive(true)
       setTutorialStep(0)
     }
-  }, [hasCompletedTour, setTourOpen, setTutorialActive, setTutorialStep])
+  }, [hasCompletedTour, isTourOpen, skipTour, setTourOpen, setTutorialActive, setTutorialStep])
 
   // Sync TutorialEngine lifecycle
   useEffect(() => {
+    if (isE2EMode) return
     const engine = TutorialEngine.getInstance()
     if (isTutorialActive && isTourOpen) {
       engine.start()

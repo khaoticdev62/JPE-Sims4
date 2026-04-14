@@ -102,6 +102,7 @@ const electronAPI = {
       'menu:check-updates', 'menu:about',
       'compile:request', 'tray:compile', 'deep-link',
       'sync:status', 'sync:event',
+      'jpe-live:status', 'jpe-live:data',
     ]
     if (validChannels.includes(channel)) {
       const strippedCallback = (_event: unknown, ...args: unknown[]) => callback(...args)

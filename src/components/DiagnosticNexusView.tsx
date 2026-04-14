@@ -9,6 +9,12 @@ import {
   ChevronDown,
   type LucideIcon,
 } from "lucide-react";
+
+// Store & Service Imports
+import { useActivityStore } from "@/stores/useActivityStore";
+import { OllamaService } from "@/services/ai/OllamaService";
+import { toast } from "sonner";
+
 // High-Fidelity Asset: Diagnostic Nexus Hero
 const nexusCoreImage = "/assets/diagnostic_nexus_hero.svg";
 import {
@@ -68,25 +74,6 @@ const N = {
   noiseSvg: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E")`,
 };
 
-/* ═══ MOCK DATA ═══ */
-interface LogIntercept {
-  id: string;
-  title: string;
-  subtitle: string;
-  severity: "critical" | "error" | "warning" | "info";
-  time: string;
-  color: string;
-}
-
-const logIntercepts: LogIntercept[] = [
-  { id: "INT-0943", title: "System Exception Events", subtitle: "[CRITICAL]", severity: "critical", time: "14:02:41", color: N.rose },
-  { id: "INT-0942", title: "Memory Access Violation", subtitle: "[WARNING]", severity: "warning", time: "14:02:39", color: N.amber },
-  { id: "INT-0941", title: "Null Pointer Deref", subtitle: "[ERROR]", severity: "error", time: "14:02:35", color: N.cyan },
-  { id: "INT-0940", title: "Stack Buffer Overflow", subtitle: "[CRITICAL]", severity: "critical", time: "14:02:31", color: N.rose },
-  { id: "INT-0939", title: "Type Coercion Fault", subtitle: "[ERROR]", severity: "error", time: "14:02:28", color: N.cyan },
-  { id: "INT-0938", title: "Async Race Condition", subtitle: "[WARNING]", severity: "warning", time: "14:02:24", color: N.amber },
-  { id: "INT-0937", title: "Unresolved Symbol Ref", subtitle: "[ERROR]", severity: "error", time: "14:02:19", color: N.cyan },
-];
 
 interface StackFrame {
   fn: string;
@@ -366,38 +353,31 @@ function HolographicTrace({ selectedFrame }: { selectedFrame: number }) {
 /* ═══════════════════════════════════════════════════════════════════
    MAIN: DIAGNOSTIC NEXUS VIEW
    ═══════════════════════════════════════════════════════════════════ */
-export function DiagnosticNexusView({ diagnostics: _diagnostics, isAiScanning, onNavigate: _onNavigate }: DiagnosticNexusViewProps) {
+export function DiagnosticNexusView({ diagnostics: _diagnostics, isAiScanning: _isAiScanning, onNavigate: _onNavigate }: DiagnosticNexusViewProps) {
   const leftW = useScaledPx(260);
   const rightW = useScaledPx(280);
+  
+  const activities = useActivityStore(state => state.activities);
+  
   const [selectedIntercept, setSelectedIntercept] = useState(0);
-  const [selectedFrame, _setSelectedFrame] = useState(4);
-  const [analysisStatus, setAnalysisStatus] = useState<"idle" | "scanning" | "complete">("scanning");
-  const [scanProgress, setScanProgress] = useState(78);
+  const [selectedFrame, setSelectedFrame] = useState(0);
+  const [analysisStatus, setAnalysisStatus] = useState<"idle" | "scanning" | "complete">("idle");
+  const [scanProgress, setScanProgress] = useState(0);
   const [neuralLinkPulse, setNeuralLinkPulse] = useState(true);
+  const [aiFix, setAiFix] = useState<any>(null);
 
-  // Sync with real scanning state if provided
-  useEffect(() => {
-    if (isAiScanning !== undefined) {
-      setAnalysisStatus(isAiScanning ? "scanning" : "complete");
-      if (!isAiScanning) setScanProgress(100);
-    }
-  }, [isAiScanning]);
-
-  // Simulate scanning progress (only if not controlled by props)
-  useEffect(() => {
-    if (isAiScanning !== undefined) return;
-    if (analysisStatus !== "scanning") return;
-    const interval = setInterval(() => {
-      setScanProgress(p => {
-        if (p >= 100) {
-          setAnalysisStatus("complete");
-          return 100;
-        }
-        return p + Math.random() * 3;
-      });
-    }, 200);
-    return () => clearInterval(interval);
-  }, [analysisStatus]);
+  // Map activities to intercepts
+  const displayIntercepts = activities
+    .filter(a => a.type === 'exception' || a.type === 'bridge_event')
+    .map(a => ({
+      id: a.id.split('-').pop()?.toUpperCase() || "INT",
+      title: a.fileName,
+      subtitle: `[${a.type.toUpperCase()}]`,
+      severity: a.type === 'exception' ? 'critical' : 'info',
+      time: new Date(a.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+      color: a.type === 'exception' ? N.rose : N.cyan,
+      payload: (a as any).payload // Assuming payload has traceback if any
+    }));
 
   // Neural link pulse
   useEffect(() => {
@@ -405,7 +385,51 @@ export function DiagnosticNexusView({ diagnostics: _diagnostics, isAiScanning, o
     return () => clearInterval(t);
   }, []);
 
-  const _activeIntercept = logIntercepts[selectedIntercept];
+  const handleDeployPatch = async () => {
+    const active = displayIntercepts[selectedIntercept];
+    if (!active) return;
+
+    setAnalysisStatus("scanning");
+    setScanProgress(0);
+    
+    // Industrial Simulation of AI analysis
+    const timer = setInterval(() => {
+      setScanProgress(p => p < 90 ? p + 5 : p);
+    }, 150);
+
+    try {
+      const ollama = OllamaService.getInstance();
+      const traceback = active.title + (active as any).payload?.traceback || "";
+      const result = await ollama.analyzeException(traceback);
+
+      if (result.success && result.report) {
+        setAiFix(result.report);
+        setAnalysisStatus("complete");
+      } else {
+        setAnalysisStatus("idle");
+      }
+    } catch (err) {
+      console.error("[Nexus] Flash-Fix Failed:", err);
+      setAnalysisStatus("idle");
+    } finally {
+      clearInterval(timer);
+      setScanProgress(100);
+    }
+  };
+
+  const handleSystemReload = async () => {
+    const activeIntercept = displayIntercepts[selectedIntercept];
+    const moduleName = (activeIntercept as any)?.payload?.module || null;
+    
+    if (typeof window !== "undefined" && (window as any).electron?.invoke) {
+      toast.info("Dispatching Reload Command", {
+        description: moduleName ? `Targeting: ${moduleName}` : "Targeting all modules"
+      });
+      await (window as any).electron.invoke('bridge:sendCommand', 'RELOAD', { module: moduleName });
+    }
+  };
+
+  const activeIntercept = displayIntercepts[selectedIntercept];
 
   return (
     <div className="flex flex-col h-full w-full" style={{ background: N.bg, fontFamily: N.sans, color: N.textPrimary } as React.CSSProperties}>
@@ -485,9 +509,8 @@ export function DiagnosticNexusView({ diagnostics: _diagnostics, isAiScanning, o
             <MoreHorizontal size={13} color={N.textMuted} className="cursor-pointer" />
           </div>
 
-          {/* Intercept list */}
           <div className="flex-1 overflow-y-auto py-1">
-            {logIntercepts.map((item, i) => {
+            {displayIntercepts.map((item, i) => {
               const isActive = i === selectedIntercept;
               return (
                 <div
@@ -497,7 +520,10 @@ export function DiagnosticNexusView({ diagnostics: _diagnostics, isAiScanning, o
                     background: isActive ? `rgba(0,220,255,0.04)` : "transparent",
                     borderLeft: isActive ? `2px solid ${N.cyan}` : "2px solid transparent",
                   }}
-                  onClick={() => setSelectedIntercept(i)}
+                  onClick={() => {
+                    setSelectedIntercept(i);
+                    setSelectedFrame(0);
+                  }}
                   onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = N.bgHover; }}
                   onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = "transparent"; }}
                 >
@@ -507,7 +533,7 @@ export function DiagnosticNexusView({ diagnostics: _diagnostics, isAiScanning, o
                       color={item.severity === "critical" ? N.rose : item.severity === "warning" ? N.amber : N.cyan}
                       pulse={item.severity === "critical" && isActive}
                     />
-                    {i < logIntercepts.length - 1 && (
+                    {i < displayIntercepts.length - 1 && (
                       <div className="w-px flex-1 min-h-[20px]" style={{ background: `linear-gradient(to bottom, ${item.color}30, transparent)` } as React.CSSProperties} />
                     )}
                   </div>
@@ -578,10 +604,10 @@ export function DiagnosticNexusView({ diagnostics: _diagnostics, isAiScanning, o
               Traceback (most recent call last)
             </div>
             <div style={{ fontFamily: N.mono, fontSize: 11, color: N.rose, marginTop: 2 } as React.CSSProperties}>
-              TypeError: cannot concatenate 'str' and 'int' objects
+              {activeIntercept?.title || "No selective intercept"}
             </div>
-            <div style={{ fontFamily: N.mono, fontSize: 10, color: N.textMuted, marginTop: 1 } as React.CSSProperties}>
-              game_logic.py:142
+            <div style={{ fontFamily: N.mono, fontSize: 10, color: N.textMuted, marginTop: 1, whiteSpace: 'pre-wrap', maxHeight: '60px', overflowY: 'auto' } as React.CSSProperties}>
+              {(activeIntercept as any)?.payload?.traceback?.substring(0, 500) || "Sensor monitoring active..."}
             </div>
           </div>
 
@@ -631,13 +657,13 @@ export function DiagnosticNexusView({ diagnostics: _diagnostics, isAiScanning, o
               boxShadow: `0 0 20px rgba(139,92,246,0.1)`,
             }}>
               <div style={{ fontSize: 9, color: N.violetBright, fontWeight: 600, letterSpacing: "0.08em", marginBottom: 3 } as React.CSSProperties}>
-                CORRUPTION DETECTED
+                {aiFix ? "RESOLUTION FOUND" : "CORRUPTION DETECTED"}
               </div>
               <div style={{ fontFamily: N.mono, fontSize: 10, color: N.textSecondary } as React.CSSProperties}>
-                TypeError at L142
+                {aiFix?.rootCause || "Monitoring Layer 4..."}
               </div>
               <div style={{ fontFamily: N.mono, fontSize: 10, color: N.textMuted, marginTop: 1 } as React.CSSProperties}>
-                str ⊕ int collision
+                {aiFix?.affectedSystems?.join(' / ') || "Awaiting signal parity"}
               </div>
             </div>
           </div>
@@ -656,11 +682,15 @@ export function DiagnosticNexusView({ diagnostics: _diagnostics, isAiScanning, o
               </div>
               <div className="flex items-center gap-1.5">
                 <span style={{ fontSize: 9, color: N.textTertiary } as React.CSSProperties}>Severity:</span>
-                <span style={{ fontFamily: N.mono, fontSize: 10, fontWeight: 600, color: N.rose } as React.CSSProperties}>High</span>
+                <span style={{ fontFamily: N.mono, fontSize: 10, fontWeight: 600, color: N.rose } as React.CSSProperties}>
+                  {aiFix?.severity?.toUpperCase() || (activeIntercept?.severity === 'critical' ? 'CRITICAL' : 'HIGH')}
+                </span>
               </div>
               <div className="flex items-center gap-1.5">
                 <span style={{ fontSize: 9, color: N.textTertiary } as React.CSSProperties}>Root Cause:</span>
-                <span style={{ fontFamily: N.mono, fontSize: 10, fontWeight: 600, color: N.textSecondary } as React.CSSProperties}>Type Mismatch</span>
+                <span style={{ fontFamily: N.mono, fontSize: 10, fontWeight: 600, color: N.textSecondary } as React.CSSProperties}>
+                  {aiFix ? "IDENTIFIED" : "UNKNOWN"}
+                </span>
               </div>
             </div>
           </div>
@@ -707,8 +737,12 @@ export function DiagnosticNexusView({ diagnostics: _diagnostics, isAiScanning, o
               <div style={{ fontSize: 9, color: N.textTertiary, letterSpacing: "0.1em", marginBottom: 4 } as React.CSSProperties}>
                 RECOMMENDED SOLUTION
               </div>
-              <div style={{ fontSize: 13, fontWeight: 700, color: N.textPrimary } as React.CSSProperties}>Automatic Type Cast</div>
-              <div style={{ fontSize: 11, color: N.emerald, fontWeight: 600, marginTop: 2 } as React.CSSProperties}>98% Confidence</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: N.textPrimary } as React.CSSProperties}>
+                {aiFix ? "Apply Flash-Fix" : "Select Intercept"}
+              </div>
+              <div style={{ fontSize: 11, color: N.emerald, fontWeight: 600, marginTop: 2 } as React.CSSProperties}>
+                {aiFix ? "Deep Scan Optimal" : "Awaiting Analysis"}
+              </div>
             </div>
           </div>
 
@@ -717,20 +751,24 @@ export function DiagnosticNexusView({ diagnostics: _diagnostics, isAiScanning, o
             {/* Deploy Patch - Primary */}
             <StaggerItem>
             <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
+              onClick={handleDeployPatch}
+              disabled={analysisStatus === "scanning"}
               className="w-full py-2.5 rounded-lg transition-colors"
               style={{
-                backgroundImage: `linear-gradient(135deg, ${N.emerald}, ${N.emeraldBright})`,
+                backgroundImage: analysisStatus === "scanning" 
+                  ? `linear-gradient(135deg, ${N.bgElevated}, ${N.bgSurface})`
+                  : `linear-gradient(135deg, ${N.emerald}, ${N.emeraldBright})`,
                 border: "none",
                 fontFamily: N.mono,
                 fontSize: 11,
                 fontWeight: 800,
-                color: "#050505",
+                color: analysisStatus === "scanning" ? N.textMuted : "#050505",
                 letterSpacing: "0.1em",
-                boxShadow: `0 0 20px rgba(16,185,129,0.3)`,
-                cursor: "pointer",
+                boxShadow: analysisStatus === "scanning" ? "none" : `0 0 20px rgba(16,185,129,0.3)`,
+                cursor: analysisStatus === "scanning" ? "wait" : "pointer",
               } as React.CSSProperties}
             >
-              DEPLOY PATCH
+              {analysisStatus === "scanning" ? "ANALYZING..." : "DEPLOY PATCH"}
             </motion.button>
             </StaggerItem>
 
@@ -750,6 +788,28 @@ export function DiagnosticNexusView({ diagnostics: _diagnostics, isAiScanning, o
               } as React.CSSProperties}
             >
               VIEW CODE DIFF
+            </motion.button>
+            </StaggerItem>
+
+            {/* System Reload - Industrial Secondary */}
+            <StaggerItem>
+            <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
+              onClick={handleSystemReload}
+              className="w-full py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2"
+              style={{
+                backgroundColor: "transparent",
+                border: `1px solid ${N.borderCyan}`,
+                fontFamily: N.mono,
+                fontSize: 11,
+                fontWeight: 700,
+                color: N.cyan,
+                letterSpacing: "0.08em",
+                cursor: "pointer",
+                boxShadow: `0 0 15px ${N.cyanDim}`,
+              } as React.CSSProperties}
+            >
+              <Zap size={12} />
+              SYSTEM RELOAD
             </motion.button>
             </StaggerItem>
 
@@ -781,18 +841,18 @@ export function DiagnosticNexusView({ diagnostics: _diagnostics, isAiScanning, o
             <div className="px-3 py-2" style={{ borderBottom: `1px solid ${N.borderSubtle}` } as React.CSSProperties}>
               <span style={{ fontSize: 9, color: N.textTertiary, letterSpacing: "0.08em" } as React.CSSProperties}>SUGGESTED FIX</span>
             </div>
-            <div className="p-3 space-y-0.5">
-              {[
-                { text: "str_count = {", color: N.textSecondary },
-                { text: "  for (scount) {", color: N.textSecondary },
-                { text: "    str(count);", color: N.emerald },
-                { text: "  }", color: N.textSecondary },
-                { text: "}", color: N.textSecondary },
-              ].map((line, i) => (
-                <div key={i} style={{ fontFamily: N.mono, fontSize: 11, color: line.color, lineHeight: 1.6 } as React.CSSProperties}>
-                  {line.text}
-                </div>
-              ))}
+            <div className="p-3">
+              <div style={{ 
+                fontFamily: N.mono, 
+                fontSize: 10, 
+                color: N.emerald, 
+                lineHeight: 1.4,
+                whiteSpace: 'pre-wrap',
+                maxHeight: '120px',
+                overflowY: 'auto'
+              } as React.CSSProperties}>
+                {aiFix?.suggestedJpeFix || "Select an intercept and click 'DEPLOY PATCH' to generate a solution via local AI."}
+              </div>
             </div>
           </div>
 

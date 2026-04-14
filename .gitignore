@@ -83,5 +83,17 @@ node_modules
 node_modules
 node_modules
 node_modules
-node_modules
-node_modules
+
+# Rust build artifacts
+core/target/
+target/
+
+# Test artifacts and reports
+artifacts/
+test-results/
+playwright-report/data/
+playwright-report/trace/
+scratch/
+
+# Build output
+out/

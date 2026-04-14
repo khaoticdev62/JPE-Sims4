@@ -27,7 +27,17 @@ let autoUpdater: typeof import('electron-updater').autoUpdater | null = null
 // ─── Protocol Registration ───────────────────────────────────────────────────
 // Must be called before app.ready
 protocol.registerSchemesAsPrivileged([
-  { scheme: 'app', privileges: { standard: true, secure: true, allowServiceWorkers: true, supportFetchAPI: true } }
+  { 
+    scheme: 'app', 
+    privileges: { 
+      standard: true, 
+      secure: true, 
+      allowServiceWorkers: true, 
+      supportFetchAPI: true,
+      bypassCSP: true, 
+      corsEnabled: true 
+    } 
+  }
 ])
 
 // ─── Single Instance Lock ────────────────────────────────────────────────────
@@ -111,6 +121,8 @@ const createWindow = (_url: string) => {
       nodeIntegration: false,
       contextIsolation: true,
       spellcheck: false,
+      webSecurity: true, // Hardened: Re-enabling standard security barriers
+      allowRunningInsecureContent: false, // Hardened: Disabling insecure content
     },
   })
 
@@ -140,6 +152,15 @@ const createWindow = (_url: string) => {
 
     if (isDev && mainWindow) {
       mainWindow.webContents.openDevTools({ mode: 'detach' })
+    }
+  })
+
+  // Diagnostic: Monitor renderer crashes (Story 13.1 Stabilization)
+  mainWindow.webContents.on('render-process-gone', (_event, details) => {
+    const { reason, exitCode } = details
+    console.error(`[Main] Renderer Process Gone: ${reason} (${exitCode})`)
+    if (reason === 'crashed' || reason === 'oom') {
+       console.error('[Main] Critical Renderer Failure Detected')
     }
   })
 
@@ -353,7 +374,6 @@ const buildAppMenu = (): Menu => {
         { role: 'about', label: `About ${app.getName()}` },
         { type: 'separator' },
         { role: 'services', label: 'Services' },
-        { type: 'separator' },
         { role: 'hide', label: `Hide ${app.getName()}` },
         { role: 'hideOthers', label: 'Hide Others' },
         { role: 'unhide', label: 'Show All' },
@@ -835,7 +855,10 @@ ipcMain.handle('sims4:deployBridge', async (_event, pythonSource: string) => {
 // === LIVE BRIDGE COMMANDS (NEW — Story 13.1) ===
 ipcMain.handle('bridge:sendCommand', async (_event, type: string, payload: any) => {
   try {
-    if (!linkServer) throw new Error('Link server not initialized')
+    if (!linkServer)      return {
+        success: false,
+        error: 'Bridge unavailable in current environment'
+      };
     linkServer.sendCommand(type, payload)
     return { success: true }
   } catch (error) {
@@ -919,6 +942,7 @@ ipcMain.handle('ts4rebels:invoke', async (_event, action: string, params: Record
     const childEnv: NodeJS.ProcessEnv = {
       ...process.env,
       PYTHONIOENCODING: 'utf-8',
+      PYTHONPATH: PathResolver.getInternalPath('.'), // Ensure Python can find root modules
     }
 
     // Action handling with sanitization
@@ -1295,19 +1319,63 @@ ipcMain.handle('shell:installContextMenu', async () => {
 app.on('ready', async () => {
   // Register custom protocol to serve static files from 'out' directory
   if (!isDev) {
-    protocol.registerFileProtocol('app', (request, callback) => {
-      // Robust URL extraction: remove app:// and then remove leading slashes
-      let url = request.url.replace(/^app:\/\//, '')
-      
-      // Remove leading slashes/dots so it becomes relative to out/
-      url = url.replace(/^[./]+/, '')
+    protocol.handle('app', async (request) => {
+      try {
+        const parsedUrl = new URL(request.url)
+        let pathname = parsedUrl.pathname
+        
+        // Remove leading dots and slashes (compatibility for various Electron path styles)
+        pathname = pathname.replace(/^\/*\.\/+/, '').replace(/^\/+/, '')
+        
+        // Industrial Fallback: if no extension, it's likely a route, serve index.html
+        if (!path.extname(pathname)) {
+          console.log(`[Protocol] Route detected: ${pathname} -> serving index.html`)
+          pathname = pathname ? `${pathname}/index.html` : 'index.html'
+        }
 
-      // Clean up the path (remove query params etc)
-      url = url.split('?')[0].split('#')[0]
+        let filePath = PathResolver.getStaticAssetPath(pathname)
+        
+        // 404/403 Fallback Strategy
+        if (!fs.existsSync(filePath)) {
+           // Check if directory exists but index.html was expected
+           if (fs.existsSync(filePath.replace(/\.html$/, '')) && fs.lstatSync(filePath.replace(/\.html$/, '')).isDirectory()) {
+              filePath = path.join(filePath.replace(/\.html$/, ''), 'index.html')
+           }
+           
+           if (!fs.existsSync(filePath)) {
+              console.warn(`[Protocol] 404 Fallback: ${filePath} -> serving root index.html`)
+              filePath = PathResolver.getInternalPath('out', 'index.html')
+           }
+        }
 
-      const filePath = PathResolver.getStaticAssetPath(url)
+        const data = await fs.promises.readFile(filePath)
+        const ext = path.extname(filePath).toLowerCase()
+        
+        // Next.js 15 RSC expects text/x-component for .txt shards
+        const isRsc = parsedUrl.searchParams.has('_rsc')
+        const mimeMap: Record<string, string> = {
+          '.html': 'text/html',
+          '.js': 'text/javascript',
+          '.css': 'text/css',
+          '.svg': 'image/svg+xml',
+          '.png': 'image/png',
+          '.jpg': 'image/jpeg',
+          '.txt': isRsc ? 'text/x-component' : 'text/plain',
+          '.json': 'application/json'
+        }
 
-      callback({ path: path.normalize(filePath) })
+        return new Response(data, {
+          status: 200,
+          headers: {
+            'Content-Type': mimeMap[ext] || 'application/octet-stream',
+            'Access-Control-Allow-Origin': '*',
+            'Cache-Control': 'no-cache'
+          }
+        })
+      } catch (error) {
+        console.error('[Protocol Handler] Critical Error:', error)
+        return new Response('Internal Server Error', { status: 500 })
+      }
     })
   }
 
@@ -1380,16 +1448,20 @@ app.on('ready', async () => {
     app.quit()
   }
 
-  // Initialize Industrial AI Engine
-  try {
-    // 1. Sync models
-    await ModelSetupService.initialize()
-    
-    // 2. Start manager
-    ollamaManager = new OllamaManager()
-    await ollamaManager.initialize()
-  } catch (err) {
-    console.error('[Main] Failed to initialize AI engine:', err)
+  // Initialize Industrial AI Engine (unless in E2E mode to avoid ENOENT errors)
+  if (!process.env.JPE_E2E_MODE) {
+    try {
+      // 1. Sync models
+      await ModelSetupService.initialize()
+      
+      // 2. Start manager
+      ollamaManager = new OllamaManager()
+      await ollamaManager.initialize()
+    } catch (err) {
+      console.error('[Main] Failed to initialize AI engine:', err)
+    }
+  } else {
+    console.log('[Main] Skipping AI engine init in E2E Mode')
   }
 
   // Handle deep links that opened before ready
